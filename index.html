@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Morning Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg:#0F1117; --surface:#181C27; --card:#1E2333;
+    --border:rgba(255,255,255,0.08); --border-md:rgba(255,255,255,0.14);
+    --text-1:#F0EEE8; --text-2:#9A97A0; --text-3:#5C5A64;
+    --gold:#C9A84C; --gold-dim:rgba(201,168,76,0.12); --gold-glow:rgba(201,168,76,0.06);
+    --teal:#4ECDC4; --teal-dim:rgba(78,205,196,0.10);
+    --rose:#E07B7B; --rose-dim:rgba(224,123,123,0.10);
+    --green:#6BBF8E; --green-dim:rgba(107,191,142,0.10);
+    --radius-sm:6px; --radius:12px; --radius-lg:18px;
+    --font-display:'DM Serif Display',Georgia,serif;
+    --font-body:'Inter',system-ui,sans-serif;
+    --font-mono:'JetBrains Mono',monospace;
+    --transition:0.18s ease;
+  }
+  html { font-size:16px; }
+  body { background:var(--bg); color:var(--text-1); font-family:var(--font-body); line-height:1.6; min-height:100vh; -webkit-font-smoothing:antialiased; }
+
+  /* ── Tab Nav ── */
+  .tab-nav { position:sticky; top:0; z-index:40; background:rgba(15,17,23,0.94); backdrop-filter:blur(12px); border-bottom:1px solid var(--border); padding:0 1.5rem; }
+  .tab-nav-inner { max-width:900px; margin:0 auto; display:flex; align-items:center; }
+  .tab-btn { padding:0.85rem 1.25rem; font-size:13px; font-weight:500; font-family:var(--font-body); color:var(--text-3); background:none; border:none; border-bottom:2px solid transparent; cursor:pointer; transition:color var(--transition),border-color var(--transition); white-space:nowrap; display:flex; align-items:center; gap:6px; margin-bottom:-1px; }
+  .tab-btn:hover { color:var(--text-2); }
+  .tab-btn.active { color:var(--text-1); border-bottom-color:var(--gold); }
+  .tab-badge { font-size:10px; font-family:var(--font-mono); background:var(--rose-dim); color:var(--rose); border:1px solid rgba(224,123,123,0.25); border-radius:20px; padding:1px 6px; min-width:20px; text-align:center; }
+
+  /* ── Pages ── */
+  .page { max-width:900px; margin:0 auto; padding:2.5rem 1.5rem 4rem; display:none; }
+  .page.active { display:block; }
+
+  /* ── Header ── */
+  .header { display:grid; grid-template-columns:1fr auto; gap:1.5rem; align-items:start; margin-bottom:2rem; }
+  .eyebrow { font-family:var(--font-mono); font-size:11px; color:var(--gold); letter-spacing:0.14em; text-transform:uppercase; margin-bottom:6px; }
+  .greeting { font-family:var(--font-display); font-size:clamp(2rem,5vw,3rem); font-weight:400; color:var(--text-1); line-height:1.1; }
+  .date-line { font-size:14px; color:var(--text-2); margin-top:6px; }
+  .header-right { text-align:right; padding-top:4px; }
+  .big-num { font-family:var(--font-display); font-size:3.5rem; color:var(--gold); line-height:1; }
+  .big-num-label { font-size:11px; color:var(--text-3); letter-spacing:0.1em; text-transform:uppercase; margin-top:2px; }
+  .section-eyebrow { font-family:var(--font-mono); font-size:10px; color:var(--text-3); letter-spacing:0.14em; text-transform:uppercase; margin-bottom:12px; margin-top:2rem; }
+
+  /* ── Mantra ── */
+  .mantra-card { background:var(--gold-glow); border:1px solid rgba(201,168,76,0.18); border-left:3px solid var(--gold); border-radius:0 var(--radius) var(--radius) 0; padding:1.1rem 1.4rem; margin-bottom:2rem; }
+  .mantra-text { font-family:var(--font-display); font-size:1.15rem; font-style:italic; color:var(--text-1); line-height:1.65; }
+  .mantra-source { font-size:12px; color:var(--text-3); margin-top:6px; }
+
+  /* ── Grids ── */
+  .grid-3 { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+  @media (max-width:640px) {
+    .grid-3 { grid-template-columns:1fr; }
+    .header { grid-template-columns:1fr; }
+    .header-right { text-align:left; }
+    .pillars-grid { grid-template-columns:repeat(2,1fr) !important; }
+    .sit-fields { grid-template-columns:1fr !important; }
+    .past-stats { grid-template-columns:repeat(2,1fr) !important; }
+  }
+  @media (max-width:400px) { .pillars-grid { grid-template-columns:1fr !important; } }
+
+  /* ── Buttons ── */
+  .btn-sm { padding:7px 16px; font-size:12px; font-weight:500; font-family:var(--font-body); background:transparent; color:var(--text-2); border:1px solid var(--border-md); border-radius:var(--radius-sm); cursor:pointer; transition:var(--transition); }
+  .btn-sm:hover { background:var(--surface); color:var(--text-1); }
+  .btn-sm.primary { background:var(--gold); color:#0F1117; border-color:var(--gold); }
+  .btn-sm.primary:hover { background:#d4b55a; }
+  .btn-sm.teal { background:var(--teal-dim); color:var(--teal); border-color:rgba(78,205,196,0.3); }
+  .btn-sm.teal:hover { background:rgba(78,205,196,0.18); }
+
+  /* ── Questions ── */
+  .q-block { background:var(--card); border:1px solid var(--border); border-radius:var(--radius-lg); padding:1.5rem; margin-bottom:2rem; }
+  .q-item { margin-bottom:1.2rem; }
+  .q-item:last-child { margin-bottom:0; }
+  .q-label { font-size:12px; color:var(--text-2); margin-bottom:8px; font-weight:500; }
+  .q-input { width:100%; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); padding:10px 12px; font-size:14px; color:var(--text-1); font-family:var(--font-body); resize:none; outline:none; line-height:1.6; transition:border-color var(--transition); }
+  .q-input:focus { border-color:rgba(201,168,76,0.4); }
+  .q-input::placeholder { color:var(--text-3); }
+  .save-row { display:flex; justify-content:flex-end; margin-top:14px; gap:8px; align-items:center; }
+  .save-status { font-size:12px; color:var(--text-3); }
+  .save-status.ok { color:var(--green); }
+  .save-status.err { color:var(--rose); }
+
+  /* ── Pillars ── */
+  .pillars-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; }
+  .pillar-btn { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:16px 10px 14px; cursor:pointer; transition:all var(--transition); text-align:center; }
+  .pillar-btn:hover { border-color:var(--border-md); background:#232840; }
+  .pillar-btn.active { border-color:var(--gold); background:var(--gold-dim); }
+  .pillar-emoji { font-size:22px; margin-bottom:8px; display:block; }
+  .pillar-label { font-size:11px; color:var(--text-2); font-weight:500; line-height:1.3; }
+  .pillar-btn.active .pillar-label { color:var(--gold); }
+  .pillar-detail-box { background:var(--card); border:1px solid var(--border); border-radius:var(--radius-lg); padding:1.5rem; margin-top:10px; display:none; }
+  .pillar-detail-box.open { display:block; }
+  .detail-head { display:flex; gap:12px; align-items:flex-start; margin-bottom:1.25rem; }
+  .detail-head-emoji { font-size:28px; line-height:1; }
+  .detail-head-title { font-family:var(--font-display); font-size:1.3rem; color:var(--text-1); }
+  .detail-head-sub { font-size:13px; color:var(--text-2); margin-top:2px; }
+  .principle-row { display:flex; gap:12px; padding:12px 0; border-bottom:1px solid var(--border); }
+  .principle-row:last-child { border-bottom:none; }
+  .principle-dot { width:6px; height:6px; border-radius:50%; background:var(--gold); flex-shrink:0; margin-top:6px; }
+  .principle-title { font-size:14px; font-weight:500; color:var(--text-1); }
+  .principle-sub { font-size:13px; color:var(--text-2); margin-top:3px; line-height:1.55; }
+
+  /* ── Checklist ── */
+  .checklist-block { background:var(--card); border:1px solid var(--border); border-radius:var(--radius-lg); padding:1.5rem; margin-bottom:2rem; }
+  .check-row { display:flex; align-items:flex-start; gap:12px; padding:10px 0; border-bottom:1px solid var(--border); cursor:pointer; }
+  .check-row:last-child { border-bottom:none; }
+  .check-box { width:20px; height:20px; border-radius:5px; border:1.5px solid var(--border-md); flex-shrink:0; display:flex; align-items:center; justify-content:center; transition:all var(--transition); background:var(--surface); }
+  .check-row.done .check-box { background:var(--green); border-color:var(--green); }
+  .check-tick { color:#0F1117; font-size:12px; font-weight:700; display:none; }
+  .check-row.done .check-tick { display:block; }
+  .check-text { font-size:14px; color:var(--text-1); padding-top:1px; flex:1; }
+  .check-row.done .check-text { color:var(--text-3); text-decoration:line-through; }
+  .check-tag { font-size:10px; font-family:var(--font-mono); color:var(--text-3); padding:2px 7px; border:1px solid var(--border); border-radius:20px; white-space:nowrap; }
+  .progress-bar-wrap { margin-top:1.25rem; }
+  .progress-meta { display:flex; justify-content:space-between; font-size:12px; color:var(--text-3); margin-bottom:8px; }
+  .progress-count { font-family:var(--font-mono); }
+  .progress-track { height:3px; background:rgba(255,255,255,0.06); border-radius:2px; }
+  .progress-fill { height:100%; background:linear-gradient(90deg,var(--teal),var(--green)); border-radius:2px; transition:width 0.35s ease; }
+
+  /* ── Intention tiles ── */
+  .intention-tile { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:1.25rem; }
+  .intention-icon { font-size:24px; margin-bottom:10px; }
+  .intention-title { font-size:13px; font-weight:600; color:var(--text-1); margin-bottom:4px; }
+  .intention-body { font-size:12px; color:var(--text-2); line-height:1.6; }
+
+  /* ── Situation form ── */
+  .sit-add-block { background:var(--card); border:1px solid var(--border); border-radius:var(--radius-lg); padding:1.5rem; margin-bottom:1.5rem; }
+  .sit-field-label { font-size:12px; color:var(--text-2); font-weight:500; margin-bottom:8px; display:block; }
+  .sit-input { width:100%; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); padding:10px 12px; font-size:14px; color:var(--text-1); font-family:var(--font-body); resize:none; outline:none; line-height:1.6; transition:border-color var(--transition); }
+  .sit-input:focus { border-color:rgba(224,123,123,0.45); }
+  .sit-input::placeholder { color:var(--text-3); }
+  .sit-fields { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px; }
+  .sit-field { display:flex; flex-direction:column; }
+  .sit-full { margin-bottom:12px; }
+  .sit-add-row { display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap; }
+  .sit-add-hint { font-size:12px; color:var(--text-3); }
+  .emotion-pills { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px; }
+  .epill { padding:4px 12px; font-size:12px; border-radius:20px; border:1px solid var(--border-md); color:var(--text-2); background:transparent; cursor:pointer; transition:all var(--transition); font-family:var(--font-body); }
+  .epill:hover { background:var(--surface); color:var(--text-1); }
+  .epill.sel { background:var(--rose-dim); border-color:rgba(224,123,123,0.4); color:var(--rose); }
+
+  /* ── Past Situations Tab ── */
+  .past-header { margin-bottom:1.5rem; }
+  .past-title { font-family:var(--font-display); font-size:1.8rem; color:var(--text-1); margin-bottom:6px; }
+  .past-sub { font-size:14px; color:var(--text-2); }
+
+  /* Stats */
+  .past-stats { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:1.5rem; }
+  .stat-tile { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:14px; }
+  .stat-num { font-family:var(--font-display); font-size:1.8rem; color:var(--text-1); line-height:1; }
+  .stat-label { font-size:11px; color:var(--text-3); margin-top:4px; }
+  .stat-tile.rose .stat-num { color:var(--rose); }
+  .stat-tile.teal .stat-num { color:var(--teal); }
+
+  /* Date filter panel */
+  .date-filter-panel { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:1rem 1.25rem; margin-bottom:1.25rem; }
+  .date-filter-row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+  .date-filter-label { font-size:12px; color:var(--text-2); font-weight:500; white-space:nowrap; }
+  .date-input { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); padding:7px 10px; font-size:13px; color:var(--text-1); font-family:var(--font-mono); outline:none; transition:border-color var(--transition); cursor:pointer; }
+  .date-input:focus { border-color:var(--gold); }
+  .date-separator { font-size:12px; color:var(--text-3); }
+  .date-quick-btns { display:flex; gap:6px; flex-wrap:wrap; margin-top:10px; }
+  .dq-btn { padding:4px 12px; font-size:11px; border-radius:20px; border:1px solid var(--border); color:var(--text-3); background:transparent; cursor:pointer; font-family:var(--font-body); transition:all var(--transition); }
+  .dq-btn:hover { color:var(--text-1); border-color:var(--border-md); }
+  .dq-btn.active { background:var(--gold-dim); border-color:rgba(201,168,76,0.4); color:var(--gold); }
+
+  /* Toolbar */
+  .past-toolbar { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:1.25rem; }
+  .past-search { flex:1; min-width:180px; background:var(--card); border:1px solid var(--border); border-radius:var(--radius-sm); padding:9px 12px; font-size:13px; color:var(--text-1); font-family:var(--font-body); outline:none; transition:border-color var(--transition); }
+  .past-search:focus { border-color:var(--border-md); }
+  .past-search::placeholder { color:var(--text-3); }
+  .past-sort { background:var(--card); border:1px solid var(--border); border-radius:var(--radius-sm); padding:9px 10px; font-size:12px; color:var(--text-2); font-family:var(--font-body); outline:none; cursor:pointer; }
+
+  /* Emotion filter */
+  .emotion-filter-bar { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:1.25rem; }
+  .ef-pill { padding:5px 14px; font-size:12px; border-radius:20px; border:1px solid var(--border); color:var(--text-3); background:transparent; cursor:pointer; font-family:var(--font-body); transition:all var(--transition); }
+  .ef-pill:hover { color:var(--text-1); border-color:var(--border-md); }
+  .ef-pill.active { background:var(--rose-dim); border-color:rgba(224,123,123,0.35); color:var(--rose); }
+
+  .past-results-meta { font-size:12px; color:var(--text-3); margin-bottom:10px; font-family:var(--font-mono); }
+
+  /* ── Situation Cards ── */
+  .sit-log { display:flex; flex-direction:column; gap:10px; }
+  .sit-card { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; transition:border-color var(--transition); }
+  .sit-card:hover { border-color:var(--border-md); }
+  .sit-card-head { display:flex; align-items:flex-start; gap:12px; padding:14px 16px; cursor:pointer; }
+  .sit-card-meta { flex:1; min-width:0; }
+  .sit-card-title { font-size:14px; font-weight:500; color:var(--text-1); line-height:1.4; margin-bottom:5px; }
+  .sit-card-sub { font-size:12px; color:var(--text-3); display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  .sit-emotion-badge { font-size:11px; padding:2px 8px; border-radius:20px; border:1px solid rgba(224,123,123,0.3); background:var(--rose-dim); color:var(--rose); }
+  .sit-strategy-badge { font-size:11px; color:var(--teal); }
+  .sit-card-toggle { font-size:14px; color:var(--text-3); flex-shrink:0; transition:transform var(--transition); }
+  .sit-card.open .sit-card-toggle { transform:rotate(180deg); }
+  .sit-card-body { display:none; border-top:1px solid var(--border); padding:14px 16px; }
+  .sit-card.open .sit-card-body { display:block; }
+  .sit-body-section { margin-bottom:14px; }
+  .sit-body-section:last-child { margin-bottom:0; }
+  .sit-body-label { font-family:var(--font-mono); font-size:10px; color:var(--text-3); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:6px; }
+  .sit-body-text { font-size:13px; color:var(--text-2); line-height:1.65; }
+  .sit-strategy-area { width:100%; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); padding:10px 12px; font-size:13px; color:var(--text-1); font-family:var(--font-body); resize:none; outline:none; line-height:1.6; transition:border-color var(--transition); min-height:80px; }
+  .sit-strategy-area:focus { border-color:rgba(78,205,196,0.4); }
+  .sit-strategy-area::placeholder { color:var(--text-3); }
+  .sit-card-footer { display:flex; justify-content:space-between; align-items:center; margin-top:10px; gap:8px; flex-wrap:wrap; }
+  .sit-delete-btn { font-size:11px; color:var(--text-3); background:none; border:none; cursor:pointer; padding:4px 8px; border-radius:var(--radius-sm); font-family:var(--font-body); transition:color var(--transition); }
+  .sit-delete-btn:hover { color:var(--rose); }
+
+  /* Empty state */
+  .sit-empty { text-align:center; padding:3rem 1rem; background:var(--card); border:1px dashed var(--border); border-radius:var(--radius); color:var(--text-3); font-size:13px; line-height:1.8; }
+  .sit-empty-icon { font-size:32px; margin-bottom:12px; }
+
+  /* Sync indicator */
+  .sync-dot { display:inline-block; width:7px; height:7px; border-radius:50%; background:var(--text-3); margin-right:5px; vertical-align:middle; }
+  .sync-dot.syncing { background:var(--gold); animation:pulse 1s infinite; }
+  .sync-dot.ok { background:var(--green); }
+  .sync-dot.err { background:var(--rose); }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  /* ── Footer ── */
+  .footer-row { display:flex; justify-content:space-between; align-items:center; margin-top:2.5rem; padding-top:1.5rem; border-top:1px solid var(--border); flex-wrap:wrap; gap:8px; }
+  .footer-note { font-size:12px; color:var(--text-3); }
+  .footer-btns { display:flex; gap:8px; }
+
+  /* ── Toast ── */
+  .toast { position:fixed; bottom:1.5rem; right:1.5rem; background:#1E2333; border:1px solid var(--border-md); border-radius:var(--radius); padding:12px 18px; font-size:13px; color:var(--text-1); box-shadow:0 8px 32px rgba(0,0,0,0.4); opacity:0; transform:translateY(8px); transition:all 0.25s ease; pointer-events:none; z-index:100; max-width:300px; }
+  .toast.show { opacity:1; transform:translateY(0); }
+  .toast.success { border-color:rgba(107,191,142,0.35); }
+  .toast.error { border-color:rgba(224,123,123,0.35); }
+
+  hr.div { border:none; border-top:1px solid var(--border); margin:2rem 0; }
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+
+<!-- Tab Nav -->
+<nav class="tab-nav">
+  <div class="tab-nav-inner">
+    <button class="tab-btn active" onclick="switchTab('morning')">☀️ Morning</button>
+    <button class="tab-btn" onclick="switchTab('situations')">
+      🪞 Past Situations <span class="tab-badge" id="sit-badge">0</span>
+    </button>
+  </div>
+</nav>
+
+<!-- ══════ TAB 1: MORNING ══════ -->
+<div class="page active" id="page-morning">
+
+  <div class="header">
+    <div>
+      <div class="eyebrow" id="time-now">—</div>
+      <h1 class="greeting" id="greeting">Good morning</h1>
+      <div class="date-line" id="date-line">Loading…</div>
+    </div>
+    <div class="header-right">
+      <div class="big-num" id="day-num">—</div>
+      <div class="big-num-label">Day of year</div>
+    </div>
+  </div>
+
+  <div class="mantra-card">
+    <div class="mantra-text" id="mantra-text">"…"</div>
+    <div class="mantra-source" id="mantra-source"></div>
+  </div>
+
+  <hr class="div">
+
+  <div class="section-eyebrow">Three morning questions</div>
+  <div class="q-block">
+    <div class="q-item">
+      <div class="q-label">What is the one thing that, if I do it today, makes everything else easier?</div>
+      <textarea class="q-input" id="q1" rows="2" placeholder="Your top priority for today…"></textarea>
+    </div>
+    <div class="q-item">
+      <div class="q-label">How do I want to show up emotionally today?</div>
+      <textarea class="q-input" id="q2" rows="2" placeholder="Calm, focused, patient, present…"></textarea>
+    </div>
+    <div class="q-item">
+      <div class="q-label">What am I genuinely grateful for right now?</div>
+      <textarea class="q-input" id="q3" rows="2" placeholder="Name one specific thing…"></textarea>
+    </div>
+    <div class="save-row">
+      <span class="save-status" id="save-status"></span>
+      <button class="btn-sm" onclick="clearQuestions()">Clear</button>
+      <button class="btn-sm primary" onclick="saveToSheet()">Save to Sheet ↗</button>
+    </div>
+  </div>
+
+  <hr class="div">
+
+  <div class="section-eyebrow">Five pillars — tap to explore</div>
+  <div class="pillars-grid">
+    <button class="pillar-btn" onclick="togglePillar(0)"><span class="pillar-emoji">🧠</span><div class="pillar-label">Mental strength</div></button>
+    <button class="pillar-btn" onclick="togglePillar(1)"><span class="pillar-emoji">❤️</span><div class="pillar-label">Emotional control</div></button>
+    <button class="pillar-btn" onclick="togglePillar(2)"><span class="pillar-emoji">🎯</span><div class="pillar-label">Focus & clarity</div></button>
+    <button class="pillar-btn" onclick="togglePillar(3)"><span class="pillar-emoji">⚡</span><div class="pillar-label">Body & energy</div></button>
+    <button class="pillar-btn" onclick="togglePillar(4)"><span class="pillar-emoji">🤝</span><div class="pillar-label">Relationships</div></button>
+  </div>
+  <div class="pillar-detail-box" id="pillar-detail"></div>
+
+  <hr class="div">
+
+  <div class="section-eyebrow">Daily practice checklist</div>
+  <div class="checklist-block">
+    <div id="checklist-list"></div>
+    <div class="progress-bar-wrap">
+      <div class="progress-meta"><span>Today's practices</span><span class="progress-count" id="progress-text">0 / 8</span></div>
+      <div class="progress-track"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+    </div>
+  </div>
+
+  <div class="section-eyebrow">Anchor intentions</div>
+  <div class="grid-3" style="margin-bottom:2rem;">
+    <div class="intention-tile"><div class="intention-icon">⏸️</div><div class="intention-title">Pause before reacting</div><div class="intention-body">3 deep breaths before responding to anything charged today.</div></div>
+    <div class="intention-tile"><div class="intention-icon">🎯</div><div class="intention-title">One task, full focus</div><div class="intention-body">No tabs, no phone — one thing at a time during deep work.</div></div>
+    <div class="intention-tile"><div class="intention-icon">🌱</div><div class="intention-title">Choose the hard thing first</div><div class="intention-body">Do your most important work before email or meetings steal the morning.</div></div>
+  </div>
+
+  <hr class="div">
+
+  <div class="section-eyebrow">Log a situation to handle better</div>
+  <div class="sit-add-block">
+    <div class="sit-full">
+      <label class="sit-field-label">What happened? <span style="color:var(--text-3);font-weight:400;">(describe briefly)</span></label>
+      <textarea class="sit-input" id="sit-title" rows="2" placeholder="e.g. I raised my voice during a disagreement with a colleague over a deadline…"></textarea>
+    </div>
+    <div class="sit-fields">
+      <div class="sit-field">
+        <label class="sit-field-label">What triggered me?</label>
+        <textarea class="sit-input" id="sit-trigger" rows="3" placeholder="The words, tone, or circumstance that set me off…"></textarea>
+      </div>
+      <div class="sit-field">
+        <label class="sit-field-label">How did I actually respond?</label>
+        <textarea class="sit-input" id="sit-reaction" rows="3" placeholder="What I said, did, or felt in the moment…"></textarea>
+      </div>
+    </div>
+    <div class="sit-full">
+      <label class="sit-field-label">What emotion was dominant?</label>
+      <div class="emotion-pills" id="emotion-pills">
+        <button class="epill" onclick="selectEmotion(this)" data-val="anger">😤 Anger</button>
+        <button class="epill" onclick="selectEmotion(this)" data-val="anxiety">😰 Anxiety</button>
+        <button class="epill" onclick="selectEmotion(this)" data-val="frustration">😣 Frustration</button>
+        <button class="epill" onclick="selectEmotion(this)" data-val="hurt">💔 Hurt</button>
+        <button class="epill" onclick="selectEmotion(this)" data-val="shame">😔 Shame</button>
+        <button class="epill" onclick="selectEmotion(this)" data-val="overwhelm">🌊 Overwhelm</button>
+        <button class="epill" onclick="selectEmotion(this)" data-val="fear">😨 Fear</button>
+        <button class="epill" onclick="selectEmotion(this)" data-val="jealousy">👁 Jealousy</button>
+      </div>
+    </div>
+    <div class="sit-add-row">
+      <span class="sit-add-hint" id="sit-sync-status"><span class="sync-dot" id="sit-sync-dot"></span><span id="sit-sync-text">Saved locally + synced to Sheet</span></span>
+      <button class="btn-sm primary" onclick="addSituation()">Log situation ↗</button>
+    </div>
+  </div>
+
+  <div class="footer-row">
+    <div class="footer-note" id="streak-text"></div>
+    <div class="footer-btns">
+      <button class="btn-sm" onclick="switchTab('situations')">🪞 Past situations</button>
+      <button class="btn-sm" onclick="resetDay()">↺ Reset day</button>
+    </div>
+  </div>
+
+</div><!-- /page-morning -->
+
+
+<!-- ══════ TAB 2: PAST SITUATIONS ══════ -->
+<div class="page" id="page-situations">
+
+  <div class="past-header">
+    <div class="past-title">Past Situations</div>
+    <div class="past-sub">Everything you've logged — filter by date, emotion, or keyword.</div>
+  </div>
+
+  <div class="past-stats" id="past-stats">
+    <div class="stat-tile"><div class="stat-num" id="stat-total">0</div><div class="stat-label">Total logged</div></div>
+    <div class="stat-tile teal"><div class="stat-num" id="stat-strategy">0</div><div class="stat-label">Have strategies</div></div>
+    <div class="stat-tile rose"><div class="stat-num" id="stat-pending">0</div><div class="stat-label">Needs reflection</div></div>
+    <div class="stat-tile"><div class="stat-num" id="stat-emotion" style="font-size:1.3rem;">—</div><div class="stat-label">Top emotion</div></div>
+  </div>
+
+  <!-- Date filter -->
+  <div class="date-filter-panel">
+    <div class="date-filter-row">
+      <span class="date-filter-label">Filter by date:</span>
+      <input type="date" class="date-input" id="date-from" onchange="renderPast()">
+      <span class="date-separator">to</span>
+      <input type="date" class="date-input" id="date-to" onchange="renderPast()">
+      <button class="btn-sm" onclick="clearDateFilter()" style="font-size:11px;padding:5px 10px;">Clear</button>
+    </div>
+    <div class="date-quick-btns">
+      <button class="dq-btn active" data-range="all" onclick="setDateRange(this,'all')">All time</button>
+      <button class="dq-btn" data-range="today" onclick="setDateRange(this,'today')">Today</button>
+      <button class="dq-btn" data-range="week" onclick="setDateRange(this,'week')">This week</button>
+      <button class="dq-btn" data-range="month" onclick="setDateRange(this,'month')">This month</button>
+      <button class="dq-btn" data-range="3month" onclick="setDateRange(this,'3month')">Last 3 months</button>
+    </div>
+  </div>
+
+  <!-- Search + sort -->
+  <div class="past-toolbar">
+    <input class="past-search" id="past-search" type="text" placeholder="Search by keyword…" oninput="renderPast()">
+    <select class="past-sort" id="past-sort" onchange="renderPast()">
+      <option value="newest">Newest first</option>
+      <option value="oldest">Oldest first</option>
+      <option value="no-strategy">Needs strategy first</option>
+      <option value="has-strategy">Has strategy first</option>
+    </select>
+    <button class="btn-sm" onclick="exportCSV()">Export CSV</button>
+  </div>
+
+  <!-- Emotion filter -->
+  <div class="emotion-filter-bar">
+    <button class="ef-pill active" data-filter="all" onclick="setPastFilter(this)">All emotions</button>
+    <button class="ef-pill" data-filter="anger" onclick="setPastFilter(this)">😤 Anger</button>
+    <button class="ef-pill" data-filter="anxiety" onclick="setPastFilter(this)">😰 Anxiety</button>
+    <button class="ef-pill" data-filter="frustration" onclick="setPastFilter(this)">😣 Frustration</button>
+    <button class="ef-pill" data-filter="hurt" onclick="setPastFilter(this)">💔 Hurt</button>
+    <button class="ef-pill" data-filter="shame" onclick="setPastFilter(this)">😔 Shame</button>
+    <button class="ef-pill" data-filter="overwhelm" onclick="setPastFilter(this)">🌊 Overwhelm</button>
+    <button class="ef-pill" data-filter="fear" onclick="setPastFilter(this)">😨 Fear</button>
+    <button class="ef-pill" data-filter="jealousy" onclick="setPastFilter(this)">👁 Jealousy</button>
+  </div>
+
+  <div class="past-results-meta" id="past-results-meta"></div>
+  <div class="sit-log" id="past-sit-log"></div>
+
+  <div class="footer-row">
+    <div class="footer-note">Stored locally in your browser · synced to Google Sheets</div>
+    <button class="btn-sm" onclick="switchTab('morning')">← Back to morning</button>
+  </div>
+
+</div><!-- /page-situations -->
+
+<script>
+'use strict';
+
+/* ══ SHEET URL ══ */
+const SHEET_URL = 'https://script.google.com/macros/s/AKfycbxXiJWJmP1e1r9J9PCDk19I8Jv-ThVXRA4YTwNKlqACDPIpNaHzhaXCv3llcnY5Omjy/exec';
+
+/* POST to Apps Script — uses URLSearchParams (no CORS preflight) so Apps Script
+   receives the data via e.parameter.payload. Falls back to FormData, then no-cors. */
+async function postToSheet(data) {
+  const json = JSON.stringify(data);
+  // Primary: URLSearchParams — triggers no preflight, Apps Script reads e.parameter.payload
+  const body = new URLSearchParams();
+  body.append('payload', json);
+  try {
+    await fetch(SHEET_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: body.toString()
+    });
+    return;
+  } catch(e1) {}
+  // Fallback: FormData — also no preflight
+  try {
+    const fd = new FormData();
+    fd.append('payload', json);
+    await fetch(SHEET_URL, { method: 'POST', body: fd });
+    return;
+  } catch(e2) {}
+  // Last resort: no-cors fire-and-forget (opaque response, no confirmation)
+  fetch(SHEET_URL, {
+    method: 'POST', mode: 'no-cors',
+    headers: { 'Content-Type': 'application/json' },
+    body: json
+  }).catch(() => {});
+}
+
+/* ══ DATA ══ */
+const MANTRAS = [
+  { text: "You don't have to be perfect. You just have to begin.", source: "— James Clear" },
+  { text: "The mind is the athlete. Everything else follows.", source: "— David Goggins" },
+  { text: "Between stimulus and response, there is a space. In that space lies your power.", source: "— Viktor Frankl" },
+  { text: "Control what you can. Release what you cannot.", source: "— Stoic principle" },
+  { text: "Discipline is choosing what you want most over what you want right now.", source: "— Abraham Lincoln" },
+  { text: "Calm is a superpower.", source: "— Ancient Stoic wisdom" },
+  { text: "Today's actions are tomorrow's character.", source: "— Ryan Holiday" },
+  { text: "You are not your thoughts. You are the one who notices them.", source: "— Mindfulness principle" },
+  { text: "Amor fati — love everything that happens.", source: "— Marcus Aurelius" },
+  { text: "The obstacle is the way.", source: "— Marcus Aurelius" },
+  { text: "Small disciplines repeated with consistency lead to great achievements.", source: "— John Maxwell" },
+  { text: "Energy flows where attention goes.", source: "— Tony Robbins" },
+  { text: "Hard choices, easy life. Easy choices, hard life.", source: "— Jerzy Gregorek" },
+  { text: "What you do today is what matters most.", source: "— Jocko Willink" },
+  { text: "The best investment you can make is in yourself.", source: "— Warren Buffett" },
+];
+
+const PILLARS = [
+  { emoji:'🧠', name:'Mental strength', sub:'Build a resilient, sharp, unshakeable mind', items:[
+    { t:'Control only what is in your control', s:'Let go of outcomes. Focus entirely on your effort and attitude — the only two things that are truly yours.' },
+    { t:'Embrace discomfort as growth', s:'Every hard moment is a deposit into your future self. Lean in rather than shrink away.' },
+    { t:'Reject negative self-talk immediately', s:'Name the thought. Step back from it. Replace it with a neutral, factual statement about what is actually happening.' },
+    { t:'Focus on process, not results', s:'Show up fully. Results are a byproduct of consistent, quality action — not something to chase directly.' },
+    { t:'Think long-term, act present', s:'Ask: what can I do right now that serves the person I\'m becoming in 5 years?' },
+  ]},
+  { emoji:'❤️', name:'Emotional control', sub:'Stay regulated, grounded and intentional under pressure', items:[
+    { t:'Pause before reacting', s:'Three deep breaths before responding to anything emotionally charged. The pause is where you reclaim your power.' },
+    { t:'Name the emotion — don\'t become it', s:'\'I notice I feel frustrated\' — not \'I am frustrated.\' Labels create distance and restore choice.' },
+    { t:'Respond to what is, not what you fear', s:'Stay in the present reality. Catastrophising borrows suffering from a future that may never arrive.' },
+    { t:'Set the emotional tone first', s:'Your inner state radiates outward. People read your energy before your words. Choose it consciously every morning.' },
+    { t:'Forgive quickly — especially yourself', s:'Resentment drains mental RAM. Release it not for others but because you need the space back for something better.' },
+  ]},
+  { emoji:'🎯', name:'Focus & clarity', sub:'Protect your attention — it is your most finite resource', items:[
+    { t:'One task at a time, always', s:'Multitasking is a myth. Every task switch costs you cognitive energy and accuracy. Guard your single-pointed attention.' },
+    { t:'Remove friction before you start', s:'Set up your environment the night before. Eliminate the small decisions that make mornings feel like resistance.' },
+    { t:'Kill distractions before they start', s:'Phone in another room, notifications off, browser tabs closed. Distraction begins with a single notification.' },
+    { t:'Time-block your most important work first', s:'Protect 90 minutes each morning before meetings or messages touch you. This is your highest-leverage window of the day.' },
+    { t:'Revisit your goals weekly', s:'What you track, you tend. A goal you don\'t look at is a goal you\'ll drift from.' },
+  ]},
+  { emoji:'⚡', name:'Body & energy', sub:'Your physical state is the foundation everything rests on', items:[
+    { t:'Move your body before you touch your phone', s:'Even 10 minutes of movement sets a different neurological baseline for the entire day.' },
+    { t:'Hydrate immediately on waking', s:'Your brain is ~75% water. You wake already dehydrated. Water before coffee, every day.' },
+    { t:'Protect your sleep ruthlessly', s:'No screen 1 hour before bed. Sleep debt destroys decision-making and emotional regulation alike.' },
+    { t:'Eat to fuel, not to fill', s:'Food is information for your cells. Every meal is a choice about how sharp you\'ll be in 2 hours.' },
+    { t:'Breathe on purpose', s:'Box breathing — 4 in, hold 4, out 4, hold 4 — activates your parasympathetic system in under 2 minutes.' },
+  ]},
+  { emoji:'🤝', name:'Relationships', sub:'The quality of your life is the quality of your connections', items:[
+    { t:'Listen more than you speak today', s:'Most conflict is a failure to feel heard. Offer that gift first, before making your own point.' },
+    { t:'Assume positive intent by default', s:'Before attributing malice, consider circumstance. People are mostly doing their best with what they have.' },
+    { t:'Express appreciation specifically and out loud', s:'Tell someone one precise thing you value about them today. Vague praise is wallpaper. Specificity lands.' },
+    { t:'Set boundaries with warmth, not walls', s:'You can say no to a request while saying yes to the person. Healthy limits protect both of you.' },
+    { t:'Be fully present with whoever is in front of you', s:'Phone away. Eyes up. Half-presence is invisible to you and obvious to them.' },
+  ]},
+];
+
+const CHECKLIST = [
+  { text:'Drank a full glass of water on waking', tag:'body', key:'water' },
+  { text:'Moved my body before checking my phone', tag:'body', key:'move' },
+  { text:'Completed the three morning questions', tag:'mind', key:'questions' },
+  { text:'Named my one priority for today', tag:'focus', key:'priority' },
+  { text:'Set my emotional intention for the day', tag:'emotion', key:'emotion' },
+  { text:'No reactive screen in first 30 minutes', tag:'focus', key:'no_screen' },
+  { text:'Said something kind or grateful out loud', tag:'heart', key:'kind' },
+  { text:'Took 3 intentional deep breaths', tag:'body', key:'breathe' },
+];
+
+const EMOJI_MAP = { anger:'😤', anxiety:'😰', frustration:'😣', hurt:'💔', shame:'😔', overwhelm:'🌊', fear:'😨', jealousy:'👁' };
+
+/* ══ STATE ══ */
+let activePillar = null;
+const checked = {};
+let situations = [];
+let selectedEmotion = '';
+let pastEmotionFilter = 'all';
+
+/* ══ TABS ══ */
+function switchTab(tab) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + tab).classList.add('active');
+  document.querySelectorAll('.tab-btn')[tab === 'morning' ? 0 : 1].classList.add('active');
+  if (tab === 'situations') { renderPastStats(); renderPast(); }
+  window.scrollTo({ top:0, behavior:'smooth' });
+}
+
+/* ══ INIT ══ */
+function init() {
+  const now = new Date();
+  const h = now.getHours();
+  document.getElementById('greeting').textContent = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+  document.getElementById('time-now').textContent = now.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit', hour12:true });
+  document.getElementById('date-line').textContent = now.toLocaleDateString('en-IN', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+  const day = Math.floor((now - new Date(now.getFullYear(), 0, 0)) / 86400000);
+  document.getElementById('day-num').textContent = day;
+  const m = MANTRAS[day % MANTRAS.length];
+  document.getElementById('mantra-text').textContent = '\u201C' + m.text + '\u201D';
+  document.getElementById('mantra-source').textContent = m.source;
+  loadTodayData();
+  renderChecklist();
+  updateStreak();
+  loadSituations();
+  updateBadge();
+}
+
+/* ══ PILLARS ══ */
+function togglePillar(id) {
+  const btns = document.querySelectorAll('.pillar-btn');
+  const box = document.getElementById('pillar-detail');
+  if (activePillar === id) {
+    activePillar = null; btns.forEach(b => b.classList.remove('active'));
+    box.classList.remove('open'); box.innerHTML = ''; return;
+  }
+  activePillar = id; btns.forEach(b => b.classList.remove('active')); btns[id].classList.add('active');
+  const p = PILLARS[id];
+  box.innerHTML = '<div class="detail-head"><div class="detail-head-emoji">' + p.emoji + '</div><div><div class="detail-head-title">' + p.name + '</div><div class="detail-head-sub">' + p.sub + '</div></div></div>' +
+    p.items.map(i => '<div class="principle-row"><div class="principle-dot"></div><div><div class="principle-title">' + i.t + '</div><div class="principle-sub">' + i.s + '</div></div></div>').join('');
+  box.classList.add('open');
+  setTimeout(() => box.scrollIntoView({ behavior:'smooth', block:'nearest' }), 50);
+}
+
+/* ══ CHECKLIST ══ */
+function renderChecklist() {
+  const list = document.getElementById('checklist-list'); list.innerHTML = '';
+  CHECKLIST.forEach(item => {
+    const done = !!checked[item.key];
+    const div = document.createElement('div');
+    div.className = 'check-row' + (done ? ' done' : '');
+    div.onclick = () => toggleCheck(item.key);
+    div.innerHTML = '<div class="check-box"><span class="check-tick">✓</span></div><div class="check-text">' + item.text + '</div><span class="check-tag">' + item.tag + '</span>';
+    list.appendChild(div);
+  });
+  updateProgress();
+}
+function toggleCheck(key) { checked[key] = !checked[key]; saveTodayData(); renderChecklist(); }
+function updateProgress() {
+  const done = CHECKLIST.filter(i => checked[i.key]).length;
+  document.getElementById('progress-text').textContent = done + ' / ' + CHECKLIST.length;
+  document.getElementById('progress-fill').style.width = Math.round(done / CHECKLIST.length * 100) + '%';
+}
+
+/* ══ PERSISTENCE ══ */
+function todayKey() {
+  const d = new Date();
+  return 'morning_' + d.getFullYear() + '_' + (d.getMonth()+1) + '_' + d.getDate();
+}
+function saveTodayData() {
+  localStorage.setItem(todayKey(), JSON.stringify({
+    checked, dateISO: isoDate(new Date()),
+    q1: document.getElementById('q1').value,
+    q2: document.getElementById('q2').value,
+    q3: document.getElementById('q3').value,
+  }));
+  updateStreak();
+}
+function loadTodayData() {
+  try {
+    const raw = localStorage.getItem(todayKey()); if (!raw) return;
+    const data = JSON.parse(raw);
+    Object.assign(checked, data.checked || {});
+    if (data.q1) document.getElementById('q1').value = data.q1;
+    if (data.q2) document.getElementById('q2').value = data.q2;
+    if (data.q3) document.getElementById('q3').value = data.q3;
+  } catch(e) {}
+}
+function clearQuestions() { ['q1','q2','q3'].forEach(id => document.getElementById(id).value = ''); saveTodayData(); }
+function resetDay() {
+  if (!confirm('Reset all of today\'s progress? This cannot be undone.')) return;
+  CHECKLIST.forEach(i => { checked[i.key] = false; });
+  clearQuestions(); renderChecklist(); showToast('Day reset. Fresh start. 🌅');
+}
+
+/* ══ STREAK ══ */
+function updateStreak() {
+  let streak = 0; const today = new Date();
+  for (let i = 0; i < 365; i++) {
+    const d = new Date(today); d.setDate(today.getDate() - i);
+    const raw = localStorage.getItem('morning_' + d.getFullYear() + '_' + (d.getMonth()+1) + '_' + d.getDate());
+    if (!raw) break;
+    try { const data = JSON.parse(raw); if (CHECKLIST.filter(x => data.checked && data.checked[x.key]).length > 0) streak++; else if (i > 0) break; } catch(e) { break; }
+  }
+  document.getElementById('streak-text').textContent = streak > 1 ? '🔥 ' + streak + '-day streak — keep going.' : streak === 1 ? '⭐ First step taken today.' : 'Start your first practice today.';
+}
+
+/* ══ SAVE MORNING TO SHEET ══ */
+async function saveToSheet() {
+  const q1 = document.getElementById('q1').value.trim();
+  const q2 = document.getElementById('q2').value.trim();
+  const q3 = document.getElementById('q3').value.trim();
+  if (!q1 && !q2 && !q3) { showToast('Fill in at least one question first.', 'error'); return; }
+  saveTodayData();
+  setStatus('Saving…', null);
+  const now = new Date();
+  const payload = {
+    sheet: 'Morning Reflections',
+    date: now.toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' }),
+    dateISO: isoDate(now),
+    time: now.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit', hour12:true }),
+    priority: q1,
+    emotional_intention: q2,
+    gratitude: q3,
+    checklist_done: CHECKLIST.filter(i => checked[i.key]).map(i => i.text).join(' | '),
+    score: CHECKLIST.filter(i => checked[i.key]).length + '/' + CHECKLIST.length,
+  };
+  try {
+    await postToSheet(payload);
+    setStatus('Saved to Sheet ✓', true);
+    showToast('Morning reflection logged to Sheet ✓', 'success');
+  } catch(e) {
+    setStatus('Network error — saved locally only.', false);
+    showToast('Could not reach Sheet. Saved locally.', 'error');
+  }
+}
+function setStatus(msg, ok) {
+  const el = document.getElementById('save-status');
+  el.textContent = msg; el.className = 'save-status' + (ok === true ? ' ok' : ok === false ? ' err' : '');
+}
+
+/* ══ SITUATIONS — CORE ══ */
+function loadSituations() {
+  try { const raw = localStorage.getItem('morning_situations'); if (raw) situations = JSON.parse(raw); } catch(e) { situations = []; }
+}
+function saveSituations() { localStorage.setItem('morning_situations', JSON.stringify(situations)); }
+
+function selectEmotion(el) {
+  document.querySelectorAll('.epill').forEach(p => p.classList.remove('sel'));
+  selectedEmotion = (selectedEmotion === el.dataset.val) ? '' : el.dataset.val;
+  if (selectedEmotion) el.classList.add('sel');
+}
+
+function updateBadge() { document.getElementById('sit-badge').textContent = situations.length; }
+
+async function addSituation() {
+  const title = document.getElementById('sit-title').value.trim();
+  if (!title) { showToast('Describe the situation first.', 'error'); return; }
+  const now = new Date();
+  const sit = {
+    id: Date.now(),
+    dateISO: isoDate(now),
+    date: now.toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' }),
+    timestamp: Date.now(),
+    title,
+    trigger: document.getElementById('sit-trigger').value.trim(),
+    reaction: document.getElementById('sit-reaction').value.trim(),
+    emotion: selectedEmotion,
+    strategy: '',
+  };
+  situations.unshift(sit);
+  saveSituations();
+  updateBadge();
+
+  // clear form
+  document.getElementById('sit-title').value = '';
+  document.getElementById('sit-trigger').value = '';
+  document.getElementById('sit-reaction').value = '';
+  selectedEmotion = '';
+  document.querySelectorAll('.epill').forEach(p => p.classList.remove('sel'));
+
+  // sync to sheet
+  setSitSyncStatus('syncing');
+  const payload = {
+    sheet: 'Situations',
+    date: sit.date,
+    dateISO: sit.dateISO,
+    title: sit.title,
+    trigger: sit.trigger,
+    reaction: sit.reaction,
+    emotion: sit.emotion,
+    strategy: '',
+  };
+  try {
+    await postToSheet(payload);
+    setSitSyncStatus('ok');
+    showToast('Situation logged + synced to Sheet ✓', 'success');
+  } catch(e) {
+    setSitSyncStatus('err');
+    showToast('Saved locally — Sheet sync failed.', 'error');
+  }
+}
+
+function setSitSyncStatus(state) {
+  const dot = document.getElementById('sit-sync-dot');
+  const txt = document.getElementById('sit-sync-text');
+  dot.className = 'sync-dot ' + state;
+  txt.textContent = state === 'syncing' ? 'Syncing to Sheet…' : state === 'ok' ? 'Synced to Sheet ✓' : 'Saved locally (Sheet unreachable)';
+}
+
+/* ══ SITUATION CARD HTML ══ */
+function sitCardHTML(sit) {
+  const badge = sit.emotion ? '<span class="sit-emotion-badge">' + (EMOJI_MAP[sit.emotion]||'') + ' ' + sit.emotion + '</span>' : '';
+  const stratBadge = sit.strategy ? '<span class="sit-strategy-badge">✓ strategy</span>' : '';
+  return '<div class="sit-card" id="psc-' + sit.id + '">' +
+    '<div class="sit-card-head" onclick="toggleSitCard(' + sit.id + ')">' +
+      '<div class="sit-card-meta">' +
+        '<div class="sit-card-title">' + escHtml(sit.title) + '</div>' +
+        '<div class="sit-card-sub">' + sit.date + badge + stratBadge + '</div>' +
+      '</div>' +
+      '<div class="sit-card-toggle">▾</div>' +
+    '</div>' +
+    '<div class="sit-card-body">' +
+      (sit.trigger ? '<div class="sit-body-section"><div class="sit-body-label">What triggered it</div><div class="sit-body-text">' + escHtml(sit.trigger) + '</div></div>' : '') +
+      (sit.reaction ? '<div class="sit-body-section"><div class="sit-body-label">How I responded</div><div class="sit-body-text">' + escHtml(sit.reaction) + '</div></div>' : '') +
+      '<div class="sit-body-section">' +
+        '<div class="sit-body-label">Better ways to handle this next time</div>' +
+        '<textarea class="sit-strategy-area" id="strat-' + sit.id + '" rows="4" placeholder="Specific scripts, reframes, or techniques you\'ll use next time…">' + escHtml(sit.strategy) + '</textarea>' +
+        '<div class="sit-card-footer">' +
+          '<button class="sit-delete-btn" onclick="deleteSituation(' + sit.id + ')">🗑 Delete</button>' +
+          '<button class="btn-sm teal" style="font-size:12px;padding:6px 14px;" onclick="saveStrategy(' + sit.id + ')">Save strategy ✓</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>' +
+  '</div>';
+}
+
+function toggleSitCard(id) {
+  const card = document.getElementById('psc-' + id);
+  if (card) card.classList.toggle('open');
+}
+
+async function saveStrategy(id) {
+  const area = document.getElementById('strat-' + id); if (!area) return;
+  const sit = situations.find(s => s.id === id); if (!sit) return;
+  sit.strategy = area.value.trim();
+  saveSituations();
+  // update sheet row by logging an update entry
+  try {
+    await postToSheet({ sheet: 'Situations', action: 'update_strategy', dateISO: sit.dateISO, title: sit.title, strategy: sit.strategy });
+  } catch(e) {}
+  renderPast();
+  setTimeout(() => { const c = document.getElementById('psc-' + id); if (c) c.classList.add('open'); }, 30);
+  showToast('Strategy saved ✓', 'success');
+}
+
+function deleteSituation(id) {
+  if (!confirm('Delete this situation? This cannot be undone.')) return;
+  situations = situations.filter(s => s.id !== id);
+  saveSituations(); updateBadge(); renderPastStats(); renderPast();
+  showToast('Situation deleted.', '');
+}
+
+/* ══ DATE HELPERS ══ */
+function isoDate(d) {
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+function parseISODate(str) {
+  if (!str) return null;
+  const [y,m,d] = str.split('-').map(Number); return new Date(y, m-1, d);
+}
+
+/* ══ PAST SITUATIONS TAB ══ */
+function renderPastStats() {
+  const total = situations.length;
+  const withStrat = situations.filter(s => s.strategy).length;
+  document.getElementById('stat-total').textContent = total;
+  document.getElementById('stat-strategy').textContent = withStrat;
+  document.getElementById('stat-pending').textContent = total - withStrat;
+  const freq = {};
+  situations.forEach(s => { if (s.emotion) freq[s.emotion] = (freq[s.emotion]||0)+1; });
+  const top = Object.entries(freq).sort((a,b)=>b[1]-a[1])[0];
+  document.getElementById('stat-emotion').textContent = top ? (EMOJI_MAP[top[0]]||'') + ' ' + top[0] : '—';
+}
+
+function setDateRange(el, range) {
+  document.querySelectorAll('.dq-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  const now = new Date();
+  const from = document.getElementById('date-from');
+  const to = document.getElementById('date-to');
+  to.value = isoDate(now);
+  if (range === 'all') { from.value = ''; to.value = ''; }
+  else if (range === 'today') { from.value = isoDate(now); }
+  else if (range === 'week') { const d = new Date(now); d.setDate(d.getDate()-6); from.value = isoDate(d); }
+  else if (range === 'month') { const d = new Date(now); d.setDate(d.getDate()-29); from.value = isoDate(d); }
+  else if (range === '3month') { const d = new Date(now); d.setDate(d.getDate()-89); from.value = isoDate(d); }
+  renderPast();
+}
+
+function clearDateFilter() {
+  document.getElementById('date-from').value = '';
+  document.getElementById('date-to').value = '';
+  document.querySelectorAll('.dq-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector('.dq-btn[data-range="all"]').classList.add('active');
+  renderPast();
+}
+
+function setPastFilter(el) {
+  document.querySelectorAll('.ef-pill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  pastEmotionFilter = el.dataset.filter;
+  renderPast();
+}
+
+function renderPast() {
+  const search = (document.getElementById('past-search').value || '').toLowerCase().trim();
+  const sort = document.getElementById('past-sort').value;
+  const fromVal = document.getElementById('date-from').value;
+  const toVal = document.getElementById('date-to').value;
+  const fromDate = fromVal ? parseISODate(fromVal) : null;
+  const toDate = toVal ? parseISODate(toVal) : null;
+  if (toDate) toDate.setHours(23,59,59);
+
+  let list = situations.slice();
+
+  // date filter
+  if (fromDate || toDate) {
+    list = list.filter(s => {
+      const d = s.dateISO ? parseISODate(s.dateISO) : null;
+      if (!d) return true;
+      if (fromDate && d < fromDate) return false;
+      if (toDate && d > toDate) return false;
+      return true;
+    });
+  }
+
+  // emotion filter
+  if (pastEmotionFilter !== 'all') list = list.filter(s => s.emotion === pastEmotionFilter);
+
+  // keyword search
+  if (search) list = list.filter(s => (s.title + s.trigger + s.reaction + s.strategy).toLowerCase().includes(search));
+
+  // sort
+  if (sort === 'oldest') list.sort((a,b) => a.timestamp - b.timestamp);
+  else if (sort === 'newest') list.sort((a,b) => b.timestamp - a.timestamp);
+  else if (sort === 'no-strategy') list.sort((a,b) => (a.strategy?1:0) - (b.strategy?1:0));
+  else if (sort === 'has-strategy') list.sort((a,b) => (b.strategy?1:0) - (a.strategy?1:0));
+
+  const meta = document.getElementById('past-results-meta');
+  meta.textContent = list.length + ' of ' + situations.length + ' situation' + (situations.length !== 1 ? 's' : '');
+
+  const log = document.getElementById('past-sit-log');
+  if (list.length === 0) {
+    log.innerHTML = '<div class="sit-empty"><div class="sit-empty-icon">🪞</div>' +
+      (situations.length === 0
+        ? 'Nothing logged yet.<br>Head to the Morning tab and record your first situation.<br><br><button class="btn-sm" onclick="switchTab(\'morning\')">← Go to morning</button>'
+        : 'No situations match your current filters.<br>Try clearing the date range or changing the emotion filter.') +
+      '</div>';
+    return;
+  }
+  log.innerHTML = list.map(s => sitCardHTML(s)).join('');
+}
+
+/* ══ EXPORT ══ */
+function exportCSV() {
+  if (!situations.length) { showToast('Nothing to export yet.', 'error'); return; }
+  const fromVal = document.getElementById('date-from').value;
+  const toVal = document.getElementById('date-to').value;
+  const fromDate = fromVal ? parseISODate(fromVal) : null;
+  const toDate = toVal ? parseISODate(toVal) : null;
+  if (toDate) toDate.setHours(23,59,59);
+  let list = situations.slice();
+  if (fromDate || toDate) {
+    list = list.filter(s => {
+      const d = s.dateISO ? parseISODate(s.dateISO) : null; if (!d) return true;
+      if (fromDate && d < fromDate) return false;
+      if (toDate && d > toDate) return false;
+      return true;
+    });
+  }
+  if (pastEmotionFilter !== 'all') list = list.filter(s => s.emotion === pastEmotionFilter);
+  const header = ['Date','Situation','Trigger','Reaction','Emotion','Strategy'];
+  const rows = list.map(s => [s.date, s.title, s.trigger||'', s.reaction||'', s.emotion||'', s.strategy||''].map(v => '"' + String(v).replace(/"/g,'""') + '"').join(','));
+  const csv = [header.join(','), ...rows].join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = 'situations-' + isoDate(new Date()) + '.csv';
+  a.click();
+  showToast('CSV exported ✓', 'success');
+}
+
+/* ══ UTILS ══ */
+function escHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+let toastTimer = null;
+function showToast(msg, type) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.className = 'toast show' + (type ? ' '+type : '');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('show'), 3500);
+}
+
+/* ══ AUTO-SAVE QUESTIONS ══ */
+['q1','q2','q3'].forEach(id => {
+  document.getElementById(id).addEventListener('input', () => {
+    clearTimeout(window._saveTimer);
+    window._saveTimer = setTimeout(saveTodayData, 800);
+  });
+});
+
+/* ══ START ══ */
+init();
+setInterval(() => {
+  document.getElementById('time-now').textContent = new Date().toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit', hour12:true });
+}, 60000);
+</script>
+</body>
+</html>
