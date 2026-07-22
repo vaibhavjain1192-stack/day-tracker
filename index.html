@@ -1,207 +1,1060 @@
-/* ═══════════════════════════════════════════════
-   MORNING DASHBOARD — Google Apps Script
-   Handles both POST (write) and GET (read today)
-═══════════════════════════════════════════════ */
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Morning Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0F1117;--surface:#181C27;--card:#1E2333;
+  --border:rgba(255,255,255,0.07);--border-md:rgba(255,255,255,0.13);
+  --text-1:#F0EEE8;--text-2:#9A97A0;--text-3:#5C5A64;
+  --gold:#C9A84C;--gold-dim:rgba(201,168,76,0.11);--gold-glow:rgba(201,168,76,0.05);
+  --teal:#4ECDC4;--teal-dim:rgba(78,205,196,0.09);
+  --rose:#E07B7B;--rose-dim:rgba(224,123,123,0.09);
+  --green:#6BBF8E;
+  --rsm:6px;--r:10px;--rlg:14px;
+  --fd:'DM Serif Display',Georgia,serif;
+  --fb:'Inter',system-ui,sans-serif;
+  --fm:'JetBrains Mono',monospace;
+  --tr:0.16s ease
+}
+html{font-size:15px}
+body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:1.55;min-height:100vh;-webkit-font-smoothing:antialiased}
 
-/* ── GET: read today's data back to the dashboard ── */
-function doGet(e) {
-  const action = e.parameter.action;
+/* NAV */
+.nav{position:sticky;top:0;z-index:40;background:rgba(15,17,23,0.95);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);padding:0 1.25rem}
+.nav-inner{max-width:860px;margin:0 auto;display:flex;align-items:center}
+.tab{padding:.7rem 1rem;font-size:12px;font-weight:500;font-family:var(--fb);color:var(--text-3);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;transition:color var(--tr),border-color var(--tr);display:flex;align-items:center;gap:5px;margin-bottom:-1px;white-space:nowrap}
+.tab:hover{color:var(--text-2)}
+.tab.on{color:var(--text-1);border-bottom-color:var(--gold)}
+.badge{font-size:10px;font-family:var(--fm);background:var(--rose-dim);color:var(--rose);border:1px solid rgba(224,123,123,0.22);border-radius:20px;padding:1px 5px;min-width:18px;text-align:center}
 
-  if (action === 'getToday') {
-    const dateISO = e.parameter.date;
-    if (!dateISO) return jsonOut({ status: 'error', message: 'No date provided' });
+/* PAGES */
+.pg{max-width:860px;margin:0 auto;padding:1.5rem 1.25rem 3rem;display:none}
+.pg.on{display:block}
 
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
+/* HEADER */
+.hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1rem;gap:1rem}
+.hdr-l{}
+.eyebrow{font-family:var(--fm);font-size:10px;color:var(--gold);letter-spacing:0.13em;text-transform:uppercase;margin-bottom:4px}
+.greeting{font-family:var(--fd);font-size:clamp(1.6rem,4vw,2.2rem);font-weight:400;color:var(--text-1);line-height:1.1}
+.dateline{font-size:12px;color:var(--text-2);margin-top:4px}
+.hdr-r{text-align:right;flex-shrink:0}
+.daynum{font-family:var(--fd);font-size:2.6rem;color:var(--gold);line-height:1}
+.daynum-lbl{font-size:10px;color:var(--text-3);letter-spacing:0.08em;text-transform:uppercase;margin-top:1px}
 
-    // ── Morning Reflections ──
-    const mrSheet = ss.getSheetByName('Morning Reflections');
-    let morningData = null;
-    if (mrSheet && mrSheet.getLastRow() > 1) {
-      const rows = mrSheet.getDataRange().getValues();
-      // Col index: 0=Date, 1=DateISO, 2=Time, 3=Priority, 4=Emotional Intention, 5=Gratitude, 6=Checklist Done, 7=Score
-      for (let i = rows.length - 1; i >= 1; i--) {
-        if (String(rows[i][1]).trim() === dateISO) {
-          morningData = {
-            date:                rows[i][0],
-            dateISO:             rows[i][1],
-            time:                rows[i][2],
-            priority:            rows[i][3],
-            emotional_intention: rows[i][4],
-            gratitude:           rows[i][5],
-            checklist_done:      rows[i][6],
-            score:               rows[i][7],
-          };
-          break; // take the most recent entry for today
-        }
-      }
-    }
+/* MANTRA */
+.mantra{background:var(--gold-glow);border:1px solid rgba(201,168,76,0.15);border-left:2px solid var(--gold);border-radius:0 var(--r) var(--r) 0;padding:.75rem 1rem;margin-bottom:1rem}
+.mantra-q{font-family:var(--fd);font-size:1rem;font-style:italic;color:var(--text-1);line-height:1.55}
+.mantra-src{font-size:11px;color:var(--text-3);margin-top:4px}
 
-    // ── Situations for today ──
-    const sitSheet = ss.getSheetByName('Situations');
-    const todaySituations = [];
-    if (sitSheet && sitSheet.getLastRow() > 1) {
-      const rows = sitSheet.getDataRange().getValues();
-      // Col index: 0=Date, 1=DateISO, 2=Situation, 3=Trigger, 4=Reaction, 5=Emotion, 6=Strategy, 7=Logged At
-      for (let i = 1; i < rows.length; i++) {
-        if (String(rows[i][1]).trim() === dateISO) {
-          todaySituations.push({
-            date:     rows[i][0],
-            dateISO:  rows[i][1],
-            title:    rows[i][2],
-            trigger:  rows[i][3],
-            reaction: rows[i][4],
-            emotion:  rows[i][5],
-            strategy: rows[i][6],
-            loggedAt: rows[i][7],
-          });
-        }
-      }
-    }
+/* SECTION LABEL */
+.lbl{font-family:var(--fm);font-size:9px;color:var(--text-3);letter-spacing:0.13em;text-transform:uppercase;margin-bottom:8px;margin-top:1.25rem;display:flex;align-items:center;gap:8px}
+.lbl-line{flex:1;height:1px;background:var(--border)}
 
-    return jsonOut({
-      status: 'ok',
-      morning: morningData,
-      situations: todaySituations,
-    });
-  }
+/* BUTTONS */
+.btn{padding:5px 13px;font-size:11px;font-weight:500;font-family:var(--fb);background:transparent;color:var(--text-2);border:1px solid var(--border-md);border-radius:var(--rsm);cursor:pointer;transition:var(--tr)}
+.btn:hover{background:var(--surface);color:var(--text-1)}
+.btn.gold{background:var(--gold);color:#0F1117;border-color:var(--gold)}
+.btn.gold:hover{background:#d4b55a}
+.btn.teal{background:var(--teal-dim);color:var(--teal);border-color:rgba(78,205,196,0.28)}
+.btn.teal:hover{background:rgba(78,205,196,0.16)}
+.btn.ghost{background:none;border:none;color:var(--text-3);padding:4px 8px;font-size:11px}
+.btn.ghost:hover{color:var(--text-1)}
 
-  // Default: health check
-  return jsonOut({ status: 'alive', ts: new Date().toISOString() });
+/* ── TODAY'S GOALS (filled state) ── */
+.goals-card{background:var(--card);border:1px solid var(--border);border-radius:var(--rlg);overflow:hidden}
+.goals-card-head{display:flex;justify-content:space-between;align-items:center;padding:.75rem 1rem;border-bottom:1px solid var(--border)}
+.goals-card-title{font-size:12px;font-weight:600;color:var(--text-1)}
+.goals-card-date{font-size:11px;color:var(--text-3);font-family:var(--fm)}
+.goals-body{padding:.875rem 1rem}
+.goal-row{display:flex;gap:10px;padding:7px 0;border-bottom:1px solid var(--border)}
+.goal-row:last-child{border-bottom:none}
+.goal-icon{font-size:16px;flex-shrink:0;width:20px;text-align:center;margin-top:1px}
+.goal-col{}
+.goal-label{font-size:10px;font-family:var(--fm);color:var(--text-3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:2px}
+.goal-value{font-size:13px;color:var(--text-1);line-height:1.45}
+.goals-footer{display:flex;justify-content:space-between;align-items:center;padding:.6rem 1rem;border-top:1px solid var(--border);background:var(--surface)}
+.goals-synced{font-size:11px;color:var(--text-3)}
+.goals-synced.ok{color:var(--green)}
+
+/* ── QUESTION FORM ── */
+.q-wrap{background:var(--card);border:1px solid var(--border);border-radius:var(--rlg);padding:1rem}
+.q-item{margin-bottom:.875rem}
+.q-item:last-of-type{margin-bottom:0}
+.q-lbl{font-size:11px;color:var(--text-2);margin-bottom:5px;font-weight:500}
+.q-in{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--rsm);padding:7px 10px;font-size:13px;color:var(--text-1);font-family:var(--fb);resize:none;outline:none;line-height:1.5;transition:border-color var(--tr)}
+.q-in:focus{border-color:rgba(201,168,76,0.38)}
+.q-in::placeholder{color:var(--text-3)}
+.q-actions{display:flex;justify-content:flex-end;align-items:center;gap:6px;margin-top:.75rem}
+.save-st{font-size:11px;color:var(--text-3)}
+.save-st.ok{color:var(--green)}
+.save-st.err{color:var(--rose)}
+
+@media(max-width:580px){
+  .sit-flds{grid-template-columns:1fr!important}
+  .past-stats{grid-template-columns:repeat(2,1fr)!important}
+  .hdr{flex-wrap:wrap}
 }
 
+/* PILLARS — vertical list + horizontal detail panel */
+.pillars-wrap{display:flex;gap:10px;align-items:flex-start}
+.pillars-list{display:flex;flex-direction:column;gap:5px;flex-shrink:0;width:148px}
+.pillar{display:flex;align-items:center;gap:9px;background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:9px 12px;cursor:pointer;transition:all var(--tr);text-align:left;width:100%}
+.pillar:hover{border-color:var(--border-md);background:#222840}
+.pillar.on{border-color:var(--gold);background:var(--gold-dim)}
+.pillar-e{font-size:17px;flex-shrink:0;line-height:1}
+.pillar-lbl{font-size:11px;color:var(--text-2);font-weight:500;line-height:1.2}
+.pillar.on .pillar-lbl{color:var(--gold)}
+.pillar-arr{margin-left:auto;font-size:10px;color:var(--text-3);transition:transform var(--tr);flex-shrink:0}
+.pillar.on .pillar-arr{color:var(--gold);transform:rotate(90deg)}
+.pillar-detail{flex:1;min-width:0;background:var(--card);border:1px solid var(--border);border-radius:var(--rlg);padding:1rem;display:none}
+.pillar-detail.on{display:block}
+.p-head{display:flex;gap:10px;align-items:flex-start;margin-bottom:.875rem}
+.p-e{font-size:22px;line-height:1}
+.p-title{font-family:var(--fd);font-size:1.05rem;color:var(--text-1)}
+.p-sub{font-size:11px;color:var(--text-2);margin-top:2px}
+.p-row{display:flex;gap:9px;padding:8px 0;border-bottom:1px solid var(--border)}
+.p-row:last-child{border-bottom:none}
+.p-dot{width:5px;height:5px;border-radius:50%;background:var(--gold);flex-shrink:0;margin-top:5px}
+.p-t{font-size:12px;font-weight:500;color:var(--text-1)}
+.p-s{font-size:11px;color:var(--text-2);margin-top:2px;line-height:1.5}
+.pillar-empty{flex:1;display:flex;align-items:center;justify-content:center;min-height:160px;background:var(--card);border:1px dashed var(--border);border-radius:var(--rlg);color:var(--text-3);font-size:11px;text-align:center;padding:1rem;line-height:1.6}
+.pillar-empty.hidden{display:none}
+@media(max-width:580px){
+  .pillars-wrap{flex-direction:column}
+  .pillars-list{width:100%;flex-direction:row;flex-wrap:wrap}
+  .pillar{width:calc(50% - 3px)}
+  .pillar-detail{width:100%}
+}
 
-/* ── POST: write data from the dashboard ── */
-function doPost(e) {
+/* CHECKLIST */
+.cl-block{background:var(--card);border:1px solid var(--border);border-radius:var(--rlg);padding:.875rem}
+.cl-row{display:flex;align-items:center;gap:9px;padding:6px 0;border-bottom:1px solid var(--border);cursor:pointer}
+.cl-row:last-child{border-bottom:none}
+.cl-box{width:17px;height:17px;border-radius:4px;border:1.5px solid var(--border-md);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all var(--tr);background:var(--surface)}
+.cl-row.done .cl-box{background:var(--green);border-color:var(--green)}
+.cl-tick{color:#0F1117;font-size:10px;font-weight:700;display:none}
+.cl-row.done .cl-tick{display:block}
+.cl-txt{font-size:13px;color:var(--text-1);flex:1}
+.cl-row.done .cl-txt{color:var(--text-3);text-decoration:line-through}
+.cl-tag{font-size:9px;font-family:var(--fm);color:var(--text-3);padding:1px 6px;border:1px solid var(--border);border-radius:20px;white-space:nowrap}
+.prog-wrap{margin-top:.875rem}
+.prog-meta{display:flex;justify-content:space-between;font-size:11px;color:var(--text-3);margin-bottom:5px}
+.prog-ct{font-family:var(--fm)}
+.prog-track{height:2px;background:rgba(255,255,255,0.05);border-radius:2px}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--teal),var(--green));border-radius:2px;transition:width 0.3s ease}
+
+/* INTENTIONS (compact 3-col row) */
+.int-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+@media(max-width:580px){.int-row{grid-template-columns:1fr}}
+.int-tile{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:.75rem}
+.int-e{font-size:18px;margin-bottom:5px}
+.int-t{font-size:12px;font-weight:600;color:var(--text-1);margin-bottom:3px}
+.int-b{font-size:11px;color:var(--text-2);line-height:1.45}
+
+/* SITUATION FORM */
+.sit-block{background:var(--card);border:1px solid var(--border);border-radius:var(--rlg);padding:1rem}
+.sfl{font-size:11px;color:var(--text-2);font-weight:500;margin-bottom:5px;display:block}
+.sin{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--rsm);padding:7px 10px;font-size:13px;color:var(--text-1);font-family:var(--fb);resize:none;outline:none;line-height:1.5;transition:border-color var(--tr)}
+.sin:focus{border-color:rgba(224,123,123,0.4)}
+.sin::placeholder{color:var(--text-3)}
+.sit-flds{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.epills{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px}
+.ep{padding:3px 10px;font-size:11px;border-radius:20px;border:1px solid var(--border-md);color:var(--text-2);background:transparent;cursor:pointer;transition:all var(--tr);font-family:var(--fb)}
+.ep:hover{background:var(--surface);color:var(--text-1)}
+.ep.on{background:var(--rose-dim);border-color:rgba(224,123,123,0.38);color:var(--rose)}
+.sit-foot{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px}
+.sync-txt{font-size:11px;color:var(--text-3)}
+.sync-txt.ok{color:var(--green)}
+.sync-txt.syncing{color:var(--gold)}
+.sync-txt.err{color:var(--rose)}
+
+/* FOOTER */
+.foot{display:flex;justify-content:space-between;align-items:center;margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--border);flex-wrap:wrap;gap:6px}
+.foot-note{font-size:11px;color:var(--text-3)}
+.foot-btns{display:flex;gap:6px}
+
+/* PAST SITUATIONS TAB */
+.past-hdr{margin-bottom:1rem}
+.past-title{font-family:var(--fd);font-size:1.5rem;color:var(--text-1);margin-bottom:4px}
+.past-sub{font-size:13px;color:var(--text-2)}
+.past-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:1rem}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:10px 12px}
+.stat-n{font-family:var(--fd);font-size:1.5rem;color:var(--text-1);line-height:1}
+.stat-l{font-size:10px;color:var(--text-3);margin-top:3px}
+.stat.rose .stat-n{color:var(--rose)}
+.stat.teal .stat-n{color:var(--teal)}
+.df-panel{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:.75rem 1rem;margin-bottom:1rem}
+.df-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.df-lbl{font-size:11px;color:var(--text-2);font-weight:500;white-space:nowrap}
+.d-in{background:var(--surface);border:1px solid var(--border);border-radius:var(--rsm);padding:5px 8px;font-size:12px;color:var(--text-1);font-family:var(--fm);outline:none;transition:border-color var(--tr);cursor:pointer}
+.d-in:focus{border-color:var(--gold)}
+.df-sep{font-size:11px;color:var(--text-3)}
+.dq-row{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px}
+.dq{padding:3px 10px;font-size:10px;border-radius:20px;border:1px solid var(--border);color:var(--text-3);background:transparent;cursor:pointer;font-family:var(--fb);transition:all var(--tr)}
+.dq:hover{color:var(--text-1);border-color:var(--border-md)}
+.dq.on{background:var(--gold-dim);border-color:rgba(201,168,76,0.38);color:var(--gold)}
+.tb{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:1rem}
+.psearch{flex:1;min-width:160px;background:var(--card);border:1px solid var(--border);border-radius:var(--rsm);padding:7px 10px;font-size:12px;color:var(--text-1);font-family:var(--fb);outline:none}
+.psearch::placeholder{color:var(--text-3)}
+.psort{background:var(--card);border:1px solid var(--border);border-radius:var(--rsm);padding:7px 8px;font-size:11px;color:var(--text-2);font-family:var(--fb);outline:none;cursor:pointer}
+.ef-bar{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:1rem}
+.ef{padding:4px 11px;font-size:11px;border-radius:20px;border:1px solid var(--border);color:var(--text-3);background:transparent;cursor:pointer;font-family:var(--fb);transition:all var(--tr)}
+.ef:hover{color:var(--text-1);border-color:var(--border-md)}
+.ef.on{background:var(--rose-dim);border-color:rgba(224,123,123,0.32);color:var(--rose)}
+.pmeta{font-size:11px;color:var(--text-3);margin-bottom:8px;font-family:var(--fm)}
+.sit-log{display:flex;flex-direction:column;gap:8px}
+.sc{background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;transition:border-color var(--tr)}
+.sc:hover{border-color:var(--border-md)}
+.sc-head{display:flex;align-items:flex-start;gap:10px;padding:11px 14px;cursor:pointer}
+.sc-meta{flex:1;min-width:0}
+.sc-title{font-size:13px;font-weight:500;color:var(--text-1);line-height:1.35;margin-bottom:4px}
+.sc-sub{font-size:11px;color:var(--text-3);display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+.emo-badge{font-size:10px;padding:1px 7px;border-radius:20px;border:1px solid rgba(224,123,123,0.28);background:var(--rose-dim);color:var(--rose)}
+.strat-badge{font-size:10px;color:var(--teal)}
+.sc-tog{font-size:12px;color:var(--text-3);flex-shrink:0;transition:transform var(--tr)}
+.sc.open .sc-tog{transform:rotate(180deg)}
+.sc-body{display:none;border-top:1px solid var(--border);padding:11px 14px}
+.sc.open .sc-body{display:block}
+.sb-sec{margin-bottom:10px}
+.sb-sec:last-child{margin-bottom:0}
+.sb-lbl{font-family:var(--fm);font-size:9px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:4px}
+.sb-txt{font-size:12px;color:var(--text-2);line-height:1.55}
+.strat-area{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--rsm);padding:8px 10px;font-size:12px;color:var(--text-1);font-family:var(--fb);resize:none;outline:none;line-height:1.5;transition:border-color var(--tr);min-height:70px}
+.strat-area:focus{border-color:rgba(78,205,196,0.38)}
+.strat-area::placeholder{color:var(--text-3)}
+.sc-foot{display:flex;justify-content:space-between;align-items:center;margin-top:8px;gap:6px;flex-wrap:wrap}
+.del-btn{font-size:10px;color:var(--text-3);background:none;border:none;cursor:pointer;padding:3px 6px;border-radius:var(--rsm);font-family:var(--fb);transition:color var(--tr)}
+.del-btn:hover{color:var(--rose)}
+.sit-empty{text-align:center;padding:2.5rem 1rem;background:var(--card);border:1px dashed var(--border);border-radius:var(--r);color:var(--text-3);font-size:12px;line-height:1.7}
+
+/* TOAST */
+.toast{position:fixed;bottom:1.25rem;right:1.25rem;background:#1E2333;border:1px solid var(--border-md);border-radius:var(--r);padding:10px 16px;font-size:12px;color:var(--text-1);box-shadow:0 6px 24px rgba(0,0,0,0.4);opacity:0;transform:translateY(6px);transition:all 0.22s ease;pointer-events:none;z-index:100;max-width:280px}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast.success{border-color:rgba(107,191,142,0.32)}
+.toast.error{border-color:rgba(224,123,123,0.32)}
+hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
+</style>
+</head>
+<body>
+<div class="toast" id="toast"></div>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <button class="tab on" onclick="switchTab('morning')">☀️ Morning</button>
+    <button class="tab" onclick="switchTab('situations')">🪞 Situations <span class="badge" id="sit-badge">0</span></button>
+  </div>
+</nav>
+
+<!-- ══ TAB 1: MORNING ══ -->
+<div class="pg on" id="pg-morning">
+
+  <!-- Header -->
+  <div class="hdr">
+    <div class="hdr-l">
+      <div class="eyebrow" id="time-now">—</div>
+      <h1 class="greeting" id="greeting">Good morning</h1>
+      <div class="dateline" id="date-line">Loading…</div>
+    </div>
+    <div class="hdr-r">
+      <div class="daynum" id="day-num">—</div>
+      <div class="daynum-lbl">Day of year</div>
+    </div>
+  </div>
+
+  <!-- Mantra -->
+  <div class="mantra">
+    <div class="mantra-q" id="mantra-text">"…"</div>
+    <div class="mantra-src" id="mantra-source"></div>
+  </div>
+
+  <hr class="d">
+
+  <!-- Today's intentions: FORM state (shown when not yet filled) -->
+  <div id="q-form-wrap">
+    <div class="lbl">Today's intentions <span class="lbl-line"></span></div>
+    <div class="q-wrap">
+      <div class="q-item">
+        <div class="q-lbl">What is the one thing that, if I do it today, makes everything else easier?</div>
+        <textarea class="q-in" id="q1" rows="2" placeholder="Your single top priority for today…"></textarea>
+      </div>
+      <div class="q-item">
+        <div class="q-lbl">How do I want to show up emotionally today?</div>
+        <textarea class="q-in" id="q2" rows="2" placeholder="Calm, focused, patient, present…"></textarea>
+      </div>
+      <div class="q-item">
+        <div class="q-lbl">What am I genuinely grateful for right now?</div>
+        <textarea class="q-in" id="q3" rows="2" placeholder="Name one specific thing…"></textarea>
+      </div>
+      <div class="q-actions">
+        <span class="save-st" id="save-status"></span>
+        <button class="btn" onclick="clearQuestions()">Clear</button>
+        <button class="btn gold" onclick="saveToSheet()">Save intentions ↗</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Today's intentions: READ state (shown when filled) -->
+  <div id="q-read-wrap" style="display:none">
+    <div class="lbl">Today's intentions <span class="lbl-line"></span> <button class="btn ghost" onclick="editIntentions()">Edit</button></div>
+    <div class="goals-card">
+      <div class="goals-card-head">
+        <span class="goals-card-title">Your day is set ✓</span>
+        <span class="goals-card-date" id="goals-date"></span>
+      </div>
+      <div class="goals-body">
+        <div class="goal-row">
+          <div class="goal-icon">🎯</div>
+          <div class="goal-col">
+            <div class="goal-label">Top priority</div>
+            <div class="goal-value" id="goal-q1">—</div>
+          </div>
+        </div>
+        <div class="goal-row">
+          <div class="goal-icon">❤️</div>
+          <div class="goal-col">
+            <div class="goal-label">Emotional intention</div>
+            <div class="goal-value" id="goal-q2">—</div>
+          </div>
+        </div>
+        <div class="goal-row">
+          <div class="goal-icon">🙏</div>
+          <div class="goal-col">
+            <div class="goal-label">Gratitude</div>
+            <div class="goal-value" id="goal-q3">—</div>
+          </div>
+        </div>
+      </div>
+      <div class="goals-footer">
+        <span class="goals-synced" id="goals-synced-lbl">Saved locally</span>
+        <button class="btn ghost" onclick="editIntentions()">✏ Edit intentions</button>
+      </div>
+    </div>
+  </div>
+
+  <hr class="d">
+
+  <!-- Five Pillars: vertical list, horizontal detail -->
+  <div class="lbl">Five pillars <span class="lbl-line"></span></div>
+  <div class="pillars-wrap">
+    <div class="pillars-list">
+      <button class="pillar" data-id="0" onclick="togglePillar(0)"><span class="pillar-e">🧠</span><div class="pillar-lbl">Mental strength</div><span class="pillar-arr">▶</span></button>
+      <button class="pillar" data-id="1" onclick="togglePillar(1)"><span class="pillar-e">❤️</span><div class="pillar-lbl">Emotional control</div><span class="pillar-arr">▶</span></button>
+      <button class="pillar" data-id="2" onclick="togglePillar(2)"><span class="pillar-e">🎯</span><div class="pillar-lbl">Focus & clarity</div><span class="pillar-arr">▶</span></button>
+      <button class="pillar" data-id="3" onclick="togglePillar(3)"><span class="pillar-e">⚡</span><div class="pillar-lbl">Body & energy</div><span class="pillar-arr">▶</span></button>
+      <button class="pillar" data-id="4" onclick="togglePillar(4)"><span class="pillar-e">🤝</span><div class="pillar-lbl">Relationships</div><span class="pillar-arr">▶</span></button>
+    </div>
+    <div class="pillar-detail" id="pillar-detail"></div>
+    <div class="pillar-empty" id="pillar-empty">Tap a pillar<br>to explore its principles</div>
+  </div>
+
+  <hr class="d">
+
+  <!-- Checklist -->
+  <div class="lbl">Daily checklist <span class="lbl-line"></span></div>
+  <div class="cl-block">
+    <div id="cl-list"></div>
+    <div class="prog-wrap">
+      <div class="prog-meta"><span>Practices</span><span class="prog-ct" id="prog-txt">0/8</span></div>
+      <div class="prog-track"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+    </div>
+  </div>
+
+  <hr class="d">
+
+  <!-- Anchor intentions -->
+  <div class="lbl">Anchor intentions <span class="lbl-line"></span></div>
+  <div class="int-row">
+    <div class="int-tile"><div class="int-e">⏸️</div><div class="int-t">Pause before reacting</div><div class="int-b">3 deep breaths before responding to anything charged.</div></div>
+    <div class="int-tile"><div class="int-e">🎯</div><div class="int-t">One task, full focus</div><div class="int-b">No tabs, no phone — one thing at a time during deep work.</div></div>
+    <div class="int-tile"><div class="int-e">🌱</div><div class="int-t">Hard thing first</div><div class="int-b">Most important work before email or meetings steal the morning.</div></div>
+  </div>
+
+  <hr class="d">
+
+  <!-- Situation log form -->
+  <div class="lbl">Log a situation to handle better <span class="lbl-line"></span></div>
+  <div class="sit-block">
+    <div style="margin-bottom:8px">
+      <label class="sfl">What happened?</label>
+      <textarea class="sin" id="sit-title" rows="2" placeholder="e.g. I raised my voice during a disagreement about a deadline…"></textarea>
+    </div>
+    <div class="sit-flds">
+      <div><label class="sfl">What triggered me?</label><textarea class="sin" id="sit-trigger" rows="3" placeholder="The words, tone, or circumstance…"></textarea></div>
+      <div><label class="sfl">How did I respond?</label><textarea class="sin" id="sit-reaction" rows="3" placeholder="What I said, did, or felt…"></textarea></div>
+    </div>
+    <label class="sfl">Dominant emotion</label>
+    <div class="epills">
+      <button class="ep" onclick="selEmo(this)" data-val="anger">😤 Anger</button>
+      <button class="ep" onclick="selEmo(this)" data-val="anxiety">😰 Anxiety</button>
+      <button class="ep" onclick="selEmo(this)" data-val="frustration">😣 Frustration</button>
+      <button class="ep" onclick="selEmo(this)" data-val="hurt">💔 Hurt</button>
+      <button class="ep" onclick="selEmo(this)" data-val="shame">😔 Shame</button>
+      <button class="ep" onclick="selEmo(this)" data-val="overwhelm">🌊 Overwhelm</button>
+      <button class="ep" onclick="selEmo(this)" data-val="fear">😨 Fear</button>
+      <button class="ep" onclick="selEmo(this)" data-val="jealousy">👁 Jealousy</button>
+    </div>
+    <div class="sit-foot">
+      <span class="sync-txt" id="sit-sync">Ready to log</span>
+      <button class="btn gold" onclick="addSituation()">Log situation ↗</button>
+    </div>
+  </div>
+
+  <div class="foot">
+    <span class="foot-note" id="streak-txt"></span>
+    <div class="foot-btns">
+      <button class="btn" onclick="switchTab('situations')">🪞 Past situations</button>
+      <button class="btn" onclick="resetDay()">↺ Reset day</button>
+    </div>
+  </div>
+</div><!-- /pg-morning -->
+
+
+<!-- ══ TAB 2: PAST SITUATIONS ══ -->
+<div class="pg" id="pg-situations">
+
+  <div class="past-hdr">
+    <div class="past-title">Past Situations</div>
+    <div class="past-sub">Your full log — filter by date, emotion, or keyword.</div>
+  </div>
+
+  <div class="past-stats">
+    <div class="stat"><div class="stat-n" id="st-total">0</div><div class="stat-l">Total logged</div></div>
+    <div class="stat teal"><div class="stat-n" id="st-strat">0</div><div class="stat-l">Have strategies</div></div>
+    <div class="stat rose"><div class="stat-n" id="st-pend">0</div><div class="stat-l">Needs reflection</div></div>
+    <div class="stat"><div class="stat-n" id="st-emo" style="font-size:1.1rem">—</div><div class="stat-l">Top emotion</div></div>
+  </div>
+
+  <div class="df-panel">
+    <div class="df-row">
+      <span class="df-lbl">Date range:</span>
+      <input type="date" class="d-in" id="date-from" onchange="renderPast()">
+      <span class="df-sep">to</span>
+      <input type="date" class="d-in" id="date-to" onchange="renderPast()">
+      <button class="btn" onclick="clearDateFilter()" style="font-size:10px;padding:4px 9px">Clear</button>
+    </div>
+    <div class="dq-row">
+      <button class="dq on" data-r="all" onclick="setRange(this,'all')">All time</button>
+      <button class="dq" data-r="today" onclick="setRange(this,'today')">Today</button>
+      <button class="dq" data-r="week" onclick="setRange(this,'week')">This week</button>
+      <button class="dq" data-r="month" onclick="setRange(this,'month')">This month</button>
+      <button class="dq" data-r="3m" onclick="setRange(this,'3m')">Last 3 months</button>
+    </div>
+  </div>
+
+  <div class="tb">
+    <input class="psearch" id="psearch" type="text" placeholder="Search keyword…" oninput="renderPast()">
+    <select class="psort" id="psort" onchange="renderPast()">
+      <option value="newest">Newest first</option>
+      <option value="oldest">Oldest first</option>
+      <option value="no-strat">Needs strategy</option>
+      <option value="has-strat">Has strategy</option>
+    </select>
+    <button class="btn" onclick="exportCSV()">Export CSV</button>
+  </div>
+
+  <div class="ef-bar">
+    <button class="ef on" data-f="all" onclick="setEmoFilter(this)">All</button>
+    <button class="ef" data-f="anger" onclick="setEmoFilter(this)">😤 Anger</button>
+    <button class="ef" data-f="anxiety" onclick="setEmoFilter(this)">😰 Anxiety</button>
+    <button class="ef" data-f="frustration" onclick="setEmoFilter(this)">😣 Frustration</button>
+    <button class="ef" data-f="hurt" onclick="setEmoFilter(this)">💔 Hurt</button>
+    <button class="ef" data-f="shame" onclick="setEmoFilter(this)">😔 Shame</button>
+    <button class="ef" data-f="overwhelm" onclick="setEmoFilter(this)">🌊 Overwhelm</button>
+    <button class="ef" data-f="fear" onclick="setEmoFilter(this)">😨 Fear</button>
+    <button class="ef" data-f="jealousy" onclick="setEmoFilter(this)">👁 Jealousy</button>
+  </div>
+
+  <div class="pmeta" id="pmeta"></div>
+  <div class="sit-log" id="past-log"></div>
+
+  <div class="foot" style="margin-top:1.25rem">
+    <span class="foot-note">Stored locally · synced to Google Sheets</span>
+    <button class="btn" onclick="switchTab('morning')">← Morning</button>
+  </div>
+</div><!-- /pg-situations -->
+
+<script>
+'use strict';
+
+const SHEET_URL = 'https://script.google.com/macros/s/AKfycbxXiJWJmP1e1r9J9PCDk19I8Jv-ThVXRA4YTwNKlqACDPIpNaHzhaXCv3llcnY5Omjy/exec';
+
+/* ── POST to Sheet (URLSearchParams = no CORS preflight) ── */
+async function postToSheet(data) {
+  const body = new URLSearchParams();
+  body.append('payload', JSON.stringify(data));
   try {
-    // Accepts URLSearchParams (e.parameter.payload) OR raw JSON body
-    const raw = (e.parameter && e.parameter.payload)
-      ? e.parameter.payload
-      : e.postData.contents;
+    await fetch(SHEET_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: body.toString()
+    });
+    return true;
+  } catch(e) {
+    // fallback: no-cors fire-and-forget
+    try {
+      fetch(SHEET_URL, {
+        method: 'POST', mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+    } catch(_) {}
+    return false;
+  }
+}
 
-    const data = JSON.parse(raw);
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
-    const sheetName = data.sheet || 'Morning Reflections';
+/* ── GET from Sheet (read back today's data) ── */
+async function fetchTodayFromSheet() {
+  try {
+    const url = SHEET_URL + '?action=getToday&date=' + encodeURIComponent(isoToday());
+    const resp = await fetch(url, { method: 'GET' });
+    if (!resp.ok) return null;
+    const json = await resp.json();
+    return json && json.status === 'ok' ? json.data : null;
+  } catch(e) { return null; }
+}
 
-    if (sheetName === 'Situations') {
-      writeSituation(ss, data);
+/* ── DATA ── */
+const MANTRAS = [
+  { text:"You don't have to be perfect. You just have to begin.", src:"— James Clear" },
+  { text:"The mind is the athlete. Everything else follows.", src:"— David Goggins" },
+  { text:"Between stimulus and response there is a space. In that space lies your power.", src:"— Viktor Frankl" },
+  { text:"Control what you can. Release what you cannot.", src:"— Stoic principle" },
+  { text:"Discipline is choosing what you want most over what you want right now.", src:"— Abraham Lincoln" },
+  { text:"Calm is a superpower.", src:"— Ancient Stoic wisdom" },
+  { text:"Today's actions are tomorrow's character.", src:"— Ryan Holiday" },
+  { text:"You are not your thoughts. You are the one who notices them.", src:"— Mindfulness" },
+  { text:"Amor fati — love everything that happens.", src:"— Marcus Aurelius" },
+  { text:"The obstacle is the way.", src:"— Marcus Aurelius" },
+  { text:"Small disciplines repeated with consistency lead to great achievements.", src:"— John Maxwell" },
+  { text:"Energy flows where attention goes.", src:"— Tony Robbins" },
+  { text:"Hard choices, easy life. Easy choices, hard life.", src:"— Jerzy Gregorek" },
+  { text:"What you do today is what matters most.", src:"— Jocko Willink" },
+  { text:"The best investment you can make is in yourself.", src:"— Warren Buffett" },
+];
+
+const PILLARS = [
+  { e:'🧠', n:'Mental strength', s:'Build a resilient, sharp, unshakeable mind', items:[
+    { t:'Control only what is in your control', d:'Let go of outcomes. Focus entirely on your effort and attitude.' },
+    { t:'Embrace discomfort as growth', d:'Every hard moment is a deposit into your future self.' },
+    { t:'Reject negative self-talk immediately', d:'Name the thought, step back from it, replace with a neutral fact.' },
+    { t:'Focus on process, not results', d:'Show up fully. Results are a byproduct of consistent quality action.' },
+    { t:'Think long-term, act present', d:'What can I do right now that serves who I\'m becoming in 5 years?' },
+  ]},
+  { e:'❤️', n:'Emotional control', s:'Stay regulated and intentional under pressure', items:[
+    { t:'Pause before reacting', d:'Three deep breaths before responding to anything emotionally charged.' },
+    { t:'Name the emotion — don\'t become it', d:'"I notice I feel frustrated" — not "I am frustrated."' },
+    { t:'Respond to what is, not what you fear', d:'Stay in the present. Catastrophising borrows suffering from the future.' },
+    { t:'Set the emotional tone first', d:'Your inner state radiates outward. People read energy before words.' },
+    { t:'Forgive quickly — especially yourself', d:'Resentment drains mental RAM. Release it and reclaim the space.' },
+  ]},
+  { e:'🎯', n:'Focus & clarity', s:'Protect your attention — it\'s your most finite resource', items:[
+    { t:'One task at a time, always', d:'Every task switch costs cognitive energy. Guard your attention.' },
+    { t:'Remove friction before you start', d:'Set up your environment the night before. Eliminate morning resistance.' },
+    { t:'Kill distractions before they start', d:'Phone away, notifications off. Distraction begins with one ping.' },
+    { t:'Time-block your most important work first', d:'Protect 90 minutes before meetings or messages touch you.' },
+    { t:'Revisit your goals weekly', d:'What you track, you tend. An unseen goal is a forgotten goal.' },
+  ]},
+  { e:'⚡', n:'Body & energy', s:'Your physical state is the foundation everything rests on', items:[
+    { t:'Move before you touch your phone', d:'Even 10 minutes of movement sets a different neurological baseline.' },
+    { t:'Hydrate immediately on waking', d:'Your brain is ~75% water. Water before coffee, every day.' },
+    { t:'Protect your sleep ruthlessly', d:'No screen 1 hour before bed. Sleep debt destroys emotional regulation.' },
+    { t:'Eat to fuel, not to fill', d:'Every meal is a choice about how sharp you\'ll be in 2 hours.' },
+    { t:'Breathe on purpose', d:'Box breathing — 4 in, hold 4, out 4, hold 4 — calms you in 2 minutes.' },
+  ]},
+  { e:'🤝', n:'Relationships', s:'The quality of your life is the quality of your connections', items:[
+    { t:'Listen more than you speak', d:'Most conflict is a failure to feel heard. Give that gift first.' },
+    { t:'Assume positive intent by default', d:'Before attributing malice, consider circumstance.' },
+    { t:'Express appreciation specifically', d:'Tell someone one precise thing you value about them today.' },
+    { t:'Set boundaries with warmth', d:'Say no to the request and yes to the person.' },
+    { t:'Be fully present', d:'Phone away. Eyes up. Half-presence is obvious to them.' },
+  ]},
+];
+
+const CHECKLIST = [
+  { t:'Drank water on waking', tag:'body', k:'water' },
+  { t:'Moved before checking phone', tag:'body', k:'move' },
+  { t:'Set today\'s intentions', tag:'mind', k:'intentions' },
+  { t:'Named my one priority', tag:'focus', k:'priority' },
+  { t:'Set emotional intention', tag:'emotion', k:'emotion' },
+  { t:'No reactive screen first 30 min', tag:'focus', k:'no_screen' },
+  { t:'Said something kind or grateful', tag:'heart', k:'kind' },
+  { t:'Took 3 deep breaths intentionally', tag:'body', k:'breathe' },
+];
+
+const EMAP = { anger:'😤', anxiety:'😰', frustration:'😣', hurt:'💔', shame:'😔', overwhelm:'🌊', fear:'😨', jealousy:'👁' };
+
+/* ── STATE ── */
+let activePillar = null;
+const checked = {};
+let situations = [];
+let selEmotion = '';
+let pastEmoFilter = 'all';
+let intentionsSaved = false;   // true = show read view today
+
+/* ── TABS ── */
+function switchTab(tab) {
+  document.querySelectorAll('.pg').forEach(p => p.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(b => b.classList.remove('on'));
+  document.getElementById('pg-' + tab).classList.add('on');
+  document.querySelectorAll('.tab')[tab === 'morning' ? 0 : 1].classList.add('on');
+  if (tab === 'situations') { renderStats(); renderPast(); }
+  window.scrollTo({ top:0, behavior:'smooth' });
+}
+
+/* ── INIT ── */
+async function init() {
+  const now = new Date();
+  const h = now.getHours();
+  document.getElementById('greeting').textContent = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+  document.getElementById('time-now').textContent = now.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit', hour12:true });
+  document.getElementById('date-line').textContent = now.toLocaleDateString('en-IN', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+  const day = Math.floor((now - new Date(now.getFullYear(),0,0)) / 86400000);
+  document.getElementById('day-num').textContent = day;
+  const m = MANTRAS[day % MANTRAS.length];
+  document.getElementById('mantra-text').textContent = '\u201C' + m.text + '\u201D';
+  document.getElementById('mantra-source').textContent = m.src;
+
+  loadTodayLocal();      // load from localStorage first (instant)
+  renderChecklist();
+  updateStreak();
+  loadSituations();
+  updateBadge();
+  checkIntentionsState(); // show form or read view
+
+  // then try to pull from Sheet in background
+  const sheetData = await fetchTodayFromSheet();
+  if (sheetData) mergeSheetData(sheetData);
+}
+
+/* ── INTENTIONS STATE ── */
+function checkIntentionsState() {
+  const raw = localStorage.getItem(todayKey());
+  if (!raw) { showForm(); return; }
+  try {
+    const d = JSON.parse(raw);
+    const hasData = d.q1 || d.q2 || d.q3;
+    if (hasData) {
+      showReadView(d.q1 || '', d.q2 || '', d.q3 || '', d.synced || false);
     } else {
-      writeMorningReflection(ss, data);
+      showForm();
     }
-
-    return jsonOut({ status: 'ok' });
-
-  } catch (err) {
-    return jsonOut({ status: 'error', message: err.toString() });
-  }
+  } catch(e) { showForm(); }
 }
 
-
-/* ── Write morning reflection row ── */
-function writeMorningReflection(ss, data) {
-  let sheet = ss.getSheetByName('Morning Reflections');
-  if (!sheet) {
-    sheet = ss.insertSheet('Morning Reflections');
-    sheet.appendRow([
-      'Date', 'Date ISO', 'Time',
-      'Priority', 'Emotional Intention', 'Gratitude',
-      'Checklist Done', 'Score', 'Saved At'
-    ]);
-    sheet.setFrozenRows(1);
-    styleHeader(sheet);
-  }
-
-  // Check if a row for this dateISO already exists — update it instead of appending
-  const dateISO = data.dateISO || '';
-  if (dateISO) {
-    const rows = sheet.getDataRange().getValues();
-    for (let i = 1; i < rows.length; i++) {
-      if (String(rows[i][1]).trim() === dateISO) {
-        // Update existing row in place
-        sheet.getRange(i + 1, 1, 1, 9).setValues([[
-          data.date                || rows[i][0],
-          dateISO,
-          data.time                || rows[i][2],
-          data.priority            || rows[i][3],
-          data.emotional_intention || rows[i][4],
-          data.gratitude           || rows[i][5],
-          data.checklist_done      || rows[i][6],
-          data.score               || rows[i][7],
-          new Date().toLocaleString(),
-        ]]);
-        return;
-      }
-    }
-  }
-
-  // No existing row — append new
-  sheet.appendRow([
-    data.date                || '',
-    dateISO,
-    data.time                || '',
-    data.priority            || '',
-    data.emotional_intention || '',
-    data.gratitude           || '',
-    data.checklist_done      || '',
-    data.score               || '',
-    new Date().toLocaleString(),
-  ]);
+function showForm() {
+  intentionsSaved = false;
+  document.getElementById('q-form-wrap').style.display = 'block';
+  document.getElementById('q-read-wrap').style.display = 'none';
 }
 
+function showReadView(q1, q2, q3, synced) {
+  intentionsSaved = true;
+  document.getElementById('q-form-wrap').style.display = 'none';
+  document.getElementById('q-read-wrap').style.display = 'block';
 
-/* ── Write situation row ── */
-function writeSituation(ss, data) {
-  let sheet = ss.getSheetByName('Situations');
-  if (!sheet) {
-    sheet = ss.insertSheet('Situations');
-    sheet.appendRow([
-      'Date', 'Date ISO', 'Situation',
-      'Trigger', 'Reaction', 'Emotion',
-      'Strategy', 'Logged At'
-    ]);
-    sheet.setFrozenRows(1);
-    styleHeader(sheet);
+  // populate read cards
+  document.getElementById('goal-q1').textContent = q1 || '—';
+  document.getElementById('goal-q2').textContent = q2 || '—';
+  document.getElementById('goal-q3').textContent = q3 || '—';
+  document.getElementById('goals-date').textContent = new Date().toLocaleDateString('en-IN', { day:'numeric', month:'short' });
+
+  const syncLbl = document.getElementById('goals-synced-lbl');
+  syncLbl.textContent = synced ? 'Synced to Sheet ✓' : 'Saved locally';
+  syncLbl.className = 'goals-synced' + (synced ? ' ok' : '');
+
+  // also populate form fields in background so edit works
+  document.getElementById('q1').value = q1 || '';
+  document.getElementById('q2').value = q2 || '';
+  document.getElementById('q3').value = q3 || '';
+}
+
+function editIntentions() {
+  showForm();
+  document.getElementById('q1').focus();
+}
+
+/* ── SHEET DATA MERGE ── */
+function mergeSheetData(d) {
+  // Sheet returned today's row — update local if different
+  const q1 = d.priority || '';
+  const q2 = d.emotional_intention || '';
+  const q3 = d.gratitude || '';
+  if (!q1 && !q2 && !q3) return;
+
+  // update localStorage
+  const stored = getTodayStored();
+  stored.q1 = q1; stored.q2 = q2; stored.q3 = q3; stored.synced = true;
+  localStorage.setItem(todayKey(), JSON.stringify(stored));
+
+  // update UI
+  showReadView(q1, q2, q3, true);
+  showToast('Today\'s intentions loaded from Sheet ✓', 'success');
+}
+
+/* ── PERSISTENCE ── */
+function isoToday() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+function isoDate(d) {
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+function parseISO(s) {
+  if (!s) return null;
+  const [y,mo,d] = s.split('-').map(Number); return new Date(y, mo-1, d);
+}
+function todayKey() {
+  const d = new Date();
+  return 'morning_' + d.getFullYear() + '_' + (d.getMonth()+1) + '_' + d.getDate();
+}
+function getTodayStored() {
+  try { const r = localStorage.getItem(todayKey()); return r ? JSON.parse(r) : {}; } catch(e) { return {}; }
+}
+function saveTodayLocal(extra) {
+  const stored = getTodayStored();
+  const merged = Object.assign(stored, { dateISO: isoToday() }, extra || {});
+  localStorage.setItem(todayKey(), JSON.stringify(merged));
+  updateStreak();
+}
+function loadTodayLocal() {
+  const d = getTodayStored();
+  if (d.checked) Object.assign(checked, d.checked);
+  if (d.q1) document.getElementById('q1').value = d.q1;
+  if (d.q2) document.getElementById('q2').value = d.q2;
+  if (d.q3) document.getElementById('q3').value = d.q3;
+}
+function clearQuestions() {
+  ['q1','q2','q3'].forEach(id => document.getElementById(id).value = '');
+  saveTodayLocal({ q1:'', q2:'', q3:'', synced:false });
+  document.getElementById('save-status').textContent = '';
+}
+function resetDay() {
+  if (!confirm('Reset all today\'s progress?')) return;
+  CHECKLIST.forEach(i => { checked[i.k] = false; });
+  clearQuestions();
+  showForm();
+  renderChecklist();
+  showToast('Day reset. Fresh start. 🌅');
+}
+
+/* ── STREAK ── */
+function updateStreak() {
+  let s = 0; const today = new Date();
+  for (let i = 0; i < 365; i++) {
+    const d = new Date(today); d.setDate(today.getDate()-i);
+    const raw = localStorage.getItem('morning_'+d.getFullYear()+'_'+(d.getMonth()+1)+'_'+d.getDate());
+    if (!raw) break;
+    try { const dd = JSON.parse(raw); if (CHECKLIST.filter(x=>dd.checked&&dd.checked[x.k]).length>0) s++; else if(i>0) break; } catch(e){break;}
+  }
+  document.getElementById('streak-txt').textContent = s>1 ? '🔥 '+s+'-day streak — keep going.' : s===1 ? '⭐ First step today.' : 'Start your first practice today.';
+}
+
+/* ── SAVE INTENTIONS TO SHEET ── */
+async function saveToSheet() {
+  const q1 = document.getElementById('q1').value.trim();
+  const q2 = document.getElementById('q2').value.trim();
+  const q3 = document.getElementById('q3').value.trim();
+  if (!q1 && !q2 && !q3) { showToast('Fill in at least one intention first.', 'error'); return; }
+
+  saveTodayLocal({ q1, q2, q3, checked, synced: false });
+  setSt('Saving…', null);
+
+  const now = new Date();
+  const payload = {
+    sheet: 'Morning Reflections',
+    date: now.toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' }),
+    dateISO: isoDate(now),
+    time: now.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit', hour12:true }),
+    priority: q1,
+    emotional_intention: q2,
+    gratitude: q3,
+    checklist_done: CHECKLIST.filter(i=>checked[i.k]).map(i=>i.t).join(' | '),
+    score: CHECKLIST.filter(i=>checked[i.k]).length + '/' + CHECKLIST.length,
+  };
+
+  const ok = await postToSheet(payload);
+  if (ok) {
+    saveTodayLocal({ q1, q2, q3, checked, synced: true });
+    setSt('Saved ✓', true);
+    showToast('Intentions saved to Sheet ✓', 'success');
+  } else {
+    setSt('Saved locally — Sheet unreachable', false);
+    showToast('Saved locally. Sheet sync failed.', 'error');
   }
 
-  // If it's a strategy update, find the matching row and update strategy column only
-  if (data.action === 'update_strategy' && data.dateISO && data.title) {
-    const rows = sheet.getDataRange().getValues();
-    for (let i = 1; i < rows.length; i++) {
-      if (String(rows[i][1]).trim() === data.dateISO &&
-          String(rows[i][2]).trim() === String(data.title).trim()) {
-        sheet.getRange(i + 1, 7).setValue(data.strategy || ''); // col G = Strategy
-        return;
-      }
-    }
+  // switch to read view
+  showReadView(q1, q2, q3, ok);
+}
+
+function setSt(msg, ok) {
+  const el = document.getElementById('save-status');
+  el.textContent = msg;
+  el.className = 'save-st' + (ok===true?' ok':ok===false?' err':'');
+}
+
+/* ── PILLARS ── */
+function togglePillar(id) {
+  const btns = document.querySelectorAll('.pillar');
+  const detail = document.getElementById('pillar-detail');
+  const empty = document.getElementById('pillar-empty');
+  if (activePillar === id) {
+    // close
+    activePillar = null;
+    btns.forEach(b => b.classList.remove('on'));
+    detail.classList.remove('on'); detail.innerHTML = '';
+    empty.classList.remove('hidden');
+    return;
   }
-
-  // New situation — append
-  sheet.appendRow([
-    data.date     || '',
-    data.dateISO  || '',
-    data.title    || '',
-    data.trigger  || '',
-    data.reaction || '',
-    data.emotion  || '',
-    data.strategy || '',
-    new Date().toLocaleString(),
-  ]);
+  activePillar = id;
+  btns.forEach(b => b.classList.remove('on'));
+  btns[id].classList.add('on');
+  const p = PILLARS[id];
+  detail.innerHTML =
+    '<div class="p-head"><div class="p-e">'+p.e+'</div><div><div class="p-title">'+p.n+'</div><div class="p-sub">'+p.s+'</div></div></div>' +
+    p.items.map(i =>
+      '<div class="p-row"><div class="p-dot"></div><div><div class="p-t">'+i.t+'</div><div class="p-s">'+i.d+'</div></div></div>'
+    ).join('');
+  detail.classList.add('on');
+  empty.classList.add('hidden');
 }
 
-
-/* ── Header styling ── */
-function styleHeader(sheet) {
-  const cols = sheet.getLastColumn();
-  const r = sheet.getRange(1, 1, 1, cols);
-  r.setBackground('#1a1a2e');
-  r.setFontColor('#C9A84C');
-  r.setFontWeight('bold');
-  sheet.setColumnWidths(1, cols, 200);
+/* ── CHECKLIST ── */
+function renderChecklist() {
+  const el = document.getElementById('cl-list'); el.innerHTML = '';
+  CHECKLIST.forEach(item => {
+    const done = !!checked[item.k];
+    const div = document.createElement('div');
+    div.className = 'cl-row' + (done?' done':'');
+    div.onclick = () => toggleCheck(item.k);
+    div.innerHTML = '<div class="cl-box"><span class="cl-tick">✓</span></div><div class="cl-txt">'+item.t+'</div><span class="cl-tag">'+item.tag+'</span>';
+    el.appendChild(div);
+  });
+  updateProg();
+}
+function toggleCheck(k) {
+  checked[k] = !checked[k];
+  saveTodayLocal({ checked });
+  renderChecklist();
+}
+function updateProg() {
+  const done = CHECKLIST.filter(i=>checked[i.k]).length;
+  document.getElementById('prog-txt').textContent = done+'/'+CHECKLIST.length;
+  document.getElementById('prog-fill').style.width = Math.round(done/CHECKLIST.length*100)+'%';
 }
 
-
-/* ── JSON output helper ── */
-function jsonOut(obj) {
-  return ContentService
-    .createTextOutput(JSON.stringify(obj))
-    .setMimeType(ContentService.MimeType.JSON);
+/* ── SITUATIONS ── */
+function loadSituations() {
+  try { const r=localStorage.getItem('morning_situations'); if(r) situations=JSON.parse(r); } catch(e){situations=[];}
 }
+function saveSits() { localStorage.setItem('morning_situations',JSON.stringify(situations)); }
+function updateBadge() { document.getElementById('sit-badge').textContent=situations.length; }
+
+function selEmo(el) {
+  document.querySelectorAll('.ep').forEach(p=>p.classList.remove('on'));
+  selEmotion = (selEmotion===el.dataset.val)?'':el.dataset.val;
+  if (selEmotion) el.classList.add('on');
+}
+
+function setSyncTxt(state, msg) {
+  const el = document.getElementById('sit-sync');
+  el.className = 'sync-txt ' + state;
+  el.textContent = msg;
+}
+
+async function addSituation() {
+  const title = document.getElementById('sit-title').value.trim();
+  if (!title) { showToast('Describe the situation first.','error'); return; }
+  const now = new Date();
+  const sit = {
+    id: Date.now(),
+    dateISO: isoDate(now),
+    date: now.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}),
+    timestamp: Date.now(),
+    title,
+    trigger: document.getElementById('sit-trigger').value.trim(),
+    reaction: document.getElementById('sit-reaction').value.trim(),
+    emotion: selEmotion,
+    strategy: '',
+  };
+  situations.unshift(sit);
+  saveSits(); updateBadge();
+  document.getElementById('sit-title').value='';
+  document.getElementById('sit-trigger').value='';
+  document.getElementById('sit-reaction').value='';
+  selEmotion='';
+  document.querySelectorAll('.ep').forEach(p=>p.classList.remove('on'));
+
+  setSyncTxt('syncing','Syncing to Sheet…');
+  const ok = await postToSheet({
+    sheet:'Situations',
+    date:sit.date, dateISO:sit.dateISO,
+    title:sit.title, trigger:sit.trigger, reaction:sit.reaction,
+    emotion:sit.emotion, strategy:'',
+  });
+  setSyncTxt(ok?'ok':'err', ok?'Synced to Sheet ✓':'Saved locally (Sheet unreachable)');
+  showToast(ok?'Situation logged + synced ✓':'Saved locally — sync failed.', ok?'success':'error');
+}
+
+/* ── SIT CARD HTML ── */
+function sitCardHTML(s) {
+  const badge = s.emotion ? '<span class="emo-badge">'+(EMAP[s.emotion]||'')+' '+s.emotion+'</span>' : '';
+  const sb = s.strategy ? '<span class="strat-badge">✓ strategy</span>' : '';
+  return '<div class="sc" id="sc-'+s.id+'">' +
+    '<div class="sc-head" onclick="togSC('+s.id+')">' +
+      '<div class="sc-meta">' +
+        '<div class="sc-title">'+escH(s.title)+'</div>' +
+        '<div class="sc-sub">'+s.date+badge+sb+'</div>' +
+      '</div>' +
+      '<div class="sc-tog">▾</div>' +
+    '</div>' +
+    '<div class="sc-body">' +
+      (s.trigger?'<div class="sb-sec"><div class="sb-lbl">Trigger</div><div class="sb-txt">'+escH(s.trigger)+'</div></div>':'') +
+      (s.reaction?'<div class="sb-sec"><div class="sb-lbl">My response</div><div class="sb-txt">'+escH(s.reaction)+'</div></div>':'') +
+      '<div class="sb-sec">' +
+        '<div class="sb-lbl">Better ways to handle this</div>' +
+        '<textarea class="strat-area" id="str-'+s.id+'" rows="3" placeholder="Specific scripts, reframes, or techniques for next time…">'+escH(s.strategy)+'</textarea>' +
+        '<div class="sc-foot">' +
+          '<button class="del-btn" onclick="delSit('+s.id+')">🗑 Delete</button>' +
+          '<button class="btn teal" style="font-size:11px;padding:5px 12px" onclick="saveSt('+s.id+')">Save strategy ✓</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>' +
+  '</div>';
+}
+
+function togSC(id) { const c=document.getElementById('sc-'+id); if(c) c.classList.toggle('open'); }
+
+async function saveSt(id) {
+  const area = document.getElementById('str-'+id); if(!area) return;
+  const sit = situations.find(s=>s.id===id); if(!sit) return;
+  sit.strategy = area.value.trim();
+  saveSits();
+  try { await postToSheet({sheet:'Situations',action:'update_strategy',dateISO:sit.dateISO,title:sit.title,strategy:sit.strategy}); } catch(_){}
+  renderPast();
+  setTimeout(()=>{ const c=document.getElementById('sc-'+id); if(c) c.classList.add('open'); },30);
+  showToast('Strategy saved ✓','success');
+}
+
+function delSit(id) {
+  if(!confirm('Delete this situation?')) return;
+  situations=situations.filter(s=>s.id!==id);
+  saveSits(); updateBadge(); renderStats(); renderPast();
+  showToast('Deleted.','');
+}
+
+/* ── PAST TAB ── */
+function renderStats() {
+  const total=situations.length, ws=situations.filter(s=>s.strategy).length;
+  document.getElementById('st-total').textContent=total;
+  document.getElementById('st-strat').textContent=ws;
+  document.getElementById('st-pend').textContent=total-ws;
+  const freq={};
+  situations.forEach(s=>{ if(s.emotion) freq[s.emotion]=(freq[s.emotion]||0)+1; });
+  const top=Object.entries(freq).sort((a,b)=>b[1]-a[1])[0];
+  document.getElementById('st-emo').textContent=top?(EMAP[top[0]]||'')+' '+top[0]:'—';
+}
+
+function setRange(el, r) {
+  document.querySelectorAll('.dq').forEach(b=>b.classList.remove('on')); el.classList.add('on');
+  const now=new Date(), f=document.getElementById('date-from'), t=document.getElementById('date-to');
+  t.value=isoDate(now);
+  if(r==='all'){f.value='';t.value='';}
+  else if(r==='today'){f.value=isoDate(now);}
+  else if(r==='week'){const d=new Date(now);d.setDate(d.getDate()-6);f.value=isoDate(d);}
+  else if(r==='month'){const d=new Date(now);d.setDate(d.getDate()-29);f.value=isoDate(d);}
+  else if(r==='3m'){const d=new Date(now);d.setDate(d.getDate()-89);f.value=isoDate(d);}
+  renderPast();
+}
+
+function clearDateFilter() {
+  document.getElementById('date-from').value='';
+  document.getElementById('date-to').value='';
+  document.querySelectorAll('.dq').forEach(b=>b.classList.remove('on'));
+  document.querySelector('.dq[data-r="all"]').classList.add('on');
+  renderPast();
+}
+
+function setEmoFilter(el) {
+  document.querySelectorAll('.ef').forEach(p=>p.classList.remove('on'));
+  el.classList.add('on');
+  pastEmoFilter=el.dataset.f;
+  renderPast();
+}
+
+function renderPast() {
+  const search=(document.getElementById('psearch').value||'').toLowerCase().trim();
+  const sort=document.getElementById('psort').value;
+  const fv=document.getElementById('date-from').value;
+  const tv=document.getElementById('date-to').value;
+  const fd=fv?parseISO(fv):null;
+  const td=tv?parseISO(tv):null;
+  if(td) td.setHours(23,59,59);
+
+  let list=situations.slice();
+  if(fd||td) list=list.filter(s=>{ const d=s.dateISO?parseISO(s.dateISO):null; if(!d)return true; if(fd&&d<fd)return false; if(td&&d>td)return false; return true; });
+  if(pastEmoFilter!=='all') list=list.filter(s=>s.emotion===pastEmoFilter);
+  if(search) list=list.filter(s=>(s.title+s.trigger+s.reaction+s.strategy).toLowerCase().includes(search));
+  if(sort==='oldest') list.sort((a,b)=>a.timestamp-b.timestamp);
+  else if(sort==='newest') list.sort((a,b)=>b.timestamp-a.timestamp);
+  else if(sort==='no-strat') list.sort((a,b)=>(a.strategy?1:0)-(b.strategy?1:0));
+  else if(sort==='has-strat') list.sort((a,b)=>(b.strategy?1:0)-(a.strategy?1:0));
+
+  document.getElementById('pmeta').textContent=list.length+' of '+situations.length+' situation'+(situations.length!==1?'s':'');
+  const log=document.getElementById('past-log');
+  if(!list.length) {
+    log.innerHTML='<div class="sit-empty">'+(situations.length===0?'Nothing logged yet.<br>Head to the Morning tab to record your first situation.<br><br><button class="btn" onclick="switchTab(\'morning\')">← Go to morning</button>':'No matches for the current filter.')+'</div>';
+    return;
+  }
+  log.innerHTML=list.map(s=>sitCardHTML(s)).join('');
+}
+
+/* ── EXPORT ── */
+function exportCSV() {
+  if(!situations.length){showToast('Nothing to export yet.','error');return;}
+  const h=['Date','Situation','Trigger','Reaction','Emotion','Strategy'];
+  const rows=situations.map(s=>[s.date,s.title,s.trigger||'',s.reaction||'',s.emotion||'',s.strategy||''].map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(','));
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent([h.join(','),...rows].join('\n'));
+  a.download='situations-'+isoToday()+'.csv';
+  a.click();
+  showToast('CSV exported ✓','success');
+}
+
+/* ── UTILS ── */
+function escH(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+let _tt=null;
+function showToast(msg,type){
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.className='toast show'+(type?' '+type:'');
+  clearTimeout(_tt); _tt=setTimeout(()=>el.classList.remove('show'),3200);
+}
+
+/* ── AUTO-SAVE QUESTIONS ── */
+['q1','q2','q3'].forEach(id=>{
+  document.getElementById(id).addEventListener('input',()=>{
+    clearTimeout(window._qs);
+    window._qs=setTimeout(()=>{
+      saveTodayLocal({
+        q1:document.getElementById('q1').value,
+        q2:document.getElementById('q2').value,
+        q3:document.getElementById('q3').value,
+      });
+    },700);
+  });
+});
+
+/* ── START ── */
+init();
+setInterval(()=>{
+  document.getElementById('time-now').textContent=new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true});
+},60000);
+</script>
+</body>
+</html>
