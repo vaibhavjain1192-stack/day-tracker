@@ -507,81 +507,67 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
 <script>
 'use strict';
 
-const SHEET_URL = 'https://script.google.com/macros/s/AKfycbxXiJWJmP1e1r9J9PCDk19I8Jv-ThVXRA4YTwNKlqACDPIpNaHzhaXCv3llcnY5Omjy/exec';
+/* ═══════════════════════════════════════════
+   PROXY URL — Cloudflare Worker
+   Replace WORKER_URL with your worker URL after deploy
+   e.g. https://morning-proxy.YOUR-NAME.workers.dev
+═══════════════════════════════════════════ */
+const WORKER_URL = 'https://muddy-shadow-1aa7.vaibhavjain-1192.workers.dev';
 
-/* ── POST to Sheet (URLSearchParams = no CORS preflight) ── */
-async function postToSheet(data) {
-  const body = new URLSearchParams();
-  body.append('payload', JSON.stringify(data));
-  try {
-    await fetch(SHEET_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: body.toString()
-    });
-    return true;
-  } catch(e) {
-    // fallback: no-cors fire-and-forget
+/* ═══════════════════════════════════════════
+   SHEET: POST (write data)
+   Worker proxy handles CORS — plain fetch works fine.
+   Always resolves to true/false, never throws.
+═══════════════════════════════════════════ */
+function postToSheet(data) {
+  return new Promise(function(resolve) {
     try {
-      fetch(SHEET_URL, {
-        method: 'POST', mode: 'no-cors',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-      });
-    } catch(_) {}
-    return false;
-  }
-}
-
-/* ── GET from Sheet via JSONP ──
-   Apps Script GET requests go through a 302 redirect that strips CORS headers,
-   making fetch() silently fail in all browsers. JSONP (script tag injection) 
-   bypasses CORS entirely and is the only reliable cross-origin GET method
-   for Apps Script Web Apps.
-──────────────────────────────────────────────────────────── */
-function fetchTodayFromSheet() {
-  return new Promise((resolve) => {
-    const cbName = '__sheetCb_' + Date.now();
-    const timeout = setTimeout(() => {
-      // Timed out — clean up and resolve null so UI falls back to form
-      window[cbName] = null;
-      const el = document.getElementById(cbName);
-      if (el) el.remove();
-      console.warn('Sheet fetch timed out');
-      resolve(null);
-    }, 8000);
-
-    // Apps Script will call this function with the JSON data
-    window[cbName] = function(data) {
-      clearTimeout(timeout);
-      window[cbName] = null;
-      const el = document.getElementById(cbName);
-      if (el) el.remove();
-      console.log('Sheet JSONP response:', JSON.stringify(data));
-      resolve((data && data.status === 'ok') ? data : null);
-    };
-
-    const url = SHEET_URL
-      + '?action=getToday'
-      + '&date=' + encodeURIComponent(isoToday())
-      + '&callback=' + cbName;
-
-    const script = document.createElement('script');
-    script.id = cbName;
-    script.src = url;
-    script.onerror = () => {
-      clearTimeout(timeout);
-      window[cbName] = null;
-      script.remove();
-      console.warn('Sheet JSONP script load error');
-      resolve(null);
-    };
-    document.head.appendChild(script);
+      var body = new URLSearchParams();
+      body.append('payload', JSON.stringify(data));
+      fetch(WORKER_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: body.toString()
+      })
+      .then(function(resp) { resolve(resp && resp.ok); })
+      .catch(function() { resolve(false); });
+    } catch(e) {
+      resolve(false);
+    }
   });
 }
 
-/* ── DATA ── */
-const MANTRAS = [
+/* ═══════════════════════════════════════════
+   GET today's data via Cloudflare Worker proxy.
+   Always resolves (never rejects) — returns null on any error.
+═══════════════════════════════════════════ */
+function fetchFromSheet() {
+  return new Promise(function(resolve) {
+    try {
+      var url = WORKER_URL + '?action=getToday&date=' + isoToday();
+      fetch(url, { method: 'GET' })
+        .then(function(resp) {
+          if (!resp.ok) { resolve(null); return; }
+          return resp.json();
+        })
+        .then(function(data) {
+          resolve((data && data.status === 'ok') ? data : null);
+        })
+        .catch(function(e) {
+          console.warn('Sheet fetch failed:', e.message);
+          resolve(null);
+        });
+    } catch(e) {
+      console.warn('fetchFromSheet error:', e.message);
+      resolve(null);
+    }
+  });
+}
+
+/* ═══════════════════════════════════════════
+   STATIC DATA
+═══════════════════════════════════════════ */
+var MANTRAS = [
   { text:"You don't have to be perfect. You just have to begin.", src:"— James Clear" },
   { text:"The mind is the athlete. Everything else follows.", src:"— David Goggins" },
   { text:"Between stimulus and response there is a space. In that space lies your power.", src:"— Viktor Frankl" },
@@ -596,231 +582,208 @@ const MANTRAS = [
   { text:"Energy flows where attention goes.", src:"— Tony Robbins" },
   { text:"Hard choices, easy life. Easy choices, hard life.", src:"— Jerzy Gregorek" },
   { text:"What you do today is what matters most.", src:"— Jocko Willink" },
-  { text:"The best investment you can make is in yourself.", src:"— Warren Buffett" },
+  { text:"The best investment you can make is in yourself.", src:"— Warren Buffett" }
 ];
 
-const PILLARS = [
+var PILLARS = [
   { e:'🧠', n:'Mental strength', s:'Build a resilient, sharp, unshakeable mind', items:[
     { t:'Control only what is in your control', d:'Let go of outcomes. Focus entirely on your effort and attitude.' },
     { t:'Embrace discomfort as growth', d:'Every hard moment is a deposit into your future self.' },
     { t:'Reject negative self-talk immediately', d:'Name the thought, step back from it, replace with a neutral fact.' },
     { t:'Focus on process, not results', d:'Show up fully. Results are a byproduct of consistent quality action.' },
-    { t:'Think long-term, act present', d:'What can I do right now that serves who I\'m becoming in 5 years?' },
+    { t:'Think long-term, act present', d:"What can I do right now that serves who I'm becoming in 5 years?" }
   ]},
   { e:'❤️', n:'Emotional control', s:'Stay regulated and intentional under pressure', items:[
     { t:'Pause before reacting', d:'Three deep breaths before responding to anything emotionally charged.' },
-    { t:'Name the emotion — don\'t become it', d:'"I notice I feel frustrated" — not "I am frustrated."' },
-    { t:'Respond to what is, not what you fear', d:'Stay in the present. Catastrophising borrows suffering from the future.' },
+    { t:"Name the emotion — don't become it", d:'"I notice I feel frustrated" — not "I am frustrated."' },
+    { t:'Respond to what is, not what you fear', d:'Stay present. Catastrophising borrows suffering from the future.' },
     { t:'Set the emotional tone first', d:'Your inner state radiates outward. People read energy before words.' },
-    { t:'Forgive quickly — especially yourself', d:'Resentment drains mental RAM. Release it and reclaim the space.' },
+    { t:'Forgive quickly — especially yourself', d:'Resentment drains mental RAM. Release it and reclaim the space.' }
   ]},
-  { e:'🎯', n:'Focus & clarity', s:'Protect your attention — it\'s your most finite resource', items:[
+  { e:'🎯', n:'Focus & clarity', s:"Protect your attention — it's your most finite resource", items:[
     { t:'One task at a time, always', d:'Every task switch costs cognitive energy. Guard your attention.' },
     { t:'Remove friction before you start', d:'Set up your environment the night before. Eliminate morning resistance.' },
     { t:'Kill distractions before they start', d:'Phone away, notifications off. Distraction begins with one ping.' },
     { t:'Time-block your most important work first', d:'Protect 90 minutes before meetings or messages touch you.' },
-    { t:'Revisit your goals weekly', d:'What you track, you tend. An unseen goal is a forgotten goal.' },
+    { t:'Revisit your goals weekly', d:"What you track, you tend. An unseen goal is a forgotten goal." }
   ]},
   { e:'⚡', n:'Body & energy', s:'Your physical state is the foundation everything rests on', items:[
     { t:'Move before you touch your phone', d:'Even 10 minutes of movement sets a different neurological baseline.' },
     { t:'Hydrate immediately on waking', d:'Your brain is ~75% water. Water before coffee, every day.' },
     { t:'Protect your sleep ruthlessly', d:'No screen 1 hour before bed. Sleep debt destroys emotional regulation.' },
-    { t:'Eat to fuel, not to fill', d:'Every meal is a choice about how sharp you\'ll be in 2 hours.' },
-    { t:'Breathe on purpose', d:'Box breathing — 4 in, hold 4, out 4, hold 4 — calms you in 2 minutes.' },
+    { t:'Eat to fuel, not to fill', d:"Every meal is a choice about how sharp you'll be in 2 hours." },
+    { t:'Breathe on purpose', d:'Box breathing — 4 in, hold 4, out 4, hold 4 — calms you in 2 minutes.' }
   ]},
   { e:'🤝', n:'Relationships', s:'The quality of your life is the quality of your connections', items:[
     { t:'Listen more than you speak', d:'Most conflict is a failure to feel heard. Give that gift first.' },
     { t:'Assume positive intent by default', d:'Before attributing malice, consider circumstance.' },
     { t:'Express appreciation specifically', d:'Tell someone one precise thing you value about them today.' },
     { t:'Set boundaries with warmth', d:'Say no to the request and yes to the person.' },
-    { t:'Be fully present', d:'Phone away. Eyes up. Half-presence is obvious to them.' },
-  ]},
+    { t:'Be fully present', d:'Phone away. Eyes up. Half-presence is obvious to them.' }
+  ]}
 ];
 
-const CHECKLIST = [
-  { t:'Drank water on waking', tag:'body', k:'water' },
-  { t:'Moved before checking phone', tag:'body', k:'move' },
-  { t:'Set today\'s intentions', tag:'mind', k:'intentions' },
-  { t:'Named my one priority', tag:'focus', k:'priority' },
-  { t:'Set emotional intention', tag:'emotion', k:'emotion' },
-  { t:'No reactive screen first 30 min', tag:'focus', k:'no_screen' },
-  { t:'Said something kind or grateful', tag:'heart', k:'kind' },
-  { t:'Took 3 deep breaths intentionally', tag:'body', k:'breathe' },
+var CHECKLIST = [
+  { t:'Drank water on waking',            tag:'body',    k:'water' },
+  { t:'Moved before checking phone',       tag:'body',    k:'move' },
+  { t:"Set today's intentions",            tag:'mind',    k:'intentions' },
+  { t:'Named my one priority',             tag:'focus',   k:'priority' },
+  { t:'Set emotional intention',           tag:'emotion', k:'emotion' },
+  { t:'No reactive screen first 30 min',   tag:'focus',   k:'no_screen' },
+  { t:'Said something kind or grateful',   tag:'heart',   k:'kind' },
+  { t:'Took 3 deep breaths intentionally', tag:'body',    k:'breathe' }
 ];
 
-const EMAP = { anger:'😤', anxiety:'😰', frustration:'😣', hurt:'💔', shame:'😔', overwhelm:'🌊', fear:'😨', jealousy:'👁' };
+var EMAP = { anger:'😤', anxiety:'😰', frustration:'😣', hurt:'💔', shame:'😔', overwhelm:'🌊', fear:'😨', jealousy:'👁' };
 
-/* ── STATE ── */
-let activePillar = null;
-const checked = {};
-let situations = [];
-let selEmotion = '';
-let pastEmoFilter = 'all';
-let intentionsSaved = false;   // true = show read view today
+/* ═══════════════════════════════════════════
+   STATE
+═══════════════════════════════════════════ */
+var activePillar = null;
+var checked = {};
+var situations = [];
+var selEmotion = '';
+var pastEmoFilter = 'all';
 
-/* ── TABS ── */
+/* ═══════════════════════════════════════════
+   HELPERS
+═══════════════════════════════════════════ */
+function isoToday() {
+  var d = new Date();
+  return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate());
+}
+function isoDate(d) {
+  return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate());
+}
+function pad(n) { return String(n).padStart(2,'0'); }
+function parseISO(s) {
+  if (!s) return null;
+  var p = s.split('-').map(Number);
+  return new Date(p[0], p[1]-1, p[2]);
+}
+function escH(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+var _tt = null;
+function showToast(msg, type) {
+  var el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast show' + (type ? ' '+type : '');
+  clearTimeout(_tt);
+  _tt = setTimeout(function(){ el.classList.remove('show'); }, 3200);
+}
+
+/* ═══════════════════════════════════════════
+   TABS
+═══════════════════════════════════════════ */
 function switchTab(tab) {
-  document.querySelectorAll('.pg').forEach(p => p.classList.remove('on'));
-  document.querySelectorAll('.tab').forEach(b => b.classList.remove('on'));
+  document.querySelectorAll('.pg').forEach(function(p){ p.classList.remove('on'); });
+  document.querySelectorAll('.tab').forEach(function(b){ b.classList.remove('on'); });
   document.getElementById('pg-' + tab).classList.add('on');
   document.querySelectorAll('.tab')[tab === 'morning' ? 0 : 1].classList.add('on');
   if (tab === 'situations') { renderStats(); renderPast(); }
   window.scrollTo({ top:0, behavior:'smooth' });
 }
 
-/* ── INIT ── */
-async function init() {
-  const now = new Date();
-  const h = now.getHours();
-  document.getElementById('greeting').textContent = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
-  document.getElementById('time-now').textContent = now.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit', hour12:true });
-  document.getElementById('date-line').textContent = now.toLocaleDateString('en-IN', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
-  const day = Math.floor((now - new Date(now.getFullYear(),0,0)) / 86400000);
-  document.getElementById('day-num').textContent = day;
-  const m = MANTRAS[day % MANTRAS.length];
-  document.getElementById('mantra-text').textContent = '\u201C' + m.text + '\u201D';
-  document.getElementById('mantra-source').textContent = m.src;
 
-  // Load checklist state from localStorage (device-local, OK to be per-device)
-  const stored = getTodayStored();
-  if (stored.checked) Object.assign(checked, stored.checked);
-  renderChecklist();
-  updateStreak();
-  loadSituations();
-  updateBadge();
+/* ═════════════════════════════════════════════
+   INIT — entry point
+═════════════════════════════════════════════ */
+function init() {
+  // Step 1: Header — synchronous, isolated so nothing else can crash
+  try {
+    var now = new Date();
+    var h = now.getHours();
+    document.getElementById('greeting').textContent = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+    document.getElementById('time-now').textContent = now.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit', hour12:true });
+    document.getElementById('date-line').textContent = now.toLocaleDateString('en-IN', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+    var day = Math.floor((now - new Date(now.getFullYear(),0,0)) / 86400000);
+    document.getElementById('day-num').textContent = day;
+    var m = MANTRAS[day % MANTRAS.length];
+    document.getElementById('mantra-text').textContent = '“' + m.text + '”';
+    document.getElementById('mantra-source').textContent = m.src;
+  } catch(e) { console.error('Header init error:', e); }
 
-  // Always show loading state while we fetch from Sheet
-  showLoadingIntentions();
+  // Step 2: Local checklist state
+  try {
+    var stored = getTodayStored();
+    if (stored.checked) Object.assign(checked, stored.checked);
+    renderChecklist();
+    updateStreak();
+    loadSituations();
+    updateBadge();
+  } catch(e) { console.error('Local state error:', e); }
 
-  // Sheet is the single source of truth for intentions — always fetch first
-  const sheetData = await fetchTodayFromSheet();
-  if (sheetData && sheetData.morning) {
-    // Sheet has data for today — show it
-    applySheetIntentions(sheetData.morning);
-  } else {
-    // No Sheet data or fetch failed — show the form but also show config banner
-    showForm();
-  }
+  // Step 3: Fetch intentions from Sheet
+  setIntentionsState('loading');
+  fetchFromSheet()
+    .then(function(data) {
+      if (data && data.morning &&
+          (data.morning.priority || data.morning.emotional_intention || data.morning.gratitude)) {
+        showReadView(
+          data.morning.priority || '',
+          data.morning.emotional_intention || '',
+          data.morning.gratitude || ''
+        );
+      } else {
+        setIntentionsState('form');
+      }
+    })
+    .catch(function() { setIntentionsState('form'); });
+}
+  });
 }
 
-function showForm() {
-  intentionsSaved = false;
-  document.getElementById('q-form-wrap').style.display = 'block';
-  document.getElementById('q-read-wrap').style.display = 'none';
+/* ═══════════════════════════════════════════
+   INTENTIONS: three display states
+   'loading' | 'form' | 'read'
+═══════════════════════════════════════════ */
+function setIntentionsState(state) {
+  document.getElementById('q-loading-wrap').style.display = state === 'loading' ? 'block' : 'none';
+  document.getElementById('q-form-wrap').style.display   = state === 'form'    ? 'block' : 'none';
+  document.getElementById('q-read-wrap').style.display   = state === 'read'    ? 'block' : 'none';
 }
 
-function showReadView(q1, q2, q3, synced) {
-  intentionsSaved = true;
-  document.getElementById('q-form-wrap').style.display = 'none';
-  document.getElementById('q-read-wrap').style.display = 'block';
-
-  // populate read cards
+function showReadView(q1, q2, q3) {
   document.getElementById('goal-q1').textContent = q1 || '—';
   document.getElementById('goal-q2').textContent = q2 || '—';
   document.getElementById('goal-q3').textContent = q3 || '—';
   document.getElementById('goals-date').textContent = new Date().toLocaleDateString('en-IN', { day:'numeric', month:'short' });
-
-  const syncLbl = document.getElementById('goals-synced-lbl');
-  syncLbl.textContent = synced ? 'Synced to Sheet ✓' : 'Saved locally';
-  syncLbl.className = 'goals-synced' + (synced ? ' ok' : '');
-
-  // also populate form fields in background so edit works
+  document.getElementById('goals-synced-lbl').textContent = 'Synced to Sheet ✓';
+  document.getElementById('goals-synced-lbl').className = 'goals-synced ok';
+  // keep form in sync for Edit
   document.getElementById('q1').value = q1 || '';
   document.getElementById('q2').value = q2 || '';
   document.getElementById('q3').value = q3 || '';
+  setIntentionsState('read');
 }
 
 function editIntentions() {
-  showForm();
+  // pre-fill form from read view
+  document.getElementById('q1').value = document.getElementById('goal-q1').textContent.replace('—','');
+  document.getElementById('q2').value = document.getElementById('goal-q2').textContent.replace('—','');
+  document.getElementById('q3').value = document.getElementById('goal-q3').textContent.replace('—','');
+  setIntentionsState('form');
   document.getElementById('q1').focus();
 }
 
-/* ── SHEET DATA MERGE ── */
-function mergeSheetData(d) {
-  // Sheet returned today's row — update local if different
-  const q1 = d.priority || '';
-  const q2 = d.emotional_intention || '';
-  const q3 = d.gratitude || '';
-  if (!q1 && !q2 && !q3) return;
-
-  // update localStorage
-  const stored = getTodayStored();
-  stored.q1 = q1; stored.q2 = q2; stored.q3 = q3; stored.synced = true;
-  localStorage.setItem(todayKey(), JSON.stringify(stored));
-
-  // update UI
-  showReadView(q1, q2, q3, true);
-  showToast('Today\'s intentions loaded from Sheet ✓', 'success');
-}
-
-/* ── PERSISTENCE ── */
-function isoToday() {
-  const d = new Date();
-  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
-}
-function isoDate(d) {
-  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
-}
-function parseISO(s) {
-  if (!s) return null;
-  const [y,mo,d] = s.split('-').map(Number); return new Date(y, mo-1, d);
-}
-function todayKey() {
-  const d = new Date();
-  return 'morning_' + d.getFullYear() + '_' + (d.getMonth()+1) + '_' + d.getDate();
-}
-function getTodayStored() {
-  try { const r = localStorage.getItem(todayKey()); return r ? JSON.parse(r) : {}; } catch(e) { return {}; }
-}
-function saveTodayLocal(extra) {
-  const stored = getTodayStored();
-  const merged = Object.assign(stored, { dateISO: isoToday() }, extra || {});
-  localStorage.setItem(todayKey(), JSON.stringify(merged));
-  updateStreak();
-}
-function loadTodayLocal() {
-  // Only load checklist state — questions always come from Sheet
-  const d = getTodayStored();
-  if (d.checked) Object.assign(checked, d.checked);
-}
 function clearQuestions() {
-  ['q1','q2','q3'].forEach(id => document.getElementById(id).value = '');
-  saveTodayLocal({ q1:'', q2:'', q3:'', synced:false });
+  ['q1','q2','q3'].forEach(function(id){ document.getElementById(id).value = ''; });
   document.getElementById('save-status').textContent = '';
 }
-function resetDay() {
-  if (!confirm('Reset all today\'s progress?')) return;
-  CHECKLIST.forEach(i => { checked[i.k] = false; });
-  clearQuestions();
-  showForm();
-  renderChecklist();
-  showToast('Day reset. Fresh start. 🌅');
-}
 
-/* ── STREAK ── */
-function updateStreak() {
-  let s = 0; const today = new Date();
-  for (let i = 0; i < 365; i++) {
-    const d = new Date(today); d.setDate(today.getDate()-i);
-    const raw = localStorage.getItem('morning_'+d.getFullYear()+'_'+(d.getMonth()+1)+'_'+d.getDate());
-    if (!raw) break;
-    try { const dd = JSON.parse(raw); if (CHECKLIST.filter(x=>dd.checked&&dd.checked[x.k]).length>0) s++; else if(i>0) break; } catch(e){break;}
-  }
-  document.getElementById('streak-txt').textContent = s>1 ? '🔥 '+s+'-day streak — keep going.' : s===1 ? '⭐ First step today.' : 'Start your first practice today.';
-}
-
-/* ── SAVE INTENTIONS TO SHEET ── */
+/* ═══════════════════════════════════════════
+   SAVE INTENTIONS TO SHEET
+═══════════════════════════════════════════ */
 async function saveToSheet() {
-  const q1 = document.getElementById('q1').value.trim();
-  const q2 = document.getElementById('q2').value.trim();
-  const q3 = document.getElementById('q3').value.trim();
-  if (!q1 && !q2 && !q3) { showToast('Fill in at least one intention first.', 'error'); return; }
+  var q1 = document.getElementById('q1').value.trim();
+  var q2 = document.getElementById('q2').value.trim();
+  var q3 = document.getElementById('q3').value.trim();
+  if (!q1 && !q2 && !q3) { showToast('Fill in at least one intention first.','error'); return; }
 
-  saveTodayLocal({ q1, q2, q3, checked, synced: false });
   setSt('Saving…', null);
-
-  const now = new Date();
-  const payload = {
+  var now = new Date();
+  var ok = await postToSheet({
     sheet: 'Morning Reflections',
     date: now.toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' }),
     dateISO: isoDate(now),
@@ -828,65 +791,67 @@ async function saveToSheet() {
     priority: q1,
     emotional_intention: q2,
     gratitude: q3,
-    checklist_done: CHECKLIST.filter(i=>checked[i.k]).map(i=>i.t).join(' | '),
-    score: CHECKLIST.filter(i=>checked[i.k]).length + '/' + CHECKLIST.length,
-  };
+    checklist_done: CHECKLIST.filter(function(i){ return checked[i.k]; }).map(function(i){ return i.t; }).join(' | '),
+    score: CHECKLIST.filter(function(i){ return checked[i.k]; }).length + '/' + CHECKLIST.length
+  });
 
-  const ok = await postToSheet(payload);
+  // Save checklist to local so it persists
+  saveTodayLocal({ checked: checked });
+
   if (ok) {
     setSt('Saved ✓', true);
     showToast('Intentions saved to Sheet ✓', 'success');
-    // Show read view immediately with what was just typed
     showReadView(q1, q2, q3);
-    // Also save to local as backup for checklist continuity
-    saveTodayLocal({ checked, synced: true });
   } else {
-    setSt('Network error — please try again.', false);
-    showToast('Could not reach Sheet. Please retry.', 'error');
-    // Stay on form so user can retry
+    setSt('Network error — please retry.', false);
+    showToast('Could not reach Sheet. Check connection.', 'error');
   }
 }
 
 function setSt(msg, ok) {
-  const el = document.getElementById('save-status');
+  var el = document.getElementById('save-status');
   el.textContent = msg;
-  el.className = 'save-st' + (ok===true?' ok':ok===false?' err':'');
+  el.className = 'save-st' + (ok === true ? ' ok' : ok === false ? ' err' : '');
 }
 
-/* ── PILLARS ── */
+/* ═══════════════════════════════════════════
+   PILLARS
+═══════════════════════════════════════════ */
 function togglePillar(id) {
-  const btns = document.querySelectorAll('.pillar');
-  const detail = document.getElementById('pillar-detail');
-  const empty = document.getElementById('pillar-empty');
+  var btns = document.querySelectorAll('.pillar');
+  var detail = document.getElementById('pillar-detail');
+  var empty = document.getElementById('pillar-empty');
   if (activePillar === id) {
-    // close
     activePillar = null;
-    btns.forEach(b => b.classList.remove('on'));
+    btns.forEach(function(b){ b.classList.remove('on'); });
     detail.classList.remove('on'); detail.innerHTML = '';
     empty.classList.remove('hidden');
     return;
   }
   activePillar = id;
-  btns.forEach(b => b.classList.remove('on'));
+  btns.forEach(function(b){ b.classList.remove('on'); });
   btns[id].classList.add('on');
-  const p = PILLARS[id];
+  var p = PILLARS[id];
   detail.innerHTML =
     '<div class="p-head"><div class="p-e">'+p.e+'</div><div><div class="p-title">'+p.n+'</div><div class="p-sub">'+p.s+'</div></div></div>' +
-    p.items.map(i =>
-      '<div class="p-row"><div class="p-dot"></div><div><div class="p-t">'+i.t+'</div><div class="p-s">'+i.d+'</div></div></div>'
-    ).join('');
+    p.items.map(function(i){
+      return '<div class="p-row"><div class="p-dot"></div><div><div class="p-t">'+i.t+'</div><div class="p-s">'+i.d+'</div></div></div>';
+    }).join('');
   detail.classList.add('on');
   empty.classList.add('hidden');
 }
 
-/* ── CHECKLIST ── */
+/* ═══════════════════════════════════════════
+   CHECKLIST
+═══════════════════════════════════════════ */
 function renderChecklist() {
-  const el = document.getElementById('cl-list'); el.innerHTML = '';
-  CHECKLIST.forEach(item => {
-    const done = !!checked[item.k];
-    const div = document.createElement('div');
-    div.className = 'cl-row' + (done?' done':'');
-    div.onclick = () => toggleCheck(item.k);
+  var el = document.getElementById('cl-list');
+  el.innerHTML = '';
+  CHECKLIST.forEach(function(item) {
+    var done = !!checked[item.k];
+    var div = document.createElement('div');
+    div.className = 'cl-row' + (done ? ' done' : '');
+    div.onclick = function(){ toggleCheck(item.k); };
     div.innerHTML = '<div class="cl-box"><span class="cl-tick">✓</span></div><div class="cl-txt">'+item.t+'</div><span class="cl-tag">'+item.tag+'</span>';
     el.appendChild(div);
   });
@@ -894,86 +859,125 @@ function renderChecklist() {
 }
 function toggleCheck(k) {
   checked[k] = !checked[k];
-  saveTodayLocal({ checked });
+  saveTodayLocal({ checked: checked });
   renderChecklist();
 }
 function updateProg() {
-  const done = CHECKLIST.filter(i=>checked[i.k]).length;
+  var done = CHECKLIST.filter(function(i){ return checked[i.k]; }).length;
   document.getElementById('prog-txt').textContent = done+'/'+CHECKLIST.length;
   document.getElementById('prog-fill').style.width = Math.round(done/CHECKLIST.length*100)+'%';
 }
 
-/* ── SITUATIONS ── */
-function loadSituations() {
-  try { const r=localStorage.getItem('morning_situations'); if(r) situations=JSON.parse(r); } catch(e){situations=[];}
+/* ═══════════════════════════════════════════
+   PERSISTENCE (checklist only — questions come from Sheet)
+═══════════════════════════════════════════ */
+function todayKey() {
+  var d = new Date();
+  return 'morning_' + d.getFullYear() + '_' + (d.getMonth()+1) + '_' + d.getDate();
 }
-function saveSits() { localStorage.setItem('morning_situations',JSON.stringify(situations)); }
-function updateBadge() { document.getElementById('sit-badge').textContent=situations.length; }
+function getTodayStored() {
+  try { var r = localStorage.getItem(todayKey()); return r ? JSON.parse(r) : {}; } catch(e) { return {}; }
+}
+function saveTodayLocal(extra) {
+  var stored = getTodayStored();
+  Object.assign(stored, { dateISO: isoToday() }, extra || {});
+  localStorage.setItem(todayKey(), JSON.stringify(stored));
+  updateStreak();
+}
+
+function resetDay() {
+  if (!confirm("Reset all today's progress?")) return;
+  CHECKLIST.forEach(function(i){ checked[i.k] = false; });
+  saveTodayLocal({ checked: checked });
+  clearQuestions();
+  setIntentionsState('form');
+  renderChecklist();
+  showToast('Day reset. Fresh start. 🌅');
+}
+
+/* ═══════════════════════════════════════════
+   STREAK
+═══════════════════════════════════════════ */
+function updateStreak() {
+  var s = 0; var today = new Date();
+  for (var i = 0; i < 365; i++) {
+    var d = new Date(today); d.setDate(today.getDate()-i);
+    var raw = localStorage.getItem('morning_'+d.getFullYear()+'_'+(d.getMonth()+1)+'_'+d.getDate());
+    if (!raw) break;
+    try {
+      var dd = JSON.parse(raw);
+      if (CHECKLIST.filter(function(x){ return dd.checked && dd.checked[x.k]; }).length > 0) s++;
+      else if (i > 0) break;
+    } catch(e) { break; }
+  }
+  document.getElementById('streak-txt').textContent = s > 1 ? '🔥 '+s+'-day streak — keep going.' : s === 1 ? '⭐ First step today.' : 'Start your first practice today.';
+}
+
+/* ═══════════════════════════════════════════
+   SITUATIONS
+═══════════════════════════════════════════ */
+function loadSituations() {
+  try { var r = localStorage.getItem('morning_situations'); if (r) situations = JSON.parse(r); } catch(e) { situations = []; }
+}
+function saveSits() { localStorage.setItem('morning_situations', JSON.stringify(situations)); }
+function updateBadge() { document.getElementById('sit-badge').textContent = situations.length; }
 
 function selEmo(el) {
-  document.querySelectorAll('.ep').forEach(p=>p.classList.remove('on'));
-  selEmotion = (selEmotion===el.dataset.val)?'':el.dataset.val;
+  document.querySelectorAll('.ep').forEach(function(p){ p.classList.remove('on'); });
+  selEmotion = (selEmotion === el.dataset.val) ? '' : el.dataset.val;
   if (selEmotion) el.classList.add('on');
 }
 
 function setSyncTxt(state, msg) {
-  const el = document.getElementById('sit-sync');
+  var el = document.getElementById('sit-sync');
   el.className = 'sync-txt ' + state;
   el.textContent = msg;
 }
 
 async function addSituation() {
-  const title = document.getElementById('sit-title').value.trim();
+  var title = document.getElementById('sit-title').value.trim();
   if (!title) { showToast('Describe the situation first.','error'); return; }
-  const now = new Date();
-  const sit = {
-    id: Date.now(),
+  var now = new Date();
+  var sit = {
+    id: Date.now(), timestamp: Date.now(),
     dateISO: isoDate(now),
     date: now.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}),
-    timestamp: Date.now(),
-    title,
+    title: title,
     trigger: document.getElementById('sit-trigger').value.trim(),
     reaction: document.getElementById('sit-reaction').value.trim(),
-    emotion: selEmotion,
-    strategy: '',
+    emotion: selEmotion, strategy: ''
   };
   situations.unshift(sit);
   saveSits(); updateBadge();
-  document.getElementById('sit-title').value='';
-  document.getElementById('sit-trigger').value='';
-  document.getElementById('sit-reaction').value='';
-  selEmotion='';
-  document.querySelectorAll('.ep').forEach(p=>p.classList.remove('on'));
+  document.getElementById('sit-title').value = '';
+  document.getElementById('sit-trigger').value = '';
+  document.getElementById('sit-reaction').value = '';
+  selEmotion = '';
+  document.querySelectorAll('.ep').forEach(function(p){ p.classList.remove('on'); });
 
   setSyncTxt('syncing','Syncing to Sheet…');
-  const ok = await postToSheet({
-    sheet:'Situations',
-    date:sit.date, dateISO:sit.dateISO,
+  var ok = await postToSheet({
+    sheet:'Situations', date:sit.date, dateISO:sit.dateISO,
     title:sit.title, trigger:sit.trigger, reaction:sit.reaction,
-    emotion:sit.emotion, strategy:'',
+    emotion:sit.emotion, strategy:''
   });
   setSyncTxt(ok?'ok':'err', ok?'Synced to Sheet ✓':'Saved locally (Sheet unreachable)');
-  showToast(ok?'Situation logged + synced ✓':'Saved locally — sync failed.', ok?'success':'error');
+  showToast(ok?'Situation logged ✓':'Saved locally — sync failed.', ok?'success':'error');
 }
 
-/* ── SIT CARD HTML ── */
 function sitCardHTML(s) {
-  const badge = s.emotion ? '<span class="emo-badge">'+(EMAP[s.emotion]||'')+' '+s.emotion+'</span>' : '';
-  const sb = s.strategy ? '<span class="strat-badge">✓ strategy</span>' : '';
+  var badge = s.emotion ? '<span class="emo-badge">'+(EMAP[s.emotion]||'')+' '+s.emotion+'</span>' : '';
+  var sb = s.strategy ? '<span class="strat-badge">✓ strategy</span>' : '';
   return '<div class="sc" id="sc-'+s.id+'">' +
     '<div class="sc-head" onclick="togSC('+s.id+')">' +
-      '<div class="sc-meta">' +
-        '<div class="sc-title">'+escH(s.title)+'</div>' +
-        '<div class="sc-sub">'+s.date+badge+sb+'</div>' +
-      '</div>' +
+      '<div class="sc-meta"><div class="sc-title">'+escH(s.title)+'</div><div class="sc-sub">'+s.date+badge+sb+'</div></div>' +
       '<div class="sc-tog">▾</div>' +
     '</div>' +
     '<div class="sc-body">' +
-      (s.trigger?'<div class="sb-sec"><div class="sb-lbl">Trigger</div><div class="sb-txt">'+escH(s.trigger)+'</div></div>':'') +
-      (s.reaction?'<div class="sb-sec"><div class="sb-lbl">My response</div><div class="sb-txt">'+escH(s.reaction)+'</div></div>':'') +
-      '<div class="sb-sec">' +
-        '<div class="sb-lbl">Better ways to handle this</div>' +
-        '<textarea class="strat-area" id="str-'+s.id+'" rows="3" placeholder="Specific scripts, reframes, or techniques for next time…">'+escH(s.strategy)+'</textarea>' +
+      (s.trigger ? '<div class="sb-sec"><div class="sb-lbl">Trigger</div><div class="sb-txt">'+escH(s.trigger)+'</div></div>' : '') +
+      (s.reaction ? '<div class="sb-sec"><div class="sb-lbl">My response</div><div class="sb-txt">'+escH(s.reaction)+'</div></div>' : '') +
+      '<div class="sb-sec"><div class="sb-lbl">Better ways to handle this</div>' +
+        '<textarea class="strat-area" id="str-'+s.id+'" rows="3" placeholder="Scripts, reframes, techniques for next time…">'+escH(s.strategy)+'</textarea>' +
         '<div class="sc-foot">' +
           '<button class="del-btn" onclick="delSit('+s.id+')">🗑 Delete</button>' +
           '<button class="btn teal" style="font-size:11px;padding:5px 12px" onclick="saveSt('+s.id+')">Save strategy ✓</button>' +
@@ -983,132 +987,127 @@ function sitCardHTML(s) {
   '</div>';
 }
 
-function togSC(id) { const c=document.getElementById('sc-'+id); if(c) c.classList.toggle('open'); }
+function togSC(id) { var c = document.getElementById('sc-'+id); if(c) c.classList.toggle('open'); }
 
 async function saveSt(id) {
-  const area = document.getElementById('str-'+id); if(!area) return;
-  const sit = situations.find(s=>s.id===id); if(!sit) return;
+  var area = document.getElementById('str-'+id); if(!area) return;
+  var sit = situations.find(function(s){ return s.id===id; }); if(!sit) return;
   sit.strategy = area.value.trim();
   saveSits();
-  try { await postToSheet({sheet:'Situations',action:'update_strategy',dateISO:sit.dateISO,title:sit.title,strategy:sit.strategy}); } catch(_){}
+  await postToSheet({sheet:'Situations',action:'update_strategy',dateISO:sit.dateISO,title:sit.title,strategy:sit.strategy});
   renderPast();
-  setTimeout(()=>{ const c=document.getElementById('sc-'+id); if(c) c.classList.add('open'); },30);
+  setTimeout(function(){ var c=document.getElementById('sc-'+id); if(c) c.classList.add('open'); },30);
   showToast('Strategy saved ✓','success');
 }
 
 function delSit(id) {
   if(!confirm('Delete this situation?')) return;
-  situations=situations.filter(s=>s.id!==id);
+  situations = situations.filter(function(s){ return s.id!==id; });
   saveSits(); updateBadge(); renderStats(); renderPast();
   showToast('Deleted.','');
 }
 
-/* ── PAST TAB ── */
+/* ═══════════════════════════════════════════
+   PAST SITUATIONS TAB
+═══════════════════════════════════════════ */
 function renderStats() {
-  const total=situations.length, ws=situations.filter(s=>s.strategy).length;
-  document.getElementById('st-total').textContent=total;
-  document.getElementById('st-strat').textContent=ws;
-  document.getElementById('st-pend').textContent=total-ws;
-  const freq={};
-  situations.forEach(s=>{ if(s.emotion) freq[s.emotion]=(freq[s.emotion]||0)+1; });
-  const top=Object.entries(freq).sort((a,b)=>b[1]-a[1])[0];
-  document.getElementById('st-emo').textContent=top?(EMAP[top[0]]||'')+' '+top[0]:'—';
+  var total = situations.length;
+  var ws = situations.filter(function(s){ return s.strategy; }).length;
+  document.getElementById('st-total').textContent = total;
+  document.getElementById('st-strat').textContent = ws;
+  document.getElementById('st-pend').textContent = total - ws;
+  var freq = {};
+  situations.forEach(function(s){ if(s.emotion) freq[s.emotion]=(freq[s.emotion]||0)+1; });
+  var top = Object.entries(freq).sort(function(a,b){ return b[1]-a[1]; })[0];
+  document.getElementById('st-emo').textContent = top ? (EMAP[top[0]]||'')+' '+top[0] : '—';
 }
 
 function setRange(el, r) {
-  document.querySelectorAll('.dq').forEach(b=>b.classList.remove('on')); el.classList.add('on');
-  const now=new Date(), f=document.getElementById('date-from'), t=document.getElementById('date-to');
-  t.value=isoDate(now);
-  if(r==='all'){f.value='';t.value='';}
-  else if(r==='today'){f.value=isoDate(now);}
-  else if(r==='week'){const d=new Date(now);d.setDate(d.getDate()-6);f.value=isoDate(d);}
-  else if(r==='month'){const d=new Date(now);d.setDate(d.getDate()-29);f.value=isoDate(d);}
-  else if(r==='3m'){const d=new Date(now);d.setDate(d.getDate()-89);f.value=isoDate(d);}
+  document.querySelectorAll('.dq').forEach(function(b){ b.classList.remove('on'); }); el.classList.add('on');
+  var now = new Date();
+  var f = document.getElementById('date-from'), t = document.getElementById('date-to');
+  t.value = isoDate(now);
+  if (r==='all'){ f.value=''; t.value=''; }
+  else if (r==='today'){ f.value=isoDate(now); }
+  else if (r==='week'){ var d=new Date(now); d.setDate(d.getDate()-6); f.value=isoDate(d); }
+  else if (r==='month'){ var d=new Date(now); d.setDate(d.getDate()-29); f.value=isoDate(d); }
+  else if (r==='3m'){ var d=new Date(now); d.setDate(d.getDate()-89); f.value=isoDate(d); }
   renderPast();
 }
 
 function clearDateFilter() {
   document.getElementById('date-from').value='';
   document.getElementById('date-to').value='';
-  document.querySelectorAll('.dq').forEach(b=>b.classList.remove('on'));
+  document.querySelectorAll('.dq').forEach(function(b){ b.classList.remove('on'); });
   document.querySelector('.dq[data-r="all"]').classList.add('on');
   renderPast();
 }
 
 function setEmoFilter(el) {
-  document.querySelectorAll('.ef').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.ef').forEach(function(p){ p.classList.remove('on'); });
   el.classList.add('on');
-  pastEmoFilter=el.dataset.f;
+  pastEmoFilter = el.dataset.f;
   renderPast();
 }
 
 function renderPast() {
-  const search=(document.getElementById('psearch').value||'').toLowerCase().trim();
-  const sort=document.getElementById('psort').value;
-  const fv=document.getElementById('date-from').value;
-  const tv=document.getElementById('date-to').value;
-  const fd=fv?parseISO(fv):null;
-  const td=tv?parseISO(tv):null;
-  if(td) td.setHours(23,59,59);
+  var search = (document.getElementById('psearch').value || '').toLowerCase().trim();
+  var sort = document.getElementById('psort').value;
+  var fv = document.getElementById('date-from').value;
+  var tv = document.getElementById('date-to').value;
+  var fd = fv ? parseISO(fv) : null;
+  var td = tv ? parseISO(tv) : null;
+  if (td) td.setHours(23,59,59);
 
-  let list=situations.slice();
-  if(fd||td) list=list.filter(s=>{ const d=s.dateISO?parseISO(s.dateISO):null; if(!d)return true; if(fd&&d<fd)return false; if(td&&d>td)return false; return true; });
-  if(pastEmoFilter!=='all') list=list.filter(s=>s.emotion===pastEmoFilter);
-  if(search) list=list.filter(s=>(s.title+s.trigger+s.reaction+s.strategy).toLowerCase().includes(search));
-  if(sort==='oldest') list.sort((a,b)=>a.timestamp-b.timestamp);
-  else if(sort==='newest') list.sort((a,b)=>b.timestamp-a.timestamp);
-  else if(sort==='no-strat') list.sort((a,b)=>(a.strategy?1:0)-(b.strategy?1:0));
-  else if(sort==='has-strat') list.sort((a,b)=>(b.strategy?1:0)-(a.strategy?1:0));
+  var list = situations.slice();
+  if (fd||td) list = list.filter(function(s){
+    var d = s.dateISO ? parseISO(s.dateISO) : null; if(!d) return true;
+    if(fd&&d<fd) return false; if(td&&d>td) return false; return true;
+  });
+  if (pastEmoFilter!=='all') list = list.filter(function(s){ return s.emotion===pastEmoFilter; });
+  if (search) list = list.filter(function(s){ return (s.title+s.trigger+s.reaction+s.strategy).toLowerCase().includes(search); });
 
-  document.getElementById('pmeta').textContent=list.length+' of '+situations.length+' situation'+(situations.length!==1?'s':'');
-  const log=document.getElementById('past-log');
-  if(!list.length) {
-    log.innerHTML='<div class="sit-empty">'+(situations.length===0?'Nothing logged yet.<br>Head to the Morning tab to record your first situation.<br><br><button class="btn" onclick="switchTab(\'morning\')">← Go to morning</button>':'No matches for the current filter.')+'</div>';
+  if (sort==='oldest') list.sort(function(a,b){ return a.timestamp-b.timestamp; });
+  else if (sort==='newest') list.sort(function(a,b){ return b.timestamp-a.timestamp; });
+  else if (sort==='no-strat') list.sort(function(a,b){ return (a.strategy?1:0)-(b.strategy?1:0); });
+  else if (sort==='has-strat') list.sort(function(a,b){ return (b.strategy?1:0)-(a.strategy?1:0); });
+
+  document.getElementById('pmeta').textContent = list.length+' of '+situations.length+' situation'+(situations.length!==1?'s':'');
+  var log = document.getElementById('past-log');
+  if (!list.length) {
+    log.innerHTML = '<div class="sit-empty">'+(situations.length===0
+      ? 'Nothing logged yet.<br><br><button class="btn" onclick="switchTab('morning')">← Go to morning</button>'
+      : 'No matches for the current filter.')+'</div>';
     return;
   }
-  log.innerHTML=list.map(s=>sitCardHTML(s)).join('');
+  log.innerHTML = list.map(sitCardHTML).join('');
 }
 
-/* ── EXPORT ── */
 function exportCSV() {
-  if(!situations.length){showToast('Nothing to export yet.','error');return;}
-  const h=['Date','Situation','Trigger','Reaction','Emotion','Strategy'];
-  const rows=situations.map(s=>[s.date,s.title,s.trigger||'',s.reaction||'',s.emotion||'',s.strategy||''].map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(','));
-  const a=document.createElement('a');
-  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent([h.join(','),...rows].join('\n'));
-  a.download='situations-'+isoToday()+'.csv';
+  if (!situations.length) { showToast('Nothing to export yet.','error'); return; }
+  var h = ['Date','Situation','Trigger','Reaction','Emotion','Strategy'];
+  var rows = situations.map(function(s){
+    return [s.date,s.title,s.trigger||'',s.reaction||'',s.emotion||'',s.strategy||'']
+      .map(function(v){ return '"'+String(v).replace(/"/g,'""')+'"'; }).join(',');
+  });
+  var a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,'+encodeURIComponent([h.join(',')].concat(rows).join('\n'));
+  a.download = 'situations-'+isoToday()+'.csv';
   a.click();
   showToast('CSV exported ✓','success');
 }
 
-/* ── UTILS ── */
-function escH(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-let _tt=null;
-function showToast(msg,type){
-  const el=document.getElementById('toast');
-  el.textContent=msg; el.className='toast show'+(type?' '+type:'');
-  clearTimeout(_tt); _tt=setTimeout(()=>el.classList.remove('show'),3200);
-}
-
-/* ── AUTO-SAVE QUESTIONS ── */
-['q1','q2','q3'].forEach(id=>{
-  document.getElementById(id).addEventListener('input',()=>{
-    clearTimeout(window._qs);
-    window._qs=setTimeout(()=>{
-      saveTodayLocal({
-        q1:document.getElementById('q1').value,
-        q2:document.getElementById('q2').value,
-        q3:document.getElementById('q3').value,
-      });
-    },700);
-  });
-});
-
-/* ── START ── */
+/* ═══════════════════════════════════════════
+   START
+═══════════════════════════════════════════ */
 init();
-setInterval(()=>{
-  document.getElementById('time-now').textContent=new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true});
-},60000);
+
+setInterval(function(){
+  document.getElementById('time-now').textContent =
+    new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true});
+}, 60000);
+
+
 </script>
 </body>
 </html>
