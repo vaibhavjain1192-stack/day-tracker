@@ -704,20 +704,22 @@ function init() {
     document.getElementById('mantra-source').textContent = m.src;
   } catch(e) { console.error('Header init error:', e); }
 
-  // Step 2: Local checklist state
+  // Step 2: Local checklist + situations state
   try {
     var stored = getTodayStored();
     if (stored.checked) Object.assign(checked, stored.checked);
     renderChecklist();
     updateStreak();
-    loadSituations();
+    loadSituations();   // load from localStorage first (instant)
     updateBadge();
   } catch(e) { console.error('Local state error:', e); }
 
-  // Step 3: Fetch intentions from Sheet
+  // Step 3: Fetch intentions AND all situations from Sheet in parallel
   setIntentionsState('loading');
-  fetchFromSheet()
-    .then(function(data) {
+
+  Promise.all([fetchFromSheet(), fetchAllSituations()])
+    .then(function(results) {
+      var data = results[0];
       if (data && data.morning &&
           (data.morning.priority || data.morning.emotional_intention || data.morning.gratitude)) {
         showReadView(
@@ -915,10 +917,70 @@ function updateStreak() {
    SITUATIONS
 ═══════════════════════════════════════════ */
 function loadSituations() {
+  // Load from localStorage as immediate baseline
   try { var r = localStorage.getItem('morning_situations'); if (r) situations = JSON.parse(r); } catch(e) { situations = []; }
 }
-function saveSits() { localStorage.setItem('morning_situations', JSON.stringify(situations)); }
+
+function saveSits() {
+  localStorage.setItem('morning_situations', JSON.stringify(situations));
+}
+
 function updateBadge() { document.getElementById('sit-badge').textContent = situations.length; }
+
+// Fetch ALL situations from Sheet and merge with local
+function fetchAllSituations() {
+  return new Promise(function(resolve) {
+    try {
+      fetch(WORKER_URL + '?action=getAllSituations')
+        .then(function(resp) { return resp.ok ? resp.json() : null; })
+        .then(function(data) {
+          if (data && data.status === 'ok' && Array.isArray(data.situations)) {
+            mergeSituationsFromSheet(data.situations);
+          }
+          resolve();
+        })
+        .catch(function() { resolve(); });
+    } catch(e) { resolve(); }
+  });
+}
+
+function mergeSituationsFromSheet(sheetSits) {
+  // Build a map of existing local situations by title+dateISO for dedup
+  var localMap = {};
+  situations.forEach(function(s) {
+    localMap[(s.dateISO||'') + '|' + (s.title||'')] = true;
+  });
+
+  // Add Sheet situations that aren't already local
+  var added = 0;
+  sheetSits.forEach(function(s) {
+    var key = (s.dateISO||'') + '|' + (s.title||'');
+    if (!localMap[key]) {
+      situations.push({
+        id: Date.now() + added++,
+        timestamp: s.dateISO ? new Date(s.dateISO).getTime() : Date.now(),
+        dateISO: s.dateISO || '',
+        date: s.date || '',
+        title: s.title || '',
+        trigger: s.trigger || '',
+        reaction: s.reaction || '',
+        emotion: s.emotion || '',
+        strategy: s.strategy || '',
+      });
+    }
+  });
+
+  if (added > 0) {
+    // Sort newest first
+    situations.sort(function(a,b){ return b.timestamp - a.timestamp; });
+    saveSits();
+    updateBadge();
+    // Refresh Past Situations tab if it's open
+    if (document.getElementById('pg-situations').classList.contains('on')) {
+      renderStats(); renderPast();
+    }
+  }
+}
 
 function selEmo(el) {
   document.querySelectorAll('.ep').forEach(function(p){ p.classList.remove('on'); });
