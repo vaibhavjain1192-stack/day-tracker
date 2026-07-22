@@ -261,6 +261,7 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
   </div>
 </nav>
 
+
 <!-- ══ TAB 1: MORNING ══ -->
 <div class="pg on" id="pg-morning">
 
@@ -532,15 +533,31 @@ async function postToSheet(data) {
   }
 }
 
-/* ── GET from Sheet (read back today's data) ── */
+/* ── GET from Sheet (read back today's data) ──
+   Apps Script Web Apps redirect GET requests (302 → final URL with CORS headers).
+   We must follow redirects and read the JSON response properly. ── */
 async function fetchTodayFromSheet() {
   try {
     const url = SHEET_URL + '?action=getToday&date=' + encodeURIComponent(isoToday());
-    const resp = await fetch(url, { method: 'GET' });
-    if (!resp.ok) return null;
+    const resp = await fetch(url, {
+      method: 'GET',
+      redirect: 'follow',           // follow the Apps Script 302 redirect
+    });
+    if (!resp.ok) {
+      console.warn('Sheet GET failed:', resp.status);
+      return null;
+    }
     const json = await resp.json();
-    return json && json.status === 'ok' ? json.data : null;
-  } catch(e) { return null; }
+    console.log('Sheet response:', JSON.stringify(json));
+    if (json && json.status === 'ok') {
+      // Return the full response object — caller picks .morning or .situations
+      return json;
+    }
+    return null;
+  } catch(e) {
+    console.warn('Sheet fetch error:', e.message);
+    return null;
+  }
 }
 
 /* ── DATA ── */
@@ -661,7 +678,7 @@ async function init() {
     // Sheet has data for today — show it
     applySheetIntentions(sheetData.morning);
   } else {
-    // No Sheet data — show the empty form
+    // No Sheet data or fetch failed — show the form but also show config banner
     showForm();
   }
 }
