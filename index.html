@@ -731,8 +731,6 @@ function init() {
     })
     .catch(function() { setIntentionsState('form'); });
 }
-  });
-}
 
 /* ═══════════════════════════════════════════
    INTENTIONS: three display states
@@ -1076,7 +1074,7 @@ function renderPast() {
   var log = document.getElementById('past-log');
   if (!list.length) {
     log.innerHTML = '<div class="sit-empty">'+(situations.length===0
-      ? 'Nothing logged yet.<br><br><button class="btn" onclick="switchTab('morning')">← Go to morning</button>'
+      ? 'Nothing logged yet.<br><br><button class="btn" onclick="switchTab(\'morning\')">&#8592; Go to morning</button>'
       : 'No matches for the current filter.')+'</div>';
     return;
   }
