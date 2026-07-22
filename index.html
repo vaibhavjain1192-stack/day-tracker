@@ -96,6 +96,15 @@ body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:
 .save-st.ok{color:var(--green)}
 .save-st.err{color:var(--rose)}
 
+/* LOADING SKELETON */
+.q-loading-card{background:var(--card);border:1px solid var(--border);border-radius:var(--rlg);padding:1rem}
+.q-skel{background:linear-gradient(90deg,var(--surface) 25%,#232840 50%,var(--surface) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:4px;height:12px;margin-bottom:4px}
+.q-skel-sm{width:55%;height:10px}
+.q-skel-lg{width:100%;height:28px;margin-top:4px;margin-bottom:6px}
+.q-skel-md{width:100%;height:28px;margin-top:4px}
+.q-loading-note{font-size:11px;color:var(--text-3);margin-top:10px;text-align:center}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
 @media(max-width:580px){
   .sit-flds{grid-template-columns:1fr!important}
   .past-stats{grid-template-columns:repeat(2,1fr)!important}
@@ -275,6 +284,20 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
   </div>
 
   <hr class="d">
+
+  <!-- Today's intentions: LOADING state (shown while Sheet fetch is in flight) -->
+  <div id="q-loading-wrap" style="display:none">
+    <div class="lbl">Today's intentions <span class="lbl-line"></span></div>
+    <div class="q-loading-card">
+      <div class="q-skel q-skel-sm"></div>
+      <div class="q-skel q-skel-lg"></div>
+      <div class="q-skel q-skel-sm" style="margin-top:8px"></div>
+      <div class="q-skel q-skel-lg"></div>
+      <div class="q-skel q-skel-sm" style="margin-top:8px"></div>
+      <div class="q-skel q-skel-md"></div>
+      <div class="q-loading-note">Checking your Sheet for today's intentions…</div>
+    </div>
+  </div>
 
   <!-- Today's intentions: FORM state (shown when not yet filled) -->
   <div id="q-form-wrap">
@@ -621,31 +644,26 @@ async function init() {
   document.getElementById('mantra-text').textContent = '\u201C' + m.text + '\u201D';
   document.getElementById('mantra-source').textContent = m.src;
 
-  loadTodayLocal();      // load from localStorage first (instant)
+  // Load checklist state from localStorage (device-local, OK to be per-device)
+  const stored = getTodayStored();
+  if (stored.checked) Object.assign(checked, stored.checked);
   renderChecklist();
   updateStreak();
   loadSituations();
   updateBadge();
-  checkIntentionsState(); // show form or read view
 
-  // then try to pull from Sheet in background
+  // Always show loading state while we fetch from Sheet
+  showLoadingIntentions();
+
+  // Sheet is the single source of truth for intentions — always fetch first
   const sheetData = await fetchTodayFromSheet();
-  if (sheetData) mergeSheetData(sheetData);
-}
-
-/* ── INTENTIONS STATE ── */
-function checkIntentionsState() {
-  const raw = localStorage.getItem(todayKey());
-  if (!raw) { showForm(); return; }
-  try {
-    const d = JSON.parse(raw);
-    const hasData = d.q1 || d.q2 || d.q3;
-    if (hasData) {
-      showReadView(d.q1 || '', d.q2 || '', d.q3 || '', d.synced || false);
-    } else {
-      showForm();
-    }
-  } catch(e) { showForm(); }
+  if (sheetData && sheetData.morning) {
+    // Sheet has data for today — show it
+    applySheetIntentions(sheetData.morning);
+  } else {
+    // No Sheet data — show the empty form
+    showForm();
+  }
 }
 
 function showForm() {
@@ -724,11 +742,9 @@ function saveTodayLocal(extra) {
   updateStreak();
 }
 function loadTodayLocal() {
+  // Only load checklist state — questions always come from Sheet
   const d = getTodayStored();
   if (d.checked) Object.assign(checked, d.checked);
-  if (d.q1) document.getElementById('q1').value = d.q1;
-  if (d.q2) document.getElementById('q2').value = d.q2;
-  if (d.q3) document.getElementById('q3').value = d.q3;
 }
 function clearQuestions() {
   ['q1','q2','q3'].forEach(id => document.getElementById(id).value = '');
@@ -781,16 +797,17 @@ async function saveToSheet() {
 
   const ok = await postToSheet(payload);
   if (ok) {
-    saveTodayLocal({ q1, q2, q3, checked, synced: true });
     setSt('Saved ✓', true);
     showToast('Intentions saved to Sheet ✓', 'success');
+    // Show read view immediately with what was just typed
+    showReadView(q1, q2, q3);
+    // Also save to local as backup for checklist continuity
+    saveTodayLocal({ checked, synced: true });
   } else {
-    setSt('Saved locally — Sheet unreachable', false);
-    showToast('Saved locally. Sheet sync failed.', 'error');
+    setSt('Network error — please try again.', false);
+    showToast('Could not reach Sheet. Please retry.', 'error');
+    // Stay on form so user can retry
   }
-
-  // switch to read view
-  showReadView(q1, q2, q3, ok);
 }
 
 function setSt(msg, ok) {
