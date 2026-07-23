@@ -243,6 +243,28 @@ body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:
 .del-btn:hover{color:var(--rose)}
 .sit-empty{text-align:center;padding:2.5rem 1rem;background:var(--card);border:1px dashed var(--border);border-radius:var(--r);color:var(--text-3);font-size:12px;line-height:1.7}
 
+/* THOUGHTS TAB */
+.th-add-block{background:var(--card);border:1px solid var(--border);border-radius:var(--rlg);padding:1rem;margin-bottom:1rem}
+.th-add-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.th-field-full{grid-column:1/-1}
+.th-cat-pills,.th-emo-pills{display:flex;flex-wrap:wrap;gap:5px;margin-top:2px}
+.thp{padding:3px 10px;font-size:11px;border-radius:20px;border:1px solid var(--border-md);color:var(--text-2);background:transparent;cursor:pointer;transition:all var(--tr);font-family:var(--fb)}
+.thp:hover{background:var(--surface);color:var(--text-1)}
+.thp.on{background:var(--gold-dim);border-color:rgba(201,168,76,0.4);color:var(--gold)}
+.th-add-foot{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
+.th-filter-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:1rem}
+.th-log{display:flex;flex-direction:column;gap:8px}
+.th-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:1rem;transition:border-color var(--tr)}
+.th-card:hover{border-color:var(--border-md)}
+.th-card-text{font-family:var(--fd);font-size:1rem;font-style:italic;color:var(--text-1);line-height:1.6;margin-bottom:.6rem}
+.th-card-meta{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:.5rem}
+.th-cat-badge{font-size:10px;padding:2px 8px;border-radius:20px;background:var(--gold-dim);border:1px solid rgba(201,168,76,0.28);color:var(--gold)}
+.th-emo-badge{font-size:10px;padding:2px 8px;border-radius:20px;background:var(--teal-dim);border:1px solid rgba(78,205,196,0.28);color:var(--teal)}
+.th-date{font-size:10px;color:var(--text-3);font-family:var(--fm)}
+.th-url{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--gold);text-decoration:none;word-break:break-all}
+.th-url:hover{text-decoration:underline}
+.th-card-foot{display:flex;justify-content:space-between;align-items:center;margin-top:.5rem;padding-top:.5rem;border-top:1px solid var(--border)}
+@media(max-width:580px){.th-add-grid{grid-template-columns:1fr}}
 /* TOAST */
 .toast{position:fixed;bottom:1.25rem;right:1.25rem;background:#1E2333;border:1px solid var(--border-md);border-radius:var(--r);padding:10px 16px;font-size:12px;color:var(--text-1);box-shadow:0 6px 24px rgba(0,0,0,0.4);opacity:0;transform:translateY(6px);transition:all 0.22s ease;pointer-events:none;z-index:100;max-width:280px}
 .toast.show{opacity:1;transform:translateY(0)}
@@ -258,6 +280,7 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
   <div class="nav-inner">
     <button class="tab on" onclick="switchTab('morning')">☀️ Morning</button>
     <button class="tab" onclick="switchTab('situations')">🪞 Situations <span class="badge" id="sit-badge">0</span></button>
+    <button class="tab" onclick="switchTab('thoughts')">💡 Thoughts <span class="badge" id="th-badge">0</span></button>
   </div>
 </nav>
 
@@ -504,6 +527,99 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
   </div>
 </div><!-- /pg-situations -->
 
+<!-- ══ TAB 3: THOUGHTS ══ -->
+<div class="pg" id="pg-thoughts">
+
+  <div class="past-hdr">
+    <div class="past-title">Good Thoughts</div>
+    <div class="past-sub">Your personal repository of ideas, insights and inspirations.</div>
+  </div>
+
+  <!-- Add thought form -->
+  <div class="th-add-block">
+    <div class="th-add-grid">
+      <div class="th-field-full">
+        <label class="sfl">The thought / insight</label>
+        <textarea class="sin" id="th-text" rows="3" placeholder="Write the thought, quote, or insight exactly as it struck you…"></textarea>
+      </div>
+      <div class="th-field-full">
+        <label class="sfl">Source or URL <span style="color:var(--text-3);font-weight:400">(optional)</span></label>
+        <input class="sin" id="th-url" type="text" placeholder="https://… or Author / Book / Podcast name" style="resize:none">
+      </div>
+      <div>
+        <label class="sfl">Category</label>
+        <div class="th-cat-pills" id="th-cat-pills">
+          <button class="thp" onclick="selThCat(this)" data-val="mindset">🧠 Mindset</button>
+          <button class="thp" onclick="selThCat(this)" data-val="emotion">❤️ Emotion</button>
+          <button class="thp" onclick="selThCat(this)" data-val="focus">🎯 Focus</button>
+          <button class="thp" onclick="selThCat(this)" data-val="discipline">⚡ Discipline</button>
+          <button class="thp" onclick="selThCat(this)" data-val="relationships">🤝 Relationships</button>
+          <button class="thp" onclick="selThCat(this)" data-val="philosophy">📖 Philosophy</button>
+          <button class="thp" onclick="selThCat(this)" data-val="business">💼 Business</button>
+          <button class="thp" onclick="selThCat(this)" data-val="life">🌱 Life</button>
+        </div>
+      </div>
+      <div>
+        <label class="sfl">How does it make you feel?</label>
+        <div class="th-emo-pills" id="th-emo-pills">
+          <button class="thp" onclick="selThEmo(this)" data-val="inspired">✨ Inspired</button>
+          <button class="thp" onclick="selThEmo(this)" data-val="calm">🧘 Calm</button>
+          <button class="thp" onclick="selThEmo(this)" data-val="motivated">🔥 Motivated</button>
+          <button class="thp" onclick="selThEmo(this)" data-val="grateful">🙏 Grateful</button>
+          <button class="thp" onclick="selThEmo(this)" data-val="reflective">🪞 Reflective</button>
+          <button class="thp" onclick="selThEmo(this)" data-val="challenged">💪 Challenged</button>
+        </div>
+      </div>
+    </div>
+    <div class="th-add-foot">
+      <span class="sync-txt" id="th-sync">Add your first thought</span>
+      <button class="btn gold" onclick="addThought()">Save thought ↗</button>
+    </div>
+  </div>
+
+  <!-- Filter + search bar -->
+  <div class="th-filter-bar">
+    <input class="psearch" id="th-search" type="text" placeholder="Search thoughts…" oninput="renderThoughts()" style="flex:1;min-width:160px">
+    <select class="psort" id="th-sort" onchange="renderThoughts()">
+      <option value="newest">Newest first</option>
+      <option value="oldest">Oldest first</option>
+    </select>
+    <button class="btn" onclick="exportThoughtsCSV()">Export CSV</button>
+  </div>
+
+  <!-- Category filter -->
+  <div class="ef-bar" id="th-cat-filter">
+    <button class="ef on" data-c="all" onclick="setThCatFilter(this)">All</button>
+    <button class="ef" data-c="mindset" onclick="setThCatFilter(this)">🧠 Mindset</button>
+    <button class="ef" data-c="emotion" onclick="setThCatFilter(this)">❤️ Emotion</button>
+    <button class="ef" data-c="focus" onclick="setThCatFilter(this)">🎯 Focus</button>
+    <button class="ef" data-c="discipline" onclick="setThCatFilter(this)">⚡ Discipline</button>
+    <button class="ef" data-c="relationships" onclick="setThCatFilter(this)">🤝 Relationships</button>
+    <button class="ef" data-c="philosophy" onclick="setThCatFilter(this)">📖 Philosophy</button>
+    <button class="ef" data-c="business" onclick="setThCatFilter(this)">💼 Business</button>
+    <button class="ef" data-c="life" onclick="setThCatFilter(this)">🌱 Life</button>
+  </div>
+
+  <!-- Emotion filter -->
+  <div class="ef-bar" id="th-emo-filter">
+    <button class="ef on" data-e="all" onclick="setThEmoFilter(this)">All feelings</button>
+    <button class="ef" data-e="inspired" onclick="setThEmoFilter(this)">✨ Inspired</button>
+    <button class="ef" data-e="calm" onclick="setThEmoFilter(this)">🧘 Calm</button>
+    <button class="ef" data-e="motivated" onclick="setThEmoFilter(this)">🔥 Motivated</button>
+    <button class="ef" data-e="grateful" onclick="setThEmoFilter(this)">🙏 Grateful</button>
+    <button class="ef" data-e="reflective" onclick="setThEmoFilter(this)">🪞 Reflective</button>
+    <button class="ef" data-e="challenged" onclick="setThEmoFilter(this)">💪 Challenged</button>
+  </div>
+
+  <div class="pmeta" id="th-meta"></div>
+  <div class="th-log" id="th-log"></div>
+
+  <div class="foot" style="margin-top:1.25rem">
+    <span class="foot-note">Stored locally · synced to Google Sheets</span>
+    <button class="btn" onclick="switchTab('morning')">← Morning</button>
+  </div>
+</div><!-- /pg-thoughts -->
+
 <script>
 'use strict';
 
@@ -680,8 +796,10 @@ function switchTab(tab) {
   document.querySelectorAll('.pg').forEach(function(p){ p.classList.remove('on'); });
   document.querySelectorAll('.tab').forEach(function(b){ b.classList.remove('on'); });
   document.getElementById('pg-' + tab).classList.add('on');
-  document.querySelectorAll('.tab')[tab === 'morning' ? 0 : 1].classList.add('on');
+  var idx = tab === 'morning' ? 0 : tab === 'situations' ? 1 : 2;
+  document.querySelectorAll('.tab')[idx].classList.add('on');
   if (tab === 'situations') { renderStats(); renderPast(); }
+  if (tab === 'thoughts') { renderThoughts(); }
   window.scrollTo({ top:0, behavior:'smooth' });
 }
 
@@ -712,12 +830,14 @@ function init() {
     updateStreak();
     loadSituations();   // load from localStorage first (instant)
     updateBadge();
+    loadThoughts();
+    updateThBadge();
   } catch(e) { console.error('Local state error:', e); }
 
-  // Step 3: Fetch intentions AND all situations from Sheet in parallel
+  // Step 3: Fetch intentions, situations AND thoughts from Sheet in parallel
   setIntentionsState('loading');
 
-  Promise.all([fetchFromSheet(), fetchAllSituations()])
+  Promise.all([fetchFromSheet(), fetchAllSituations(), fetchAllThoughts()])
     .then(function(results) {
       var data = results[0];
       if (data && data.morning &&
@@ -1155,6 +1275,184 @@ function exportCSV() {
   a.download = 'situations-'+isoToday()+'.csv';
   a.click();
   showToast('CSV exported ✓','success');
+}
+
+/* ═══════════════════════════════════════════
+   THOUGHTS
+═══════════════════════════════════════════ */
+var thoughts = [];
+var selThCategory = '';
+var selThEmotion = '';
+var thCatFilter = 'all';
+var thEmoFilter = 'all';
+
+function loadThoughts() {
+  try { var r = localStorage.getItem('morning_thoughts'); if(r) thoughts = JSON.parse(r); } catch(e){ thoughts=[]; }
+}
+function saveThoughts() { localStorage.setItem('morning_thoughts', JSON.stringify(thoughts)); }
+function updateThBadge() { document.getElementById('th-badge').textContent = thoughts.length; }
+
+function selThCat(el) {
+  document.querySelectorAll('#th-cat-pills .thp').forEach(function(p){ p.classList.remove('on'); });
+  selThCategory = (selThCategory === el.dataset.val) ? '' : el.dataset.val;
+  if (selThCategory) el.classList.add('on');
+}
+function selThEmo(el) {
+  document.querySelectorAll('#th-emo-pills .thp').forEach(function(p){ p.classList.remove('on'); });
+  selThEmotion = (selThEmotion === el.dataset.val) ? '' : el.dataset.val;
+  if (selThEmotion) el.classList.add('on');
+}
+function setThCatFilter(el) {
+  document.querySelectorAll('#th-cat-filter .ef').forEach(function(p){ p.classList.remove('on'); });
+  el.classList.add('on'); thCatFilter = el.dataset.c; renderThoughts();
+}
+function setThEmoFilter(el) {
+  document.querySelectorAll('#th-emo-filter .ef').forEach(function(p){ p.classList.remove('on'); });
+  el.classList.add('on'); thEmoFilter = el.dataset.e; renderThoughts();
+}
+
+async function addThought() {
+  var text = document.getElementById('th-text').value.trim();
+  if (!text) { showToast('Write the thought first.', 'error'); return; }
+  var now = new Date();
+  var th = {
+    id: Date.now(),
+    timestamp: Date.now(),
+    dateISO: isoDate(now),
+    date: now.toLocaleDateString('en-IN', {day:'2-digit', month:'short', year:'numeric'}),
+    text: text,
+    url: document.getElementById('th-url').value.trim(),
+    category: selThCategory,
+    emotion: selThEmotion,
+  };
+  thoughts.unshift(th);
+  saveThoughts(); updateThBadge();
+
+  // Clear form
+  document.getElementById('th-text').value = '';
+  document.getElementById('th-url').value = '';
+  selThCategory = ''; selThEmotion = '';
+  document.querySelectorAll('#th-cat-pills .thp, #th-emo-pills .thp').forEach(function(p){ p.classList.remove('on'); });
+
+  // Sync to Sheet
+  document.getElementById('th-sync').textContent = 'Syncing…';
+  document.getElementById('th-sync').className = 'sync-txt syncing';
+  var ok = await postToSheet({
+    sheet: 'Thoughts',
+    date: th.date, dateISO: th.dateISO,
+    text: th.text, url: th.url,
+    category: th.category, emotion: th.emotion,
+  });
+  document.getElementById('th-sync').textContent = ok ? 'Synced to Sheet ✓' : 'Saved locally (Sheet unreachable)';
+  document.getElementById('th-sync').className = 'sync-txt ' + (ok ? 'ok' : 'err');
+  showToast(ok ? 'Thought saved ✓' : 'Saved locally — sync failed.', ok ? 'success' : 'error');
+  renderThoughts();
+}
+
+function renderThoughts() {
+  var search = (document.getElementById('th-search').value || '').toLowerCase().trim();
+  var sort = document.getElementById('th-sort').value;
+  var list = thoughts.slice();
+  if (thCatFilter !== 'all') list = list.filter(function(t){ return t.category === thCatFilter; });
+  if (thEmoFilter !== 'all') list = list.filter(function(t){ return t.emotion === thEmoFilter; });
+  if (search) list = list.filter(function(t){ return (t.text + t.url + t.category + t.emotion).toLowerCase().includes(search); });
+  if (sort === 'oldest') list.sort(function(a,b){ return a.timestamp - b.timestamp; });
+  else list.sort(function(a,b){ return b.timestamp - a.timestamp; });
+
+  document.getElementById('th-meta').textContent = list.length + ' of ' + thoughts.length + ' thought' + (thoughts.length !== 1 ? 's' : '');
+  var log = document.getElementById('th-log');
+  if (!list.length) {
+    log.innerHTML = '<div class="sit-empty"><div style="font-size:28px;margin-bottom:10px">💡</div>' +
+      (thoughts.length === 0
+        ? 'No thoughts yet.<br>Add the first insight that moved you.'
+        : 'No matches for the current filter.') + '</div>';
+    return;
+  }
+  log.innerHTML = list.map(function(t){ return thoughtCardHTML(t); }).join('');
+}
+
+var CAT_ICONS = { mindset:'🧠', emotion:'❤️', focus:'🎯', discipline:'⚡', relationships:'🤝', philosophy:'📖', business:'💼', life:'🌱' };
+var EMO_ICONS = { inspired:'✨', calm:'🧘', motivated:'🔥', grateful:'🙏', reflective:'🪞', challenged:'💪' };
+
+function thoughtCardHTML(t) {
+  var catBadge = t.category ? '<span class="th-cat-badge">'+(CAT_ICONS[t.category]||'')+' '+t.category+'</span>' : '';
+  var emoBadge = t.emotion ? '<span class="th-emo-badge">'+(EMO_ICONS[t.emotion]||'')+' '+t.emotion+'</span>' : '';
+  var urlHtml = '';
+  if (t.url) {
+    var isUrl = t.url.startsWith('http');
+    urlHtml = isUrl
+      ? '<a class="th-url" href="'+escH(t.url)+'" target="_blank" rel="noopener">🔗 '+escH(t.url)+'</a>'
+      : '<span class="th-url" style="cursor:default;color:var(--text-2)">📚 '+escH(t.url)+'</span>';
+  }
+  return '<div class="th-card">' +
+    '<div class="th-card-text">“' + escH(t.text) + '”</div>' +
+    '<div class="th-card-meta">' + catBadge + emoBadge + '<span class="th-date">'+t.date+'</span></div>' +
+    (urlHtml ? '<div style="margin-top:4px">'+urlHtml+'</div>' : '') +
+    '<div class="th-card-foot">' +
+      '<span></span>' +
+      '<button class="del-btn" onclick="delThought('+t.id+')">🗑 Delete</button>' +
+    '</div>' +
+  '</div>';
+}
+
+function delThought(id) {
+  if (!confirm('Delete this thought?')) return;
+  thoughts = thoughts.filter(function(t){ return t.id !== id; });
+  saveThoughts(); updateThBadge(); renderThoughts();
+  showToast('Deleted.', '');
+}
+
+function exportThoughtsCSV() {
+  if (!thoughts.length) { showToast('Nothing to export.', 'error'); return; }
+  var h = ['Date','Thought','URL','Category','Emotion'];
+  var rows = thoughts.map(function(t){
+    return [t.date, t.text, t.url||'', t.category||'', t.emotion||'']
+      .map(function(v){ return '"'+String(v).replace(/"/g,'""')+'"'; }).join(',');
+  });
+  var a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent([h.join(',')].concat(rows).join('\n'));
+  a.download = 'thoughts-' + isoToday() + '.csv';
+  a.click();
+  showToast('CSV exported ✓', 'success');
+}
+
+function fetchAllThoughts() {
+  return new Promise(function(resolve) {
+    try {
+      fetch(WORKER_URL + '?action=getAllThoughts')
+        .then(function(resp){ return resp.ok ? resp.json() : null; })
+        .then(function(data) {
+          if (data && data.status === 'ok' && Array.isArray(data.thoughts)) {
+            mergeThoughtsFromSheet(data.thoughts);
+          }
+          resolve();
+        })
+        .catch(function(){ resolve(); });
+    } catch(e){ resolve(); }
+  });
+}
+
+function mergeThoughtsFromSheet(sheetThoughts) {
+  var localMap = {};
+  thoughts.forEach(function(t){ localMap[(t.dateISO||'') + '|' + (t.text||'').substring(0,50)] = true; });
+  var added = 0;
+  sheetThoughts.forEach(function(t) {
+    var key = (t.dateISO||'') + '|' + (t.text||'').substring(0,50);
+    if (!localMap[key]) {
+      thoughts.push({
+        id: Date.now() + added++,
+        timestamp: t.dateISO ? new Date(t.dateISO).getTime() : Date.now(),
+        dateISO: t.dateISO || '', date: t.date || '',
+        text: t.text || '', url: t.url || '',
+        category: t.category || '', emotion: t.emotion || '',
+      });
+    }
+  });
+  if (added > 0) {
+    thoughts.sort(function(a,b){ return b.timestamp - a.timestamp; });
+    saveThoughts(); updateThBadge();
+    if (document.getElementById('pg-thoughts').classList.contains('on')) renderThoughts();
+  }
 }
 
 /* ═══════════════════════════════════════════
