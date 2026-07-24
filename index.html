@@ -263,6 +263,13 @@ body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:
 .th-date{font-size:10px;color:var(--text-3);font-family:var(--fm)}
 .th-url{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--gold);text-decoration:none;word-break:break-all}
 .th-url:hover{text-decoration:underline}
+.th-card-heading{font-size:14px;font-weight:600;color:var(--text-1);margin-bottom:.5rem;line-height:1.35}
+.th-card-body{margin-bottom:.6rem}
+.th-bullets{margin:4px 0 4px 1rem;padding:0;list-style:none}
+.th-bullets li{position:relative;padding-left:14px;font-size:13px;color:var(--text-2);line-height:1.6;margin-bottom:2px}
+.th-bullets li::before{content:'·';position:absolute;left:0;color:var(--gold);font-size:16px;line-height:1.35}
+.th-para{font-size:13px;color:var(--text-2);line-height:1.6;margin-bottom:4px}
+.th-para:last-child{margin-bottom:0}
 .th-card-foot{display:flex;justify-content:space-between;align-items:center;margin-top:.5rem;padding-top:.5rem;border-top:1px solid var(--border)}
 @media(max-width:580px){.th-add-grid{grid-template-columns:1fr}}
 /* TOAST */
@@ -539,12 +546,17 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
   <div class="th-add-block">
     <div class="th-add-grid">
       <div class="th-field-full">
-        <label class="sfl">The thought / insight</label>
-        <textarea class="sin" id="th-text" rows="3" placeholder="Write the thought, quote, or insight exactly as it struck you…"></textarea>
+        <label class="sfl">Heading / title <span style="color:var(--text-3);font-weight:400">(what is this insight about?)</span></label>
+        <input class="sin" id="th-heading" type="text" placeholder="e.g. On staying calm under pressure, The power of pause, Discipline over motivation…">
+      </div>
+      <div class="th-field-full">
+        <label class="sfl">Description / key points <span style="color:var(--text-3);font-weight:400">(start each bullet with • or – or *)</span></label>
+        <textarea class="sin" id="th-text" rows="5" placeholder="• The main insight or quote&#10;• Why this matters to you&#10;• How you will apply this today&#10;&#10;Or write freely — bullets are optional."></textarea>
+        <div style="font-size:10px;color:var(--text-3);margin-top:4px">Tip: Start each line with <code style="background:rgba(255,255,255,0.07);padding:1px 5px;border-radius:3px;color:var(--text-2)">•</code> or <code style="background:rgba(255,255,255,0.07);padding:1px 5px;border-radius:3px;color:var(--text-2)">-</code> or <code style="background:rgba(255,255,255,0.07);padding:1px 5px;border-radius:3px;color:var(--text-2)">*</code> to create bullets</div>
       </div>
       <div class="th-field-full">
         <label class="sfl">Source or URL <span style="color:var(--text-3);font-weight:400">(optional)</span></label>
-        <input class="sin" id="th-url" type="text" placeholder="https://… or Author / Book / Podcast name" style="resize:none">
+        <input class="sin" id="th-url" type="text" placeholder="https://… or Author / Book / Podcast name">
       </div>
       <div>
         <label class="sfl">Category</label>
@@ -623,66 +635,34 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
 <script>
 'use strict';
 
-/* ═══════════════════════════════════════════
-   PROXY URL — Cloudflare Worker
-   Replace WORKER_URL with your worker URL after deploy
-   e.g. https://morning-proxy.YOUR-NAME.workers.dev
-═══════════════════════════════════════════ */
 const WORKER_URL = 'https://muddy-shadow-1aa7.vaibhavjain-1192.workers.dev';
 
-/* ═══════════════════════════════════════════
-   SHEET: POST (write data)
-   Worker proxy handles CORS — plain fetch works fine.
-   Always resolves to true/false, never throws.
-═══════════════════════════════════════════ */
+/* POST to Sheet via Worker */
 function postToSheet(data) {
   return new Promise(function(resolve) {
     try {
       var body = new URLSearchParams();
       body.append('payload', JSON.stringify(data));
-      fetch(WORKER_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: body.toString()
-      })
-      .then(function(resp) { resolve(resp && resp.ok); })
-      .catch(function() { resolve(false); });
-    } catch(e) {
-      resolve(false);
-    }
+      fetch(WORKER_URL, { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:body.toString() })
+        .then(function(resp){ resolve(resp && resp.ok); })
+        .catch(function(){ resolve(false); });
+    } catch(e){ resolve(false); }
   });
 }
 
-/* ═══════════════════════════════════════════
-   GET today's data via Cloudflare Worker proxy.
-   Always resolves (never rejects) — returns null on any error.
-═══════════════════════════════════════════ */
+/* GET today's data via Worker (follows redirects, has CORS) */
 function fetchFromSheet() {
   return new Promise(function(resolve) {
     try {
-      var url = WORKER_URL + '?action=getToday&date=' + isoToday();
-      fetch(url, { method: 'GET' })
-        .then(function(resp) {
-          if (!resp.ok) { resolve(null); return; }
-          return resp.json();
-        })
-        .then(function(data) {
-          resolve((data && data.status === 'ok') ? data : null);
-        })
-        .catch(function(e) {
-          console.warn('Sheet fetch failed:', e.message);
-          resolve(null);
-        });
-    } catch(e) {
-      console.warn('fetchFromSheet error:', e.message);
-      resolve(null);
-    }
+      fetch(WORKER_URL + '?action=getToday&date=' + isoToday(), { method:'GET' })
+        .then(function(resp){ return resp.ok ? resp.json() : null; })
+        .then(function(data){ resolve((data && data.status==='ok') ? data : null); })
+        .catch(function(){ resolve(null); });
+    } catch(e){ resolve(null); }
   });
 }
 
-/* ═══════════════════════════════════════════
-   STATIC DATA
-═══════════════════════════════════════════ */
+/* MANTRAS */
 var MANTRAS = [
   { text:"You don't have to be perfect. You just have to begin.", src:"— James Clear" },
   { text:"The mind is the athlete. Everything else follows.", src:"— David Goggins" },
@@ -752,18 +732,19 @@ var CHECKLIST = [
 
 var EMAP = { anger:'😤', anxiety:'😰', frustration:'😣', hurt:'💔', shame:'😔', overwhelm:'🌊', fear:'😨', jealousy:'👁' };
 
-/* ═══════════════════════════════════════════
-   STATE
-═══════════════════════════════════════════ */
+/* STATE */
 var activePillar = null;
 var checked = {};
 var situations = [];
 var selEmotion = '';
 var pastEmoFilter = 'all';
+var thoughts = [];
+var selThCategory = '';
+var selThEmotion = '';
+var thCatFilter = 'all';
+var thEmoFilter = 'all';
 
-/* ═══════════════════════════════════════════
-   HELPERS
-═══════════════════════════════════════════ */
+/* HELPERS */
 function isoToday() {
   var d = new Date();
   return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate());
@@ -772,699 +753,461 @@ function isoDate(d) {
   return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate());
 }
 function pad(n) { return String(n).padStart(2,'0'); }
-function parseISO(s) {
-  if (!s) return null;
-  var p = s.split('-').map(Number);
-  return new Date(p[0], p[1]-1, p[2]);
-}
-function escH(s) {
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-var _tt = null;
-function showToast(msg, type) {
-  var el = document.getElementById('toast');
-  el.textContent = msg;
-  el.className = 'toast show' + (type ? ' '+type : '');
-  clearTimeout(_tt);
-  _tt = setTimeout(function(){ el.classList.remove('show'); }, 3200);
+function parseISO(s) { if(!s) return null; var p=s.split('-').map(Number); return new Date(p[0],p[1]-1,p[2]); }
+function escH(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+var _tt=null;
+function showToast(msg,type) {
+  var el=document.getElementById('toast');
+  el.textContent=msg; el.className='toast show'+(type?' '+type:'');
+  clearTimeout(_tt); _tt=setTimeout(function(){ el.classList.remove('show'); },3200);
 }
 
-/* ═══════════════════════════════════════════
-   TABS
-═══════════════════════════════════════════ */
+/* TABS */
 function switchTab(tab) {
   document.querySelectorAll('.pg').forEach(function(p){ p.classList.remove('on'); });
   document.querySelectorAll('.tab').forEach(function(b){ b.classList.remove('on'); });
-  document.getElementById('pg-' + tab).classList.add('on');
-  var idx = tab === 'morning' ? 0 : tab === 'situations' ? 1 : 2;
+  document.getElementById('pg-'+tab).classList.add('on');
+  var idx = tab==='morning' ? 0 : tab==='situations' ? 1 : 2;
   document.querySelectorAll('.tab')[idx].classList.add('on');
-  if (tab === 'situations') { renderStats(); renderPast(); }
-  if (tab === 'thoughts') { renderThoughts(); }
-  window.scrollTo({ top:0, behavior:'smooth' });
+  if (tab==='situations') { renderStats(); renderPast(); }
+  if (tab==='thoughts') renderThoughts();
+  window.scrollTo({top:0,behavior:'smooth'});
 }
 
-
-/* ═════════════════════════════════════════════
-   INIT — entry point
-═════════════════════════════════════════════ */
+/* INIT */
 function init() {
-  // Step 1: Header — synchronous, isolated so nothing else can crash
   try {
-    var now = new Date();
-    var h = now.getHours();
-    document.getElementById('greeting').textContent = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
-    document.getElementById('time-now').textContent = now.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit', hour12:true });
-    document.getElementById('date-line').textContent = now.toLocaleDateString('en-IN', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+    var now = new Date(); var h = now.getHours();
+    document.getElementById('greeting').textContent = h<12?'Good morning':h<17?'Good afternoon':'Good evening';
+    document.getElementById('time-now').textContent = now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true});
+    document.getElementById('date-line').textContent = now.toLocaleDateString('en-IN',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
     var day = Math.floor((now - new Date(now.getFullYear(),0,0)) / 86400000);
     document.getElementById('day-num').textContent = day;
     var m = MANTRAS[day % MANTRAS.length];
-    document.getElementById('mantra-text').textContent = '“' + m.text + '”';
+    document.getElementById('mantra-text').textContent = '\u201C' + m.text + '\u201D';
     document.getElementById('mantra-source').textContent = m.src;
-  } catch(e) { console.error('Header init error:', e); }
+  } catch(e){ console.error('Header error:',e); }
 
-  // Step 2: Local checklist + situations state
   try {
     var stored = getTodayStored();
     if (stored.checked) Object.assign(checked, stored.checked);
-    renderChecklist();
-    updateStreak();
-    loadSituations();   // load from localStorage first (instant)
-    updateBadge();
-    loadThoughts();
-    updateThBadge();
-  } catch(e) { console.error('Local state error:', e); }
+    renderChecklist(); updateStreak();
+    loadSituations(); updateBadge();
+    loadThoughts(); updateThBadge();
+  } catch(e){ console.error('Local state error:',e); }
 
-  // Step 3: Fetch intentions, situations AND thoughts from Sheet in parallel
   setIntentionsState('loading');
-
   Promise.all([fetchFromSheet(), fetchAllSituations(), fetchAllThoughts()])
     .then(function(results) {
       var data = results[0];
-      if (data && data.morning &&
-          (data.morning.priority || data.morning.emotional_intention || data.morning.gratitude)) {
-        showReadView(
-          data.morning.priority || '',
-          data.morning.emotional_intention || '',
-          data.morning.gratitude || ''
-        );
+      if (data && data.morning && (data.morning.priority || data.morning.emotional_intention || data.morning.gratitude)) {
+        showReadView(data.morning.priority||'', data.morning.emotional_intention||'', data.morning.gratitude||'');
       } else {
         setIntentionsState('form');
       }
     })
-    .catch(function() { setIntentionsState('form'); });
+    .catch(function(){ setIntentionsState('form'); });
 }
 
-/* ═══════════════════════════════════════════
-   INTENTIONS: three display states
-   'loading' | 'form' | 'read'
-═══════════════════════════════════════════ */
+/* INTENTIONS */
 function setIntentionsState(state) {
-  document.getElementById('q-loading-wrap').style.display = state === 'loading' ? 'block' : 'none';
-  document.getElementById('q-form-wrap').style.display   = state === 'form'    ? 'block' : 'none';
-  document.getElementById('q-read-wrap').style.display   = state === 'read'    ? 'block' : 'none';
+  document.getElementById('q-loading-wrap').style.display = state==='loading'?'block':'none';
+  document.getElementById('q-form-wrap').style.display   = state==='form'   ?'block':'none';
+  document.getElementById('q-read-wrap').style.display   = state==='read'   ?'block':'none';
 }
-
-function showReadView(q1, q2, q3) {
-  document.getElementById('goal-q1').textContent = q1 || '—';
-  document.getElementById('goal-q2').textContent = q2 || '—';
-  document.getElementById('goal-q3').textContent = q3 || '—';
-  document.getElementById('goals-date').textContent = new Date().toLocaleDateString('en-IN', { day:'numeric', month:'short' });
-  document.getElementById('goals-synced-lbl').textContent = 'Synced to Sheet ✓';
-  document.getElementById('goals-synced-lbl').className = 'goals-synced ok';
-  // keep form in sync for Edit
-  document.getElementById('q1').value = q1 || '';
-  document.getElementById('q2').value = q2 || '';
-  document.getElementById('q3').value = q3 || '';
+function showReadView(q1,q2,q3) {
+  document.getElementById('goal-q1').textContent = q1||'—';
+  document.getElementById('goal-q2').textContent = q2||'—';
+  document.getElementById('goal-q3').textContent = q3||'—';
+  document.getElementById('goals-date').textContent = new Date().toLocaleDateString('en-IN',{day:'numeric',month:'short'});
+  var lbl = document.getElementById('goals-synced-lbl');
+  lbl.textContent = 'Synced to Sheet \u2713'; lbl.className = 'goals-synced ok';
+  document.getElementById('q1').value=q1||'';
+  document.getElementById('q2').value=q2||'';
+  document.getElementById('q3').value=q3||'';
   setIntentionsState('read');
 }
-
 function editIntentions() {
-  // pre-fill form from read view
   document.getElementById('q1').value = document.getElementById('goal-q1').textContent.replace('—','');
   document.getElementById('q2').value = document.getElementById('goal-q2').textContent.replace('—','');
   document.getElementById('q3').value = document.getElementById('goal-q3').textContent.replace('—','');
-  setIntentionsState('form');
-  document.getElementById('q1').focus();
+  setIntentionsState('form'); document.getElementById('q1').focus();
 }
-
 function clearQuestions() {
-  ['q1','q2','q3'].forEach(function(id){ document.getElementById(id).value = ''; });
-  document.getElementById('save-status').textContent = '';
+  ['q1','q2','q3'].forEach(function(id){ document.getElementById(id).value=''; });
+  document.getElementById('save-status').textContent='';
 }
 
-/* ═══════════════════════════════════════════
-   SAVE INTENTIONS TO SHEET
-═══════════════════════════════════════════ */
+/* SAVE INTENTIONS */
 async function saveToSheet() {
-  var q1 = document.getElementById('q1').value.trim();
-  var q2 = document.getElementById('q2').value.trim();
-  var q3 = document.getElementById('q3').value.trim();
-  if (!q1 && !q2 && !q3) { showToast('Fill in at least one intention first.','error'); return; }
-
-  setSt('Saving…', null);
+  var q1=document.getElementById('q1').value.trim(), q2=document.getElementById('q2').value.trim(), q3=document.getElementById('q3').value.trim();
+  if (!q1&&!q2&&!q3) { showToast('Fill in at least one intention first.','error'); return; }
+  setSt('Saving...', null);
   var now = new Date();
   var ok = await postToSheet({
-    sheet: 'Morning Reflections',
-    date: now.toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' }),
+    sheet:'Morning Reflections',
+    date: now.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}),
     dateISO: isoDate(now),
-    time: now.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit', hour12:true }),
-    priority: q1,
-    emotional_intention: q2,
-    gratitude: q3,
-    checklist_done: CHECKLIST.filter(function(i){ return checked[i.k]; }).map(function(i){ return i.t; }).join(' | '),
-    score: CHECKLIST.filter(function(i){ return checked[i.k]; }).length + '/' + CHECKLIST.length
+    time: now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true}),
+    priority:q1, emotional_intention:q2, gratitude:q3,
+    checklist_done: CHECKLIST.filter(function(i){return checked[i.k];}).map(function(i){return i.t;}).join(' | '),
+    score: CHECKLIST.filter(function(i){return checked[i.k];}).length+'/'+CHECKLIST.length
   });
-
-  // Save checklist to local so it persists
-  saveTodayLocal({ checked: checked });
-
-  if (ok) {
-    setSt('Saved ✓', true);
-    showToast('Intentions saved to Sheet ✓', 'success');
-    showReadView(q1, q2, q3);
-  } else {
-    setSt('Network error — please retry.', false);
-    showToast('Could not reach Sheet. Check connection.', 'error');
-  }
+  saveTodayLocal({checked:checked});
+  if (ok) { setSt('Saved \u2713',true); showToast('Intentions saved to Sheet \u2713','success'); showReadView(q1,q2,q3); }
+  else { setSt('Network error — please retry.',false); showToast('Could not reach Sheet.','error'); }
+}
+function setSt(msg,ok) {
+  var el=document.getElementById('save-status');
+  el.textContent=msg; el.className='save-st'+(ok===true?' ok':ok===false?' err':'');
 }
 
-function setSt(msg, ok) {
-  var el = document.getElementById('save-status');
-  el.textContent = msg;
-  el.className = 'save-st' + (ok === true ? ' ok' : ok === false ? ' err' : '');
-}
-
-/* ═══════════════════════════════════════════
-   PILLARS
-═══════════════════════════════════════════ */
+/* PILLARS */
 function togglePillar(id) {
-  var btns = document.querySelectorAll('.pillar');
-  var detail = document.getElementById('pillar-detail');
-  var empty = document.getElementById('pillar-empty');
-  if (activePillar === id) {
-    activePillar = null;
-    btns.forEach(function(b){ b.classList.remove('on'); });
-    detail.classList.remove('on'); detail.innerHTML = '';
-    empty.classList.remove('hidden');
-    return;
+  var btns=document.querySelectorAll('.pillar'), detail=document.getElementById('pillar-detail'), empty=document.getElementById('pillar-empty');
+  if (activePillar===id) {
+    activePillar=null; btns.forEach(function(b){b.classList.remove('on');});
+    detail.classList.remove('on'); detail.innerHTML=''; empty.classList.remove('hidden'); return;
   }
-  activePillar = id;
-  btns.forEach(function(b){ b.classList.remove('on'); });
-  btns[id].classList.add('on');
-  var p = PILLARS[id];
-  detail.innerHTML =
-    '<div class="p-head"><div class="p-e">'+p.e+'</div><div><div class="p-title">'+p.n+'</div><div class="p-sub">'+p.s+'</div></div></div>' +
-    p.items.map(function(i){
-      return '<div class="p-row"><div class="p-dot"></div><div><div class="p-t">'+i.t+'</div><div class="p-s">'+i.d+'</div></div></div>';
-    }).join('');
-  detail.classList.add('on');
-  empty.classList.add('hidden');
+  activePillar=id; btns.forEach(function(b){b.classList.remove('on');}); btns[id].classList.add('on');
+  var p=PILLARS[id];
+  detail.innerHTML='<div class="p-head"><div class="p-e">'+p.e+'</div><div><div class="p-title">'+p.n+'</div><div class="p-sub">'+p.s+'</div></div></div>'+
+    p.items.map(function(i){return '<div class="p-row"><div class="p-dot"></div><div><div class="p-t">'+i.t+'</div><div class="p-s">'+i.d+'</div></div></div>';}).join('');
+  detail.classList.add('on'); empty.classList.add('hidden');
 }
 
-/* ═══════════════════════════════════════════
-   CHECKLIST
-═══════════════════════════════════════════ */
+/* CHECKLIST */
 function renderChecklist() {
-  var el = document.getElementById('cl-list');
-  el.innerHTML = '';
+  var el=document.getElementById('cl-list'); el.innerHTML='';
   CHECKLIST.forEach(function(item) {
-    var done = !!checked[item.k];
-    var div = document.createElement('div');
-    div.className = 'cl-row' + (done ? ' done' : '');
-    div.onclick = function(){ toggleCheck(item.k); };
-    div.innerHTML = '<div class="cl-box"><span class="cl-tick">✓</span></div><div class="cl-txt">'+item.t+'</div><span class="cl-tag">'+item.tag+'</span>';
+    var done=!!checked[item.k], div=document.createElement('div');
+    div.className='cl-row'+(done?' done':'');
+    div.onclick=function(){ toggleCheck(item.k); };
+    div.innerHTML='<div class="cl-box"><span class="cl-tick">\u2713</span></div><div class="cl-txt">'+item.t+'</div><span class="cl-tag">'+item.tag+'</span>';
     el.appendChild(div);
-  });
-  updateProg();
+  }); updateProg();
 }
-function toggleCheck(k) {
-  checked[k] = !checked[k];
-  saveTodayLocal({ checked: checked });
-  renderChecklist();
-}
+function toggleCheck(k) { checked[k]=!checked[k]; saveTodayLocal({checked:checked}); renderChecklist(); }
 function updateProg() {
-  var done = CHECKLIST.filter(function(i){ return checked[i.k]; }).length;
-  document.getElementById('prog-txt').textContent = done+'/'+CHECKLIST.length;
-  document.getElementById('prog-fill').style.width = Math.round(done/CHECKLIST.length*100)+'%';
+  var done=CHECKLIST.filter(function(i){return checked[i.k];}).length;
+  document.getElementById('prog-txt').textContent=done+'/'+CHECKLIST.length;
+  document.getElementById('prog-fill').style.width=Math.round(done/CHECKLIST.length*100)+'%';
 }
 
-/* ═══════════════════════════════════════════
-   PERSISTENCE (checklist only — questions come from Sheet)
-═══════════════════════════════════════════ */
-function todayKey() {
-  var d = new Date();
-  return 'morning_' + d.getFullYear() + '_' + (d.getMonth()+1) + '_' + d.getDate();
-}
-function getTodayStored() {
-  try { var r = localStorage.getItem(todayKey()); return r ? JSON.parse(r) : {}; } catch(e) { return {}; }
-}
+/* PERSISTENCE */
+function todayKey() { var d=new Date(); return 'morning_'+d.getFullYear()+'_'+(d.getMonth()+1)+'_'+d.getDate(); }
+function getTodayStored() { try{ var r=localStorage.getItem(todayKey()); return r?JSON.parse(r):{};} catch(e){return{};} }
 function saveTodayLocal(extra) {
-  var stored = getTodayStored();
-  Object.assign(stored, { dateISO: isoToday() }, extra || {});
-  localStorage.setItem(todayKey(), JSON.stringify(stored));
-  updateStreak();
+  var s=getTodayStored(); Object.assign(s,{dateISO:isoToday()},extra||{});
+  localStorage.setItem(todayKey(),JSON.stringify(s)); updateStreak();
 }
-
 function resetDay() {
   if (!confirm("Reset all today's progress?")) return;
-  CHECKLIST.forEach(function(i){ checked[i.k] = false; });
-  saveTodayLocal({ checked: checked });
-  clearQuestions();
-  setIntentionsState('form');
-  renderChecklist();
-  showToast('Day reset. Fresh start. 🌅');
+  CHECKLIST.forEach(function(i){checked[i.k]=false;}); saveTodayLocal({checked:checked});
+  clearQuestions(); setIntentionsState('form'); renderChecklist(); showToast('Day reset. Fresh start.');
 }
 
-/* ═══════════════════════════════════════════
-   STREAK
-═══════════════════════════════════════════ */
+/* STREAK */
 function updateStreak() {
-  var s = 0; var today = new Date();
-  for (var i = 0; i < 365; i++) {
-    var d = new Date(today); d.setDate(today.getDate()-i);
-    var raw = localStorage.getItem('morning_'+d.getFullYear()+'_'+(d.getMonth()+1)+'_'+d.getDate());
+  var s=0, today=new Date();
+  for (var i=0;i<365;i++) {
+    var d=new Date(today); d.setDate(today.getDate()-i);
+    var raw=localStorage.getItem('morning_'+d.getFullYear()+'_'+(d.getMonth()+1)+'_'+d.getDate());
     if (!raw) break;
-    try {
-      var dd = JSON.parse(raw);
-      if (CHECKLIST.filter(function(x){ return dd.checked && dd.checked[x.k]; }).length > 0) s++;
-      else if (i > 0) break;
-    } catch(e) { break; }
+    try{ var dd=JSON.parse(raw); if(CHECKLIST.filter(function(x){return dd.checked&&dd.checked[x.k];}).length>0) s++; else if(i>0) break; }catch(e){break;}
   }
-  document.getElementById('streak-txt').textContent = s > 1 ? '🔥 '+s+'-day streak — keep going.' : s === 1 ? '⭐ First step today.' : 'Start your first practice today.';
+  document.getElementById('streak-txt').textContent = s>1?'🔥 '+s+'-day streak — keep going.':s===1?'⭐ First step today.':'Start your first practice today.';
 }
 
-/* ═══════════════════════════════════════════
-   SITUATIONS
-═══════════════════════════════════════════ */
-function loadSituations() {
-  // Load from localStorage as immediate baseline
-  try { var r = localStorage.getItem('morning_situations'); if (r) situations = JSON.parse(r); } catch(e) { situations = []; }
+/* SITUATIONS */
+function loadSituations() { try{var r=localStorage.getItem('morning_situations');if(r)situations=JSON.parse(r);}catch(e){situations=[];} }
+function saveSits() { localStorage.setItem('morning_situations',JSON.stringify(situations)); }
+function updateBadge() { document.getElementById('sit-badge').textContent=situations.length; }
+function selEmo(el) {
+  document.querySelectorAll('.ep').forEach(function(p){p.classList.remove('on');});
+  selEmotion=(selEmotion===el.dataset.val)?'':el.dataset.val;
+  if(selEmotion) el.classList.add('on');
 }
+function setSyncTxt(state,msg) { var el=document.getElementById('sit-sync'); el.className='sync-txt '+state; el.textContent=msg; }
 
-function saveSits() {
-  localStorage.setItem('morning_situations', JSON.stringify(situations));
+async function addSituation() {
+  var title=document.getElementById('sit-title').value.trim();
+  if (!title) { showToast('Describe the situation first.','error'); return; }
+  var now=new Date();
+  var sit={ id:Date.now(), timestamp:Date.now(), dateISO:isoDate(now),
+    date:now.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}),
+    title:title, trigger:document.getElementById('sit-trigger').value.trim(),
+    reaction:document.getElementById('sit-reaction').value.trim(), emotion:selEmotion, strategy:'' };
+  situations.unshift(sit); saveSits(); updateBadge();
+  document.getElementById('sit-title').value=''; document.getElementById('sit-trigger').value=''; document.getElementById('sit-reaction').value='';
+  selEmotion=''; document.querySelectorAll('.ep').forEach(function(p){p.classList.remove('on');});
+  setSyncTxt('syncing','Syncing to Sheet...');
+  var ok=await postToSheet({sheet:'Situations',date:sit.date,dateISO:sit.dateISO,title:sit.title,trigger:sit.trigger,reaction:sit.reaction,emotion:sit.emotion,strategy:''});
+  setSyncTxt(ok?'ok':'err',ok?'Synced to Sheet \u2713':'Saved locally (Sheet unreachable)');
+  showToast(ok?'Situation logged \u2713':'Saved locally — sync failed.',ok?'success':'error');
 }
-
-function updateBadge() { document.getElementById('sit-badge').textContent = situations.length; }
-
-// Fetch ALL situations from Sheet and merge with local
+function sitCardHTML(s) {
+  var badge=s.emotion?'<span class="emo-badge">'+(EMAP[s.emotion]||'')+' '+s.emotion+'</span>':'';
+  var sb=s.strategy?'<span class="strat-badge">\u2713 strategy</span>':'';
+  return '<div class="sc" id="sc-'+s.id+'"><div class="sc-head" onclick="togSC('+s.id+')">' +
+    '<div class="sc-meta"><div class="sc-title">'+escH(s.title)+'</div><div class="sc-sub">'+s.date+badge+sb+'</div></div>' +
+    '<div class="sc-tog">\u25be</div></div>' +
+    '<div class="sc-body">' +
+    (s.trigger?'<div class="sb-sec"><div class="sb-lbl">Trigger</div><div class="sb-txt">'+escH(s.trigger)+'</div></div>':'') +
+    (s.reaction?'<div class="sb-sec"><div class="sb-lbl">My response</div><div class="sb-txt">'+escH(s.reaction)+'</div></div>':'') +
+    '<div class="sb-sec"><div class="sb-lbl">Better ways to handle this</div>' +
+    '<textarea class="strat-area" id="str-'+s.id+'" rows="3" placeholder="Scripts, reframes, techniques for next time...">'+escH(s.strategy)+'</textarea>' +
+    '<div class="sc-foot"><button class="del-btn" onclick="delSit('+s.id+')">🗑 Delete</button>' +
+    '<button class="btn teal" style="font-size:11px;padding:5px 12px" onclick="saveSt('+s.id+')">Save strategy \u2713</button></div>' +
+    '</div></div></div>';
+}
+function togSC(id) { var c=document.getElementById('sc-'+id); if(c) c.classList.toggle('open'); }
+async function saveSt(id) {
+  var area=document.getElementById('str-'+id); if(!area) return;
+  var sit=situations.find(function(s){return s.id===id;}); if(!sit) return;
+  sit.strategy=area.value.trim(); saveSits();
+  await postToSheet({sheet:'Situations',action:'update_strategy',dateISO:sit.dateISO,title:sit.title,strategy:sit.strategy});
+  renderPast(); setTimeout(function(){ var c=document.getElementById('sc-'+id); if(c) c.classList.add('open'); },30);
+  showToast('Strategy saved \u2713','success');
+}
+function delSit(id) {
+  if(!confirm('Delete this situation?')) return;
+  situations=situations.filter(function(s){return s.id!==id;}); saveSits(); updateBadge(); renderStats(); renderPast();
+  showToast('Deleted.','');
+}
 function fetchAllSituations() {
   return new Promise(function(resolve) {
     try {
-      fetch(WORKER_URL + '?action=getAllSituations')
-        .then(function(resp) { return resp.ok ? resp.json() : null; })
-        .then(function(data) {
-          if (data && data.status === 'ok' && Array.isArray(data.situations)) {
-            mergeSituationsFromSheet(data.situations);
-          }
-          resolve();
-        })
-        .catch(function() { resolve(); });
-    } catch(e) { resolve(); }
+      fetch(WORKER_URL+'?action=getAllSituations')
+        .then(function(resp){return resp.ok?resp.json():null;})
+        .then(function(data){if(data&&data.status==='ok'&&Array.isArray(data.situations)) mergeSituationsFromSheet(data.situations); resolve();})
+        .catch(function(){resolve();});
+    } catch(e){resolve();}
   });
 }
-
 function mergeSituationsFromSheet(sheetSits) {
-  // Build a map of existing local situations by title+dateISO for dedup
-  var localMap = {};
-  situations.forEach(function(s) {
-    localMap[(s.dateISO||'') + '|' + (s.title||'')] = true;
-  });
-
-  // Add Sheet situations that aren't already local
-  var added = 0;
+  var localMap={};
+  situations.forEach(function(s){ localMap[(s.dateISO||'')+'|'+(s.title||'')]=true; });
+  var added=0;
   sheetSits.forEach(function(s) {
-    var key = (s.dateISO||'') + '|' + (s.title||'');
+    var key=(s.dateISO||'')+'|'+(s.title||'');
     if (!localMap[key]) {
-      situations.push({
-        id: Date.now() + added++,
-        timestamp: s.dateISO ? new Date(s.dateISO).getTime() : Date.now(),
-        dateISO: s.dateISO || '',
-        date: s.date || '',
-        title: s.title || '',
-        trigger: s.trigger || '',
-        reaction: s.reaction || '',
-        emotion: s.emotion || '',
-        strategy: s.strategy || '',
-      });
+      situations.push({id:Date.now()+added++,timestamp:s.dateISO?new Date(s.dateISO).getTime():Date.now(),
+        dateISO:s.dateISO||'',date:s.date||'',title:s.title||'',trigger:s.trigger||'',
+        reaction:s.reaction||'',emotion:s.emotion||'',strategy:s.strategy||''});
     }
   });
-
-  if (added > 0) {
-    // Sort newest first
-    situations.sort(function(a,b){ return b.timestamp - a.timestamp; });
-    saveSits();
-    updateBadge();
-    // Refresh Past Situations tab if it's open
-    if (document.getElementById('pg-situations').classList.contains('on')) {
-      renderStats(); renderPast();
-    }
+  if (added>0) {
+    situations.sort(function(a,b){return b.timestamp-a.timestamp;}); saveSits(); updateBadge();
+    if(document.getElementById('pg-situations').classList.contains('on')){ renderStats(); renderPast(); }
   }
 }
 
-function selEmo(el) {
-  document.querySelectorAll('.ep').forEach(function(p){ p.classList.remove('on'); });
-  selEmotion = (selEmotion === el.dataset.val) ? '' : el.dataset.val;
-  if (selEmotion) el.classList.add('on');
-}
-
-function setSyncTxt(state, msg) {
-  var el = document.getElementById('sit-sync');
-  el.className = 'sync-txt ' + state;
-  el.textContent = msg;
-}
-
-async function addSituation() {
-  var title = document.getElementById('sit-title').value.trim();
-  if (!title) { showToast('Describe the situation first.','error'); return; }
-  var now = new Date();
-  var sit = {
-    id: Date.now(), timestamp: Date.now(),
-    dateISO: isoDate(now),
-    date: now.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}),
-    title: title,
-    trigger: document.getElementById('sit-trigger').value.trim(),
-    reaction: document.getElementById('sit-reaction').value.trim(),
-    emotion: selEmotion, strategy: ''
-  };
-  situations.unshift(sit);
-  saveSits(); updateBadge();
-  document.getElementById('sit-title').value = '';
-  document.getElementById('sit-trigger').value = '';
-  document.getElementById('sit-reaction').value = '';
-  selEmotion = '';
-  document.querySelectorAll('.ep').forEach(function(p){ p.classList.remove('on'); });
-
-  setSyncTxt('syncing','Syncing to Sheet…');
-  var ok = await postToSheet({
-    sheet:'Situations', date:sit.date, dateISO:sit.dateISO,
-    title:sit.title, trigger:sit.trigger, reaction:sit.reaction,
-    emotion:sit.emotion, strategy:''
-  });
-  setSyncTxt(ok?'ok':'err', ok?'Synced to Sheet ✓':'Saved locally (Sheet unreachable)');
-  showToast(ok?'Situation logged ✓':'Saved locally — sync failed.', ok?'success':'error');
-}
-
-function sitCardHTML(s) {
-  var badge = s.emotion ? '<span class="emo-badge">'+(EMAP[s.emotion]||'')+' '+s.emotion+'</span>' : '';
-  var sb = s.strategy ? '<span class="strat-badge">✓ strategy</span>' : '';
-  return '<div class="sc" id="sc-'+s.id+'">' +
-    '<div class="sc-head" onclick="togSC('+s.id+')">' +
-      '<div class="sc-meta"><div class="sc-title">'+escH(s.title)+'</div><div class="sc-sub">'+s.date+badge+sb+'</div></div>' +
-      '<div class="sc-tog">▾</div>' +
-    '</div>' +
-    '<div class="sc-body">' +
-      (s.trigger ? '<div class="sb-sec"><div class="sb-lbl">Trigger</div><div class="sb-txt">'+escH(s.trigger)+'</div></div>' : '') +
-      (s.reaction ? '<div class="sb-sec"><div class="sb-lbl">My response</div><div class="sb-txt">'+escH(s.reaction)+'</div></div>' : '') +
-      '<div class="sb-sec"><div class="sb-lbl">Better ways to handle this</div>' +
-        '<textarea class="strat-area" id="str-'+s.id+'" rows="3" placeholder="Scripts, reframes, techniques for next time…">'+escH(s.strategy)+'</textarea>' +
-        '<div class="sc-foot">' +
-          '<button class="del-btn" onclick="delSit('+s.id+')">🗑 Delete</button>' +
-          '<button class="btn teal" style="font-size:11px;padding:5px 12px" onclick="saveSt('+s.id+')">Save strategy ✓</button>' +
-        '</div>' +
-      '</div>' +
-    '</div>' +
-  '</div>';
-}
-
-function togSC(id) { var c = document.getElementById('sc-'+id); if(c) c.classList.toggle('open'); }
-
-async function saveSt(id) {
-  var area = document.getElementById('str-'+id); if(!area) return;
-  var sit = situations.find(function(s){ return s.id===id; }); if(!sit) return;
-  sit.strategy = area.value.trim();
-  saveSits();
-  await postToSheet({sheet:'Situations',action:'update_strategy',dateISO:sit.dateISO,title:sit.title,strategy:sit.strategy});
-  renderPast();
-  setTimeout(function(){ var c=document.getElementById('sc-'+id); if(c) c.classList.add('open'); },30);
-  showToast('Strategy saved ✓','success');
-}
-
-function delSit(id) {
-  if(!confirm('Delete this situation?')) return;
-  situations = situations.filter(function(s){ return s.id!==id; });
-  saveSits(); updateBadge(); renderStats(); renderPast();
-  showToast('Deleted.','');
-}
-
-/* ═══════════════════════════════════════════
-   PAST SITUATIONS TAB
-═══════════════════════════════════════════ */
+/* PAST SITUATIONS TAB */
 function renderStats() {
-  var total = situations.length;
-  var ws = situations.filter(function(s){ return s.strategy; }).length;
-  document.getElementById('st-total').textContent = total;
-  document.getElementById('st-strat').textContent = ws;
-  document.getElementById('st-pend').textContent = total - ws;
-  var freq = {};
-  situations.forEach(function(s){ if(s.emotion) freq[s.emotion]=(freq[s.emotion]||0)+1; });
-  var top = Object.entries(freq).sort(function(a,b){ return b[1]-a[1]; })[0];
-  document.getElementById('st-emo').textContent = top ? (EMAP[top[0]]||'')+' '+top[0] : '—';
+  var total=situations.length, ws=situations.filter(function(s){return s.strategy;}).length;
+  document.getElementById('st-total').textContent=total;
+  document.getElementById('st-strat').textContent=ws;
+  document.getElementById('st-pend').textContent=total-ws;
+  var freq={}; situations.forEach(function(s){if(s.emotion) freq[s.emotion]=(freq[s.emotion]||0)+1;});
+  var top=Object.entries(freq).sort(function(a,b){return b[1]-a[1];})[0];
+  document.getElementById('st-emo').textContent=top?(EMAP[top[0]]||'')+' '+top[0]:'—';
 }
-
-function setRange(el, r) {
-  document.querySelectorAll('.dq').forEach(function(b){ b.classList.remove('on'); }); el.classList.add('on');
-  var now = new Date();
-  var f = document.getElementById('date-from'), t = document.getElementById('date-to');
-  t.value = isoDate(now);
-  if (r==='all'){ f.value=''; t.value=''; }
-  else if (r==='today'){ f.value=isoDate(now); }
-  else if (r==='week'){ var d=new Date(now); d.setDate(d.getDate()-6); f.value=isoDate(d); }
-  else if (r==='month'){ var d=new Date(now); d.setDate(d.getDate()-29); f.value=isoDate(d); }
-  else if (r==='3m'){ var d=new Date(now); d.setDate(d.getDate()-89); f.value=isoDate(d); }
+function setRange(el,r) {
+  document.querySelectorAll('.dq').forEach(function(b){b.classList.remove('on');}); el.classList.add('on');
+  var now=new Date(), f=document.getElementById('date-from'), t=document.getElementById('date-to');
+  t.value=isoDate(now);
+  if(r==='all'){f.value='';t.value='';}
+  else if(r==='today'){f.value=isoDate(now);}
+  else if(r==='week'){var d=new Date(now);d.setDate(d.getDate()-6);f.value=isoDate(d);}
+  else if(r==='month'){var d=new Date(now);d.setDate(d.getDate()-29);f.value=isoDate(d);}
+  else if(r==='3m'){var d=new Date(now);d.setDate(d.getDate()-89);f.value=isoDate(d);}
   renderPast();
 }
-
 function clearDateFilter() {
-  document.getElementById('date-from').value='';
-  document.getElementById('date-to').value='';
-  document.querySelectorAll('.dq').forEach(function(b){ b.classList.remove('on'); });
-  document.querySelector('.dq[data-r="all"]').classList.add('on');
+  document.getElementById('date-from').value=''; document.getElementById('date-to').value='';
+  document.querySelectorAll('.dq').forEach(function(b){b.classList.remove('on');}); document.querySelector('.dq[data-r="all"]').classList.add('on');
   renderPast();
 }
-
 function setEmoFilter(el) {
-  document.querySelectorAll('.ef').forEach(function(p){ p.classList.remove('on'); });
-  el.classList.add('on');
-  pastEmoFilter = el.dataset.f;
-  renderPast();
+  document.querySelectorAll('.ef').forEach(function(p){p.classList.remove('on');}); el.classList.add('on');
+  pastEmoFilter=el.dataset.f; renderPast();
 }
-
 function renderPast() {
-  var search = (document.getElementById('psearch').value || '').toLowerCase().trim();
-  var sort = document.getElementById('psort').value;
-  var fv = document.getElementById('date-from').value;
-  var tv = document.getElementById('date-to').value;
-  var fd = fv ? parseISO(fv) : null;
-  var td = tv ? parseISO(tv) : null;
-  if (td) td.setHours(23,59,59);
-
-  var list = situations.slice();
-  if (fd||td) list = list.filter(function(s){
-    var d = s.dateISO ? parseISO(s.dateISO) : null; if(!d) return true;
-    if(fd&&d<fd) return false; if(td&&d>td) return false; return true;
-  });
-  if (pastEmoFilter!=='all') list = list.filter(function(s){ return s.emotion===pastEmoFilter; });
-  if (search) list = list.filter(function(s){ return (s.title+s.trigger+s.reaction+s.strategy).toLowerCase().includes(search); });
-
-  if (sort==='oldest') list.sort(function(a,b){ return a.timestamp-b.timestamp; });
-  else if (sort==='newest') list.sort(function(a,b){ return b.timestamp-a.timestamp; });
-  else if (sort==='no-strat') list.sort(function(a,b){ return (a.strategy?1:0)-(b.strategy?1:0); });
-  else if (sort==='has-strat') list.sort(function(a,b){ return (b.strategy?1:0)-(a.strategy?1:0); });
-
-  document.getElementById('pmeta').textContent = list.length+' of '+situations.length+' situation'+(situations.length!==1?'s':'');
-  var log = document.getElementById('past-log');
-  if (!list.length) {
-    log.innerHTML = '<div class="sit-empty">'+(situations.length===0
-      ? 'Nothing logged yet.<br><br><button class="btn" onclick="switchTab(\'morning\')">&#8592; Go to morning</button>'
-      : 'No matches for the current filter.')+'</div>';
-    return;
-  }
-  log.innerHTML = list.map(sitCardHTML).join('');
+  var search=(document.getElementById('psearch').value||'').toLowerCase().trim();
+  var sort=document.getElementById('psort').value;
+  var fv=document.getElementById('date-from').value, tv=document.getElementById('date-to').value;
+  var fd=fv?parseISO(fv):null, td=tv?parseISO(tv):null;
+  if(td) td.setHours(23,59,59);
+  var list=situations.slice();
+  if(fd||td) list=list.filter(function(s){var d=s.dateISO?parseISO(s.dateISO):null;if(!d)return true;if(fd&&d<fd)return false;if(td&&d>td)return false;return true;});
+  if(pastEmoFilter!=='all') list=list.filter(function(s){return s.emotion===pastEmoFilter;});
+  if(search) list=list.filter(function(s){return(s.title+s.trigger+s.reaction+s.strategy).toLowerCase().includes(search);});
+  if(sort==='oldest') list.sort(function(a,b){return a.timestamp-b.timestamp;});
+  else if(sort==='newest') list.sort(function(a,b){return b.timestamp-a.timestamp;});
+  else if(sort==='no-strat') list.sort(function(a,b){return(a.strategy?1:0)-(b.strategy?1:0);});
+  else if(sort==='has-strat') list.sort(function(a,b){return(b.strategy?1:0)-(a.strategy?1:0);});
+  document.getElementById('pmeta').textContent=list.length+' of '+situations.length+' situation'+(situations.length!==1?'s':'');
+  var log=document.getElementById('past-log');
+  if(!list.length){log.innerHTML='<div class="sit-empty">'+(situations.length===0?'Nothing logged yet.<br><br><button class="btn" onclick="switchTab(\'morning\')">&#8592; Go to morning</button>':'No matches for the current filter.')+'</div>'; return;}
+  log.innerHTML=list.map(sitCardHTML).join('');
 }
-
 function exportCSV() {
-  if (!situations.length) { showToast('Nothing to export yet.','error'); return; }
-  var h = ['Date','Situation','Trigger','Reaction','Emotion','Strategy'];
-  var rows = situations.map(function(s){
-    return [s.date,s.title,s.trigger||'',s.reaction||'',s.emotion||'',s.strategy||'']
-      .map(function(v){ return '"'+String(v).replace(/"/g,'""')+'"'; }).join(',');
-  });
-  var a = document.createElement('a');
-  a.href = 'data:text/csv;charset=utf-8,'+encodeURIComponent([h.join(',')].concat(rows).join('\n'));
-  a.download = 'situations-'+isoToday()+'.csv';
-  a.click();
-  showToast('CSV exported ✓','success');
+  if(!situations.length){showToast('Nothing to export yet.','error');return;}
+  var h=['Date','Situation','Trigger','Reaction','Emotion','Strategy'];
+  var rows=situations.map(function(s){return[s.date,s.title,s.trigger||'',s.reaction||'',s.emotion||'',s.strategy||''].map(function(v){return'"'+String(v).replace(/"/g,'""')+'"';}).join(',');});
+  var a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent([h.join(',')].concat(rows).join('\n'));
+  a.download='situations-'+isoToday()+'.csv'; a.click(); showToast('CSV exported \u2713','success');
 }
 
-/* ═══════════════════════════════════════════
-   THOUGHTS
-═══════════════════════════════════════════ */
-var thoughts = [];
-var selThCategory = '';
-var selThEmotion = '';
-var thCatFilter = 'all';
-var thEmoFilter = 'all';
-
-function loadThoughts() {
-  try { var r = localStorage.getItem('morning_thoughts'); if(r) thoughts = JSON.parse(r); } catch(e){ thoughts=[]; }
-}
-function saveThoughts() { localStorage.setItem('morning_thoughts', JSON.stringify(thoughts)); }
-function updateThBadge() { document.getElementById('th-badge').textContent = thoughts.length; }
+/* THOUGHTS */
+function loadThoughts() { try{var r=localStorage.getItem('morning_thoughts');if(r)thoughts=JSON.parse(r);}catch(e){thoughts=[];} }
+function saveThoughts() { localStorage.setItem('morning_thoughts',JSON.stringify(thoughts)); }
+function updateThBadge() { document.getElementById('th-badge').textContent=thoughts.length; }
 
 function selThCat(el) {
-  document.querySelectorAll('#th-cat-pills .thp').forEach(function(p){ p.classList.remove('on'); });
-  selThCategory = (selThCategory === el.dataset.val) ? '' : el.dataset.val;
-  if (selThCategory) el.classList.add('on');
+  document.querySelectorAll('#th-cat-pills .thp').forEach(function(p){p.classList.remove('on');});
+  selThCategory=(selThCategory===el.dataset.val)?'':el.dataset.val;
+  if(selThCategory) el.classList.add('on');
 }
 function selThEmo(el) {
-  document.querySelectorAll('#th-emo-pills .thp').forEach(function(p){ p.classList.remove('on'); });
-  selThEmotion = (selThEmotion === el.dataset.val) ? '' : el.dataset.val;
-  if (selThEmotion) el.classList.add('on');
+  document.querySelectorAll('#th-emo-pills .thp').forEach(function(p){p.classList.remove('on');});
+  selThEmotion=(selThEmotion===el.dataset.val)?'':el.dataset.val;
+  if(selThEmotion) el.classList.add('on');
 }
 function setThCatFilter(el) {
-  document.querySelectorAll('#th-cat-filter .ef').forEach(function(p){ p.classList.remove('on'); });
-  el.classList.add('on'); thCatFilter = el.dataset.c; renderThoughts();
+  document.querySelectorAll('#th-cat-filter .ef').forEach(function(p){p.classList.remove('on');}); el.classList.add('on'); thCatFilter=el.dataset.c; renderThoughts();
 }
 function setThEmoFilter(el) {
-  document.querySelectorAll('#th-emo-filter .ef').forEach(function(p){ p.classList.remove('on'); });
-  el.classList.add('on'); thEmoFilter = el.dataset.e; renderThoughts();
+  document.querySelectorAll('#th-emo-filter .ef').forEach(function(p){p.classList.remove('on');}); el.classList.add('on'); thEmoFilter=el.dataset.e; renderThoughts();
 }
 
 async function addThought() {
-  var text = document.getElementById('th-text').value.trim();
-  if (!text) { showToast('Write the thought first.', 'error'); return; }
-  var now = new Date();
-  var th = {
-    id: Date.now(),
-    timestamp: Date.now(),
-    dateISO: isoDate(now),
-    date: now.toLocaleDateString('en-IN', {day:'2-digit', month:'short', year:'numeric'}),
-    text: text,
-    url: document.getElementById('th-url').value.trim(),
-    category: selThCategory,
-    emotion: selThEmotion,
-  };
-  thoughts.unshift(th);
-  saveThoughts(); updateThBadge();
-
-  // Clear form
-  document.getElementById('th-text').value = '';
-  document.getElementById('th-url').value = '';
-  selThCategory = ''; selThEmotion = '';
-  document.querySelectorAll('#th-cat-pills .thp, #th-emo-pills .thp').forEach(function(p){ p.classList.remove('on'); });
-
-  // Sync to Sheet
-  document.getElementById('th-sync').textContent = 'Syncing…';
-  document.getElementById('th-sync').className = 'sync-txt syncing';
-  var ok = await postToSheet({
-    sheet: 'Thoughts',
-    date: th.date, dateISO: th.dateISO,
-    text: th.text, url: th.url,
-    category: th.category, emotion: th.emotion,
-  });
-  document.getElementById('th-sync').textContent = ok ? 'Synced to Sheet ✓' : 'Saved locally (Sheet unreachable)';
-  document.getElementById('th-sync').className = 'sync-txt ' + (ok ? 'ok' : 'err');
-  showToast(ok ? 'Thought saved ✓' : 'Saved locally — sync failed.', ok ? 'success' : 'error');
+  var heading=document.getElementById('th-heading').value.trim();
+  var text=document.getElementById('th-text').value.trim();
+  if (!heading&&!text) { showToast('Add a heading or description first.','error'); return; }
+  var now=new Date();
+  var th={ id:Date.now(), timestamp:Date.now(), dateISO:isoDate(now),
+    date:now.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}),
+    heading:heading, text:text, url:document.getElementById('th-url').value.trim(),
+    category:selThCategory, emotion:selThEmotion };
+  thoughts.unshift(th); saveThoughts(); updateThBadge();
+  document.getElementById('th-heading').value=''; document.getElementById('th-text').value=''; document.getElementById('th-url').value='';
+  selThCategory=''; selThEmotion='';
+  document.querySelectorAll('#th-cat-pills .thp, #th-emo-pills .thp').forEach(function(p){p.classList.remove('on');});
+  document.getElementById('th-sync').textContent='Syncing...'; document.getElementById('th-sync').className='sync-txt syncing';
+  var ok=await postToSheet({sheet:'Thoughts',date:th.date,dateISO:th.dateISO,heading:th.heading,text:th.text,url:th.url,category:th.category,emotion:th.emotion});
+  document.getElementById('th-sync').textContent=ok?'Synced to Sheet \u2713':'Saved locally (Sheet unreachable)';
+  document.getElementById('th-sync').className='sync-txt '+(ok?'ok':'err');
+  showToast(ok?'Thought saved \u2713':'Saved locally — sync failed.',ok?'success':'error');
   renderThoughts();
 }
 
-function renderThoughts() {
-  var search = (document.getElementById('th-search').value || '').toLowerCase().trim();
-  var sort = document.getElementById('th-sort').value;
-  var list = thoughts.slice();
-  if (thCatFilter !== 'all') list = list.filter(function(t){ return t.category === thCatFilter; });
-  if (thEmoFilter !== 'all') list = list.filter(function(t){ return t.emotion === thEmoFilter; });
-  if (search) list = list.filter(function(t){ return (t.text + t.url + t.category + t.emotion).toLowerCase().includes(search); });
-  if (sort === 'oldest') list.sort(function(a,b){ return a.timestamp - b.timestamp; });
-  else list.sort(function(a,b){ return b.timestamp - a.timestamp; });
-
-  document.getElementById('th-meta').textContent = list.length + ' of ' + thoughts.length + ' thought' + (thoughts.length !== 1 ? 's' : '');
-  var log = document.getElementById('th-log');
-  if (!list.length) {
-    log.innerHTML = '<div class="sit-empty"><div style="font-size:28px;margin-bottom:10px">💡</div>' +
-      (thoughts.length === 0
-        ? 'No thoughts yet.<br>Add the first insight that moved you.'
-        : 'No matches for the current filter.') + '</div>';
-    return;
-  }
-  log.innerHTML = list.map(function(t){ return thoughtCardHTML(t); }).join('');
+/* Convert • - * prefixed lines to HTML bullets */
+function renderBullets(text) {
+  if (!text) return '';
+  var ls=text.split('\n'), html='', inList=false;
+  ls.forEach(function(line) {
+    var tr=line.trim();
+    var bullet=tr.length>0&&(tr[0]==='\u2022'||tr[0]==='-'||tr[0]==='*');
+    if (bullet) {
+      if(!inList){html+='<ul class="th-bullets">';inList=true;}
+      html+='<li>'+escH(tr.slice(1).trim())+'</li>';
+    } else {
+      if(inList){html+='</ul>';inList=false;}
+      if(tr) html+='<p class="th-para">'+escH(tr)+'</p>';
+    }
+  });
+  if(inList) html+='</ul>';
+  return html;
 }
 
-var CAT_ICONS = { mindset:'🧠', emotion:'❤️', focus:'🎯', discipline:'⚡', relationships:'🤝', philosophy:'📖', business:'💼', life:'🌱' };
-var EMO_ICONS = { inspired:'✨', calm:'🧘', motivated:'🔥', grateful:'🙏', reflective:'🪞', challenged:'💪' };
+var CAT_ICONS={mindset:'🧠',emotion:'❤️',focus:'🎯',discipline:'⚡',relationships:'🤝',philosophy:'📖',business:'💼',life:'🌱'};
+var EMO_ICONS={inspired:'✨',calm:'🧘',motivated:'🔥',grateful:'🙏',reflective:'🪞',challenged:'💪'};
 
 function thoughtCardHTML(t) {
-  var catBadge = t.category ? '<span class="th-cat-badge">'+(CAT_ICONS[t.category]||'')+' '+t.category+'</span>' : '';
-  var emoBadge = t.emotion ? '<span class="th-emo-badge">'+(EMO_ICONS[t.emotion]||'')+' '+t.emotion+'</span>' : '';
-  var urlHtml = '';
-  if (t.url) {
-    var isUrl = t.url.startsWith('http');
-    urlHtml = isUrl
-      ? '<a class="th-url" href="'+escH(t.url)+'" target="_blank" rel="noopener">🔗 '+escH(t.url)+'</a>'
-      : '<span class="th-url" style="cursor:default;color:var(--text-2)">📚 '+escH(t.url)+'</span>';
+  var catBadge=t.category?'<span class="th-cat-badge">'+(CAT_ICONS[t.category]||'')+' '+t.category+'</span>':'';
+  var emoBadge=t.emotion?'<span class="th-emo-badge">'+(EMO_ICONS[t.emotion]||'')+' '+t.emotion+'</span>':'';
+  var urlHtml='';
+  if(t.url){
+    var isUrl=t.url.startsWith('http');
+    urlHtml=isUrl?'<a class="th-url" href="'+escH(t.url)+'" target="_blank" rel="noopener">🔗 '+escH(t.url)+'</a>':'<span class="th-url" style="cursor:default;color:var(--text-2)">📚 '+escH(t.url)+'</span>';
   }
-  return '<div class="th-card">' +
-    '<div class="th-card-text">“' + escH(t.text) + '”</div>' +
-    '<div class="th-card-meta">' + catBadge + emoBadge + '<span class="th-date">'+t.date+'</span></div>' +
-    (urlHtml ? '<div style="margin-top:4px">'+urlHtml+'</div>' : '') +
-    '<div class="th-card-foot">' +
-      '<span></span>' +
-      '<button class="del-btn" onclick="delThought('+t.id+')">🗑 Delete</button>' +
-    '</div>' +
+  var bodyHtml=renderBullets(t.text||'');
+  return '<div class="th-card">'+
+    (t.heading?'<div class="th-card-heading">'+escH(t.heading)+'</div>':'')+
+    (bodyHtml?'<div class="th-card-body">'+bodyHtml+'</div>':'')+
+    '<div class="th-card-meta">'+catBadge+emoBadge+'<span class="th-date">'+t.date+'</span></div>'+
+    (urlHtml?'<div style="margin-top:6px">'+urlHtml+'</div>':'')+
+    '<div class="th-card-foot"><span></span><button class="del-btn" onclick="delThought('+t.id+')">🗑 Delete</button></div>'+
   '</div>';
 }
 
+function renderThoughts() {
+  var search=(document.getElementById('th-search').value||'').toLowerCase().trim();
+  var sort=document.getElementById('th-sort').value;
+  var list=thoughts.slice();
+  if(thCatFilter!=='all') list=list.filter(function(t){return t.category===thCatFilter;});
+  if(thEmoFilter!=='all') list=list.filter(function(t){return t.emotion===thEmoFilter;});
+  if(search) list=list.filter(function(t){return((t.heading||'')+t.text+(t.url||'')+t.category+t.emotion).toLowerCase().includes(search);});
+  if(sort==='oldest') list.sort(function(a,b){return a.timestamp-b.timestamp;});
+  else list.sort(function(a,b){return b.timestamp-a.timestamp;});
+  document.getElementById('th-meta').textContent=list.length+' of '+thoughts.length+' thought'+(thoughts.length!==1?'s':'');
+  var log=document.getElementById('th-log');
+  if(!list.length){
+    log.innerHTML='<div class="sit-empty"><div style="font-size:28px;margin-bottom:10px">💡</div>'+(thoughts.length===0?'No thoughts yet.<br>Add the first insight that moved you.':'No matches for the current filter.')+'</div>';
+    return;
+  }
+  log.innerHTML=list.map(thoughtCardHTML).join('');
+}
+
 function delThought(id) {
-  if (!confirm('Delete this thought?')) return;
-  thoughts = thoughts.filter(function(t){ return t.id !== id; });
-  saveThoughts(); updateThBadge(); renderThoughts();
-  showToast('Deleted.', '');
+  if(!confirm('Delete this thought?')) return;
+  thoughts=thoughts.filter(function(t){return t.id!==id;}); saveThoughts(); updateThBadge(); renderThoughts();
+  showToast('Deleted.','');
 }
-
 function exportThoughtsCSV() {
-  if (!thoughts.length) { showToast('Nothing to export.', 'error'); return; }
-  var h = ['Date','Thought','URL','Category','Emotion'];
-  var rows = thoughts.map(function(t){
-    return [t.date, t.text, t.url||'', t.category||'', t.emotion||'']
-      .map(function(v){ return '"'+String(v).replace(/"/g,'""')+'"'; }).join(',');
-  });
-  var a = document.createElement('a');
-  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent([h.join(',')].concat(rows).join('\n'));
-  a.download = 'thoughts-' + isoToday() + '.csv';
-  a.click();
-  showToast('CSV exported ✓', 'success');
+  if(!thoughts.length){showToast('Nothing to export.','error');return;}
+  var h=['Date','Heading','Description','URL','Category','Emotion'];
+  var rows=thoughts.map(function(t){return[t.date,t.heading||'',t.text||'',t.url||'',t.category||'',t.emotion||''].map(function(v){return'"'+String(v).replace(/"/g,'""')+'"';}).join(',');});
+  var a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent([h.join(',')].concat(rows).join('\n'));
+  a.download='thoughts-'+isoToday()+'.csv'; a.click(); showToast('CSV exported \u2713','success');
 }
-
 function fetchAllThoughts() {
-  return new Promise(function(resolve) {
-    try {
-      fetch(WORKER_URL + '?action=getAllThoughts')
-        .then(function(resp){ return resp.ok ? resp.json() : null; })
-        .then(function(data) {
-          if (data && data.status === 'ok' && Array.isArray(data.thoughts)) {
-            mergeThoughtsFromSheet(data.thoughts);
-          }
-          resolve();
-        })
-        .catch(function(){ resolve(); });
-    } catch(e){ resolve(); }
+  return new Promise(function(resolve){
+    try{
+      fetch(WORKER_URL+'?action=getAllThoughts')
+        .then(function(resp){return resp.ok?resp.json():null;})
+        .then(function(data){if(data&&data.status==='ok'&&Array.isArray(data.thoughts)) mergeThoughtsFromSheet(data.thoughts); resolve();})
+        .catch(function(){resolve();});
+    }catch(e){resolve();}
   });
 }
-
 function mergeThoughtsFromSheet(sheetThoughts) {
-  var localMap = {};
-  thoughts.forEach(function(t){ localMap[(t.dateISO||'') + '|' + (t.text||'').substring(0,50)] = true; });
-  var added = 0;
-  sheetThoughts.forEach(function(t) {
-    var key = (t.dateISO||'') + '|' + (t.text||'').substring(0,50);
-    if (!localMap[key]) {
-      thoughts.push({
-        id: Date.now() + added++,
-        timestamp: t.dateISO ? new Date(t.dateISO).getTime() : Date.now(),
-        dateISO: t.dateISO || '', date: t.date || '',
-        text: t.text || '', url: t.url || '',
-        category: t.category || '', emotion: t.emotion || '',
-      });
+  var localMap={};
+  thoughts.forEach(function(t){localMap[(t.dateISO||'')+'|'+(t.text||'').substring(0,50)+(t.heading||'').substring(0,20)]=true;});
+  var added=0;
+  sheetThoughts.forEach(function(t){
+    var key=(t.dateISO||'')+'|'+(t.text||'').substring(0,50)+(t.heading||'').substring(0,20);
+    if(!localMap[key]){
+      thoughts.push({id:Date.now()+added++,timestamp:t.dateISO?new Date(t.dateISO).getTime():Date.now(),
+        dateISO:t.dateISO||'',date:t.date||'',heading:t.heading||'',text:t.text||'',
+        url:t.url||'',category:t.category||'',emotion:t.emotion||''});
     }
   });
-  if (added > 0) {
-    thoughts.sort(function(a,b){ return b.timestamp - a.timestamp; });
-    saveThoughts(); updateThBadge();
-    if (document.getElementById('pg-thoughts').classList.contains('on')) renderThoughts();
+  if(added>0){
+    thoughts.sort(function(a,b){return b.timestamp-a.timestamp;}); saveThoughts(); updateThBadge();
+    if(document.getElementById('pg-thoughts').classList.contains('on')) renderThoughts();
   }
 }
 
-/* ═══════════════════════════════════════════
-   START
-═══════════════════════════════════════════ */
+/* START */
 init();
-
 setInterval(function(){
-  document.getElementById('time-now').textContent =
-    new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true});
-}, 60000);
-
+  document.getElementById('time-now').textContent=new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true});
+},60000);
 
 </script>
 </body>
