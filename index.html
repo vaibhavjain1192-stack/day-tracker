@@ -430,36 +430,6 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
     <div class="int-tile"><div class="int-e">🌱</div><div class="int-t">Hard thing first</div><div class="int-b">Most important work before email or meetings steal the morning.</div></div>
   </div>
 
-  <hr class="d">
-
-  <!-- Situation log form -->
-  <div class="lbl">Log a situation to handle better <span class="lbl-line"></span></div>
-  <div class="sit-block">
-    <div style="margin-bottom:8px">
-      <label class="sfl">What happened?</label>
-      <textarea class="sin" id="sit-title" rows="2" placeholder="e.g. I raised my voice during a disagreement about a deadline…"></textarea>
-    </div>
-    <div class="sit-flds">
-      <div><label class="sfl">What triggered me?</label><textarea class="sin" id="sit-trigger" rows="3" placeholder="The words, tone, or circumstance…"></textarea></div>
-      <div><label class="sfl">How did I respond?</label><textarea class="sin" id="sit-reaction" rows="3" placeholder="What I said, did, or felt…"></textarea></div>
-    </div>
-    <label class="sfl">Dominant emotion</label>
-    <div class="epills">
-      <button class="ep" onclick="selEmo(this)" data-val="anger">😤 Anger</button>
-      <button class="ep" onclick="selEmo(this)" data-val="anxiety">😰 Anxiety</button>
-      <button class="ep" onclick="selEmo(this)" data-val="frustration">😣 Frustration</button>
-      <button class="ep" onclick="selEmo(this)" data-val="hurt">💔 Hurt</button>
-      <button class="ep" onclick="selEmo(this)" data-val="shame">😔 Shame</button>
-      <button class="ep" onclick="selEmo(this)" data-val="overwhelm">🌊 Overwhelm</button>
-      <button class="ep" onclick="selEmo(this)" data-val="fear">😨 Fear</button>
-      <button class="ep" onclick="selEmo(this)" data-val="jealousy">👁 Jealousy</button>
-    </div>
-    <div class="sit-foot">
-      <span class="sync-txt" id="sit-sync">Ready to log</span>
-      <button class="btn gold" onclick="addSituation()">Log situation ↗</button>
-    </div>
-  </div>
-
   <div class="foot">
     <span class="foot-note" id="streak-txt"></span>
     <div class="foot-btns">
@@ -527,6 +497,34 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
 
   <div class="pmeta" id="pmeta"></div>
   <div class="sit-log" id="past-log"></div>
+
+  <!-- Log new situation — moved to bottom of Situations tab -->
+  <div class="lbl" style="margin-top:1.5rem">Log a new situation <span class="lbl-line"></span></div>
+  <div class="sit-block">
+    <div style="margin-bottom:8px">
+      <label class="sfl">What happened?</label>
+      <textarea class="sin" id="sit-title" rows="2" placeholder="e.g. I raised my voice during a disagreement about a deadline…"></textarea>
+    </div>
+    <div class="sit-flds">
+      <div><label class="sfl">What triggered me?</label><textarea class="sin" id="sit-trigger" rows="3" placeholder="The words, tone, or circumstance…"></textarea></div>
+      <div><label class="sfl">How did I respond?</label><textarea class="sin" id="sit-reaction" rows="3" placeholder="What I said, did, or felt…"></textarea></div>
+    </div>
+    <label class="sfl">Dominant emotion</label>
+    <div class="epills">
+      <button class="ep" onclick="selEmo(this)" data-val="anger">😤 Anger</button>
+      <button class="ep" onclick="selEmo(this)" data-val="anxiety">😰 Anxiety</button>
+      <button class="ep" onclick="selEmo(this)" data-val="frustration">😣 Frustration</button>
+      <button class="ep" onclick="selEmo(this)" data-val="hurt">💔 Hurt</button>
+      <button class="ep" onclick="selEmo(this)" data-val="shame">😔 Shame</button>
+      <button class="ep" onclick="selEmo(this)" data-val="overwhelm">🌊 Overwhelm</button>
+      <button class="ep" onclick="selEmo(this)" data-val="fear">😨 Fear</button>
+      <button class="ep" onclick="selEmo(this)" data-val="jealousy">👁 Jealousy</button>
+    </div>
+    <div class="sit-foot">
+      <span class="sync-txt" id="sit-sync">Ready to log</span>
+      <button class="btn gold" onclick="addSituation()">Log situation ↗</button>
+    </div>
+  </div>
 
   <div class="foot" style="margin-top:1.25rem">
     <span class="foot-note">Stored locally · synced to Google Sheets</span>
@@ -631,6 +629,21 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
     <button class="btn" onclick="switchTab('morning')">← Morning</button>
   </div>
 </div><!-- /pg-thoughts -->
+
+<!-- ══ EDIT MODAL ══ -->
+<div id="edit-modal" style="display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);overflow-y:auto;padding:2rem 1rem">
+  <div style="max-width:620px;margin:0 auto;background:var(--card);border:1px solid var(--border-md);border-radius:var(--rlg);overflow:hidden">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:1rem 1.25rem;border-bottom:1px solid var(--border)">
+      <div style="font-size:14px;font-weight:600;color:var(--text-1)" id="modal-title">Edit</div>
+      <button onclick="closeEditModal()" style="background:none;border:none;color:var(--text-2);font-size:20px;cursor:pointer;line-height:1;padding:0 4px">&times;</button>
+    </div>
+    <div style="padding:1.25rem" id="modal-body"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:.875rem 1.25rem;border-top:1px solid var(--border);background:var(--surface)">
+      <button class="btn" onclick="closeEditModal()">Cancel</button>
+      <button class="btn gold" id="modal-save-btn" onclick="saveEditModal()">Save changes ↗</button>
+    </div>
+  </div>
+</div>
 
 <script>
 'use strict';
@@ -958,7 +971,8 @@ function sitCardHTML(s) {
     '<div class="sb-sec"><div class="sb-lbl">Better ways to handle this</div>' +
     '<textarea class="strat-area" id="str-'+s.id+'" rows="3" placeholder="Scripts, reframes, techniques for next time...">'+escH(s.strategy)+'</textarea>' +
     '<div class="sc-foot"><button class="del-btn" onclick="delSit('+s.id+')">🗑 Delete</button>' +
-    '<button class="btn teal" style="font-size:11px;padding:5px 12px" onclick="saveSt('+s.id+')">Save strategy \u2713</button></div>' +
+    '<div style="display:flex;gap:6px"><button class="btn" style="font-size:11px;padding:5px 12px" onclick="editSituation('+s.id+')">✏ Edit</button>' +
+    '<button class="btn teal" style="font-size:11px;padding:5px 12px" onclick="saveSt('+s.id+')">Save strategy \u2713</button></div></div>' +
     '</div></div></div>';
 }
 function togSC(id) { var c=document.getElementById('sc-'+id); if(c) c.classList.toggle('open'); }
@@ -1140,7 +1154,10 @@ function thoughtCardHTML(t) {
     (bodyHtml?'<div class="th-card-body">'+bodyHtml+'</div>':'')+
     '<div class="th-card-meta">'+catBadge+emoBadge+'<span class="th-date">'+t.date+'</span></div>'+
     (urlHtml?'<div style="margin-top:6px">'+urlHtml+'</div>':'')+
-    '<div class="th-card-foot"><span></span><button class="del-btn" onclick="delThought('+t.id+')">🗑 Delete</button></div>'+
+    '<div class="th-card-foot">' +
+    '<button class="del-btn" onclick="delThought('+t.id+')">🗑 Delete</button>' +
+    '<button class="btn" style="font-size:11px;padding:4px 12px" onclick="editThought('+t.id+')">✏ Edit</button>' +
+    '</div>'+
   '</div>';
 }
 
@@ -1202,6 +1219,131 @@ function mergeThoughtsFromSheet(sheetThoughts) {
     if(document.getElementById('pg-thoughts').classList.contains('on')) renderThoughts();
   }
 }
+
+/* ══════════════════════════════════════════
+   EDIT MODAL — shared by Situations + Thoughts
+══════════════════════════════════════════ */
+var _editCtx = null; // { type: 'situation'|'thought', id: Number }
+
+function openEditModal(title, bodyHTML, ctx) {
+  _editCtx = ctx;
+  document.getElementById('modal-title').textContent = title;
+  document.getElementById('modal-body').innerHTML = bodyHTML;
+  document.getElementById('edit-modal').style.display = 'block';
+  document.body.style.overflow = 'hidden';
+}
+function closeEditModal() {
+  document.getElementById('edit-modal').style.display = 'none';
+  document.body.style.overflow = '';
+  _editCtx = null;
+}
+
+/* ── Edit Situation ── */
+function editSituation(id) {
+  var sit = situations.find(function(s){ return s.id === id; });
+  if (!sit) return;
+  var emoOptions = ['anger','anxiety','frustration','hurt','shame','overwhelm','fear','jealousy'];
+  var emoEmojis  = {anger:'😤',anxiety:'😰',frustration:'😣',hurt:'💔',shame:'😔',overwhelm:'🌊',fear:'😨',jealousy:'👁'};
+  var emoPills = emoOptions.map(function(e){
+    return '<button class="ep'+(sit.emotion===e?' on':'')+'" data-val="'+e+'" onclick="this.parentNode.querySelectorAll(\'.ep\').forEach(function(x){x.classList.remove(\'on\')});this.classList.add(\'on\')">'+emoEmojis[e]+' '+e+'</button>';
+  }).join('');
+  var html =
+    '<div style="margin-bottom:10px"><label class="sfl">What happened?</label>' +
+    '<textarea class="sin" id="edit-sit-title" rows="2">'+escH(sit.title)+'</textarea></div>' +
+    '<div class="sit-flds" style="margin-bottom:10px">' +
+    '<div><label class="sfl">What triggered me?</label><textarea class="sin" id="edit-sit-trigger" rows="3">'+escH(sit.trigger||'')+'</textarea></div>' +
+    '<div><label class="sfl">How did I respond?</label><textarea class="sin" id="edit-sit-reaction" rows="3">'+escH(sit.reaction||'')+'</textarea></div>' +
+    '</div>' +
+    '<label class="sfl">Dominant emotion</label>' +
+    '<div class="epills" id="edit-emo-pills" style="margin-bottom:10px">'+emoPills+'</div>' +
+    '<label class="sfl">Strategy / better response</label>' +
+    '<textarea class="sin" id="edit-sit-strategy" rows="3" placeholder="What will you do differently next time...">'+escH(sit.strategy||'')+'</textarea>';
+  openEditModal('Edit situation', html, { type:'situation', id:id });
+}
+
+/* ── Edit Thought ── */
+function editThought(id) {
+  var th = thoughts.find(function(t){ return t.id === id; });
+  if (!th) return;
+  var catOptions = ['mindset','emotion','focus','discipline','relationships','philosophy','business','life'];
+  var catIcons = {mindset:'🧠',emotion:'❤️',focus:'🎯',discipline:'⚡',relationships:'🤝',philosophy:'📖',business:'💼',life:'🌱'};
+  var emoOptions = ['inspired','calm','motivated','grateful','reflective','challenged'];
+  var emoIcons = {inspired:'✨',calm:'🧘',motivated:'🔥',grateful:'🙏',reflective:'🪞',challenged:'💪'};
+  var catPills = catOptions.map(function(c){
+    return '<button class="thp'+(th.category===c?' on':'')+'" data-val="'+c+'" onclick="this.parentNode.querySelectorAll(\'.thp\').forEach(function(x){x.classList.remove(\'on\')});this.classList.add(\'on\')">'+catIcons[c]+' '+c+'</button>';
+  }).join('');
+  var emoPills = emoOptions.map(function(e){
+    return '<button class="thp'+(th.emotion===e?' on':'')+'" data-val="'+e+'" onclick="this.parentNode.querySelectorAll(\'.thp\').forEach(function(x){x.classList.remove(\'on\')});this.classList.add(\'on\')">'+emoIcons[e]+' '+e+'</button>';
+  }).join('');
+  var html =
+    '<div style="margin-bottom:10px"><label class="sfl">Heading / title</label>' +
+    '<input class="sin" id="edit-th-heading" type="text" value="'+escH(th.heading||'')+'"></div>' +
+    '<div style="margin-bottom:10px"><label class="sfl">Description / key points (• or - for bullets)</label>' +
+    '<textarea class="sin" id="edit-th-text" rows="6">'+escH(th.text||'')+'</textarea></div>' +
+    '<div style="margin-bottom:10px"><label class="sfl">Source or URL</label>' +
+    '<input class="sin" id="edit-th-url" type="text" value="'+escH(th.url||'')+'"></div>' +
+    '<label class="sfl">Category</label>' +
+    '<div class="th-cat-pills" id="edit-cat-pills" style="margin-bottom:10px">'+catPills+'</div>' +
+    '<label class="sfl">Emotion</label>' +
+    '<div class="th-emo-pills" id="edit-emo-pills">'+emoPills+'</div>';
+  openEditModal('Edit thought', html, { type:'thought', id:id });
+}
+
+/* ── Save from modal ── */
+async function saveEditModal() {
+  if (!_editCtx) return;
+  var btn = document.getElementById('modal-save-btn');
+  btn.textContent = 'Saving...'; btn.disabled = true;
+
+  if (_editCtx.type === 'situation') {
+    var sit = situations.find(function(s){ return s.id === _editCtx.id; });
+    if (!sit) { closeEditModal(); return; }
+    sit.title    = document.getElementById('edit-sit-title').value.trim();
+    sit.trigger  = document.getElementById('edit-sit-trigger').value.trim();
+    sit.reaction = document.getElementById('edit-sit-reaction').value.trim();
+    sit.strategy = document.getElementById('edit-sit-strategy').value.trim();
+    var selEmoEl = document.querySelector('#edit-emo-pills .ep.on');
+    sit.emotion = selEmoEl ? selEmoEl.dataset.val : sit.emotion;
+    saveSits();
+    var ok = await postToSheet({
+      sheet:'Situations', action:'edit_situation',
+      dateISO:sit.dateISO, title:sit.title,
+      trigger:sit.trigger, reaction:sit.reaction,
+      emotion:sit.emotion, strategy:sit.strategy,
+    });
+    closeEditModal();
+    renderStats(); renderPast();
+    showToast(ok ? 'Situation updated ✓' : 'Updated locally — Sheet sync pending.', ok ? 'success' : '');
+
+  } else if (_editCtx.type === 'thought') {
+    var th = thoughts.find(function(t){ return t.id === _editCtx.id; });
+    if (!th) { closeEditModal(); return; }
+    th.heading = document.getElementById('edit-th-heading').value.trim();
+    th.text    = document.getElementById('edit-th-text').value.trim();
+    th.url     = document.getElementById('edit-th-url').value.trim();
+    var selCatEl = document.querySelector('#edit-cat-pills .thp.on');
+    var selEmoEl2 = document.querySelector('#edit-emo-pills .thp.on');
+    th.category = selCatEl ? selCatEl.dataset.val : th.category;
+    th.emotion  = selEmoEl2 ? selEmoEl2.dataset.val : th.emotion;
+    saveThoughts();
+    var ok2 = await postToSheet({
+      sheet:'Thoughts', action:'edit_thought',
+      dateISO:th.dateISO, heading:th.heading,
+      text:th.text, url:th.url,
+      category:th.category, emotion:th.emotion,
+    });
+    closeEditModal();
+    renderThoughts();
+    showToast(ok2 ? 'Thought updated ✓' : 'Updated locally — Sheet sync pending.', ok2 ? 'success' : '');
+  }
+
+  btn.textContent = 'Save changes ↗'; btn.disabled = false;
+}
+
+/* Close modal on backdrop click */
+document.getElementById('edit-modal').addEventListener('click', function(e){
+  if (e.target === this) closeEditModal();
+});
 
 /* START */
 init();
