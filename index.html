@@ -1000,21 +1000,27 @@ function fetchAllSituations() {
   });
 }
 function mergeSituationsFromSheet(sheetSits) {
-  var localMap={};
-  situations.forEach(function(s){ localMap[(s.dateISO||'')+'|'+(s.title||'')]=true; });
+  var localByKey={};
+  situations.forEach(function(s){ localByKey[(s.dateISO||'')+'|'+(s.title||'').substring(0,60)]=s; });
   var added=0;
   sheetSits.forEach(function(s) {
-    var key=(s.dateISO||'')+'|'+(s.title||'');
-    if (!localMap[key]) {
-      situations.push({id:Date.now()+added++,timestamp:s.dateISO?new Date(s.dateISO).getTime():Date.now(),
+    var key=(s.dateISO||'')+'|'+(s.title||'').substring(0,60);
+    if (localByKey[key]) {
+      // Update existing local entry with Sheet data (strategy/emotion may have been edited)
+      var loc=localByKey[key];
+      if(s.strategy) loc.strategy=s.strategy;
+      if(s.emotion)  loc.emotion=s.emotion;
+      if(s.trigger)  loc.trigger=s.trigger;
+      if(s.reaction) loc.reaction=s.reaction;
+    } else {
+      situations.push({id:Date.now()+added,timestamp:s.dateISO?new Date(s.dateISO).getTime():Date.now(),
         dateISO:s.dateISO||'',date:s.date||'',title:s.title||'',trigger:s.trigger||'',
         reaction:s.reaction||'',emotion:s.emotion||'',strategy:s.strategy||''});
+      added++;
     }
   });
-  if (added>0) {
-    situations.sort(function(a,b){return b.timestamp-a.timestamp;}); saveSits(); updateBadge();
-    if(document.getElementById('pg-situations').classList.contains('on')){ renderStats(); renderPast(); }
-  }
+  situations.sort(function(a,b){return b.timestamp-a.timestamp;}); saveSits(); updateBadge();
+  if(document.getElementById('pg-situations').classList.contains('on')){ renderStats(); renderPast(); }
 }
 
 /* PAST SITUATIONS TAB */
@@ -1102,16 +1108,18 @@ async function addThought() {
   var text=document.getElementById('th-text').value.trim();
   if (!heading&&!text) { showToast('Add a heading or description first.','error'); return; }
   var now=new Date();
+  var thId = String(Date.now());
   var th={ id:Date.now(), timestamp:Date.now(), dateISO:isoDate(now),
     date:now.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}),
     heading:heading, text:text, url:document.getElementById('th-url').value.trim(),
-    category:selThCategory, emotion:selThEmotion };
+    category:selThCategory, emotion:selThEmotion,
+    sheetId:thId };  // stable ID used to find/update Sheet row
   thoughts.unshift(th); saveThoughts(); updateThBadge();
   document.getElementById('th-heading').value=''; document.getElementById('th-text').value=''; document.getElementById('th-url').value='';
   selThCategory=''; selThEmotion='';
   document.querySelectorAll('#th-cat-pills .thp, #th-emo-pills .thp').forEach(function(p){p.classList.remove('on');});
   document.getElementById('th-sync').textContent='Syncing...'; document.getElementById('th-sync').className='sync-txt syncing';
-  var ok=await postToSheet({sheet:'Thoughts',date:th.date,dateISO:th.dateISO,heading:th.heading,text:th.text,url:th.url,category:th.category,emotion:th.emotion});
+  var ok=await postToSheet({sheet:'Thoughts',sheetId:thId,date:th.date,dateISO:th.dateISO,heading:th.heading,text:th.text,url:th.url,category:th.category,emotion:th.emotion});
   document.getElementById('th-sync').textContent=ok?'Synced to Sheet \u2713':'Saved locally (Sheet unreachable)';
   document.getElementById('th-sync').className='sync-txt '+(ok?'ok':'err');
   showToast(ok?'Thought saved \u2713':'Saved locally — sync failed.',ok?'success':'error');
@@ -1203,21 +1211,35 @@ function fetchAllThoughts() {
   });
 }
 function mergeThoughtsFromSheet(sheetThoughts) {
-  var localMap={};
-  thoughts.forEach(function(t){localMap[(t.dateISO||'')+'|'+(t.text||'').substring(0,50)+(t.heading||'').substring(0,20)]=true;});
+  // Build dedup map using sheetId (stable) or heading+date (fallback for older entries)
+  var localBySheetId={};
+  var localByKey={};
+  thoughts.forEach(function(t){
+    if(t.sheetId) localBySheetId[t.sheetId]=t;
+    localByKey[(t.dateISO||'')+'|'+(t.heading||'').substring(0,40)]=t;
+  });
+
   var added=0;
-  sheetThoughts.forEach(function(t){
-    var key=(t.dateISO||'')+'|'+(t.text||'').substring(0,50)+(t.heading||'').substring(0,20);
-    if(!localMap[key]){
-      thoughts.push({id:Date.now()+added++,timestamp:t.dateISO?new Date(t.dateISO).getTime():Date.now(),
-        dateISO:t.dateISO||'',date:t.date||'',heading:t.heading||'',text:t.text||'',
-        url:t.url||'',category:t.category||'',emotion:t.emotion||''});
+  sheetThoughts.forEach(function(s){
+    var sid=s.sheetId||'';
+    var key=(s.dateISO||'')+'|'+(s.heading||'').substring(0,40);
+    if(sid && localBySheetId[sid]) {
+      // Already exists locally — update it in case Sheet has newer edits
+      var t=localBySheetId[sid];
+      t.heading=s.heading||t.heading; t.text=s.text||t.text;
+      t.url=s.url||t.url; t.category=s.category||t.category; t.emotion=s.emotion||t.emotion;
+    } else if(!localByKey[key]) {
+      // Truly new — add it
+      thoughts.push({id:Date.now()+added++,timestamp:s.dateISO?new Date(s.dateISO).getTime():Date.now(),
+        dateISO:s.dateISO||'',date:s.date||'',heading:s.heading||'',text:s.text||'',
+        url:s.url||'',category:s.category||'',emotion:s.emotion||'',sheetId:s.sheetId||''});
+      added++;
     }
   });
-  if(added>0){
-    thoughts.sort(function(a,b){return b.timestamp-a.timestamp;}); saveThoughts(); updateThBadge();
-    if(document.getElementById('pg-thoughts').classList.contains('on')) renderThoughts();
-  }
+
+  thoughts.sort(function(a,b){return b.timestamp-a.timestamp;});
+  saveThoughts(); updateThBadge();
+  if(document.getElementById('pg-thoughts').classList.contains('on')) renderThoughts();
 }
 
 /* ══════════════════════════════════════════
@@ -1328,8 +1350,8 @@ async function saveEditModal() {
     saveThoughts();
     var ok2 = await postToSheet({
       sheet:'Thoughts', action:'edit_thought',
-      dateISO:th.dateISO, heading:th.heading,
-      text:th.text, url:th.url,
+      sheetId:th.sheetId||'', dateISO:th.dateISO,
+      heading:th.heading, text:th.text, url:th.url,
       category:th.category, emotion:th.emotion,
     });
     closeEditModal();
