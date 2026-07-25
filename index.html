@@ -994,32 +994,35 @@ function fetchAllSituations() {
     try {
       fetch(WORKER_URL+'?action=getAllSituations')
         .then(function(resp){return resp.ok?resp.json():null;})
-        .then(function(data){if(data&&data.status==='ok'&&Array.isArray(data.situations)) mergeSituationsFromSheet(data.situations); resolve();})
+        .then(function(data){
+          if(data&&data.status==='ok'&&Array.isArray(data.situations)){
+            replaceSituationsFromSheet(data.situations);
+          }
+          resolve();
+        })
         .catch(function(){resolve();});
     } catch(e){resolve();}
   });
 }
-function mergeSituationsFromSheet(sheetSits) {
-  var localByKey={};
-  situations.forEach(function(s){ localByKey[(s.dateISO||'')+'|'+(s.title||'').substring(0,60)]=s; });
-  var added=0;
-  sheetSits.forEach(function(s) {
-    var key=(s.dateISO||'')+'|'+(s.title||'').substring(0,60);
-    if (localByKey[key]) {
-      // Update existing local entry with Sheet data (strategy/emotion may have been edited)
-      var loc=localByKey[key];
-      if(s.strategy) loc.strategy=s.strategy;
-      if(s.emotion)  loc.emotion=s.emotion;
-      if(s.trigger)  loc.trigger=s.trigger;
-      if(s.reaction) loc.reaction=s.reaction;
-    } else {
-      situations.push({id:Date.now()+added,timestamp:s.dateISO?new Date(s.dateISO).getTime():Date.now(),
-        dateISO:s.dateISO||'',date:s.date||'',title:s.title||'',trigger:s.trigger||'',
-        reaction:s.reaction||'',emotion:s.emotion||'',strategy:s.strategy||''});
-      added++;
-    }
+
+/* Sheet is the single source of truth for situations too. Replace local entirely. */
+function replaceSituationsFromSheet(sheetSits) {
+  situations = sheetSits.map(function(s, i){
+    return {
+      id:        Date.now() + i,
+      timestamp: s.dateISO ? new Date(s.dateISO).getTime() : Date.now(),
+      dateISO:   s.dateISO   || '',
+      date:      s.date      || '',
+      title:     s.title     || '',
+      trigger:   s.trigger   || '',
+      reaction:  s.reaction  || '',
+      emotion:   s.emotion   || '',
+      strategy:  s.strategy  || '',
+    };
   });
-  situations.sort(function(a,b){return b.timestamp-a.timestamp;}); saveSits(); updateBadge();
+  situations.sort(function(a,b){return b.timestamp-a.timestamp;});
+  saveSits();
+  updateBadge();
   if(document.getElementById('pg-situations').classList.contains('on')){ renderStats(); renderPast(); }
 }
 
@@ -1205,40 +1208,49 @@ function fetchAllThoughts() {
     try{
       fetch(WORKER_URL+'?action=getAllThoughts')
         .then(function(resp){return resp.ok?resp.json():null;})
-        .then(function(data){if(data&&data.status==='ok'&&Array.isArray(data.thoughts)) mergeThoughtsFromSheet(data.thoughts); resolve();})
+        .then(function(data){
+          if(data&&data.status==='ok'&&Array.isArray(data.thoughts)){
+            replaceThoughtsFromSheet(data.thoughts);
+          }
+          resolve();
+        })
         .catch(function(){resolve();});
     }catch(e){resolve();}
   });
 }
-function mergeThoughtsFromSheet(sheetThoughts) {
-  // Build dedup map using sheetId (stable) or heading+date (fallback for older entries)
-  var localBySheetId={};
-  var localByKey={};
-  thoughts.forEach(function(t){
-    if(t.sheetId) localBySheetId[t.sheetId]=t;
-    localByKey[(t.dateISO||'')+'|'+(t.heading||'').substring(0,40)]=t;
+
+/* Sheet is the single source of truth for thoughts.
+   Replace local array entirely from Sheet data.
+   Only keep any locally-pending items (id > last sheet timestamp) not yet synced. */
+function replaceThoughtsFromSheet(sheetThoughts) {
+  // Convert Sheet rows to local objects
+  var fromSheet = sheetThoughts.map(function(s, i){
+    return {
+      id:        s.sheetId ? parseInt(s.sheetId,10) : (Date.now() + i),
+      timestamp: s.dateISO ? new Date(s.dateISO).getTime() : Date.now(),
+      dateISO:   s.dateISO   || '',
+      date:      s.date      || '',
+      heading:   s.heading   || '',
+      text:      s.text      || '',
+      url:       s.url       || '',
+      category:  s.category  || '',
+      emotion:   s.emotion   || '',
+      sheetId:   s.sheetId   || '',
+    };
   });
 
-  var added=0;
-  sheetThoughts.forEach(function(s){
-    var sid=s.sheetId||'';
-    var key=(s.dateISO||'')+'|'+(s.heading||'').substring(0,40);
-    if(sid && localBySheetId[sid]) {
-      // Already exists locally — update it in case Sheet has newer edits
-      var t=localBySheetId[sid];
-      t.heading=s.heading||t.heading; t.text=s.text||t.text;
-      t.url=s.url||t.url; t.category=s.category||t.category; t.emotion=s.emotion||t.emotion;
-    } else if(!localByKey[key]) {
-      // Truly new — add it
-      thoughts.push({id:Date.now()+added++,timestamp:s.dateISO?new Date(s.dateISO).getTime():Date.now(),
-        dateISO:s.dateISO||'',date:s.date||'',heading:s.heading||'',text:s.text||'',
-        url:s.url||'',category:s.category||'',emotion:s.emotion||'',sheetId:s.sheetId||''});
-      added++;
-    }
+  // Keep any locally-added thoughts that haven't synced yet
+  // (i.e. they have a sheetId that isn't in the Sheet response)
+  var sheetIds = {};
+  sheetThoughts.forEach(function(s){ if(s.sheetId) sheetIds[s.sheetId]=true; });
+  var pendingLocal = thoughts.filter(function(t){
+    return t.sheetId && !sheetIds[t.sheetId];
   });
 
+  thoughts = fromSheet.concat(pendingLocal);
   thoughts.sort(function(a,b){return b.timestamp-a.timestamp;});
-  saveThoughts(); updateThBadge();
+  saveThoughts();
+  updateThBadge();
   if(document.getElementById('pg-thoughts').classList.contains('on')) renderThoughts();
 }
 
