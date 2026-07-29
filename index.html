@@ -272,6 +272,7 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
     <button class="tab" onclick="switchTab('situations')">&#128250; Situations <span class="badge" id="sit-badge">0</span></button>
     <button class="tab" onclick="switchTab('thoughts')">&#128161; Thoughts <span class="badge" id="th-badge">0</span></button>
     <button class="tab" onclick="switchTab('posts')">&#128204; Posts <span class="badge" id="post-badge">0</span></button>
+    <button class="tab" onclick="switchTab('habits')">&#127775; Habits <span class="badge" id="hab-badge">0</span></button>
   </div>
 </nav>
 
@@ -519,6 +520,71 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
   <div class="foot" style="margin-top:1.5rem"><span class="foot-note">Stored locally · synced to Google Sheets</span><button class="btn" onclick="switchTab('morning')">&#8592; Morning</button></div>
 </div>
 
+<!-- TAB 5: HABITS -->
+<div class="pg" id="pg-habits">
+  <div class="past-hdr">
+    <div class="past-title">Emotion Habits</div>
+    <div class="past-sub">Practical habits to control an emotion — your personal toolkit for staying grounded.</div>
+  </div>
+
+  <!-- Filter by emotion -->
+  <div class="ef-bar" id="hab-emo-filter" style="margin-bottom:1rem">
+    <button class="ef on" data-he="all" onclick="setHabEmoFilter(this)">All emotions</button>
+    <button class="ef" data-he="anger" onclick="setHabEmoFilter(this)">&#128548; Anger</button>
+    <button class="ef" data-he="anxiety" onclick="setHabEmoFilter(this)">&#128560; Anxiety</button>
+    <button class="ef" data-he="frustration" onclick="setHabEmoFilter(this)">&#128547; Frustration</button>
+    <button class="ef" data-he="hurt" onclick="setHabEmoFilter(this)">&#128148; Hurt</button>
+    <button class="ef" data-he="shame" onclick="setHabEmoFilter(this)">&#128532; Shame</button>
+    <button class="ef" data-he="overwhelm" onclick="setHabEmoFilter(this)">&#127754; Overwhelm</button>
+    <button class="ef" data-he="fear" onclick="setHabEmoFilter(this)">&#128552; Fear</button>
+    <button class="ef" data-he="jealousy" onclick="setHabEmoFilter(this)">&#128065; Jealousy</button>
+    <button class="ef" data-he="sadness" onclick="setHabEmoFilter(this)">&#128546; Sadness</button>
+    <button class="ef" data-he="stress" onclick="setHabEmoFilter(this)">&#128165; Stress</button>
+  </div>
+
+  <!-- Search -->
+  <div class="th-filter-bar" style="margin-bottom:1rem">
+    <input class="psearch" id="hab-search" type="text" placeholder="Search habits..." oninput="renderHabits()" style="flex:1">
+    <button class="btn" onclick="exportHabitsCSV()">Export CSV</button>
+  </div>
+
+  <div class="pmeta" id="hab-meta"></div>
+  <div class="post-log" id="hab-log"></div>
+
+  <!-- Add new habit -->
+  <div class="lbl" style="margin-top:1.5rem">Add a habit <span class="lbl-line"></span></div>
+  <div class="sit-block" style="background:var(--card);border:1px solid var(--border);border-radius:var(--rlg);padding:1rem">
+    <div style="margin-bottom:10px">
+      <label class="sfl">Emotion this habit helps with</label>
+      <div class="epills" id="hab-emo-pills">
+        <button class="ep" onclick="selHabEmo(this)" data-val="anger">&#128548; Anger</button>
+        <button class="ep" onclick="selHabEmo(this)" data-val="anxiety">&#128560; Anxiety</button>
+        <button class="ep" onclick="selHabEmo(this)" data-val="frustration">&#128547; Frustration</button>
+        <button class="ep" onclick="selHabEmo(this)" data-val="hurt">&#128148; Hurt</button>
+        <button class="ep" onclick="selHabEmo(this)" data-val="shame">&#128532; Shame</button>
+        <button class="ep" onclick="selHabEmo(this)" data-val="overwhelm">&#127754; Overwhelm</button>
+        <button class="ep" onclick="selHabEmo(this)" data-val="fear">&#128552; Fear</button>
+        <button class="ep" onclick="selHabEmo(this)" data-val="jealousy">&#128065; Jealousy</button>
+        <button class="ep" onclick="selHabEmo(this)" data-val="sadness">&#128546; Sadness</button>
+        <button class="ep" onclick="selHabEmo(this)" data-val="stress">&#128165; Stress</button>
+      </div>
+    </div>
+    <div style="margin-bottom:10px">
+      <label class="sfl">The habit / practical action</label>
+      <textarea class="sin" id="hab-text" rows="3" placeholder="e.g. When anger rises, step away for 90 seconds. Breathe out longer than you breathe in. Return only when your voice is calm."></textarea>
+    </div>
+    <div class="sit-foot">
+      <span class="sync-txt" id="hab-sync">Ready to add</span>
+      <button class="btn gold" onclick="addHabit()">Add habit &#8599;</button>
+    </div>
+  </div>
+
+  <div class="foot" style="margin-top:1.5rem">
+    <span class="foot-note">Stored locally · synced to Google Sheets</span>
+    <button class="btn" onclick="switchTab('morning')">&#8592; Morning</button>
+  </div>
+</div><!-- /pg-habits -->
+
 <!-- EDIT MODAL -->
 <div id="edit-modal" style="display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);overflow-y:auto;padding:2rem 1rem">
   <div style="max-width:620px;margin:0 auto;background:var(--card);border:1px solid var(--border-md);border-radius:var(--rlg);overflow:hidden">
@@ -602,11 +668,12 @@ function switchTab(tab){
   document.querySelectorAll('.pg').forEach(function(p){p.classList.remove('on');});
   document.querySelectorAll('.tab').forEach(function(b){b.classList.remove('on');});
   document.getElementById('pg-'+tab).classList.add('on');
-  var idx=tab==='morning'?0:tab==='situations'?1:tab==='thoughts'?2:3;
+  var idx=tab==='morning'?0:tab==='situations'?1:tab==='thoughts'?2:tab==='posts'?3:4;
   document.querySelectorAll('.tab')[idx].classList.add('on');
   if(tab==='situations'){renderStats();renderPast();}
   if(tab==='thoughts')renderThoughts();
   if(tab==='posts')renderPosts();
+  if(tab==='habits')renderHabits();
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
@@ -629,9 +696,10 @@ function init(){
     loadSituations();updateBadge();
     loadThoughts();updateThBadge();
     loadPosts();updatePostBadge();
+    loadHabits();updateHabBadge();
   }catch(e){console.error('Local:',e);}
   setIntentionsState('loading');
-  Promise.all([fetchFromSheet(),fetchAllSituations(),fetchAllThoughts(),fetchAllPosts()])
+  Promise.all([fetchFromSheet(),fetchAllSituations(),fetchAllThoughts(),fetchAllPosts(),fetchAllHabits()])
     .then(function(res){
       var d=res[0];
       if(d&&d.morning&&(d.morning.priority||d.morning.emotional_intention||d.morning.gratitude)){
@@ -916,8 +984,102 @@ async function saveEditModal(){
     var selSrcEl=document.querySelector('#edit-src-pills .src-pill[class*="on-"]'),selEmoEl3=document.querySelector('#edit-post-emo-pills .pep.on');p.source=selSrcEl?selSrcEl.dataset.src:p.source;p.emotion=selEmoEl3?selEmoEl3.dataset.val:p.emotion;savePosts();
     var ok3=await postToSheet({sheet:'Posts',action:'edit_post',sheetId:p.sheetId||'',dateISO:p.dateISO,heading:p.heading,desc:p.desc,source:p.source,url:p.url,emotion:p.emotion});
     closeEditModal();renderPosts();showToast(ok3?'Post updated \u2713':'Updated locally -- Sheet sync pending.',ok3?'success':'');
+  }else if(_editCtx.type==='habit'){
+    var h=habits.find(function(x){return x.id===_editCtx.id;});if(!h){closeEditModal();return;}
+    var selEmoEl=document.querySelector('#edit-hab-emo-pills .ep.on');
+    h.emotion=selEmoEl?selEmoEl.dataset.val:h.emotion;
+    h.text=document.getElementById('edit-hab-text').value.trim();
+    saveHabits();
+    var ok4=await postToSheet({sheet:'Habits',action:'edit_habit',sheetId:h.sheetId||'',dateISO:h.dateISO,emotion:h.emotion,text:h.text});
+    closeEditModal();renderHabits();showToast(ok4?'Habit updated ✓':'Updated locally -- Sheet sync pending.',ok4?'success':'');
   }
-  btn.textContent='Save changes \u2197';btn.disabled=false;
+  btn.textContent='Save changes ↗';btn.disabled=false;
+}
+
+/* HABITS */
+var habits=[], selHabEmotion='', habEmoFilter='all';
+var HAB_EMO_ICONS={anger:'&#128548;',anxiety:'&#128560;',frustration:'&#128547;',hurt:'&#128148;',shame:'&#128532;',overwhelm:'&#127754;',fear:'&#128552;',jealousy:'&#128065;',sadness:'&#128546;',stress:'&#128165;'};
+
+function loadHabits(){try{var r=localStorage.getItem('morning_habits');if(r)habits=JSON.parse(r);}catch(e){habits=[];}}
+function saveHabits(){localStorage.setItem('morning_habits',JSON.stringify(habits));}
+function updateHabBadge(){document.getElementById('hab-badge').textContent=habits.length;}
+
+function selHabEmo(el){document.querySelectorAll('#hab-emo-pills .ep').forEach(function(p){p.classList.remove('on');});selHabEmotion=(selHabEmotion===el.dataset.val)?'':el.dataset.val;if(selHabEmotion)el.classList.add('on');}
+function setHabEmoFilter(el){document.querySelectorAll('#hab-emo-filter .ef').forEach(function(p){p.classList.remove('on');});el.classList.add('on');habEmoFilter=el.dataset.he;renderHabits();}
+
+async function addHabit(){
+  var text=document.getElementById('hab-text').value.trim();
+  if(!text){showToast('Describe the habit first.','error');return;}
+  if(!selHabEmotion){showToast('Select an emotion first.','error');return;}
+  var now=new Date(),hid=String(Date.now());
+  var h={id:Date.now(),timestamp:Date.now(),sheetId:hid,dateISO:isoDate(now),date:now.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}),emotion:selHabEmotion,text:text};
+  habits.unshift(h);saveHabits();updateHabBadge();
+  document.getElementById('hab-text').value='';selHabEmotion='';
+  document.querySelectorAll('#hab-emo-pills .ep').forEach(function(p){p.classList.remove('on');});
+  var syncEl=document.getElementById('hab-sync');syncEl.textContent='Syncing...';syncEl.className='sync-txt syncing';
+  var ok=await postToSheet({sheet:'Habits',sheetId:hid,date:h.date,dateISO:h.dateISO,emotion:h.emotion,text:h.text});
+  syncEl.textContent=ok?'Synced to Sheet ✓':'Saved locally (Sheet unreachable)';syncEl.className='sync-txt '+(ok?'ok':'err');
+  showToast(ok?'Habit added ✓':'Saved locally -- sync failed.',ok?'success':'error');
+  renderHabits();
+}
+
+function habCardHTML(h){
+  var emoBadge=h.emotion?'<span class="emo-badge" style="background:rgba(201,168,76,0.11);border-color:rgba(201,168,76,0.28);color:var(--gold)">'+(HAB_EMO_ICONS[h.emotion]||'')+' '+h.emotion+'</span>':'';
+  return '<div class="post-card" id="hab-'+h.id+'">'+
+    '<div class="post-card-meta">'+emoBadge+'<span class="post-date">'+h.date+'</span></div>'+
+    '<div style="font-size:13px;color:var(--text-1);line-height:1.65;margin-bottom:.6rem">'+escH(h.text)+'</div>'+
+    '<div class="post-card-foot"><button class="del-btn" onclick="delHabit('+h.id+')">&#128465; Delete</button>'+
+    '<button class="btn" style="font-size:11px;padding:4px 12px" onclick="editHabit('+h.id+')">✏ Edit</button></div>'+
+  '</div>';
+}
+
+function renderHabits(){
+  var search=(document.getElementById('hab-search').value||'').toLowerCase().trim();
+  var list=habits.slice();
+  if(habEmoFilter!=='all')list=list.filter(function(h){return h.emotion===habEmoFilter;});
+  if(search)list=list.filter(function(h){return(h.text+h.emotion).toLowerCase().includes(search);});
+  list.sort(function(a,b){return b.timestamp-a.timestamp;});
+  document.getElementById('hab-meta').textContent=list.length+' of '+habits.length+' habit'+(habits.length!==1?'s':'');
+  var log=document.getElementById('hab-log');
+  if(!list.length){log.innerHTML='<div class="sit-empty"><div style="font-size:28px;margin-bottom:10px">&#127775;</div>'+(habits.length===0?'No habits yet.<br>Add your first practical technique for managing an emotion.':'No matches for the current filter.')+'</div>';return;}
+  log.innerHTML=list.map(habCardHTML).join('');
+}
+
+function delHabit(id){if(!confirm('Delete this habit?'))return;habits=habits.filter(function(h){return h.id!==id;});saveHabits();updateHabBadge();renderHabits();showToast('Deleted.','');}
+
+function editHabit(id){
+  var h=habits.find(function(x){return x.id===id;});if(!h)return;
+  var emoOpts=['anger','anxiety','frustration','hurt','shame','overwhelm','fear','jealousy','sadness','stress'];
+  var emoPills=emoOpts.map(function(e){return '<button class="ep'+(h.emotion===e?' on':'')+'" data-val="'+e+'" onclick="this.parentNode.querySelectorAll(\'.ep\').forEach(function(x){x.classList.remove(\'on\')});this.classList.add(\'on\')">'+(HAB_EMO_ICONS[e]||'')+' '+e+'</button>';}).join('');
+  var html='<div style="margin-bottom:10px"><label class="sfl">Emotion</label><div class="epills" id="edit-hab-emo-pills">'+emoPills+'</div></div>'+
+    '<div><label class="sfl">The habit / practical action</label><textarea class="sin" id="edit-hab-text" rows="4">'+escH(h.text)+'</textarea></div>';
+  openEditModal('Edit habit',html,{type:'habit',id:id});
+}
+
+function exportHabitsCSV(){
+  if(!habits.length){showToast('Nothing to export.','error');return;}
+  var h=['Date','Emotion','Habit'];
+  var rows=habits.map(function(x){return[x.date,x.emotion||'',x.text||''].map(function(v){return'"'+String(v).replace(/"/g,'""')+'"';}).join(',');});
+  var a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent([h.join(',')].concat(rows).join('\n'));
+  a.download='habits-'+isoToday()+'.csv';a.click();showToast('CSV exported ✓','success');
+}
+
+function fetchAllHabits(){
+  return new Promise(function(resolve){
+    try{
+      fetch(WORKER_URL+'?action=getAllHabits').then(function(r){return r.ok?r.json():null;})
+        .then(function(d){if(d&&d.status==='ok'&&Array.isArray(d.habits))replaceHabitsFromSheet(d.habits);resolve();})
+        .catch(function(){resolve();});
+    }catch(e){resolve();}
+  });
+}
+function replaceHabitsFromSheet(s){
+  var fromSheet=s.map(function(x,i){return{id:x.sheetId?parseInt(x.sheetId,10):Date.now()+i,timestamp:x.dateISO?new Date(x.dateISO).getTime():Date.now(),dateISO:x.dateISO||'',date:x.date||'',emotion:x.emotion||'',text:x.text||'',sheetId:x.sheetId||''};});
+  var sheetIds={};s.forEach(function(x){if(x.sheetId)sheetIds[x.sheetId]=true;});
+  var pending=habits.filter(function(h){return h.sheetId&&!sheetIds[h.sheetId];});
+  habits=fromSheet.concat(pending);habits.sort(function(a,b){return b.timestamp-a.timestamp;});
+  saveHabits();updateHabBadge();if(document.getElementById('pg-habits').classList.contains('on'))renderHabits();
 }
 
 /* START */
