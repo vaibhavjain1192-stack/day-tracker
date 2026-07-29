@@ -25,39 +25,26 @@
 }
 html{font-size:15px}
 body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:1.55;min-height:100vh;-webkit-font-smoothing:antialiased}
-
-/* NAV */
 .nav{position:sticky;top:0;z-index:40;background:rgba(15,17,23,0.95);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);padding:0 1.25rem}
-.nav-inner{max-width:860px;margin:0 auto;display:flex;align-items:center}
-.tab{padding:.7rem 1rem;font-size:12px;font-weight:500;font-family:var(--fb);color:var(--text-3);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;transition:color var(--tr),border-color var(--tr);display:flex;align-items:center;gap:5px;margin-bottom:-1px;white-space:nowrap}
+.nav-inner{max-width:860px;margin:0 auto;display:flex;align-items:center;overflow-x:auto}
+.tab{padding:.7rem 1rem;font-size:12px;font-weight:500;font-family:var(--fb);color:var(--text-3);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;transition:color var(--tr),border-color var(--tr);display:flex;align-items:center;gap:5px;margin-bottom:-1px;white-space:nowrap;flex-shrink:0}
 .tab:hover{color:var(--text-2)}
 .tab.on{color:var(--text-1);border-bottom-color:var(--gold)}
 .badge{font-size:10px;font-family:var(--fm);background:var(--rose-dim);color:var(--rose);border:1px solid rgba(224,123,123,0.22);border-radius:20px;padding:1px 5px;min-width:18px;text-align:center}
-
-/* PAGES */
 .pg{max-width:860px;margin:0 auto;padding:1.5rem 1.25rem 3rem;display:none}
 .pg.on{display:block}
-
-/* HEADER */
 .hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1rem;gap:1rem}
-.hdr-l{}
 .eyebrow{font-family:var(--fm);font-size:10px;color:var(--gold);letter-spacing:0.13em;text-transform:uppercase;margin-bottom:4px}
 .greeting{font-family:var(--fd);font-size:clamp(1.6rem,4vw,2.2rem);font-weight:400;color:var(--text-1);line-height:1.1}
 .dateline{font-size:12px;color:var(--text-2);margin-top:4px}
 .hdr-r{text-align:right;flex-shrink:0}
 .daynum{font-family:var(--fd);font-size:2.6rem;color:var(--gold);line-height:1}
 .daynum-lbl{font-size:10px;color:var(--text-3);letter-spacing:0.08em;text-transform:uppercase;margin-top:1px}
-
-/* MANTRA */
 .mantra{background:var(--gold-glow);border:1px solid rgba(201,168,76,0.15);border-left:2px solid var(--gold);border-radius:0 var(--r) var(--r) 0;padding:.75rem 1rem;margin-bottom:1rem}
 .mantra-q{font-family:var(--fd);font-size:1rem;font-style:italic;color:var(--text-1);line-height:1.55}
 .mantra-src{font-size:11px;color:var(--text-3);margin-top:4px}
-
-/* SECTION LABEL */
 .lbl{font-family:var(--fm);font-size:9px;color:var(--text-3);letter-spacing:0.13em;text-transform:uppercase;margin-bottom:8px;margin-top:1.25rem;display:flex;align-items:center;gap:8px}
 .lbl-line{flex:1;height:1px;background:var(--border)}
-
-/* BUTTONS */
 .btn{padding:5px 13px;font-size:11px;font-weight:500;font-family:var(--fb);background:transparent;color:var(--text-2);border:1px solid var(--border-md);border-radius:var(--rsm);cursor:pointer;transition:var(--tr)}
 .btn:hover{background:var(--surface);color:var(--text-1)}
 .btn.gold{background:var(--gold);color:#0F1117;border-color:var(--gold)}
@@ -66,8 +53,6 @@ body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:
 .btn.teal:hover{background:rgba(78,205,196,0.16)}
 .btn.ghost{background:none;border:none;color:var(--text-3);padding:4px 8px;font-size:11px}
 .btn.ghost:hover{color:var(--text-1)}
-
-/* ── TODAY'S GOALS (filled state) ── */
 .goals-card{background:var(--card);border:1px solid var(--border);border-radius:var(--rlg);overflow:hidden}
 .goals-card-head{display:flex;justify-content:space-between;align-items:center;padding:.75rem 1rem;border-bottom:1px solid var(--border)}
 .goals-card-title{font-size:12px;font-weight:600;color:var(--text-1)}
@@ -76,14 +61,11 @@ body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:
 .goal-row{display:flex;gap:10px;padding:7px 0;border-bottom:1px solid var(--border)}
 .goal-row:last-child{border-bottom:none}
 .goal-icon{font-size:16px;flex-shrink:0;width:20px;text-align:center;margin-top:1px}
-.goal-col{}
 .goal-label{font-size:10px;font-family:var(--fm);color:var(--text-3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:2px}
 .goal-value{font-size:13px;color:var(--text-1);line-height:1.45}
 .goals-footer{display:flex;justify-content:space-between;align-items:center;padding:.6rem 1rem;border-top:1px solid var(--border);background:var(--surface)}
 .goals-synced{font-size:11px;color:var(--text-3)}
 .goals-synced.ok{color:var(--green)}
-
-/* ── QUESTION FORM ── */
 .q-wrap{background:var(--card);border:1px solid var(--border);border-radius:var(--rlg);padding:1rem}
 .q-item{margin-bottom:.875rem}
 .q-item:last-of-type{margin-bottom:0}
@@ -95,23 +77,6 @@ body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:
 .save-st{font-size:11px;color:var(--text-3)}
 .save-st.ok{color:var(--green)}
 .save-st.err{color:var(--rose)}
-
-/* LOADING SKELETON */
-.q-loading-card{background:var(--card);border:1px solid var(--border);border-radius:var(--rlg);padding:1rem}
-.q-skel{background:linear-gradient(90deg,var(--surface) 25%,#232840 50%,var(--surface) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:4px;height:12px;margin-bottom:4px}
-.q-skel-sm{width:55%;height:10px}
-.q-skel-lg{width:100%;height:28px;margin-top:4px;margin-bottom:6px}
-.q-skel-md{width:100%;height:28px;margin-top:4px}
-.q-loading-note{font-size:11px;color:var(--text-3);margin-top:10px;text-align:center}
-@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
-
-@media(max-width:580px){
-  .sit-flds{grid-template-columns:1fr!important}
-  .past-stats{grid-template-columns:repeat(2,1fr)!important}
-  .hdr{flex-wrap:wrap}
-}
-
-/* PILLARS — vertical list + horizontal detail panel */
 .pillars-wrap{display:flex;gap:10px;align-items:flex-start}
 .pillars-list{display:flex;flex-direction:column;gap:5px;flex-shrink:0;width:148px}
 .pillar{display:flex;align-items:center;gap:9px;background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:9px 12px;cursor:pointer;transition:all var(--tr);text-align:left;width:100%}
@@ -135,14 +100,6 @@ body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:
 .p-s{font-size:11px;color:var(--text-2);margin-top:2px;line-height:1.5}
 .pillar-empty{flex:1;display:flex;align-items:center;justify-content:center;min-height:160px;background:var(--card);border:1px dashed var(--border);border-radius:var(--rlg);color:var(--text-3);font-size:11px;text-align:center;padding:1rem;line-height:1.6}
 .pillar-empty.hidden{display:none}
-@media(max-width:580px){
-  .pillars-wrap{flex-direction:column}
-  .pillars-list{width:100%;flex-direction:row;flex-wrap:wrap}
-  .pillar{width:calc(50% - 3px)}
-  .pillar-detail{width:100%}
-}
-
-/* CHECKLIST */
 .cl-block{background:var(--card);border:1px solid var(--border);border-radius:var(--rlg);padding:.875rem}
 .cl-row{display:flex;align-items:center;gap:9px;padding:6px 0;border-bottom:1px solid var(--border);cursor:pointer}
 .cl-row:last-child{border-bottom:none}
@@ -158,16 +115,11 @@ body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:
 .prog-ct{font-family:var(--fm)}
 .prog-track{height:2px;background:rgba(255,255,255,0.05);border-radius:2px}
 .prog-fill{height:100%;background:linear-gradient(90deg,var(--teal),var(--green));border-radius:2px;transition:width 0.3s ease}
-
-/* INTENTIONS (compact 3-col row) */
 .int-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-@media(max-width:580px){.int-row{grid-template-columns:1fr}}
 .int-tile{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:.75rem}
 .int-e{font-size:18px;margin-bottom:5px}
 .int-t{font-size:12px;font-weight:600;color:var(--text-1);margin-bottom:3px}
 .int-b{font-size:11px;color:var(--text-2);line-height:1.45}
-
-/* SITUATION FORM */
 .sit-block{background:var(--card);border:1px solid var(--border);border-radius:var(--rlg);padding:1rem}
 .sfl{font-size:11px;color:var(--text-2);font-weight:500;margin-bottom:5px;display:block}
 .sin{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--rsm);padding:7px 10px;font-size:13px;color:var(--text-1);font-family:var(--fb);resize:none;outline:none;line-height:1.5;transition:border-color var(--tr)}
@@ -183,13 +135,9 @@ body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:
 .sync-txt.ok{color:var(--green)}
 .sync-txt.syncing{color:var(--gold)}
 .sync-txt.err{color:var(--rose)}
-
-/* FOOTER */
 .foot{display:flex;justify-content:space-between;align-items:center;margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--border);flex-wrap:wrap;gap:6px}
 .foot-note{font-size:11px;color:var(--text-3)}
 .foot-btns{display:flex;gap:6px}
-
-/* PAST SITUATIONS TAB */
 .past-hdr{margin-bottom:1rem}
 .past-title{font-family:var(--fd);font-size:1.5rem;color:var(--text-1);margin-bottom:4px}
 .past-sub{font-size:13px;color:var(--text-2)}
@@ -242,8 +190,7 @@ body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:
 .del-btn{font-size:10px;color:var(--text-3);background:none;border:none;cursor:pointer;padding:3px 6px;border-radius:var(--rsm);font-family:var(--fb);transition:color var(--tr)}
 .del-btn:hover{color:var(--rose)}
 .sit-empty{text-align:center;padding:2.5rem 1rem;background:var(--card);border:1px dashed var(--border);border-radius:var(--r);color:var(--text-3);font-size:12px;line-height:1.7}
-
-/* THOUGHTS TAB */
+/* THOUGHTS */
 .th-add-block{background:var(--card);border:1px solid var(--border);border-radius:var(--rlg);padding:1rem;margin-bottom:1rem}
 .th-add-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
 .th-field-full{grid-column:1/-1}
@@ -253,31 +200,67 @@ body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:
 .thp.on{background:var(--gold-dim);border-color:rgba(201,168,76,0.4);color:var(--gold)}
 .th-add-foot{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
 .th-filter-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:1rem}
-.th-log{display:flex;flex-direction:column;gap:8px}
-.th-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:1rem;transition:border-color var(--tr)}
-.th-card:hover{border-color:var(--border-md)}
-.th-card-text{font-family:var(--fd);font-size:1rem;font-style:italic;color:var(--text-1);line-height:1.6;margin-bottom:.6rem}
-.th-card-meta{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:.5rem}
+.th-log,.post-log{display:flex;flex-direction:column;gap:8px}
+.th-card,.post-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:1rem;transition:border-color var(--tr)}
+.th-card:hover,.post-card:hover{border-color:var(--border-md)}
+.th-card-heading,.post-card-heading{font-size:14px;font-weight:600;color:var(--text-1);margin-bottom:.5rem;line-height:1.35}
+.th-card-body,.post-card-body{margin-bottom:.6rem}
+.th-bullets,.post-bullets{margin:4px 0 4px 1rem;padding:0;list-style:none}
+.th-bullets li,.post-bullets li{position:relative;padding-left:14px;font-size:13px;color:var(--text-2);line-height:1.6;margin-bottom:2px}
+.th-bullets li::before,.post-bullets li::before{content:'·';position:absolute;left:0;color:var(--gold);font-size:16px;line-height:1.35}
+.th-para,.post-para{font-size:13px;color:var(--text-2);line-height:1.6;margin-bottom:4px}
+.th-para:last-child,.post-para:last-child{margin-bottom:0}
+.th-card-meta,.post-card-meta{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:.5rem}
 .th-cat-badge{font-size:10px;padding:2px 8px;border-radius:20px;background:var(--gold-dim);border:1px solid rgba(201,168,76,0.28);color:var(--gold)}
 .th-emo-badge{font-size:10px;padding:2px 8px;border-radius:20px;background:var(--teal-dim);border:1px solid rgba(78,205,196,0.28);color:var(--teal)}
-.th-date{font-size:10px;color:var(--text-3);font-family:var(--fm)}
-.th-url{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--gold);text-decoration:none;word-break:break-all}
-.th-url:hover{text-decoration:underline}
-.th-card-heading{font-size:14px;font-weight:600;color:var(--text-1);margin-bottom:.5rem;line-height:1.35}
-.th-card-body{margin-bottom:.6rem}
-.th-bullets{margin:4px 0 4px 1rem;padding:0;list-style:none}
-.th-bullets li{position:relative;padding-left:14px;font-size:13px;color:var(--text-2);line-height:1.6;margin-bottom:2px}
-.th-bullets li::before{content:'·';position:absolute;left:0;color:var(--gold);font-size:16px;line-height:1.35}
-.th-para{font-size:13px;color:var(--text-2);line-height:1.6;margin-bottom:4px}
-.th-para:last-child{margin-bottom:0}
-.th-card-foot{display:flex;justify-content:space-between;align-items:center;margin-top:.5rem;padding-top:.5rem;border-top:1px solid var(--border)}
-@media(max-width:580px){.th-add-grid{grid-template-columns:1fr}}
+.th-date,.post-date{font-size:10px;color:var(--text-3);font-family:var(--fm)}
+.th-url,.post-url{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--gold);text-decoration:none;word-break:break-all}
+.th-url:hover,.post-url:hover{text-decoration:underline}
+.th-card-foot,.post-card-foot{display:flex;justify-content:space-between;align-items:center;margin-top:.5rem;padding-top:.5rem;border-top:1px solid var(--border)}
+/* POSTS */
+.post-src-badge{font-size:10px;padding:2px 9px;border-radius:20px;font-weight:500}
+.post-src-li{background:rgba(10,102,194,0.15);border:1px solid rgba(10,102,194,0.3);color:#5b9bd5}
+.post-src-ig{background:rgba(225,48,108,0.12);border:1px solid rgba(225,48,108,0.3);color:#e1306c}
+.post-src-ot{background:var(--surface);border:1px solid var(--border-md);color:var(--text-2)}
+.post-emo-badge{font-size:10px;padding:2px 8px;border-radius:20px;background:var(--teal-dim);border:1px solid rgba(78,205,196,0.28);color:var(--teal)}
+.src-pills{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.src-pill{padding:4px 14px;font-size:12px;border-radius:20px;border:1px solid var(--border-md);color:var(--text-2);background:transparent;cursor:pointer;transition:all var(--tr);font-family:var(--fb);font-weight:500}
+.src-pill:hover{background:var(--surface);color:var(--text-1)}
+.src-pill.on-li{background:rgba(10,102,194,0.15);border-color:rgba(10,102,194,0.4);color:#5b9bd5}
+.src-pill.on-ig{background:rgba(225,48,108,0.12);border-color:rgba(225,48,108,0.4);color:#e1306c}
+.src-pill.on-ot{background:var(--gold-dim);border-color:rgba(201,168,76,0.4);color:var(--gold)}
+.pemo-pills{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px}
+.pep{padding:3px 10px;font-size:11px;border-radius:20px;border:1px solid var(--border-md);color:var(--text-2);background:transparent;cursor:pointer;transition:all var(--tr);font-family:var(--fb)}
+.pep:hover{background:var(--surface);color:var(--text-1)}
+.pep.on{background:var(--teal-dim);border-color:rgba(78,205,196,0.4);color:var(--teal)}
+.pef-bar,.post-src-filter-bar{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:.75rem}
+.pef{padding:4px 11px;font-size:11px;border-radius:20px;border:1px solid var(--border);color:var(--text-3);background:transparent;cursor:pointer;font-family:var(--fb);transition:all var(--tr)}
+.pef:hover{color:var(--text-1);border-color:var(--border-md)}
+.pef.on{background:var(--teal-dim);border-color:rgba(78,205,196,0.32);color:var(--teal)}
+/* LOADING SKELETON */
+.q-loading-card{background:var(--card);border:1px solid var(--border);border-radius:var(--rlg);padding:1rem}
+.q-skel{background:linear-gradient(90deg,var(--surface) 25%,#232840 50%,var(--surface) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:4px;height:12px;margin-bottom:4px}
+.q-skel-sm{width:55%;height:10px}
+.q-skel-lg{width:100%;height:28px;margin-top:4px;margin-bottom:6px}
+.q-skel-md{width:100%;height:28px;margin-top:4px}
+.q-loading-note{font-size:11px;color:var(--text-3);margin-top:10px;text-align:center}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
 /* TOAST */
 .toast{position:fixed;bottom:1.25rem;right:1.25rem;background:#1E2333;border:1px solid var(--border-md);border-radius:var(--r);padding:10px 16px;font-size:12px;color:var(--text-1);box-shadow:0 6px 24px rgba(0,0,0,0.4);opacity:0;transform:translateY(6px);transition:all 0.22s ease;pointer-events:none;z-index:100;max-width:280px}
 .toast.show{opacity:1;transform:translateY(0)}
 .toast.success{border-color:rgba(107,191,142,0.32)}
 .toast.error{border-color:rgba(224,123,123,0.32)}
 hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
+@media(max-width:580px){
+  .sit-flds,.th-add-grid{grid-template-columns:1fr!important}
+  .past-stats{grid-template-columns:repeat(2,1fr)!important}
+  .hdr{flex-wrap:wrap}
+  .pillars-wrap{flex-direction:column}
+  .pillars-list{width:100%;flex-direction:row;flex-wrap:wrap}
+  .pillar{width:calc(50% - 3px)}
+  .pillar-detail{width:100%}
+  .int-row{grid-template-columns:1fr}
+}
 </style>
 </head>
 <body>
@@ -285,184 +268,109 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
 
 <nav class="nav">
   <div class="nav-inner">
-    <button class="tab on" onclick="switchTab('morning')">☀️ Morning</button>
-    <button class="tab" onclick="switchTab('situations')">🪞 Situations <span class="badge" id="sit-badge">0</span></button>
-    <button class="tab" onclick="switchTab('thoughts')">💡 Thoughts <span class="badge" id="th-badge">0</span></button>
+    <button class="tab on" onclick="switchTab('morning')">&#9728; Morning</button>
+    <button class="tab" onclick="switchTab('situations')">&#128250; Situations <span class="badge" id="sit-badge">0</span></button>
+    <button class="tab" onclick="switchTab('thoughts')">&#128161; Thoughts <span class="badge" id="th-badge">0</span></button>
+    <button class="tab" onclick="switchTab('posts')">&#128204; Posts <span class="badge" id="post-badge">0</span></button>
   </div>
 </nav>
 
-
-<!-- ══ TAB 1: MORNING ══ -->
+<!-- TAB 1: MORNING -->
 <div class="pg on" id="pg-morning">
-
-  <!-- Header -->
   <div class="hdr">
     <div class="hdr-l">
-      <div class="eyebrow" id="time-now">—</div>
+      <div class="eyebrow" id="time-now">--</div>
       <h1 class="greeting" id="greeting">Good morning</h1>
-      <div class="dateline" id="date-line">Loading…</div>
+      <div class="dateline" id="date-line">Loading...</div>
     </div>
     <div class="hdr-r">
-      <div class="daynum" id="day-num">—</div>
+      <div class="daynum" id="day-num">--</div>
       <div class="daynum-lbl">Day of year</div>
     </div>
   </div>
-
-  <!-- Mantra -->
   <div class="mantra">
-    <div class="mantra-q" id="mantra-text">"…"</div>
+    <div class="mantra-q" id="mantra-text">"..."</div>
     <div class="mantra-src" id="mantra-source"></div>
   </div>
-
   <hr class="d">
-
-  <!-- Today's intentions: LOADING state (shown while Sheet fetch is in flight) -->
+  <!-- Loading state -->
   <div id="q-loading-wrap" style="display:none">
     <div class="lbl">Today's intentions <span class="lbl-line"></span></div>
     <div class="q-loading-card">
-      <div class="q-skel q-skel-sm"></div>
-      <div class="q-skel q-skel-lg"></div>
-      <div class="q-skel q-skel-sm" style="margin-top:8px"></div>
-      <div class="q-skel q-skel-lg"></div>
-      <div class="q-skel q-skel-sm" style="margin-top:8px"></div>
-      <div class="q-skel q-skel-md"></div>
-      <div class="q-loading-note">Checking your Sheet for today's intentions…</div>
+      <div class="q-skel q-skel-sm"></div><div class="q-skel q-skel-lg"></div>
+      <div class="q-skel q-skel-sm" style="margin-top:8px"></div><div class="q-skel q-skel-lg"></div>
+      <div class="q-skel q-skel-sm" style="margin-top:8px"></div><div class="q-skel q-skel-md"></div>
+      <div class="q-loading-note">Checking your Sheet for today's intentions...</div>
     </div>
   </div>
-
-  <!-- Today's intentions: FORM state (shown when not yet filled) -->
+  <!-- Form state -->
   <div id="q-form-wrap">
     <div class="lbl">Today's intentions <span class="lbl-line"></span></div>
     <div class="q-wrap">
-      <div class="q-item">
-        <div class="q-lbl">What is the one thing that, if I do it today, makes everything else easier?</div>
-        <textarea class="q-in" id="q1" rows="2" placeholder="Your single top priority for today…"></textarea>
-      </div>
-      <div class="q-item">
-        <div class="q-lbl">How do I want to show up emotionally today?</div>
-        <textarea class="q-in" id="q2" rows="2" placeholder="Calm, focused, patient, present…"></textarea>
-      </div>
-      <div class="q-item">
-        <div class="q-lbl">What am I genuinely grateful for right now?</div>
-        <textarea class="q-in" id="q3" rows="2" placeholder="Name one specific thing…"></textarea>
-      </div>
-      <div class="q-actions">
-        <span class="save-st" id="save-status"></span>
-        <button class="btn" onclick="clearQuestions()">Clear</button>
-        <button class="btn gold" onclick="saveToSheet()">Save intentions ↗</button>
-      </div>
+      <div class="q-item"><div class="q-lbl">What is the one thing that, if I do it today, makes everything else easier?</div><textarea class="q-in" id="q1" rows="2" placeholder="Your single top priority for today..."></textarea></div>
+      <div class="q-item"><div class="q-lbl">How do I want to show up emotionally today?</div><textarea class="q-in" id="q2" rows="2" placeholder="Calm, focused, patient, present..."></textarea></div>
+      <div class="q-item"><div class="q-lbl">What am I genuinely grateful for right now?</div><textarea class="q-in" id="q3" rows="2" placeholder="Name one specific thing..."></textarea></div>
+      <div class="q-actions"><span class="save-st" id="save-status"></span><button class="btn" onclick="clearQuestions()">Clear</button><button class="btn gold" onclick="saveToSheet()">Save intentions &#8599;</button></div>
     </div>
   </div>
-
-  <!-- Today's intentions: READ state (shown when filled) -->
+  <!-- Read state -->
   <div id="q-read-wrap" style="display:none">
     <div class="lbl">Today's intentions <span class="lbl-line"></span> <button class="btn ghost" onclick="editIntentions()">Edit</button></div>
     <div class="goals-card">
-      <div class="goals-card-head">
-        <span class="goals-card-title">Your day is set ✓</span>
-        <span class="goals-card-date" id="goals-date"></span>
-      </div>
+      <div class="goals-card-head"><span class="goals-card-title">Your day is set &#10003;</span><span class="goals-card-date" id="goals-date"></span></div>
       <div class="goals-body">
-        <div class="goal-row">
-          <div class="goal-icon">🎯</div>
-          <div class="goal-col">
-            <div class="goal-label">Top priority</div>
-            <div class="goal-value" id="goal-q1">—</div>
-          </div>
-        </div>
-        <div class="goal-row">
-          <div class="goal-icon">❤️</div>
-          <div class="goal-col">
-            <div class="goal-label">Emotional intention</div>
-            <div class="goal-value" id="goal-q2">—</div>
-          </div>
-        </div>
-        <div class="goal-row">
-          <div class="goal-icon">🙏</div>
-          <div class="goal-col">
-            <div class="goal-label">Gratitude</div>
-            <div class="goal-value" id="goal-q3">—</div>
-          </div>
-        </div>
+        <div class="goal-row"><div class="goal-icon">&#127919;</div><div class="goal-col"><div class="goal-label">Top priority</div><div class="goal-value" id="goal-q1">--</div></div></div>
+        <div class="goal-row"><div class="goal-icon">&#10084;&#65039;</div><div class="goal-col"><div class="goal-label">Emotional intention</div><div class="goal-value" id="goal-q2">--</div></div></div>
+        <div class="goal-row"><div class="goal-icon">&#128591;</div><div class="goal-col"><div class="goal-label">Gratitude</div><div class="goal-value" id="goal-q3">--</div></div></div>
       </div>
-      <div class="goals-footer">
-        <span class="goals-synced" id="goals-synced-lbl">Saved locally</span>
-        <button class="btn ghost" onclick="editIntentions()">✏ Edit intentions</button>
-      </div>
+      <div class="goals-footer"><span class="goals-synced" id="goals-synced-lbl">Synced to Sheet &#10003;</span><button class="btn ghost" onclick="editIntentions()">&#9998; Edit intentions</button></div>
     </div>
   </div>
-
   <hr class="d">
-
-  <!-- Five Pillars: vertical list, horizontal detail -->
   <div class="lbl">Five pillars <span class="lbl-line"></span></div>
   <div class="pillars-wrap">
     <div class="pillars-list">
-      <button class="pillar" data-id="0" onclick="togglePillar(0)"><span class="pillar-e">🧠</span><div class="pillar-lbl">Mental strength</div><span class="pillar-arr">▶</span></button>
-      <button class="pillar" data-id="1" onclick="togglePillar(1)"><span class="pillar-e">❤️</span><div class="pillar-lbl">Emotional control</div><span class="pillar-arr">▶</span></button>
-      <button class="pillar" data-id="2" onclick="togglePillar(2)"><span class="pillar-e">🎯</span><div class="pillar-lbl">Focus & clarity</div><span class="pillar-arr">▶</span></button>
-      <button class="pillar" data-id="3" onclick="togglePillar(3)"><span class="pillar-e">⚡</span><div class="pillar-lbl">Body & energy</div><span class="pillar-arr">▶</span></button>
-      <button class="pillar" data-id="4" onclick="togglePillar(4)"><span class="pillar-e">🤝</span><div class="pillar-lbl">Relationships</div><span class="pillar-arr">▶</span></button>
+      <button class="pillar" onclick="togglePillar(0)"><span class="pillar-e">&#129504;</span><div class="pillar-lbl">Mental strength</div><span class="pillar-arr">&#9654;</span></button>
+      <button class="pillar" onclick="togglePillar(1)"><span class="pillar-e">&#10084;&#65039;</span><div class="pillar-lbl">Emotional control</div><span class="pillar-arr">&#9654;</span></button>
+      <button class="pillar" onclick="togglePillar(2)"><span class="pillar-e">&#127919;</span><div class="pillar-lbl">Focus &amp; clarity</div><span class="pillar-arr">&#9654;</span></button>
+      <button class="pillar" onclick="togglePillar(3)"><span class="pillar-e">&#9889;</span><div class="pillar-lbl">Body &amp; energy</div><span class="pillar-arr">&#9654;</span></button>
+      <button class="pillar" onclick="togglePillar(4)"><span class="pillar-e">&#129306;</span><div class="pillar-lbl">Relationships</div><span class="pillar-arr">&#9654;</span></button>
     </div>
     <div class="pillar-detail" id="pillar-detail"></div>
     <div class="pillar-empty" id="pillar-empty">Tap a pillar<br>to explore its principles</div>
   </div>
-
   <hr class="d">
-
-  <!-- Checklist -->
   <div class="lbl">Daily checklist <span class="lbl-line"></span></div>
-  <div class="cl-block">
-    <div id="cl-list"></div>
-    <div class="prog-wrap">
-      <div class="prog-meta"><span>Practices</span><span class="prog-ct" id="prog-txt">0/8</span></div>
-      <div class="prog-track"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
-    </div>
+  <div class="cl-block"><div id="cl-list"></div>
+    <div class="prog-wrap"><div class="prog-meta"><span>Practices</span><span class="prog-ct" id="prog-txt">0/8</span></div><div class="prog-track"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div></div>
   </div>
-
   <hr class="d">
-
-  <!-- Anchor intentions -->
   <div class="lbl">Anchor intentions <span class="lbl-line"></span></div>
-  <div class="int-row">
-    <div class="int-tile"><div class="int-e">⏸️</div><div class="int-t">Pause before reacting</div><div class="int-b">3 deep breaths before responding to anything charged.</div></div>
-    <div class="int-tile"><div class="int-e">🎯</div><div class="int-t">One task, full focus</div><div class="int-b">No tabs, no phone — one thing at a time during deep work.</div></div>
-    <div class="int-tile"><div class="int-e">🌱</div><div class="int-t">Hard thing first</div><div class="int-b">Most important work before email or meetings steal the morning.</div></div>
+  <div class="int-row" style="margin-bottom:2rem">
+    <div class="int-tile"><div class="int-e">&#9208;&#65039;</div><div class="int-t">Pause before reacting</div><div class="int-b">3 deep breaths before responding to anything charged.</div></div>
+    <div class="int-tile"><div class="int-e">&#127919;</div><div class="int-t">One task, full focus</div><div class="int-b">No tabs, no phone -- one thing at a time during deep work.</div></div>
+    <div class="int-tile"><div class="int-e">&#127807;</div><div class="int-t">Hard thing first</div><div class="int-b">Most important work before email or meetings steal the morning.</div></div>
   </div>
-
   <div class="foot">
     <span class="foot-note" id="streak-txt"></span>
     <div class="foot-btns">
-      <button class="btn" onclick="switchTab('situations')">🪞 Past situations</button>
-      <button class="btn" onclick="resetDay()">↺ Reset day</button>
+      <button class="btn" onclick="switchTab('situations')">&#128250; Situations</button>
+      <button class="btn" onclick="resetDay()">&#8635; Reset day</button>
     </div>
   </div>
-</div><!-- /pg-morning -->
+</div>
 
-
-<!-- ══ TAB 2: PAST SITUATIONS ══ -->
+<!-- TAB 2: SITUATIONS -->
 <div class="pg" id="pg-situations">
-
-  <div class="past-hdr">
-    <div class="past-title">Past Situations</div>
-    <div class="past-sub">Your full log — filter by date, emotion, or keyword.</div>
-  </div>
-
+  <div class="past-hdr"><div class="past-title">Past Situations</div><div class="past-sub">Your full log -- filter by date, emotion, or keyword.</div></div>
   <div class="past-stats">
     <div class="stat"><div class="stat-n" id="st-total">0</div><div class="stat-l">Total logged</div></div>
     <div class="stat teal"><div class="stat-n" id="st-strat">0</div><div class="stat-l">Have strategies</div></div>
     <div class="stat rose"><div class="stat-n" id="st-pend">0</div><div class="stat-l">Needs reflection</div></div>
-    <div class="stat"><div class="stat-n" id="st-emo" style="font-size:1.1rem">—</div><div class="stat-l">Top emotion</div></div>
+    <div class="stat"><div class="stat-n" id="st-emo" style="font-size:1.1rem">--</div><div class="stat-l">Top emotion</div></div>
   </div>
-
   <div class="df-panel">
-    <div class="df-row">
-      <span class="df-lbl">Date range:</span>
-      <input type="date" class="d-in" id="date-from" onchange="renderPast()">
-      <span class="df-sep">to</span>
-      <input type="date" class="d-in" id="date-to" onchange="renderPast()">
-      <button class="btn" onclick="clearDateFilter()" style="font-size:10px;padding:4px 9px">Clear</button>
-    </div>
+    <div class="df-row"><span class="df-lbl">Date range:</span><input type="date" class="d-in" id="date-from" onchange="renderPast()"><span class="df-sep">to</span><input type="date" class="d-in" id="date-to" onchange="renderPast()"><button class="btn" onclick="clearDateFilter()" style="font-size:10px;padding:4px 9px">Clear</button></div>
     <div class="dq-row">
       <button class="dq on" data-r="all" onclick="setRange(this,'all')">All time</button>
       <button class="dq" data-r="today" onclick="setRange(this,'today')">Today</button>
@@ -471,166 +379,147 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
       <button class="dq" data-r="3m" onclick="setRange(this,'3m')">Last 3 months</button>
     </div>
   </div>
-
   <div class="tb">
-    <input class="psearch" id="psearch" type="text" placeholder="Search keyword…" oninput="renderPast()">
-    <select class="psort" id="psort" onchange="renderPast()">
-      <option value="newest">Newest first</option>
-      <option value="oldest">Oldest first</option>
-      <option value="no-strat">Needs strategy</option>
-      <option value="has-strat">Has strategy</option>
-    </select>
+    <input class="psearch" id="psearch" type="text" placeholder="Search keyword..." oninput="renderPast()">
+    <select class="psort" id="psort" onchange="renderPast()"><option value="newest">Newest first</option><option value="oldest">Oldest first</option><option value="no-strat">Needs strategy</option><option value="has-strat">Has strategy</option></select>
     <button class="btn" onclick="exportCSV()">Export CSV</button>
   </div>
-
   <div class="ef-bar">
     <button class="ef on" data-f="all" onclick="setEmoFilter(this)">All</button>
-    <button class="ef" data-f="anger" onclick="setEmoFilter(this)">😤 Anger</button>
-    <button class="ef" data-f="anxiety" onclick="setEmoFilter(this)">😰 Anxiety</button>
-    <button class="ef" data-f="frustration" onclick="setEmoFilter(this)">😣 Frustration</button>
-    <button class="ef" data-f="hurt" onclick="setEmoFilter(this)">💔 Hurt</button>
-    <button class="ef" data-f="shame" onclick="setEmoFilter(this)">😔 Shame</button>
-    <button class="ef" data-f="overwhelm" onclick="setEmoFilter(this)">🌊 Overwhelm</button>
-    <button class="ef" data-f="fear" onclick="setEmoFilter(this)">😨 Fear</button>
-    <button class="ef" data-f="jealousy" onclick="setEmoFilter(this)">👁 Jealousy</button>
+    <button class="ef" data-f="anger" onclick="setEmoFilter(this)">&#128548; Anger</button>
+    <button class="ef" data-f="anxiety" onclick="setEmoFilter(this)">&#128560; Anxiety</button>
+    <button class="ef" data-f="frustration" onclick="setEmoFilter(this)">&#128547; Frustration</button>
+    <button class="ef" data-f="hurt" onclick="setEmoFilter(this)">&#128148; Hurt</button>
+    <button class="ef" data-f="shame" onclick="setEmoFilter(this)">&#128532; Shame</button>
+    <button class="ef" data-f="overwhelm" onclick="setEmoFilter(this)">&#127754; Overwhelm</button>
+    <button class="ef" data-f="fear" onclick="setEmoFilter(this)">&#128552; Fear</button>
+    <button class="ef" data-f="jealousy" onclick="setEmoFilter(this)">&#128065; Jealousy</button>
   </div>
-
   <div class="pmeta" id="pmeta"></div>
   <div class="sit-log" id="past-log"></div>
-
-  <!-- Log new situation — moved to bottom of Situations tab -->
   <div class="lbl" style="margin-top:1.5rem">Log a new situation <span class="lbl-line"></span></div>
   <div class="sit-block">
-    <div style="margin-bottom:8px">
-      <label class="sfl">What happened?</label>
-      <textarea class="sin" id="sit-title" rows="2" placeholder="e.g. I raised my voice during a disagreement about a deadline…"></textarea>
-    </div>
+    <div style="margin-bottom:8px"><label class="sfl">What happened?</label><textarea class="sin" id="sit-title" rows="2" placeholder="e.g. I raised my voice during a disagreement about a deadline..."></textarea></div>
     <div class="sit-flds">
-      <div><label class="sfl">What triggered me?</label><textarea class="sin" id="sit-trigger" rows="3" placeholder="The words, tone, or circumstance…"></textarea></div>
-      <div><label class="sfl">How did I respond?</label><textarea class="sin" id="sit-reaction" rows="3" placeholder="What I said, did, or felt…"></textarea></div>
+      <div><label class="sfl">What triggered me?</label><textarea class="sin" id="sit-trigger" rows="3" placeholder="The words, tone, or circumstance..."></textarea></div>
+      <div><label class="sfl">How did I respond?</label><textarea class="sin" id="sit-reaction" rows="3" placeholder="What I said, did, or felt..."></textarea></div>
     </div>
     <label class="sfl">Dominant emotion</label>
     <div class="epills">
-      <button class="ep" onclick="selEmo(this)" data-val="anger">😤 Anger</button>
-      <button class="ep" onclick="selEmo(this)" data-val="anxiety">😰 Anxiety</button>
-      <button class="ep" onclick="selEmo(this)" data-val="frustration">😣 Frustration</button>
-      <button class="ep" onclick="selEmo(this)" data-val="hurt">💔 Hurt</button>
-      <button class="ep" onclick="selEmo(this)" data-val="shame">😔 Shame</button>
-      <button class="ep" onclick="selEmo(this)" data-val="overwhelm">🌊 Overwhelm</button>
-      <button class="ep" onclick="selEmo(this)" data-val="fear">😨 Fear</button>
-      <button class="ep" onclick="selEmo(this)" data-val="jealousy">👁 Jealousy</button>
+      <button class="ep" onclick="selEmo(this)" data-val="anger">&#128548; Anger</button>
+      <button class="ep" onclick="selEmo(this)" data-val="anxiety">&#128560; Anxiety</button>
+      <button class="ep" onclick="selEmo(this)" data-val="frustration">&#128547; Frustration</button>
+      <button class="ep" onclick="selEmo(this)" data-val="hurt">&#128148; Hurt</button>
+      <button class="ep" onclick="selEmo(this)" data-val="shame">&#128532; Shame</button>
+      <button class="ep" onclick="selEmo(this)" data-val="overwhelm">&#127754; Overwhelm</button>
+      <button class="ep" onclick="selEmo(this)" data-val="fear">&#128552; Fear</button>
+      <button class="ep" onclick="selEmo(this)" data-val="jealousy">&#128065; Jealousy</button>
     </div>
-    <div class="sit-foot">
-      <span class="sync-txt" id="sit-sync">Ready to log</span>
-      <button class="btn gold" onclick="addSituation()">Log situation ↗</button>
-    </div>
+    <div class="sit-foot"><span class="sync-txt" id="sit-sync">Ready to log</span><button class="btn gold" onclick="addSituation()">Log situation &#8599;</button></div>
   </div>
+  <div class="foot" style="margin-top:1.25rem"><span class="foot-note">Stored locally · synced to Google Sheets</span><button class="btn" onclick="switchTab('morning')">&#8592; Morning</button></div>
+</div>
 
-  <div class="foot" style="margin-top:1.25rem">
-    <span class="foot-note">Stored locally · synced to Google Sheets</span>
-    <button class="btn" onclick="switchTab('morning')">← Morning</button>
-  </div>
-</div><!-- /pg-situations -->
-
-<!-- ══ TAB 3: THOUGHTS ══ -->
+<!-- TAB 3: THOUGHTS -->
 <div class="pg" id="pg-thoughts">
-
-  <div class="past-hdr">
-    <div class="past-title">Good Thoughts</div>
-    <div class="past-sub">Your personal repository of ideas, insights and inspirations.</div>
-  </div>
-
-  <!-- Add thought form -->
+  <div class="past-hdr"><div class="past-title">Good Thoughts</div><div class="past-sub">Your personal repository of ideas, insights and inspirations.</div></div>
   <div class="th-add-block">
     <div class="th-add-grid">
-      <div class="th-field-full">
-        <label class="sfl">Heading / title <span style="color:var(--text-3);font-weight:400">(what is this insight about?)</span></label>
-        <input class="sin" id="th-heading" type="text" placeholder="e.g. On staying calm under pressure, The power of pause, Discipline over motivation…">
-      </div>
-      <div class="th-field-full">
-        <label class="sfl">Description / key points <span style="color:var(--text-3);font-weight:400">(start each bullet with • or – or *)</span></label>
-        <textarea class="sin" id="th-text" rows="5" placeholder="• The main insight or quote&#10;• Why this matters to you&#10;• How you will apply this today&#10;&#10;Or write freely — bullets are optional."></textarea>
-        <div style="font-size:10px;color:var(--text-3);margin-top:4px">Tip: Start each line with <code style="background:rgba(255,255,255,0.07);padding:1px 5px;border-radius:3px;color:var(--text-2)">•</code> or <code style="background:rgba(255,255,255,0.07);padding:1px 5px;border-radius:3px;color:var(--text-2)">-</code> or <code style="background:rgba(255,255,255,0.07);padding:1px 5px;border-radius:3px;color:var(--text-2)">*</code> to create bullets</div>
-      </div>
-      <div class="th-field-full">
-        <label class="sfl">Source or URL <span style="color:var(--text-3);font-weight:400">(optional)</span></label>
-        <input class="sin" id="th-url" type="text" placeholder="https://… or Author / Book / Podcast name">
-      </div>
-      <div>
-        <label class="sfl">Category</label>
-        <div class="th-cat-pills" id="th-cat-pills">
-          <button class="thp" onclick="selThCat(this)" data-val="mindset">🧠 Mindset</button>
-          <button class="thp" onclick="selThCat(this)" data-val="emotion">❤️ Emotion</button>
-          <button class="thp" onclick="selThCat(this)" data-val="focus">🎯 Focus</button>
-          <button class="thp" onclick="selThCat(this)" data-val="discipline">⚡ Discipline</button>
-          <button class="thp" onclick="selThCat(this)" data-val="relationships">🤝 Relationships</button>
-          <button class="thp" onclick="selThCat(this)" data-val="philosophy">📖 Philosophy</button>
-          <button class="thp" onclick="selThCat(this)" data-val="business">💼 Business</button>
-          <button class="thp" onclick="selThCat(this)" data-val="life">🌱 Life</button>
-        </div>
-      </div>
-      <div>
-        <label class="sfl">How does it make you feel?</label>
-        <div class="th-emo-pills" id="th-emo-pills">
-          <button class="thp" onclick="selThEmo(this)" data-val="inspired">✨ Inspired</button>
-          <button class="thp" onclick="selThEmo(this)" data-val="calm">🧘 Calm</button>
-          <button class="thp" onclick="selThEmo(this)" data-val="motivated">🔥 Motivated</button>
-          <button class="thp" onclick="selThEmo(this)" data-val="grateful">🙏 Grateful</button>
-          <button class="thp" onclick="selThEmo(this)" data-val="reflective">🪞 Reflective</button>
-          <button class="thp" onclick="selThEmo(this)" data-val="challenged">💪 Challenged</button>
-        </div>
-      </div>
+      <div class="th-field-full"><label class="sfl">Heading / title <span style="color:var(--text-3);font-weight:400">(what is this insight about?)</span></label><input class="sin" id="th-heading" type="text" placeholder="e.g. On staying calm under pressure..."></div>
+      <div class="th-field-full"><label class="sfl">Description / key points <span style="color:var(--text-3);font-weight:400">(start each bullet with &bull; or -)</span></label><textarea class="sin" id="th-text" rows="5" placeholder="&#8226; The main insight&#10;&#8226; Why this matters to you&#10;&#8226; How you will apply this"></textarea><div style="font-size:10px;color:var(--text-3);margin-top:4px">Tip: Start each line with <code style="background:rgba(255,255,255,0.07);padding:1px 5px;border-radius:3px;color:var(--text-2)">&#8226;</code> or <code style="background:rgba(255,255,255,0.07);padding:1px 5px;border-radius:3px;color:var(--text-2)">-</code> to create bullets</div></div>
+      <div><label class="sfl">Category</label><div class="th-cat-pills" id="th-cat-pills"><button class="thp" onclick="selThCat(this)" data-val="mindset">&#129504; Mindset</button><button class="thp" onclick="selThCat(this)" data-val="emotion">&#10084;&#65039; Emotion</button><button class="thp" onclick="selThCat(this)" data-val="focus">&#127919; Focus</button><button class="thp" onclick="selThCat(this)" data-val="discipline">&#9889; Discipline</button><button class="thp" onclick="selThCat(this)" data-val="relationships">&#129306; Relationships</button><button class="thp" onclick="selThCat(this)" data-val="philosophy">&#128214; Philosophy</button><button class="thp" onclick="selThCat(this)" data-val="business">&#128188; Business</button><button class="thp" onclick="selThCat(this)" data-val="life">&#127807; Life</button></div></div>
+      <div><label class="sfl">How does it make you feel?</label><div class="th-emo-pills" id="th-emo-pills"><button class="thp" onclick="selThEmo(this)" data-val="inspired">&#10024; Inspired</button><button class="thp" onclick="selThEmo(this)" data-val="calm">&#129528; Calm</button><button class="thp" onclick="selThEmo(this)" data-val="motivated">&#128293; Motivated</button><button class="thp" onclick="selThEmo(this)" data-val="grateful">&#128591; Grateful</button><button class="thp" onclick="selThEmo(this)" data-val="reflective">&#129710; Reflective</button><button class="thp" onclick="selThEmo(this)" data-val="challenged">&#128170; Challenged</button></div></div>
     </div>
-    <div class="th-add-foot">
-      <span class="sync-txt" id="th-sync">Add your first thought</span>
-      <button class="btn gold" onclick="addThought()">Save thought ↗</button>
-    </div>
+    <div class="th-field-full" style="margin-bottom:10px"><label class="sfl">Source or URL <span style="color:var(--text-3);font-weight:400">(optional)</span></label><input class="sin" id="th-url" type="text" placeholder="https://... or Author / Book / Podcast name"></div>
+    <div class="th-add-foot"><span class="sync-txt" id="th-sync">Add your first thought</span><button class="btn gold" onclick="addThought()">Save thought &#8599;</button></div>
   </div>
-
-  <!-- Filter + search bar -->
   <div class="th-filter-bar">
-    <input class="psearch" id="th-search" type="text" placeholder="Search thoughts…" oninput="renderThoughts()" style="flex:1;min-width:160px">
-    <select class="psort" id="th-sort" onchange="renderThoughts()">
-      <option value="newest">Newest first</option>
-      <option value="oldest">Oldest first</option>
-    </select>
+    <input class="psearch" id="th-search" type="text" placeholder="Search thoughts..." oninput="renderThoughts()" style="flex:1;min-width:160px">
+    <select class="psort" id="th-sort" onchange="renderThoughts()"><option value="newest">Newest first</option><option value="oldest">Oldest first</option></select>
     <button class="btn" onclick="exportThoughtsCSV()">Export CSV</button>
   </div>
-
-  <!-- Category filter -->
   <div class="ef-bar" id="th-cat-filter">
     <button class="ef on" data-c="all" onclick="setThCatFilter(this)">All</button>
-    <button class="ef" data-c="mindset" onclick="setThCatFilter(this)">🧠 Mindset</button>
-    <button class="ef" data-c="emotion" onclick="setThCatFilter(this)">❤️ Emotion</button>
-    <button class="ef" data-c="focus" onclick="setThCatFilter(this)">🎯 Focus</button>
-    <button class="ef" data-c="discipline" onclick="setThCatFilter(this)">⚡ Discipline</button>
-    <button class="ef" data-c="relationships" onclick="setThCatFilter(this)">🤝 Relationships</button>
-    <button class="ef" data-c="philosophy" onclick="setThCatFilter(this)">📖 Philosophy</button>
-    <button class="ef" data-c="business" onclick="setThCatFilter(this)">💼 Business</button>
-    <button class="ef" data-c="life" onclick="setThCatFilter(this)">🌱 Life</button>
+    <button class="ef" data-c="mindset" onclick="setThCatFilter(this)">&#129504; Mindset</button>
+    <button class="ef" data-c="emotion" onclick="setThCatFilter(this)">&#10084;&#65039; Emotion</button>
+    <button class="ef" data-c="focus" onclick="setThCatFilter(this)">&#127919; Focus</button>
+    <button class="ef" data-c="discipline" onclick="setThCatFilter(this)">&#9889; Discipline</button>
+    <button class="ef" data-c="relationships" onclick="setThCatFilter(this)">&#129306; Relationships</button>
+    <button class="ef" data-c="philosophy" onclick="setThCatFilter(this)">&#128214; Philosophy</button>
+    <button class="ef" data-c="business" onclick="setThCatFilter(this)">&#128188; Business</button>
+    <button class="ef" data-c="life" onclick="setThCatFilter(this)">&#127807; Life</button>
   </div>
-
-  <!-- Emotion filter -->
   <div class="ef-bar" id="th-emo-filter">
     <button class="ef on" data-e="all" onclick="setThEmoFilter(this)">All feelings</button>
-    <button class="ef" data-e="inspired" onclick="setThEmoFilter(this)">✨ Inspired</button>
-    <button class="ef" data-e="calm" onclick="setThEmoFilter(this)">🧘 Calm</button>
-    <button class="ef" data-e="motivated" onclick="setThEmoFilter(this)">🔥 Motivated</button>
-    <button class="ef" data-e="grateful" onclick="setThEmoFilter(this)">🙏 Grateful</button>
-    <button class="ef" data-e="reflective" onclick="setThEmoFilter(this)">🪞 Reflective</button>
-    <button class="ef" data-e="challenged" onclick="setThEmoFilter(this)">💪 Challenged</button>
+    <button class="ef" data-e="inspired" onclick="setThEmoFilter(this)">&#10024; Inspired</button>
+    <button class="ef" data-e="calm" onclick="setThEmoFilter(this)">&#129528; Calm</button>
+    <button class="ef" data-e="motivated" onclick="setThEmoFilter(this)">&#128293; Motivated</button>
+    <button class="ef" data-e="grateful" onclick="setThEmoFilter(this)">&#128591; Grateful</button>
+    <button class="ef" data-e="reflective" onclick="setThEmoFilter(this)">&#129710; Reflective</button>
+    <button class="ef" data-e="challenged" onclick="setThEmoFilter(this)">&#128170; Challenged</button>
   </div>
-
   <div class="pmeta" id="th-meta"></div>
   <div class="th-log" id="th-log"></div>
+  <div class="foot" style="margin-top:1.25rem"><span class="foot-note">Stored locally · synced to Google Sheets</span><button class="btn" onclick="switchTab('morning')">&#8592; Morning</button></div>
+</div>
 
-  <div class="foot" style="margin-top:1.25rem">
-    <span class="foot-note">Stored locally · synced to Google Sheets</span>
-    <button class="btn" onclick="switchTab('morning')">← Morning</button>
+<!-- TAB 4: POSTS -->
+<div class="pg" id="pg-posts">
+  <div class="past-hdr"><div class="past-title">Favourite Posts</div><div class="past-sub">Inspiring posts from across the internet -- saved with context and emotion.</div></div>
+  <div class="post-src-filter-bar">
+    <button class="pef on" data-ps="all" onclick="setPostSrcFilter(this)">All sources</button>
+    <button class="pef" data-ps="linkedin" onclick="setPostSrcFilter(this)">&#128188; LinkedIn</button>
+    <button class="pef" data-ps="instagram" onclick="setPostSrcFilter(this)">&#128248; Instagram</button>
+    <button class="pef" data-ps="other" onclick="setPostSrcFilter(this)">&#127760; Other</button>
   </div>
-</div><!-- /pg-thoughts -->
+  <div class="pef-bar">
+    <button class="pef on" data-pe="all" onclick="setPostEmoFilter(this)">All emotions</button>
+    <button class="pef" data-pe="inspired" onclick="setPostEmoFilter(this)">&#10024; Inspired</button>
+    <button class="pef" data-pe="motivated" onclick="setPostEmoFilter(this)">&#128293; Motivated</button>
+    <button class="pef" data-pe="calm" onclick="setPostEmoFilter(this)">&#129528; Calm</button>
+    <button class="pef" data-pe="grateful" onclick="setPostEmoFilter(this)">&#128591; Grateful</button>
+    <button class="pef" data-pe="reflective" onclick="setPostEmoFilter(this)">&#129710; Reflective</button>
+    <button class="pef" data-pe="challenged" onclick="setPostEmoFilter(this)">&#128170; Challenged</button>
+    <button class="pef" data-pe="joyful" onclick="setPostEmoFilter(this)">&#128516; Joyful</button>
+  </div>
+  <div class="th-filter-bar" style="margin-bottom:1rem">
+    <input class="psearch" id="post-search" type="text" placeholder="Search posts..." oninput="renderPosts()" style="flex:1">
+    <select class="psort" id="post-sort" onchange="renderPosts()"><option value="newest">Newest first</option><option value="oldest">Oldest first</option></select>
+    <button class="btn" onclick="exportPostsCSV()">Export CSV</button>
+  </div>
+  <div class="pmeta" id="post-meta"></div>
+  <div class="post-log" id="post-log"></div>
+  <div class="lbl" style="margin-top:1.5rem">Save a post <span class="lbl-line"></span></div>
+  <div class="sit-block" style="background:var(--card);border:1px solid var(--border);border-radius:var(--rlg);padding:1rem">
+    <div style="margin-bottom:8px"><label class="sfl">Heading</label><input class="sin" id="post-heading" type="text" placeholder="What is this post about?"></div>
+    <div style="margin-bottom:8px"><label class="sfl">Description <span style="color:var(--text-3);font-weight:400">(&bull; or - for bullets)</span></label><textarea class="sin" id="post-desc" rows="4" placeholder="&#8226; Key takeaway&#10;&#8226; Why it resonated..."></textarea></div>
+    <div style="margin-bottom:8px">
+      <label class="sfl">Source</label>
+      <div class="src-pills">
+        <button class="src-pill" id="src-li" onclick="selPostSrc('linkedin')">&#128188; LinkedIn</button>
+        <button class="src-pill" id="src-ig" onclick="selPostSrc('instagram')">&#128248; Instagram</button>
+        <button class="src-pill" id="src-ot" onclick="selPostSrc('other')">&#127760; Other</button>
+      </div>
+    </div>
+    <div style="margin-bottom:8px"><label class="sfl">URL <span style="color:var(--text-3);font-weight:400">(optional)</span></label><input class="sin" id="post-url" type="text" placeholder="https://..."></div>
+    <div style="margin-bottom:8px">
+      <label class="sfl">What emotion does this help with?</label>
+      <div class="pemo-pills">
+        <button class="pep" onclick="selPostEmo(this)" data-val="inspired">&#10024; Inspired</button>
+        <button class="pep" onclick="selPostEmo(this)" data-val="motivated">&#128293; Motivated</button>
+        <button class="pep" onclick="selPostEmo(this)" data-val="calm">&#129528; Calm</button>
+        <button class="pep" onclick="selPostEmo(this)" data-val="grateful">&#128591; Grateful</button>
+        <button class="pep" onclick="selPostEmo(this)" data-val="reflective">&#129710; Reflective</button>
+        <button class="pep" onclick="selPostEmo(this)" data-val="challenged">&#128170; Challenged</button>
+        <button class="pep" onclick="selPostEmo(this)" data-val="joyful">&#128516; Joyful</button>
+      </div>
+    </div>
+    <div class="sit-foot"><span class="sync-txt" id="post-sync">Ready to save</span><button class="btn gold" onclick="addPost()">Save post &#8599;</button></div>
+  </div>
+  <div class="foot" style="margin-top:1.5rem"><span class="foot-note">Stored locally · synced to Google Sheets</span><button class="btn" onclick="switchTab('morning')">&#8592; Morning</button></div>
+</div>
 
-<!-- ══ EDIT MODAL ══ -->
+<!-- EDIT MODAL -->
 <div id="edit-modal" style="display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);overflow-y:auto;padding:2rem 1rem">
   <div style="max-width:620px;margin:0 auto;background:var(--card);border:1px solid var(--border-md);border-radius:var(--rlg);overflow:hidden">
     <div style="display:flex;justify-content:space-between;align-items:center;padding:1rem 1.25rem;border-bottom:1px solid var(--border)">
@@ -640,751 +529,400 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
     <div style="padding:1.25rem" id="modal-body"></div>
     <div style="display:flex;justify-content:space-between;align-items:center;padding:.875rem 1.25rem;border-top:1px solid var(--border);background:var(--surface)">
       <button class="btn" onclick="closeEditModal()">Cancel</button>
-      <button class="btn gold" id="modal-save-btn" onclick="saveEditModal()">Save changes ↗</button>
+      <button class="btn gold" id="modal-save-btn" onclick="saveEditModal()">Save changes &#8599;</button>
     </div>
   </div>
 </div>
 
 <script>
 'use strict';
+const WORKER_URL='https://muddy-shadow-1aa7.vaibhavjain-1192.workers.dev';
 
-const WORKER_URL = 'https://muddy-shadow-1aa7.vaibhavjain-1192.workers.dev';
+/* POST to Sheet */
+function postToSheet(data){return new Promise(function(resolve){try{var b=new URLSearchParams();b.append('payload',JSON.stringify(data));fetch(WORKER_URL,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:b.toString()}).then(function(r){resolve(r&&r.ok);}).catch(function(){resolve(false);});}catch(e){resolve(false);}});}
 
-/* POST to Sheet via Worker */
-function postToSheet(data) {
-  return new Promise(function(resolve) {
-    try {
-      var body = new URLSearchParams();
-      body.append('payload', JSON.stringify(data));
-      fetch(WORKER_URL, { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:body.toString() })
-        .then(function(resp){ resolve(resp && resp.ok); })
-        .catch(function(){ resolve(false); });
-    } catch(e){ resolve(false); }
-  });
-}
+/* GET from Sheet */
+function fetchFromSheet(){return new Promise(function(resolve){try{fetch(WORKER_URL+'?action=getToday&date='+isoToday(),{method:'GET'}).then(function(r){return r.ok?r.json():null;}).then(function(d){resolve((d&&d.status==='ok')?d:null);}).catch(function(){resolve(null);});}catch(e){resolve(null);}});}
 
-/* GET today's data via Worker (follows redirects, has CORS) */
-function fetchFromSheet() {
-  return new Promise(function(resolve) {
-    try {
-      fetch(WORKER_URL + '?action=getToday&date=' + isoToday(), { method:'GET' })
-        .then(function(resp){ return resp.ok ? resp.json() : null; })
-        .then(function(data){ resolve((data && data.status==='ok') ? data : null); })
-        .catch(function(){ resolve(null); });
-    } catch(e){ resolve(null); }
-  });
-}
-
-/* MANTRAS */
-var MANTRAS = [
-  { text:"You don't have to be perfect. You just have to begin.", src:"— James Clear" },
-  { text:"The mind is the athlete. Everything else follows.", src:"— David Goggins" },
-  { text:"Between stimulus and response there is a space. In that space lies your power.", src:"— Viktor Frankl" },
-  { text:"Control what you can. Release what you cannot.", src:"— Stoic principle" },
-  { text:"Discipline is choosing what you want most over what you want right now.", src:"— Abraham Lincoln" },
-  { text:"Calm is a superpower.", src:"— Ancient Stoic wisdom" },
-  { text:"Today's actions are tomorrow's character.", src:"— Ryan Holiday" },
-  { text:"You are not your thoughts. You are the one who notices them.", src:"— Mindfulness" },
-  { text:"Amor fati — love everything that happens.", src:"— Marcus Aurelius" },
-  { text:"The obstacle is the way.", src:"— Marcus Aurelius" },
-  { text:"Small disciplines repeated with consistency lead to great achievements.", src:"— John Maxwell" },
-  { text:"Energy flows where attention goes.", src:"— Tony Robbins" },
-  { text:"Hard choices, easy life. Easy choices, hard life.", src:"— Jerzy Gregorek" },
-  { text:"What you do today is what matters most.", src:"— Jocko Willink" },
-  { text:"The best investment you can make is in yourself.", src:"— Warren Buffett" }
+var MANTRAS=[
+  {text:"You don't have to be perfect. You just have to begin.",src:"-- James Clear"},
+  {text:"The mind is the athlete. Everything else follows.",src:"-- David Goggins"},
+  {text:"Between stimulus and response there is a space. In that space lies your power.",src:"-- Viktor Frankl"},
+  {text:"Control what you can. Release what you cannot.",src:"-- Stoic principle"},
+  {text:"Discipline is choosing what you want most over what you want right now.",src:"-- Abraham Lincoln"},
+  {text:"Calm is a superpower.",src:"-- Ancient Stoic wisdom"},
+  {text:"Today's actions are tomorrow's character.",src:"-- Ryan Holiday"},
+  {text:"You are not your thoughts. You are the one who notices them.",src:"-- Mindfulness"},
+  {text:"Amor fati -- love everything that happens.",src:"-- Marcus Aurelius"},
+  {text:"The obstacle is the way.",src:"-- Marcus Aurelius"},
+  {text:"Small disciplines repeated with consistency lead to great achievements.",src:"-- John Maxwell"},
+  {text:"Energy flows where attention goes.",src:"-- Tony Robbins"},
+  {text:"Hard choices, easy life. Easy choices, hard life.",src:"-- Jerzy Gregorek"},
+  {text:"What you do today is what matters most.",src:"-- Jocko Willink"},
+  {text:"The best investment you can make is in yourself.",src:"-- Warren Buffett"}
 ];
-
-var PILLARS = [
-  { e:'🧠', n:'Mental strength', s:'Build a resilient, sharp, unshakeable mind', items:[
-    { t:'Control only what is in your control', d:'Let go of outcomes. Focus entirely on your effort and attitude.' },
-    { t:'Embrace discomfort as growth', d:'Every hard moment is a deposit into your future self.' },
-    { t:'Reject negative self-talk immediately', d:'Name the thought, step back from it, replace with a neutral fact.' },
-    { t:'Focus on process, not results', d:'Show up fully. Results are a byproduct of consistent quality action.' },
-    { t:'Think long-term, act present', d:"What can I do right now that serves who I'm becoming in 5 years?" }
-  ]},
-  { e:'❤️', n:'Emotional control', s:'Stay regulated and intentional under pressure', items:[
-    { t:'Pause before reacting', d:'Three deep breaths before responding to anything emotionally charged.' },
-    { t:"Name the emotion — don't become it", d:'"I notice I feel frustrated" — not "I am frustrated."' },
-    { t:'Respond to what is, not what you fear', d:'Stay present. Catastrophising borrows suffering from the future.' },
-    { t:'Set the emotional tone first', d:'Your inner state radiates outward. People read energy before words.' },
-    { t:'Forgive quickly — especially yourself', d:'Resentment drains mental RAM. Release it and reclaim the space.' }
-  ]},
-  { e:'🎯', n:'Focus & clarity', s:"Protect your attention — it's your most finite resource", items:[
-    { t:'One task at a time, always', d:'Every task switch costs cognitive energy. Guard your attention.' },
-    { t:'Remove friction before you start', d:'Set up your environment the night before. Eliminate morning resistance.' },
-    { t:'Kill distractions before they start', d:'Phone away, notifications off. Distraction begins with one ping.' },
-    { t:'Time-block your most important work first', d:'Protect 90 minutes before meetings or messages touch you.' },
-    { t:'Revisit your goals weekly', d:"What you track, you tend. An unseen goal is a forgotten goal." }
-  ]},
-  { e:'⚡', n:'Body & energy', s:'Your physical state is the foundation everything rests on', items:[
-    { t:'Move before you touch your phone', d:'Even 10 minutes of movement sets a different neurological baseline.' },
-    { t:'Hydrate immediately on waking', d:'Your brain is ~75% water. Water before coffee, every day.' },
-    { t:'Protect your sleep ruthlessly', d:'No screen 1 hour before bed. Sleep debt destroys emotional regulation.' },
-    { t:'Eat to fuel, not to fill', d:"Every meal is a choice about how sharp you'll be in 2 hours." },
-    { t:'Breathe on purpose', d:'Box breathing — 4 in, hold 4, out 4, hold 4 — calms you in 2 minutes.' }
-  ]},
-  { e:'🤝', n:'Relationships', s:'The quality of your life is the quality of your connections', items:[
-    { t:'Listen more than you speak', d:'Most conflict is a failure to feel heard. Give that gift first.' },
-    { t:'Assume positive intent by default', d:'Before attributing malice, consider circumstance.' },
-    { t:'Express appreciation specifically', d:'Tell someone one precise thing you value about them today.' },
-    { t:'Set boundaries with warmth', d:'Say no to the request and yes to the person.' },
-    { t:'Be fully present', d:'Phone away. Eyes up. Half-presence is obvious to them.' }
-  ]}
+var PILLARS=[
+  {e:'&#129504;',n:'Mental strength',s:'Build a resilient, sharp, unshakeable mind',items:[{t:'Control only what is in your control',d:"Let go of outcomes. Focus entirely on your effort and attitude."},{t:'Embrace discomfort as growth',d:"Every hard moment is a deposit into your future self."},{t:'Reject negative self-talk immediately',d:"Name the thought, step back from it, replace with a neutral fact."},{t:'Focus on process, not results',d:"Show up fully. Results are a byproduct of consistent quality action."},{t:'Think long-term, act present',d:"What can I do right now that serves who I'm becoming in 5 years?"}]},
+  {e:'&#10084;&#65039;',n:'Emotional control',s:'Stay regulated and intentional under pressure',items:[{t:'Pause before reacting',d:"Three deep breaths before responding to anything emotionally charged."},{t:"Name the emotion -- don't become it",d:'"I notice I feel frustrated" -- not "I am frustrated."'},{t:'Respond to what is, not what you fear',d:"Stay present. Catastrophising borrows suffering from the future."},{t:'Set the emotional tone first',d:"Your inner state radiates outward. People read energy before words."},{t:'Forgive quickly -- especially yourself',d:"Resentment drains mental RAM. Release it and reclaim the space."}]},
+  {e:'&#127919;',n:'Focus & clarity',s:"Protect your attention -- it's your most finite resource",items:[{t:'One task at a time, always',d:"Every task switch costs cognitive energy. Guard your attention."},{t:'Remove friction before you start',d:"Set up your environment the night before. Eliminate morning resistance."},{t:'Kill distractions before they start',d:"Phone away, notifications off. Distraction begins with one ping."},{t:'Time-block your most important work first',d:"Protect 90 minutes before meetings or messages touch you."},{t:'Revisit your goals weekly',d:"What you track, you tend. An unseen goal is a forgotten goal."}]},
+  {e:'&#9889;',n:'Body & energy',s:'Your physical state is the foundation everything rests on',items:[{t:'Move before you touch your phone',d:"Even 10 minutes of movement sets a different neurological baseline."},{t:'Hydrate immediately on waking',d:"Your brain is ~75% water. Water before coffee, every day."},{t:'Protect your sleep ruthlessly',d:"No screen 1 hour before bed. Sleep debt destroys emotional regulation."},{t:'Eat to fuel, not to fill',d:"Every meal is a choice about how sharp you'll be in 2 hours."},{t:'Breathe on purpose',d:"Box breathing -- 4 in, hold 4, out 4, hold 4 -- calms you in 2 minutes."}]},
+  {e:'&#129306;',n:'Relationships',s:'The quality of your life is the quality of your connections',items:[{t:'Listen more than you speak',d:"Most conflict is a failure to feel heard. Give that gift first."},{t:'Assume positive intent by default',d:"Before attributing malice, consider circumstance."},{t:'Express appreciation specifically',d:"Tell someone one precise thing you value about them today."},{t:'Set boundaries with warmth',d:"Say no to the request and yes to the person."},{t:'Be fully present',d:"Phone away. Eyes up. Half-presence is obvious to them."}]}
 ];
-
-var CHECKLIST = [
-  { t:'Drank water on waking',            tag:'body',    k:'water' },
-  { t:'Moved before checking phone',       tag:'body',    k:'move' },
-  { t:"Set today's intentions",            tag:'mind',    k:'intentions' },
-  { t:'Named my one priority',             tag:'focus',   k:'priority' },
-  { t:'Set emotional intention',           tag:'emotion', k:'emotion' },
-  { t:'No reactive screen first 30 min',   tag:'focus',   k:'no_screen' },
-  { t:'Said something kind or grateful',   tag:'heart',   k:'kind' },
-  { t:'Took 3 deep breaths intentionally', tag:'body',    k:'breathe' }
+var CHECKLIST=[
+  {t:'Drank water on waking',tag:'body',k:'water'},
+  {t:'Moved before checking phone',tag:'body',k:'move'},
+  {t:"Set today's intentions",tag:'mind',k:'intentions'},
+  {t:'Named my one priority',tag:'focus',k:'priority'},
+  {t:'Set emotional intention',tag:'emotion',k:'emotion'},
+  {t:'No reactive screen first 30 min',tag:'focus',k:'no_screen'},
+  {t:'Said something kind or grateful',tag:'heart',k:'kind'},
+  {t:'Took 3 deep breaths intentionally',tag:'body',k:'breathe'}
 ];
+var EMAP={anger:'&#128548;',anxiety:'&#128560;',frustration:'&#128547;',hurt:'&#128148;',shame:'&#128532;',overwhelm:'&#127754;',fear:'&#128552;',jealousy:'&#128065;'};
 
-var EMAP = { anger:'😤', anxiety:'😰', frustration:'😣', hurt:'💔', shame:'😔', overwhelm:'🌊', fear:'😨', jealousy:'👁' };
+var activePillar=null,checked={},situations=[],thoughts=[],posts=[];
+var selEmotion='',selThCategory='',selThEmotion='',selPostSource='',selPostEmotion='';
+var pastEmoFilter='all',thCatFilter='all',thEmoFilter='all',postSrcFilter='all',postEmoFilter='all';
 
-/* STATE */
-var activePillar = null;
-var checked = {};
-var situations = [];
-var selEmotion = '';
-var pastEmoFilter = 'all';
-var thoughts = [];
-var selThCategory = '';
-var selThEmotion = '';
-var thCatFilter = 'all';
-var thEmoFilter = 'all';
+var CAT_ICONS={mindset:'&#129504;',emotion:'&#10084;&#65039;',focus:'&#127919;',discipline:'&#9889;',relationships:'&#129306;',philosophy:'&#128214;',business:'&#128188;',life:'&#127807;'};
+var TH_EMO_ICONS={inspired:'&#10024;',calm:'&#129528;',motivated:'&#128293;',grateful:'&#128591;',reflective:'&#129710;',challenged:'&#128170;'};
+var POST_SRC_ICONS={linkedin:'&#128188;',instagram:'&#128248;',other:'&#127760;'};
+var POST_SRC_LABELS={linkedin:'LinkedIn',instagram:'Instagram',other:'Other'};
+var POST_EMO_ICONS={inspired:'&#10024;',motivated:'&#128293;',calm:'&#129528;',grateful:'&#128591;',reflective:'&#129710;',challenged:'&#128170;',joyful:'&#128516;'};
 
-/* HELPERS */
-function isoToday() {
-  var d = new Date();
-  return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate());
-}
-function isoDate(d) {
-  return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate());
-}
-function pad(n) { return String(n).padStart(2,'0'); }
-function parseISO(s) { if(!s) return null; var p=s.split('-').map(Number); return new Date(p[0],p[1]-1,p[2]); }
-function escH(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function isoToday(){var d=new Date();return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());}
+function isoDate(d){return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());}
+function pad(n){return String(n).padStart(2,'0');}
+function parseISO(s){if(!s)return null;var p=s.split('-').map(Number);return new Date(p[0],p[1]-1,p[2]);}
+function escH(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 var _tt=null;
-function showToast(msg,type) {
-  var el=document.getElementById('toast');
-  el.textContent=msg; el.className='toast show'+(type?' '+type:'');
-  clearTimeout(_tt); _tt=setTimeout(function(){ el.classList.remove('show'); },3200);
-}
+function showToast(msg,type){var el=document.getElementById('toast');el.textContent=msg;el.className='toast show'+(type?' '+type:'');clearTimeout(_tt);_tt=setTimeout(function(){el.classList.remove('show');},3200);}
 
-/* TABS */
-function switchTab(tab) {
-  document.querySelectorAll('.pg').forEach(function(p){ p.classList.remove('on'); });
-  document.querySelectorAll('.tab').forEach(function(b){ b.classList.remove('on'); });
+function switchTab(tab){
+  document.querySelectorAll('.pg').forEach(function(p){p.classList.remove('on');});
+  document.querySelectorAll('.tab').forEach(function(b){b.classList.remove('on');});
   document.getElementById('pg-'+tab).classList.add('on');
-  var idx = tab==='morning' ? 0 : tab==='situations' ? 1 : 2;
+  var idx=tab==='morning'?0:tab==='situations'?1:tab==='thoughts'?2:3;
   document.querySelectorAll('.tab')[idx].classList.add('on');
-  if (tab==='situations') { renderStats(); renderPast(); }
-  if (tab==='thoughts') renderThoughts();
+  if(tab==='situations'){renderStats();renderPast();}
+  if(tab==='thoughts')renderThoughts();
+  if(tab==='posts')renderPosts();
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
-/* INIT */
-function init() {
-  try {
-    var now = new Date(); var h = now.getHours();
-    document.getElementById('greeting').textContent = h<12?'Good morning':h<17?'Good afternoon':'Good evening';
-    document.getElementById('time-now').textContent = now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true});
-    document.getElementById('date-line').textContent = now.toLocaleDateString('en-IN',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
-    var day = Math.floor((now - new Date(now.getFullYear(),0,0)) / 86400000);
-    document.getElementById('day-num').textContent = day;
-    var m = MANTRAS[day % MANTRAS.length];
-    document.getElementById('mantra-text').textContent = '\u201C' + m.text + '\u201D';
-    document.getElementById('mantra-source').textContent = m.src;
-  } catch(e){ console.error('Header error:',e); }
-
-  try {
-    var stored = getTodayStored();
-    if (stored.checked) Object.assign(checked, stored.checked);
-    renderChecklist(); updateStreak();
-    loadSituations(); updateBadge();
-    loadThoughts(); updateThBadge();
-  } catch(e){ console.error('Local state error:',e); }
-
+function init(){
+  try{
+    var now=new Date(),h=now.getHours();
+    document.getElementById('greeting').textContent=h<12?'Good morning':h<17?'Good afternoon':'Good evening';
+    document.getElementById('time-now').textContent=now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true});
+    document.getElementById('date-line').textContent=now.toLocaleDateString('en-IN',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+    var day=Math.floor((now-new Date(now.getFullYear(),0,0))/86400000);
+    document.getElementById('day-num').textContent=day;
+    var m=MANTRAS[day%MANTRAS.length];
+    document.getElementById('mantra-text').textContent='\u201C'+m.text+'\u201D';
+    document.getElementById('mantra-source').textContent=m.src;
+  }catch(e){console.error('Header:',e);}
+  try{
+    var stored=getTodayStored();
+    if(stored.checked)Object.assign(checked,stored.checked);
+    renderChecklist();updateStreak();
+    loadSituations();updateBadge();
+    loadThoughts();updateThBadge();
+    loadPosts();updatePostBadge();
+  }catch(e){console.error('Local:',e);}
   setIntentionsState('loading');
-  Promise.all([fetchFromSheet(), fetchAllSituations(), fetchAllThoughts()])
-    .then(function(results) {
-      var data = results[0];
-      if (data && data.morning && (data.morning.priority || data.morning.emotional_intention || data.morning.gratitude)) {
-        showReadView(data.morning.priority||'', data.morning.emotional_intention||'', data.morning.gratitude||'');
-      } else {
-        setIntentionsState('form');
-      }
-    })
-    .catch(function(){ setIntentionsState('form'); });
+  Promise.all([fetchFromSheet(),fetchAllSituations(),fetchAllThoughts(),fetchAllPosts()])
+    .then(function(res){
+      var d=res[0];
+      if(d&&d.morning&&(d.morning.priority||d.morning.emotional_intention||d.morning.gratitude)){
+        showReadView(d.morning.priority||'',d.morning.emotional_intention||'',d.morning.gratitude||'');
+      }else{setIntentionsState('form');}
+    }).catch(function(){setIntentionsState('form');});
 }
 
-/* INTENTIONS */
-function setIntentionsState(state) {
-  document.getElementById('q-loading-wrap').style.display = state==='loading'?'block':'none';
-  document.getElementById('q-form-wrap').style.display   = state==='form'   ?'block':'none';
-  document.getElementById('q-read-wrap').style.display   = state==='read'   ?'block':'none';
+function setIntentionsState(s){
+  document.getElementById('q-loading-wrap').style.display=s==='loading'?'block':'none';
+  document.getElementById('q-form-wrap').style.display=s==='form'?'block':'none';
+  document.getElementById('q-read-wrap').style.display=s==='read'?'block':'none';
 }
-function showReadView(q1,q2,q3) {
-  document.getElementById('goal-q1').textContent = q1||'—';
-  document.getElementById('goal-q2').textContent = q2||'—';
-  document.getElementById('goal-q3').textContent = q3||'—';
-  document.getElementById('goals-date').textContent = new Date().toLocaleDateString('en-IN',{day:'numeric',month:'short'});
-  var lbl = document.getElementById('goals-synced-lbl');
-  lbl.textContent = 'Synced to Sheet \u2713'; lbl.className = 'goals-synced ok';
-  document.getElementById('q1').value=q1||'';
-  document.getElementById('q2').value=q2||'';
-  document.getElementById('q3').value=q3||'';
+function showReadView(q1,q2,q3){
+  document.getElementById('goal-q1').textContent=q1||'--';
+  document.getElementById('goal-q2').textContent=q2||'--';
+  document.getElementById('goal-q3').textContent=q3||'--';
+  document.getElementById('goals-date').textContent=new Date().toLocaleDateString('en-IN',{day:'numeric',month:'short'});
+  var lbl=document.getElementById('goals-synced-lbl');lbl.textContent='Synced to Sheet \u2713';lbl.className='goals-synced ok';
+  document.getElementById('q1').value=q1||'';document.getElementById('q2').value=q2||'';document.getElementById('q3').value=q3||'';
   setIntentionsState('read');
 }
-function editIntentions() {
-  document.getElementById('q1').value = document.getElementById('goal-q1').textContent.replace('—','');
-  document.getElementById('q2').value = document.getElementById('goal-q2').textContent.replace('—','');
-  document.getElementById('q3').value = document.getElementById('goal-q3').textContent.replace('—','');
-  setIntentionsState('form'); document.getElementById('q1').focus();
+function editIntentions(){
+  document.getElementById('q1').value=document.getElementById('goal-q1').textContent.replace('--','');
+  document.getElementById('q2').value=document.getElementById('goal-q2').textContent.replace('--','');
+  document.getElementById('q3').value=document.getElementById('goal-q3').textContent.replace('--','');
+  setIntentionsState('form');document.getElementById('q1').focus();
 }
-function clearQuestions() {
-  ['q1','q2','q3'].forEach(function(id){ document.getElementById(id).value=''; });
-  document.getElementById('save-status').textContent='';
-}
+function clearQuestions(){['q1','q2','q3'].forEach(function(id){document.getElementById(id).value='';});document.getElementById('save-status').textContent='';}
 
-/* SAVE INTENTIONS */
-async function saveToSheet() {
-  var q1=document.getElementById('q1').value.trim(), q2=document.getElementById('q2').value.trim(), q3=document.getElementById('q3').value.trim();
-  if (!q1&&!q2&&!q3) { showToast('Fill in at least one intention first.','error'); return; }
-  setSt('Saving...', null);
-  var now = new Date();
-  var ok = await postToSheet({
-    sheet:'Morning Reflections',
-    date: now.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}),
-    dateISO: isoDate(now),
-    time: now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true}),
-    priority:q1, emotional_intention:q2, gratitude:q3,
-    checklist_done: CHECKLIST.filter(function(i){return checked[i.k];}).map(function(i){return i.t;}).join(' | '),
-    score: CHECKLIST.filter(function(i){return checked[i.k];}).length+'/'+CHECKLIST.length
-  });
+async function saveToSheet(){
+  var q1=document.getElementById('q1').value.trim(),q2=document.getElementById('q2').value.trim(),q3=document.getElementById('q3').value.trim();
+  if(!q1&&!q2&&!q3){showToast('Fill in at least one intention first.','error');return;}
+  setSt('Saving...',null);
+  var now=new Date();
+  var ok=await postToSheet({sheet:'Morning Reflections',date:now.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}),dateISO:isoDate(now),time:now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true}),priority:q1,emotional_intention:q2,gratitude:q3,checklist_done:CHECKLIST.filter(function(i){return checked[i.k];}).map(function(i){return i.t;}).join(' | '),score:CHECKLIST.filter(function(i){return checked[i.k];}).length+'/'+CHECKLIST.length});
   saveTodayLocal({checked:checked});
-  if (ok) { setSt('Saved \u2713',true); showToast('Intentions saved to Sheet \u2713','success'); showReadView(q1,q2,q3); }
-  else { setSt('Network error — please retry.',false); showToast('Could not reach Sheet.','error'); }
+  if(ok){setSt('Saved \u2713',true);showToast('Intentions saved to Sheet \u2713','success');showReadView(q1,q2,q3);}
+  else{setSt('Network error -- please retry.',false);showToast('Could not reach Sheet.','error');}
 }
-function setSt(msg,ok) {
-  var el=document.getElementById('save-status');
-  el.textContent=msg; el.className='save-st'+(ok===true?' ok':ok===false?' err':'');
-}
+function setSt(msg,ok){var el=document.getElementById('save-status');el.textContent=msg;el.className='save-st'+(ok===true?' ok':ok===false?' err':'');}
 
-/* PILLARS */
-function togglePillar(id) {
-  var btns=document.querySelectorAll('.pillar'), detail=document.getElementById('pillar-detail'), empty=document.getElementById('pillar-empty');
-  if (activePillar===id) {
-    activePillar=null; btns.forEach(function(b){b.classList.remove('on');});
-    detail.classList.remove('on'); detail.innerHTML=''; empty.classList.remove('hidden'); return;
-  }
-  activePillar=id; btns.forEach(function(b){b.classList.remove('on');}); btns[id].classList.add('on');
+function togglePillar(id){
+  var btns=document.querySelectorAll('.pillar'),detail=document.getElementById('pillar-detail'),empty=document.getElementById('pillar-empty');
+  if(activePillar===id){activePillar=null;btns.forEach(function(b){b.classList.remove('on');});detail.classList.remove('on');detail.innerHTML='';empty.classList.remove('hidden');return;}
+  activePillar=id;btns.forEach(function(b){b.classList.remove('on');});btns[id].classList.add('on');
   var p=PILLARS[id];
-  detail.innerHTML='<div class="p-head"><div class="p-e">'+p.e+'</div><div><div class="p-title">'+p.n+'</div><div class="p-sub">'+p.s+'</div></div></div>'+
-    p.items.map(function(i){return '<div class="p-row"><div class="p-dot"></div><div><div class="p-t">'+i.t+'</div><div class="p-s">'+i.d+'</div></div></div>';}).join('');
-  detail.classList.add('on'); empty.classList.add('hidden');
+  detail.innerHTML='<div class="p-head"><div class="p-e">'+p.e+'</div><div><div class="p-title">'+p.n+'</div><div class="p-sub">'+p.s+'</div></div></div>'+p.items.map(function(i){return '<div class="p-row"><div class="p-dot"></div><div><div class="p-t">'+i.t+'</div><div class="p-s">'+i.d+'</div></div></div>';}).join('');
+  detail.classList.add('on');empty.classList.add('hidden');
 }
 
-/* CHECKLIST */
-function renderChecklist() {
-  var el=document.getElementById('cl-list'); el.innerHTML='';
-  CHECKLIST.forEach(function(item) {
-    var done=!!checked[item.k], div=document.createElement('div');
-    div.className='cl-row'+(done?' done':'');
-    div.onclick=function(){ toggleCheck(item.k); };
-    div.innerHTML='<div class="cl-box"><span class="cl-tick">\u2713</span></div><div class="cl-txt">'+item.t+'</div><span class="cl-tag">'+item.tag+'</span>';
-    el.appendChild(div);
-  }); updateProg();
+function renderChecklist(){
+  var el=document.getElementById('cl-list');el.innerHTML='';
+  CHECKLIST.forEach(function(item){var done=!!checked[item.k],div=document.createElement('div');div.className='cl-row'+(done?' done':'');div.onclick=function(){toggleCheck(item.k);};div.innerHTML='<div class="cl-box"><span class="cl-tick">\u2713</span></div><div class="cl-txt">'+item.t+'</div><span class="cl-tag">'+item.tag+'</span>';el.appendChild(div);});updateProg();
 }
-function toggleCheck(k) { checked[k]=!checked[k]; saveTodayLocal({checked:checked}); renderChecklist(); }
-function updateProg() {
-  var done=CHECKLIST.filter(function(i){return checked[i.k];}).length;
-  document.getElementById('prog-txt').textContent=done+'/'+CHECKLIST.length;
-  document.getElementById('prog-fill').style.width=Math.round(done/CHECKLIST.length*100)+'%';
-}
+function toggleCheck(k){checked[k]=!checked[k];saveTodayLocal({checked:checked});renderChecklist();}
+function updateProg(){var done=CHECKLIST.filter(function(i){return checked[i.k];}).length;document.getElementById('prog-txt').textContent=done+'/'+CHECKLIST.length;document.getElementById('prog-fill').style.width=Math.round(done/CHECKLIST.length*100)+'%';}
 
-/* PERSISTENCE */
-function todayKey() { var d=new Date(); return 'morning_'+d.getFullYear()+'_'+(d.getMonth()+1)+'_'+d.getDate(); }
-function getTodayStored() { try{ var r=localStorage.getItem(todayKey()); return r?JSON.parse(r):{};} catch(e){return{};} }
-function saveTodayLocal(extra) {
-  var s=getTodayStored(); Object.assign(s,{dateISO:isoToday()},extra||{});
-  localStorage.setItem(todayKey(),JSON.stringify(s)); updateStreak();
-}
-function resetDay() {
-  if (!confirm("Reset all today's progress?")) return;
-  CHECKLIST.forEach(function(i){checked[i.k]=false;}); saveTodayLocal({checked:checked});
-  clearQuestions(); setIntentionsState('form'); renderChecklist(); showToast('Day reset. Fresh start.');
-}
-
-/* STREAK */
-function updateStreak() {
-  var s=0, today=new Date();
-  for (var i=0;i<365;i++) {
-    var d=new Date(today); d.setDate(today.getDate()-i);
-    var raw=localStorage.getItem('morning_'+d.getFullYear()+'_'+(d.getMonth()+1)+'_'+d.getDate());
-    if (!raw) break;
-    try{ var dd=JSON.parse(raw); if(CHECKLIST.filter(function(x){return dd.checked&&dd.checked[x.k];}).length>0) s++; else if(i>0) break; }catch(e){break;}
-  }
-  document.getElementById('streak-txt').textContent = s>1?'🔥 '+s+'-day streak — keep going.':s===1?'⭐ First step today.':'Start your first practice today.';
-}
+function todayKey(){var d=new Date();return 'morning_'+d.getFullYear()+'_'+(d.getMonth()+1)+'_'+d.getDate();}
+function getTodayStored(){try{var r=localStorage.getItem(todayKey());return r?JSON.parse(r):{};}catch(e){return{};}}
+function saveTodayLocal(extra){var s=getTodayStored();Object.assign(s,{dateISO:isoToday()},extra||{});localStorage.setItem(todayKey(),JSON.stringify(s));updateStreak();}
+function resetDay(){if(!confirm("Reset today's progress?"))return;CHECKLIST.forEach(function(i){checked[i.k]=false;});saveTodayLocal({checked:checked});clearQuestions();setIntentionsState('form');renderChecklist();showToast('Day reset. Fresh start.');}
+function updateStreak(){var s=0,today=new Date();for(var i=0;i<365;i++){var d=new Date(today);d.setDate(today.getDate()-i);var raw=localStorage.getItem('morning_'+d.getFullYear()+'_'+(d.getMonth()+1)+'_'+d.getDate());if(!raw)break;try{var dd=JSON.parse(raw);if(CHECKLIST.filter(function(x){return dd.checked&&dd.checked[x.k];}).length>0)s++;else if(i>0)break;}catch(e){break;}}document.getElementById('streak-txt').textContent=s>1?'&#128293; '+s+'-day streak -- keep going.':s===1?'&#11088; First step today.':'Start your first practice today.';}
 
 /* SITUATIONS */
-function loadSituations() { try{var r=localStorage.getItem('morning_situations');if(r)situations=JSON.parse(r);}catch(e){situations=[];} }
-function saveSits() { localStorage.setItem('morning_situations',JSON.stringify(situations)); }
-function updateBadge() { document.getElementById('sit-badge').textContent=situations.length; }
-function selEmo(el) {
-  document.querySelectorAll('.ep').forEach(function(p){p.classList.remove('on');});
-  selEmotion=(selEmotion===el.dataset.val)?'':el.dataset.val;
-  if(selEmotion) el.classList.add('on');
-}
-function setSyncTxt(state,msg) { var el=document.getElementById('sit-sync'); el.className='sync-txt '+state; el.textContent=msg; }
-
-async function addSituation() {
-  var title=document.getElementById('sit-title').value.trim();
-  if (!title) { showToast('Describe the situation first.','error'); return; }
-  var now=new Date();
-  var sit={ id:Date.now(), timestamp:Date.now(), dateISO:isoDate(now),
-    date:now.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}),
-    title:title, trigger:document.getElementById('sit-trigger').value.trim(),
-    reaction:document.getElementById('sit-reaction').value.trim(), emotion:selEmotion, strategy:'' };
-  situations.unshift(sit); saveSits(); updateBadge();
-  document.getElementById('sit-title').value=''; document.getElementById('sit-trigger').value=''; document.getElementById('sit-reaction').value='';
-  selEmotion=''; document.querySelectorAll('.ep').forEach(function(p){p.classList.remove('on');});
-  setSyncTxt('syncing','Syncing to Sheet...');
+function loadSituations(){try{var r=localStorage.getItem('morning_situations');if(r)situations=JSON.parse(r);}catch(e){situations=[];}}
+function saveSits(){localStorage.setItem('morning_situations',JSON.stringify(situations));}
+function updateBadge(){document.getElementById('sit-badge').textContent=situations.length;}
+function selEmo(el){document.querySelectorAll('.ep').forEach(function(p){p.classList.remove('on');});selEmotion=(selEmotion===el.dataset.val)?'':el.dataset.val;if(selEmotion)el.classList.add('on');}
+function setSyncTxt(state,msg){var el=document.getElementById('sit-sync');el.className='sync-txt '+state;el.textContent=msg;}
+async function addSituation(){
+  var title=document.getElementById('sit-title').value.trim();if(!title){showToast('Describe the situation first.','error');return;}
+  var now=new Date();var sit={id:Date.now(),timestamp:Date.now(),dateISO:isoDate(now),date:now.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}),title:title,trigger:document.getElementById('sit-trigger').value.trim(),reaction:document.getElementById('sit-reaction').value.trim(),emotion:selEmotion,strategy:''};
+  situations.unshift(sit);saveSits();updateBadge();
+  document.getElementById('sit-title').value='';document.getElementById('sit-trigger').value='';document.getElementById('sit-reaction').value='';selEmotion='';document.querySelectorAll('.ep').forEach(function(p){p.classList.remove('on');});
+  setSyncTxt('syncing','Syncing...');
   var ok=await postToSheet({sheet:'Situations',date:sit.date,dateISO:sit.dateISO,title:sit.title,trigger:sit.trigger,reaction:sit.reaction,emotion:sit.emotion,strategy:''});
   setSyncTxt(ok?'ok':'err',ok?'Synced to Sheet \u2713':'Saved locally (Sheet unreachable)');
-  showToast(ok?'Situation logged \u2713':'Saved locally — sync failed.',ok?'success':'error');
+  showToast(ok?'Situation logged \u2713':'Saved locally -- sync failed.',ok?'success':'error');
 }
-function sitCardHTML(s) {
+function sitCardHTML(s){
   var badge=s.emotion?'<span class="emo-badge">'+(EMAP[s.emotion]||'')+' '+s.emotion+'</span>':'';
   var sb=s.strategy?'<span class="strat-badge">\u2713 strategy</span>':'';
   return '<div class="sc" id="sc-'+s.id+'"><div class="sc-head" onclick="togSC('+s.id+')">' +
     '<div class="sc-meta"><div class="sc-title">'+escH(s.title)+'</div><div class="sc-sub">'+s.date+badge+sb+'</div></div>' +
-    '<div class="sc-tog">\u25be</div></div>' +
-    '<div class="sc-body">' +
-    (s.trigger?'<div class="sb-sec"><div class="sb-lbl">Trigger</div><div class="sb-txt">'+escH(s.trigger)+'</div></div>':'') +
-    (s.reaction?'<div class="sb-sec"><div class="sb-lbl">My response</div><div class="sb-txt">'+escH(s.reaction)+'</div></div>':'') +
-    '<div class="sb-sec"><div class="sb-lbl">Better ways to handle this</div>' +
-    '<textarea class="strat-area" id="str-'+s.id+'" rows="3" placeholder="Scripts, reframes, techniques for next time...">'+escH(s.strategy)+'</textarea>' +
-    '<div class="sc-foot"><button class="del-btn" onclick="delSit('+s.id+')">🗑 Delete</button>' +
-    '<div style="display:flex;gap:6px"><button class="btn" style="font-size:11px;padding:5px 12px" onclick="editSituation('+s.id+')">✏ Edit</button>' +
-    '<button class="btn teal" style="font-size:11px;padding:5px 12px" onclick="saveSt('+s.id+')">Save strategy \u2713</button></div></div>' +
-    '</div></div></div>';
+    '<div class="sc-tog">\u25be</div></div><div class="sc-body">' +
+    (s.trigger?'<div class="sb-sec"><div class="sb-lbl">Trigger</div><div class="sb-txt">'+escH(s.trigger)+'</div></div>':'')+
+    (s.reaction?'<div class="sb-sec"><div class="sb-lbl">My response</div><div class="sb-txt">'+escH(s.reaction)+'</div></div>':'')+
+    '<div class="sb-sec"><div class="sb-lbl">Better ways to handle this</div><textarea class="strat-area" id="str-'+s.id+'" rows="3" placeholder="Scripts, reframes, techniques for next time...">'+escH(s.strategy)+'</textarea>' +
+    '<div class="sc-foot"><button class="del-btn" onclick="delSit('+s.id+')">&#128465; Delete</button>' +
+    '<div style="display:flex;gap:6px"><button class="btn" style="font-size:11px;padding:5px 12px" onclick="editSituation('+s.id+')">\u270f Edit</button>' +
+    '<button class="btn teal" style="font-size:11px;padding:5px 12px" onclick="saveSt('+s.id+')">Save strategy \u2713</button></div></div></div></div></div>';
 }
-function togSC(id) { var c=document.getElementById('sc-'+id); if(c) c.classList.toggle('open'); }
-async function saveSt(id) {
-  var area=document.getElementById('str-'+id); if(!area) return;
-  var sit=situations.find(function(s){return s.id===id;}); if(!sit) return;
-  sit.strategy=area.value.trim(); saveSits();
-  await postToSheet({sheet:'Situations',action:'update_strategy',dateISO:sit.dateISO,title:sit.title,strategy:sit.strategy});
-  renderPast(); setTimeout(function(){ var c=document.getElementById('sc-'+id); if(c) c.classList.add('open'); },30);
-  showToast('Strategy saved \u2713','success');
-}
-function delSit(id) {
-  if(!confirm('Delete this situation?')) return;
-  situations=situations.filter(function(s){return s.id!==id;}); saveSits(); updateBadge(); renderStats(); renderPast();
-  showToast('Deleted.','');
-}
-function fetchAllSituations() {
-  return new Promise(function(resolve) {
-    try {
-      fetch(WORKER_URL+'?action=getAllSituations')
-        .then(function(resp){return resp.ok?resp.json():null;})
-        .then(function(data){
-          if(data&&data.status==='ok'&&Array.isArray(data.situations)){
-            replaceSituationsFromSheet(data.situations);
-          }
-          resolve();
-        })
-        .catch(function(){resolve();});
-    } catch(e){resolve();}
-  });
-}
-
-/* Sheet is the single source of truth for situations too. Replace local entirely. */
-function replaceSituationsFromSheet(sheetSits) {
-  situations = sheetSits.map(function(s, i){
-    return {
-      id:        Date.now() + i,
-      timestamp: s.dateISO ? new Date(s.dateISO).getTime() : Date.now(),
-      dateISO:   s.dateISO   || '',
-      date:      s.date      || '',
-      title:     s.title     || '',
-      trigger:   s.trigger   || '',
-      reaction:  s.reaction  || '',
-      emotion:   s.emotion   || '',
-      strategy:  s.strategy  || '',
-    };
-  });
-  situations.sort(function(a,b){return b.timestamp-a.timestamp;});
-  saveSits();
-  updateBadge();
-  if(document.getElementById('pg-situations').classList.contains('on')){ renderStats(); renderPast(); }
-}
+function togSC(id){var c=document.getElementById('sc-'+id);if(c)c.classList.toggle('open');}
+async function saveSt(id){var area=document.getElementById('str-'+id);if(!area)return;var sit=situations.find(function(s){return s.id===id;});if(!sit)return;sit.strategy=area.value.trim();saveSits();await postToSheet({sheet:'Situations',action:'update_strategy',dateISO:sit.dateISO,title:sit.title,strategy:sit.strategy});renderPast();setTimeout(function(){var c=document.getElementById('sc-'+id);if(c)c.classList.add('open');},30);showToast('Strategy saved \u2713','success');}
+function delSit(id){if(!confirm('Delete this situation?'))return;situations=situations.filter(function(s){return s.id!==id;});saveSits();updateBadge();renderStats();renderPast();showToast('Deleted.','');}
+function fetchAllSituations(){return new Promise(function(resolve){try{fetch(WORKER_URL+'?action=getAllSituations').then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&d.status==='ok'&&Array.isArray(d.situations))replaceSituationsFromSheet(d.situations);resolve();}).catch(function(){resolve();});}catch(e){resolve();}});}
+function replaceSituationsFromSheet(s){situations=s.map(function(x,i){return{id:Date.now()+i,timestamp:x.dateISO?new Date(x.dateISO).getTime():Date.now(),dateISO:x.dateISO||'',date:x.date||'',title:x.title||'',trigger:x.trigger||'',reaction:x.reaction||'',emotion:x.emotion||'',strategy:x.strategy||''};});situations.sort(function(a,b){return b.timestamp-a.timestamp;});saveSits();updateBadge();if(document.getElementById('pg-situations').classList.contains('on')){renderStats();renderPast();}}
 
 /* PAST SITUATIONS TAB */
-function renderStats() {
-  var total=situations.length, ws=situations.filter(function(s){return s.strategy;}).length;
-  document.getElementById('st-total').textContent=total;
-  document.getElementById('st-strat').textContent=ws;
-  document.getElementById('st-pend').textContent=total-ws;
-  var freq={}; situations.forEach(function(s){if(s.emotion) freq[s.emotion]=(freq[s.emotion]||0)+1;});
-  var top=Object.entries(freq).sort(function(a,b){return b[1]-a[1];})[0];
-  document.getElementById('st-emo').textContent=top?(EMAP[top[0]]||'')+' '+top[0]:'—';
-}
-function setRange(el,r) {
-  document.querySelectorAll('.dq').forEach(function(b){b.classList.remove('on');}); el.classList.add('on');
-  var now=new Date(), f=document.getElementById('date-from'), t=document.getElementById('date-to');
-  t.value=isoDate(now);
-  if(r==='all'){f.value='';t.value='';}
-  else if(r==='today'){f.value=isoDate(now);}
-  else if(r==='week'){var d=new Date(now);d.setDate(d.getDate()-6);f.value=isoDate(d);}
-  else if(r==='month'){var d=new Date(now);d.setDate(d.getDate()-29);f.value=isoDate(d);}
-  else if(r==='3m'){var d=new Date(now);d.setDate(d.getDate()-89);f.value=isoDate(d);}
-  renderPast();
-}
-function clearDateFilter() {
-  document.getElementById('date-from').value=''; document.getElementById('date-to').value='';
-  document.querySelectorAll('.dq').forEach(function(b){b.classList.remove('on');}); document.querySelector('.dq[data-r="all"]').classList.add('on');
-  renderPast();
-}
-function setEmoFilter(el) {
-  document.querySelectorAll('.ef').forEach(function(p){p.classList.remove('on');}); el.classList.add('on');
-  pastEmoFilter=el.dataset.f; renderPast();
-}
-function renderPast() {
-  var search=(document.getElementById('psearch').value||'').toLowerCase().trim();
-  var sort=document.getElementById('psort').value;
-  var fv=document.getElementById('date-from').value, tv=document.getElementById('date-to').value;
-  var fd=fv?parseISO(fv):null, td=tv?parseISO(tv):null;
-  if(td) td.setHours(23,59,59);
+function renderStats(){var total=situations.length,ws=situations.filter(function(s){return s.strategy;}).length;document.getElementById('st-total').textContent=total;document.getElementById('st-strat').textContent=ws;document.getElementById('st-pend').textContent=total-ws;var freq={};situations.forEach(function(s){if(s.emotion)freq[s.emotion]=(freq[s.emotion]||0)+1;});var top=Object.entries(freq).sort(function(a,b){return b[1]-a[1];})[0];document.getElementById('st-emo').textContent=top?(EMAP[top[0]]||'')+' '+top[0]:'--';}
+function setRange(el,r){document.querySelectorAll('.dq').forEach(function(b){b.classList.remove('on');});el.classList.add('on');var now=new Date(),f=document.getElementById('date-from'),t=document.getElementById('date-to');t.value=isoDate(now);if(r==='all'){f.value='';t.value='';}else if(r==='today'){f.value=isoDate(now);}else if(r==='week'){var d=new Date(now);d.setDate(d.getDate()-6);f.value=isoDate(d);}else if(r==='month'){var d=new Date(now);d.setDate(d.getDate()-29);f.value=isoDate(d);}else if(r==='3m'){var d=new Date(now);d.setDate(d.getDate()-89);f.value=isoDate(d);}renderPast();}
+function clearDateFilter(){document.getElementById('date-from').value='';document.getElementById('date-to').value='';document.querySelectorAll('.dq').forEach(function(b){b.classList.remove('on');});document.querySelector('.dq[data-r="all"]').classList.add('on');renderPast();}
+function setEmoFilter(el){document.querySelectorAll('.ef').forEach(function(p){p.classList.remove('on');});el.classList.add('on');pastEmoFilter=el.dataset.f;renderPast();}
+function renderPast(){
+  var search=(document.getElementById('psearch').value||'').toLowerCase().trim(),sort=document.getElementById('psort').value;
+  var fv=document.getElementById('date-from').value,tv=document.getElementById('date-to').value;
+  var fd=fv?parseISO(fv):null,td=tv?parseISO(tv):null;if(td)td.setHours(23,59,59);
   var list=situations.slice();
-  if(fd||td) list=list.filter(function(s){var d=s.dateISO?parseISO(s.dateISO):null;if(!d)return true;if(fd&&d<fd)return false;if(td&&d>td)return false;return true;});
-  if(pastEmoFilter!=='all') list=list.filter(function(s){return s.emotion===pastEmoFilter;});
-  if(search) list=list.filter(function(s){return(s.title+s.trigger+s.reaction+s.strategy).toLowerCase().includes(search);});
-  if(sort==='oldest') list.sort(function(a,b){return a.timestamp-b.timestamp;});
-  else if(sort==='newest') list.sort(function(a,b){return b.timestamp-a.timestamp;});
-  else if(sort==='no-strat') list.sort(function(a,b){return(a.strategy?1:0)-(b.strategy?1:0);});
-  else if(sort==='has-strat') list.sort(function(a,b){return(b.strategy?1:0)-(a.strategy?1:0);});
+  if(fd||td)list=list.filter(function(s){var d=s.dateISO?parseISO(s.dateISO):null;if(!d)return true;if(fd&&d<fd)return false;if(td&&d>td)return false;return true;});
+  if(pastEmoFilter!=='all')list=list.filter(function(s){return s.emotion===pastEmoFilter;});
+  if(search)list=list.filter(function(s){return(s.title+s.trigger+s.reaction+s.strategy).toLowerCase().includes(search);});
+  if(sort==='oldest')list.sort(function(a,b){return a.timestamp-b.timestamp;});else if(sort==='newest')list.sort(function(a,b){return b.timestamp-a.timestamp;});else if(sort==='no-strat')list.sort(function(a,b){return(a.strategy?1:0)-(b.strategy?1:0);});else if(sort==='has-strat')list.sort(function(a,b){return(b.strategy?1:0)-(a.strategy?1:0);});
   document.getElementById('pmeta').textContent=list.length+' of '+situations.length+' situation'+(situations.length!==1?'s':'');
   var log=document.getElementById('past-log');
-  if(!list.length){log.innerHTML='<div class="sit-empty">'+(situations.length===0?'Nothing logged yet.<br><br><button class="btn" onclick="switchTab(\'morning\')">&#8592; Go to morning</button>':'No matches for the current filter.')+'</div>'; return;}
+  if(!list.length){log.innerHTML='<div class="sit-empty">'+(situations.length===0?'Nothing logged yet.<br><br><button class="btn" onclick="switchTab(\'situations\')">Go to situations</button>':'No matches for the current filter.')+'</div>';return;}
   log.innerHTML=list.map(sitCardHTML).join('');
 }
-function exportCSV() {
-  if(!situations.length){showToast('Nothing to export yet.','error');return;}
-  var h=['Date','Situation','Trigger','Reaction','Emotion','Strategy'];
-  var rows=situations.map(function(s){return[s.date,s.title,s.trigger||'',s.reaction||'',s.emotion||'',s.strategy||''].map(function(v){return'"'+String(v).replace(/"/g,'""')+'"';}).join(',');});
-  var a=document.createElement('a');
-  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent([h.join(',')].concat(rows).join('\n'));
-  a.download='situations-'+isoToday()+'.csv'; a.click(); showToast('CSV exported \u2713','success');
-}
+function exportCSV(){if(!situations.length){showToast('Nothing to export yet.','error');return;}var h=['Date','Situation','Trigger','Reaction','Emotion','Strategy'];var rows=situations.map(function(s){return[s.date,s.title,s.trigger||'',s.reaction||'',s.emotion||'',s.strategy||''].map(function(v){return'"'+String(v).replace(/"/g,'""')+'"';}).join(',');});var a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent([h.join(',')].concat(rows).join('\n'));a.download='situations-'+isoToday()+'.csv';a.click();showToast('CSV exported \u2713','success');}
 
 /* THOUGHTS */
-function loadThoughts() { try{var r=localStorage.getItem('morning_thoughts');if(r)thoughts=JSON.parse(r);}catch(e){thoughts=[];} }
-function saveThoughts() { localStorage.setItem('morning_thoughts',JSON.stringify(thoughts)); }
-function updateThBadge() { document.getElementById('th-badge').textContent=thoughts.length; }
-
-function selThCat(el) {
-  document.querySelectorAll('#th-cat-pills .thp').forEach(function(p){p.classList.remove('on');});
-  selThCategory=(selThCategory===el.dataset.val)?'':el.dataset.val;
-  if(selThCategory) el.classList.add('on');
-}
-function selThEmo(el) {
-  document.querySelectorAll('#th-emo-pills .thp').forEach(function(p){p.classList.remove('on');});
-  selThEmotion=(selThEmotion===el.dataset.val)?'':el.dataset.val;
-  if(selThEmotion) el.classList.add('on');
-}
-function setThCatFilter(el) {
-  document.querySelectorAll('#th-cat-filter .ef').forEach(function(p){p.classList.remove('on');}); el.classList.add('on'); thCatFilter=el.dataset.c; renderThoughts();
-}
-function setThEmoFilter(el) {
-  document.querySelectorAll('#th-emo-filter .ef').forEach(function(p){p.classList.remove('on');}); el.classList.add('on'); thEmoFilter=el.dataset.e; renderThoughts();
-}
-
-async function addThought() {
-  var heading=document.getElementById('th-heading').value.trim();
-  var text=document.getElementById('th-text').value.trim();
-  if (!heading&&!text) { showToast('Add a heading or description first.','error'); return; }
-  var now=new Date();
-  var thId = String(Date.now());
-  var th={ id:Date.now(), timestamp:Date.now(), dateISO:isoDate(now),
-    date:now.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}),
-    heading:heading, text:text, url:document.getElementById('th-url').value.trim(),
-    category:selThCategory, emotion:selThEmotion,
-    sheetId:thId };  // stable ID used to find/update Sheet row
-  thoughts.unshift(th); saveThoughts(); updateThBadge();
-  document.getElementById('th-heading').value=''; document.getElementById('th-text').value=''; document.getElementById('th-url').value='';
-  selThCategory=''; selThEmotion='';
+function loadThoughts(){try{var r=localStorage.getItem('morning_thoughts');if(r)thoughts=JSON.parse(r);}catch(e){thoughts=[];}}
+function saveThoughts(){localStorage.setItem('morning_thoughts',JSON.stringify(thoughts));}
+function updateThBadge(){document.getElementById('th-badge').textContent=thoughts.length;}
+function selThCat(el){document.querySelectorAll('#th-cat-pills .thp').forEach(function(p){p.classList.remove('on');});selThCategory=(selThCategory===el.dataset.val)?'':el.dataset.val;if(selThCategory)el.classList.add('on');}
+function selThEmo(el){document.querySelectorAll('#th-emo-pills .thp').forEach(function(p){p.classList.remove('on');});selThEmotion=(selThEmotion===el.dataset.val)?'':el.dataset.val;if(selThEmotion)el.classList.add('on');}
+function setThCatFilter(el){document.querySelectorAll('#th-cat-filter .ef').forEach(function(p){p.classList.remove('on');});el.classList.add('on');thCatFilter=el.dataset.c;renderThoughts();}
+function setThEmoFilter(el){document.querySelectorAll('#th-emo-filter .ef').forEach(function(p){p.classList.remove('on');});el.classList.add('on');thEmoFilter=el.dataset.e;renderThoughts();}
+async function addThought(){
+  var heading=document.getElementById('th-heading').value.trim(),text=document.getElementById('th-text').value.trim();
+  if(!heading&&!text){showToast('Add a heading or description first.','error');return;}
+  var now=new Date(),thId=String(Date.now());
+  var th={id:Date.now(),timestamp:Date.now(),sheetId:thId,dateISO:isoDate(now),date:now.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}),heading:heading,text:text,url:document.getElementById('th-url').value.trim(),category:selThCategory,emotion:selThEmotion};
+  thoughts.unshift(th);saveThoughts();updateThBadge();
+  document.getElementById('th-heading').value='';document.getElementById('th-text').value='';document.getElementById('th-url').value='';selThCategory='';selThEmotion='';
   document.querySelectorAll('#th-cat-pills .thp, #th-emo-pills .thp').forEach(function(p){p.classList.remove('on');});
-  document.getElementById('th-sync').textContent='Syncing...'; document.getElementById('th-sync').className='sync-txt syncing';
+  document.getElementById('th-sync').textContent='Syncing...';document.getElementById('th-sync').className='sync-txt syncing';
   var ok=await postToSheet({sheet:'Thoughts',sheetId:thId,date:th.date,dateISO:th.dateISO,heading:th.heading,text:th.text,url:th.url,category:th.category,emotion:th.emotion});
   document.getElementById('th-sync').textContent=ok?'Synced to Sheet \u2713':'Saved locally (Sheet unreachable)';
   document.getElementById('th-sync').className='sync-txt '+(ok?'ok':'err');
-  showToast(ok?'Thought saved \u2713':'Saved locally — sync failed.',ok?'success':'error');
+  showToast(ok?'Thought saved \u2713':'Saved locally -- sync failed.',ok?'success':'error');
   renderThoughts();
 }
-
-/* Convert • - * prefixed lines to HTML bullets */
-function renderBullets(text) {
-  if (!text) return '';
-  var ls=text.split('\n'), html='', inList=false;
-  ls.forEach(function(line) {
-    var tr=line.trim();
-    var bullet=tr.length>0&&(tr[0]==='\u2022'||tr[0]==='-'||tr[0]==='*');
-    if (bullet) {
-      if(!inList){html+='<ul class="th-bullets">';inList=true;}
-      html+='<li>'+escH(tr.slice(1).trim())+'</li>';
-    } else {
-      if(inList){html+='</ul>';inList=false;}
-      if(tr) html+='<p class="th-para">'+escH(tr)+'</p>';
-    }
-  });
-  if(inList) html+='</ul>';
-  return html;
-}
-
-var CAT_ICONS={mindset:'🧠',emotion:'❤️',focus:'🎯',discipline:'⚡',relationships:'🤝',philosophy:'📖',business:'💼',life:'🌱'};
-var EMO_ICONS={inspired:'✨',calm:'🧘',motivated:'🔥',grateful:'🙏',reflective:'🪞',challenged:'💪'};
-
-function thoughtCardHTML(t) {
+function renderBullets(text){if(!text)return '';var ls=text.split('\n'),html='',inList=false;ls.forEach(function(line){var tr=line.trim(),bullet=tr.length>0&&(tr[0]==='\u2022'||tr[0]==='-'||tr[0]==='*');if(bullet){if(!inList){html+='<ul class="th-bullets">';inList=true;}html+='<li>'+escH(tr.slice(1).trim())+'</li>';}else{if(inList){html+='</ul>';inList=false;}if(tr)html+='<p class="th-para">'+escH(tr)+'</p>';}});if(inList)html+='</ul>';return html;}
+function thoughtCardHTML(t){
   var catBadge=t.category?'<span class="th-cat-badge">'+(CAT_ICONS[t.category]||'')+' '+t.category+'</span>':'';
-  var emoBadge=t.emotion?'<span class="th-emo-badge">'+(EMO_ICONS[t.emotion]||'')+' '+t.emotion+'</span>':'';
-  var urlHtml='';
-  if(t.url){
-    var isUrl=t.url.startsWith('http');
-    urlHtml=isUrl?'<a class="th-url" href="'+escH(t.url)+'" target="_blank" rel="noopener">🔗 '+escH(t.url)+'</a>':'<span class="th-url" style="cursor:default;color:var(--text-2)">📚 '+escH(t.url)+'</span>';
-  }
+  var emoBadge=t.emotion?'<span class="th-emo-badge">'+(TH_EMO_ICONS[t.emotion]||'')+' '+t.emotion+'</span>':'';
+  var urlHtml=t.url?(t.url.startsWith('http')?'<a class="th-url" href="'+escH(t.url)+'" target="_blank" rel="noopener">&#128279; '+escH(t.url)+'</a>':'<span class="th-url" style="cursor:default;color:var(--text-2)">&#128218; '+escH(t.url)+'</span>'):'';
   var bodyHtml=renderBullets(t.text||'');
-  return '<div class="th-card">'+
-    (t.heading?'<div class="th-card-heading">'+escH(t.heading)+'</div>':'')+
-    (bodyHtml?'<div class="th-card-body">'+bodyHtml+'</div>':'')+
-    '<div class="th-card-meta">'+catBadge+emoBadge+'<span class="th-date">'+t.date+'</span></div>'+
-    (urlHtml?'<div style="margin-top:6px">'+urlHtml+'</div>':'')+
-    '<div class="th-card-foot">' +
-    '<button class="del-btn" onclick="delThought('+t.id+')">🗑 Delete</button>' +
-    '<button class="btn" style="font-size:11px;padding:4px 12px" onclick="editThought('+t.id+')">✏ Edit</button>' +
-    '</div>'+
-  '</div>';
+  return '<div class="th-card">'+(t.heading?'<div class="th-card-heading">'+escH(t.heading)+'</div>':'')+(bodyHtml?'<div class="th-card-body">'+bodyHtml+'</div>':'')+'<div class="th-card-meta">'+catBadge+emoBadge+'<span class="th-date">'+t.date+'</span></div>'+(urlHtml?'<div style="margin-top:6px">'+urlHtml+'</div>':'')+'<div class="th-card-foot"><button class="del-btn" onclick="delThought('+t.id+')">&#128465; Delete</button><button class="btn" style="font-size:11px;padding:4px 12px" onclick="editThought('+t.id+')">\u270f Edit</button></div></div>';
 }
-
-function renderThoughts() {
-  var search=(document.getElementById('th-search').value||'').toLowerCase().trim();
-  var sort=document.getElementById('th-sort').value;
+function renderThoughts(){
+  var search=(document.getElementById('th-search').value||'').toLowerCase().trim(),sort=document.getElementById('th-sort').value;
   var list=thoughts.slice();
-  if(thCatFilter!=='all') list=list.filter(function(t){return t.category===thCatFilter;});
-  if(thEmoFilter!=='all') list=list.filter(function(t){return t.emotion===thEmoFilter;});
-  if(search) list=list.filter(function(t){return((t.heading||'')+t.text+(t.url||'')+t.category+t.emotion).toLowerCase().includes(search);});
-  if(sort==='oldest') list.sort(function(a,b){return a.timestamp-b.timestamp;});
-  else list.sort(function(a,b){return b.timestamp-a.timestamp;});
+  if(thCatFilter!=='all')list=list.filter(function(t){return t.category===thCatFilter;});
+  if(thEmoFilter!=='all')list=list.filter(function(t){return t.emotion===thEmoFilter;});
+  if(search)list=list.filter(function(t){return((t.heading||'')+t.text+(t.url||'')+t.category+t.emotion).toLowerCase().includes(search);});
+  if(sort==='oldest')list.sort(function(a,b){return a.timestamp-b.timestamp;});else list.sort(function(a,b){return b.timestamp-a.timestamp;});
   document.getElementById('th-meta').textContent=list.length+' of '+thoughts.length+' thought'+(thoughts.length!==1?'s':'');
   var log=document.getElementById('th-log');
-  if(!list.length){
-    log.innerHTML='<div class="sit-empty"><div style="font-size:28px;margin-bottom:10px">💡</div>'+(thoughts.length===0?'No thoughts yet.<br>Add the first insight that moved you.':'No matches for the current filter.')+'</div>';
-    return;
-  }
+  if(!list.length){log.innerHTML='<div class="sit-empty"><div style="font-size:28px;margin-bottom:10px">&#128161;</div>'+(thoughts.length===0?'No thoughts yet.<br>Add the first insight that moved you.':'No matches for the current filter.')+'</div>';return;}
   log.innerHTML=list.map(thoughtCardHTML).join('');
 }
+function delThought(id){if(!confirm('Delete this thought?'))return;thoughts=thoughts.filter(function(t){return t.id!==id;});saveThoughts();updateThBadge();renderThoughts();showToast('Deleted.','');}
+function exportThoughtsCSV(){if(!thoughts.length){showToast('Nothing to export.','error');return;}var h=['Date','Heading','Description','URL','Category','Emotion'];var rows=thoughts.map(function(t){return[t.date,t.heading||'',t.text||'',t.url||'',t.category||'',t.emotion||''].map(function(v){return'"'+String(v).replace(/"/g,'""')+'"';}).join(',');});var a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent([h.join(',')].concat(rows).join('\n'));a.download='thoughts-'+isoToday()+'.csv';a.click();showToast('CSV exported \u2713','success');}
+function fetchAllThoughts(){return new Promise(function(resolve){try{fetch(WORKER_URL+'?action=getAllThoughts').then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&d.status==='ok'&&Array.isArray(d.thoughts))replaceThoughtsFromSheet(d.thoughts);resolve();}).catch(function(){resolve();});}catch(e){resolve();}});}
+function replaceThoughtsFromSheet(s){var fromSheet=s.map(function(x,i){return{id:x.sheetId?parseInt(x.sheetId,10):Date.now()+i,timestamp:x.dateISO?new Date(x.dateISO).getTime():Date.now(),dateISO:x.dateISO||'',date:x.date||'',heading:x.heading||'',text:x.text||'',url:x.url||'',category:x.category||'',emotion:x.emotion||'',sheetId:x.sheetId||''};});var sheetIds={};s.forEach(function(x){if(x.sheetId)sheetIds[x.sheetId]=true;});var pending=thoughts.filter(function(t){return t.sheetId&&!sheetIds[t.sheetId];});thoughts=fromSheet.concat(pending);thoughts.sort(function(a,b){return b.timestamp-a.timestamp;});saveThoughts();updateThBadge();if(document.getElementById('pg-thoughts').classList.contains('on'))renderThoughts();}
 
-function delThought(id) {
-  if(!confirm('Delete this thought?')) return;
-  thoughts=thoughts.filter(function(t){return t.id!==id;}); saveThoughts(); updateThBadge(); renderThoughts();
-  showToast('Deleted.','');
+/* POSTS */
+function loadPosts(){try{var r=localStorage.getItem('morning_posts');if(r)posts=JSON.parse(r);}catch(e){posts=[];}}
+function savePosts(){localStorage.setItem('morning_posts',JSON.stringify(posts));}
+function updatePostBadge(){document.getElementById('post-badge').textContent=posts.length;}
+function selPostSrc(src){selPostSource=(selPostSource===src)?'':src;['li','ig','ot'].forEach(function(s){var el=document.getElementById('src-'+s);if(el)el.className='src-pill';});if(selPostSource){var el=document.getElementById('src-'+selPostSource.substring(0,2));if(el)el.className='src-pill on-'+selPostSource.substring(0,2);}}
+function selPostEmo(el){document.querySelectorAll('.pep').forEach(function(p){p.classList.remove('on');});selPostEmotion=(selPostEmotion===el.dataset.val)?'':el.dataset.val;if(selPostEmotion)el.classList.add('on');}
+function setPostSrcFilter(el){document.querySelectorAll('.post-src-filter-bar .pef').forEach(function(p){p.classList.remove('on');});el.classList.add('on');postSrcFilter=el.dataset.ps;renderPosts();}
+function setPostEmoFilter(el){document.querySelectorAll('.pef-bar .pef').forEach(function(p){p.classList.remove('on');});el.classList.add('on');postEmoFilter=el.dataset.pe;renderPosts();}
+async function addPost(){
+  var heading=document.getElementById('post-heading').value.trim(),desc=document.getElementById('post-desc').value.trim();
+  if(!heading&&!desc){showToast('Add a heading or description first.','error');return;}
+  var now=new Date(),pid=String(Date.now());
+  var post={id:Date.now(),timestamp:Date.now(),sheetId:pid,dateISO:isoDate(now),date:now.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}),heading:heading,desc:desc,source:selPostSource,url:document.getElementById('post-url').value.trim(),emotion:selPostEmotion};
+  posts.unshift(post);savePosts();updatePostBadge();
+  document.getElementById('post-heading').value='';document.getElementById('post-desc').value='';document.getElementById('post-url').value='';selPostSource='';selPostEmotion='';
+  ['li','ig','ot'].forEach(function(s){var el=document.getElementById('src-'+s);if(el)el.className='src-pill';});
+  document.querySelectorAll('.pep').forEach(function(p){p.classList.remove('on');});
+  var syncEl=document.getElementById('post-sync');syncEl.textContent='Syncing...';syncEl.className='sync-txt syncing';
+  var ok=await postToSheet({sheet:'Posts',sheetId:pid,date:post.date,dateISO:post.dateISO,heading:post.heading,desc:post.desc,source:post.source,url:post.url,emotion:post.emotion});
+  syncEl.textContent=ok?'Synced to Sheet \u2713':'Saved locally (Sheet unreachable)';syncEl.className='sync-txt '+(ok?'ok':'err');
+  showToast(ok?'Post saved \u2713':'Saved locally -- sync failed.',ok?'success':'error');renderPosts();
 }
-function exportThoughtsCSV() {
-  if(!thoughts.length){showToast('Nothing to export.','error');return;}
-  var h=['Date','Heading','Description','URL','Category','Emotion'];
-  var rows=thoughts.map(function(t){return[t.date,t.heading||'',t.text||'',t.url||'',t.category||'',t.emotion||''].map(function(v){return'"'+String(v).replace(/"/g,'""')+'"';}).join(',');});
-  var a=document.createElement('a');
-  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent([h.join(',')].concat(rows).join('\n'));
-  a.download='thoughts-'+isoToday()+'.csv'; a.click(); showToast('CSV exported \u2713','success');
+function postCardHTML(p){
+  var sc=p.source==='linkedin'?'li':p.source==='instagram'?'ig':'ot';
+  var srcBadge=p.source?'<span class="post-src-badge post-src-'+sc+'">'+(POST_SRC_ICONS[p.source]||'')+' '+(POST_SRC_LABELS[p.source]||p.source)+'</span>':'';
+  var emoBadge=p.emotion?'<span class="post-emo-badge">'+(POST_EMO_ICONS[p.emotion]||'')+' '+p.emotion+'</span>':'';
+  var bodyHtml=renderBullets(p.desc||'');
+  var urlHtml=p.url?'<a class="post-url" href="'+escH(p.url)+'" target="_blank" rel="noopener">&#128279; '+escH(p.url)+'</a>':'';
+  return '<div class="post-card">'+(p.heading?'<div class="post-card-heading">'+escH(p.heading)+'</div>':'')+(bodyHtml?'<div style="margin-bottom:.5rem">'+bodyHtml+'</div>':'')+'<div class="post-card-meta">'+srcBadge+emoBadge+'<span class="post-date">'+p.date+'</span></div>'+(urlHtml?urlHtml:'')+'<div class="post-card-foot"><button class="del-btn" onclick="delPost('+p.id+')">&#128465; Delete</button><button class="btn" style="font-size:11px;padding:4px 12px" onclick="editPost('+p.id+')">\u270f Edit</button></div></div>';
 }
-function fetchAllThoughts() {
-  return new Promise(function(resolve){
-    try{
-      fetch(WORKER_URL+'?action=getAllThoughts')
-        .then(function(resp){return resp.ok?resp.json():null;})
-        .then(function(data){
-          if(data&&data.status==='ok'&&Array.isArray(data.thoughts)){
-            replaceThoughtsFromSheet(data.thoughts);
-          }
-          resolve();
-        })
-        .catch(function(){resolve();});
-    }catch(e){resolve();}
-  });
+function renderPosts(){
+  var search=(document.getElementById('post-search').value||'').toLowerCase().trim(),sort=document.getElementById('post-sort').value;
+  var list=posts.slice();
+  if(postSrcFilter!=='all')list=list.filter(function(p){return p.source===postSrcFilter;});
+  if(postEmoFilter!=='all')list=list.filter(function(p){return p.emotion===postEmoFilter;});
+  if(search)list=list.filter(function(p){return((p.heading||'')+p.desc+(p.url||'')+p.source+p.emotion).toLowerCase().includes(search);});
+  if(sort==='oldest')list.sort(function(a,b){return a.timestamp-b.timestamp;});else list.sort(function(a,b){return b.timestamp-a.timestamp;});
+  document.getElementById('post-meta').textContent=list.length+' of '+posts.length+' post'+(posts.length!==1?'s':'');
+  var log=document.getElementById('post-log');
+  if(!list.length){log.innerHTML='<div class="sit-empty"><div style="font-size:28px;margin-bottom:10px">&#128204;</div>'+(posts.length===0?'No posts saved yet.<br>Save the first post that inspired you.':'No matches for the current filter.')+'</div>';return;}
+  log.innerHTML=list.map(postCardHTML).join('');
 }
+function delPost(id){if(!confirm('Delete this post?'))return;posts=posts.filter(function(p){return p.id!==id;});savePosts();updatePostBadge();renderPosts();showToast('Deleted.','');}
+function exportPostsCSV(){if(!posts.length){showToast('Nothing to export.','error');return;}var h=['Date','Heading','Description','Source','URL','Emotion'];var rows=posts.map(function(p){return[p.date,p.heading||'',p.desc||'',p.source||'',p.url||'',p.emotion||''].map(function(v){return'"'+String(v).replace(/"/g,'""')+'"';}).join(',');});var a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent([h.join(',')].concat(rows).join('\n'));a.download='posts-'+isoToday()+'.csv';a.click();showToast('CSV exported \u2713','success');}
+function fetchAllPosts(){return new Promise(function(resolve){try{fetch(WORKER_URL+'?action=getAllPosts').then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&d.status==='ok'&&Array.isArray(d.posts))replacePostsFromSheet(d.posts);resolve();}).catch(function(){resolve();});}catch(e){resolve();}});}
+function replacePostsFromSheet(s){var fromSheet=s.map(function(x,i){return{id:x.sheetId?parseInt(x.sheetId,10):Date.now()+i,timestamp:x.dateISO?new Date(x.dateISO).getTime():Date.now(),dateISO:x.dateISO||'',date:x.date||'',heading:x.heading||'',desc:x.desc||'',source:x.source||'',url:x.url||'',emotion:x.emotion||'',sheetId:x.sheetId||''};});var sheetIds={};s.forEach(function(x){if(x.sheetId)sheetIds[x.sheetId]=true;});var pending=posts.filter(function(p){return p.sheetId&&!sheetIds[p.sheetId];});posts=fromSheet.concat(pending);posts.sort(function(a,b){return b.timestamp-a.timestamp;});savePosts();updatePostBadge();if(document.getElementById('pg-posts').classList.contains('on'))renderPosts();}
 
-/* Sheet is the single source of truth for thoughts.
-   Replace local array entirely from Sheet data.
-   Only keep any locally-pending items (id > last sheet timestamp) not yet synced. */
-function replaceThoughtsFromSheet(sheetThoughts) {
-  // Convert Sheet rows to local objects
-  var fromSheet = sheetThoughts.map(function(s, i){
-    return {
-      id:        s.sheetId ? parseInt(s.sheetId,10) : (Date.now() + i),
-      timestamp: s.dateISO ? new Date(s.dateISO).getTime() : Date.now(),
-      dateISO:   s.dateISO   || '',
-      date:      s.date      || '',
-      heading:   s.heading   || '',
-      text:      s.text      || '',
-      url:       s.url       || '',
-      category:  s.category  || '',
-      emotion:   s.emotion   || '',
-      sheetId:   s.sheetId   || '',
-    };
-  });
+/* EDIT MODAL */
+var _editCtx=null;
+function openEditModal(title,bodyHTML,ctx){_editCtx=ctx;document.getElementById('modal-title').textContent=title;document.getElementById('modal-body').innerHTML=bodyHTML;document.getElementById('edit-modal').style.display='block';document.body.style.overflow='hidden';}
+function closeEditModal(){document.getElementById('edit-modal').style.display='none';document.body.style.overflow='';_editCtx=null;}
+document.getElementById('edit-modal').addEventListener('click',function(e){if(e.target===this)closeEditModal();});
 
-  // Keep any locally-added thoughts that haven't synced yet
-  // (i.e. they have a sheetId that isn't in the Sheet response)
-  var sheetIds = {};
-  sheetThoughts.forEach(function(s){ if(s.sheetId) sheetIds[s.sheetId]=true; });
-  var pendingLocal = thoughts.filter(function(t){
-    return t.sheetId && !sheetIds[t.sheetId];
-  });
-
-  thoughts = fromSheet.concat(pendingLocal);
-  thoughts.sort(function(a,b){return b.timestamp-a.timestamp;});
-  saveThoughts();
-  updateThBadge();
-  if(document.getElementById('pg-thoughts').classList.contains('on')) renderThoughts();
-}
-
-/* ══════════════════════════════════════════
-   EDIT MODAL — shared by Situations + Thoughts
-══════════════════════════════════════════ */
-var _editCtx = null; // { type: 'situation'|'thought', id: Number }
-
-function openEditModal(title, bodyHTML, ctx) {
-  _editCtx = ctx;
-  document.getElementById('modal-title').textContent = title;
-  document.getElementById('modal-body').innerHTML = bodyHTML;
-  document.getElementById('edit-modal').style.display = 'block';
-  document.body.style.overflow = 'hidden';
-}
-function closeEditModal() {
-  document.getElementById('edit-modal').style.display = 'none';
-  document.body.style.overflow = '';
-  _editCtx = null;
+function editSituation(id){
+  var sit=situations.find(function(s){return s.id===id;});if(!sit)return;
+  var emoOptions=['anger','anxiety','frustration','hurt','shame','overwhelm','fear','jealousy'];
+  var emoEmojis={anger:'&#128548;',anxiety:'&#128560;',frustration:'&#128547;',hurt:'&#128148;',shame:'&#128532;',overwhelm:'&#127754;',fear:'&#128552;',jealousy:'&#128065;'};
+  var emoPills=emoOptions.map(function(e){return '<button class="ep'+(sit.emotion===e?' on':'')+'" data-val="'+e+'" onclick="this.parentNode.querySelectorAll(\'.ep\').forEach(function(x){x.classList.remove(\'on\')});this.classList.add(\'on\')">'+emoEmojis[e]+' '+e+'</button>';}).join('');
+  var html='<div style="margin-bottom:10px"><label class="sfl">What happened?</label><textarea class="sin" id="edit-sit-title" rows="2">'+escH(sit.title)+'</textarea></div>'+
+    '<div class="sit-flds" style="margin-bottom:10px"><div><label class="sfl">What triggered me?</label><textarea class="sin" id="edit-sit-trigger" rows="3">'+escH(sit.trigger||'')+'</textarea></div><div><label class="sfl">How did I respond?</label><textarea class="sin" id="edit-sit-reaction" rows="3">'+escH(sit.reaction||'')+'</textarea></div></div>'+
+    '<label class="sfl">Dominant emotion</label><div class="epills" id="edit-emo-pills" style="margin-bottom:10px">'+emoPills+'</div>'+
+    '<label class="sfl">Strategy / better response</label><textarea class="sin" id="edit-sit-strategy" rows="3" placeholder="What will you do differently next time...">'+escH(sit.strategy||'')+'</textarea>';
+  openEditModal('Edit situation',html,{type:'situation',id:id});
 }
 
-/* ── Edit Situation ── */
-function editSituation(id) {
-  var sit = situations.find(function(s){ return s.id === id; });
-  if (!sit) return;
-  var emoOptions = ['anger','anxiety','frustration','hurt','shame','overwhelm','fear','jealousy'];
-  var emoEmojis  = {anger:'😤',anxiety:'😰',frustration:'😣',hurt:'💔',shame:'😔',overwhelm:'🌊',fear:'😨',jealousy:'👁'};
-  var emoPills = emoOptions.map(function(e){
-    return '<button class="ep'+(sit.emotion===e?' on':'')+'" data-val="'+e+'" onclick="this.parentNode.querySelectorAll(\'.ep\').forEach(function(x){x.classList.remove(\'on\')});this.classList.add(\'on\')">'+emoEmojis[e]+' '+e+'</button>';
-  }).join('');
-  var html =
-    '<div style="margin-bottom:10px"><label class="sfl">What happened?</label>' +
-    '<textarea class="sin" id="edit-sit-title" rows="2">'+escH(sit.title)+'</textarea></div>' +
-    '<div class="sit-flds" style="margin-bottom:10px">' +
-    '<div><label class="sfl">What triggered me?</label><textarea class="sin" id="edit-sit-trigger" rows="3">'+escH(sit.trigger||'')+'</textarea></div>' +
-    '<div><label class="sfl">How did I respond?</label><textarea class="sin" id="edit-sit-reaction" rows="3">'+escH(sit.reaction||'')+'</textarea></div>' +
-    '</div>' +
-    '<label class="sfl">Dominant emotion</label>' +
-    '<div class="epills" id="edit-emo-pills" style="margin-bottom:10px">'+emoPills+'</div>' +
-    '<label class="sfl">Strategy / better response</label>' +
-    '<textarea class="sin" id="edit-sit-strategy" rows="3" placeholder="What will you do differently next time...">'+escH(sit.strategy||'')+'</textarea>';
-  openEditModal('Edit situation', html, { type:'situation', id:id });
+function editThought(id){
+  var th=thoughts.find(function(t){return t.id===id;});if(!th)return;
+  var catOptions=['mindset','emotion','focus','discipline','relationships','philosophy','business','life'];
+  var catIcons={mindset:'&#129504;',emotion:'&#10084;&#65039;',focus:'&#127919;',discipline:'&#9889;',relationships:'&#129306;',philosophy:'&#128214;',business:'&#128188;',life:'&#127807;'};
+  var emoOptions=['inspired','calm','motivated','grateful','reflective','challenged'];
+  var emoIcons={inspired:'&#10024;',calm:'&#129528;',motivated:'&#128293;',grateful:'&#128591;',reflective:'&#129710;',challenged:'&#128170;'};
+  var catPills=catOptions.map(function(c){return '<button class="thp'+(th.category===c?' on':'')+'" data-val="'+c+'" onclick="this.parentNode.querySelectorAll(\'.thp\').forEach(function(x){x.classList.remove(\'on\')});this.classList.add(\'on\')">'+(catIcons[c]||'')+' '+c+'</button>';}).join('');
+  var emoPills=emoOptions.map(function(e){return '<button class="thp'+(th.emotion===e?' on':'')+'" data-val="'+e+'" onclick="this.parentNode.querySelectorAll(\'.thp\').forEach(function(x){x.classList.remove(\'on\')});this.classList.add(\'on\')">'+(emoIcons[e]||'')+' '+e+'</button>';}).join('');
+  var html='<div style="margin-bottom:10px"><label class="sfl">Heading</label><input class="sin" id="edit-th-heading" type="text" value="'+escH(th.heading||'')+'"></div>'+
+    '<div style="margin-bottom:10px"><label class="sfl">Description (&#8226; or - for bullets)</label><textarea class="sin" id="edit-th-text" rows="6">'+escH(th.text||'')+'</textarea></div>'+
+    '<div style="margin-bottom:10px"><label class="sfl">Source or URL</label><input class="sin" id="edit-th-url" type="text" value="'+escH(th.url||'')+'"></div>'+
+    '<label class="sfl">Category</label><div class="th-cat-pills" id="edit-cat-pills" style="margin-bottom:10px">'+catPills+'</div>'+
+    '<label class="sfl">Emotion</label><div class="th-emo-pills" id="edit-emo-pills">'+emoPills+'</div>';
+  openEditModal('Edit thought',html,{type:'thought',id:id});
 }
 
-/* ── Edit Thought ── */
-function editThought(id) {
-  var th = thoughts.find(function(t){ return t.id === id; });
-  if (!th) return;
-  var catOptions = ['mindset','emotion','focus','discipline','relationships','philosophy','business','life'];
-  var catIcons = {mindset:'🧠',emotion:'❤️',focus:'🎯',discipline:'⚡',relationships:'🤝',philosophy:'📖',business:'💼',life:'🌱'};
-  var emoOptions = ['inspired','calm','motivated','grateful','reflective','challenged'];
-  var emoIcons = {inspired:'✨',calm:'🧘',motivated:'🔥',grateful:'🙏',reflective:'🪞',challenged:'💪'};
-  var catPills = catOptions.map(function(c){
-    return '<button class="thp'+(th.category===c?' on':'')+'" data-val="'+c+'" onclick="this.parentNode.querySelectorAll(\'.thp\').forEach(function(x){x.classList.remove(\'on\')});this.classList.add(\'on\')">'+catIcons[c]+' '+c+'</button>';
-  }).join('');
-  var emoPills = emoOptions.map(function(e){
-    return '<button class="thp'+(th.emotion===e?' on':'')+'" data-val="'+e+'" onclick="this.parentNode.querySelectorAll(\'.thp\').forEach(function(x){x.classList.remove(\'on\')});this.classList.add(\'on\')">'+emoIcons[e]+' '+e+'</button>';
-  }).join('');
-  var html =
-    '<div style="margin-bottom:10px"><label class="sfl">Heading / title</label>' +
-    '<input class="sin" id="edit-th-heading" type="text" value="'+escH(th.heading||'')+'"></div>' +
-    '<div style="margin-bottom:10px"><label class="sfl">Description / key points (• or - for bullets)</label>' +
-    '<textarea class="sin" id="edit-th-text" rows="6">'+escH(th.text||'')+'</textarea></div>' +
-    '<div style="margin-bottom:10px"><label class="sfl">Source or URL</label>' +
-    '<input class="sin" id="edit-th-url" type="text" value="'+escH(th.url||'')+'"></div>' +
-    '<label class="sfl">Category</label>' +
-    '<div class="th-cat-pills" id="edit-cat-pills" style="margin-bottom:10px">'+catPills+'</div>' +
-    '<label class="sfl">Emotion</label>' +
-    '<div class="th-emo-pills" id="edit-emo-pills">'+emoPills+'</div>';
-  openEditModal('Edit thought', html, { type:'thought', id:id });
+function editPost(id){
+  var p=posts.find(function(x){return x.id===id;});if(!p)return;
+  var srcOpts=[['linkedin','&#128188; LinkedIn'],['instagram','&#128248; Instagram'],['other','&#127760; Other']];
+  var emoOpts=['inspired','motivated','calm','grateful','reflective','challenged','joyful'];
+  var srcPills=srcOpts.map(function(s){var a=p.source===s[0];return '<button class="src-pill'+(a?' on-'+s[0].substring(0,2):'')+'" data-src="'+s[0]+'" onclick="this.parentNode.querySelectorAll(\'.src-pill\').forEach(function(b){b.className=\'src-pill\'});this.className=\'src-pill on-\'+this.dataset.src.substring(0,2)">'+s[1]+'</button>';}).join('');
+  var emoPills=emoOpts.map(function(e){return '<button class="pep'+(p.emotion===e?' on':'')+'" data-val="'+e+'" onclick="this.parentNode.querySelectorAll(\'.pep\').forEach(function(x){x.classList.remove(\'on\')});this.classList.add(\'on\')">'+(POST_EMO_ICONS[e]||'')+' '+e+'</button>';}).join('');
+  var html='<div style="margin-bottom:10px"><label class="sfl">Heading</label><input class="sin" id="edit-post-heading" type="text" value="'+escH(p.heading||'')+'"></div>'+
+    '<div style="margin-bottom:10px"><label class="sfl">Description</label><textarea class="sin" id="edit-post-desc" rows="5">'+escH(p.desc||'')+'</textarea></div>'+
+    '<div style="margin-bottom:10px"><label class="sfl">Source</label><div class="src-pills" id="edit-src-pills">'+srcPills+'</div></div>'+
+    '<div style="margin-bottom:10px"><label class="sfl">URL</label><input class="sin" id="edit-post-url" type="text" value="'+escH(p.url||'')+'"></div>'+
+    '<label class="sfl">Emotion</label><div class="pemo-pills" id="edit-post-emo-pills">'+emoPills+'</div>';
+  openEditModal('Edit post',html,{type:'post',id:id});
 }
 
-/* ── Save from modal ── */
-async function saveEditModal() {
-  if (!_editCtx) return;
-  var btn = document.getElementById('modal-save-btn');
-  btn.textContent = 'Saving...'; btn.disabled = true;
-
-  if (_editCtx.type === 'situation') {
-    var sit = situations.find(function(s){ return s.id === _editCtx.id; });
-    if (!sit) { closeEditModal(); return; }
-    sit.title    = document.getElementById('edit-sit-title').value.trim();
-    sit.trigger  = document.getElementById('edit-sit-trigger').value.trim();
-    sit.reaction = document.getElementById('edit-sit-reaction').value.trim();
-    sit.strategy = document.getElementById('edit-sit-strategy').value.trim();
-    var selEmoEl = document.querySelector('#edit-emo-pills .ep.on');
-    sit.emotion = selEmoEl ? selEmoEl.dataset.val : sit.emotion;
-    saveSits();
-    var ok = await postToSheet({
-      sheet:'Situations', action:'edit_situation',
-      dateISO:sit.dateISO, title:sit.title,
-      trigger:sit.trigger, reaction:sit.reaction,
-      emotion:sit.emotion, strategy:sit.strategy,
-    });
-    closeEditModal();
-    renderStats(); renderPast();
-    showToast(ok ? 'Situation updated ✓' : 'Updated locally — Sheet sync pending.', ok ? 'success' : '');
-
-  } else if (_editCtx.type === 'thought') {
-    var th = thoughts.find(function(t){ return t.id === _editCtx.id; });
-    if (!th) { closeEditModal(); return; }
-    th.heading = document.getElementById('edit-th-heading').value.trim();
-    th.text    = document.getElementById('edit-th-text').value.trim();
-    th.url     = document.getElementById('edit-th-url').value.trim();
-    var selCatEl = document.querySelector('#edit-cat-pills .thp.on');
-    var selEmoEl2 = document.querySelector('#edit-emo-pills .thp.on');
-    th.category = selCatEl ? selCatEl.dataset.val : th.category;
-    th.emotion  = selEmoEl2 ? selEmoEl2.dataset.val : th.emotion;
-    saveThoughts();
-    var ok2 = await postToSheet({
-      sheet:'Thoughts', action:'edit_thought',
-      sheetId:th.sheetId||'', dateISO:th.dateISO,
-      heading:th.heading, text:th.text, url:th.url,
-      category:th.category, emotion:th.emotion,
-    });
-    closeEditModal();
-    renderThoughts();
-    showToast(ok2 ? 'Thought updated ✓' : 'Updated locally — Sheet sync pending.', ok2 ? 'success' : '');
+async function saveEditModal(){
+  if(!_editCtx)return;
+  var btn=document.getElementById('modal-save-btn');btn.textContent='Saving...';btn.disabled=true;
+  if(_editCtx.type==='situation'){
+    var sit=situations.find(function(s){return s.id===_editCtx.id;});if(!sit){closeEditModal();return;}
+    sit.title=document.getElementById('edit-sit-title').value.trim();sit.trigger=document.getElementById('edit-sit-trigger').value.trim();sit.reaction=document.getElementById('edit-sit-reaction').value.trim();sit.strategy=document.getElementById('edit-sit-strategy').value.trim();
+    var selEmoEl=document.querySelector('#edit-emo-pills .ep.on');sit.emotion=selEmoEl?selEmoEl.dataset.val:sit.emotion;saveSits();
+    var ok=await postToSheet({sheet:'Situations',action:'edit_situation',dateISO:sit.dateISO,title:sit.title,trigger:sit.trigger,reaction:sit.reaction,emotion:sit.emotion,strategy:sit.strategy});
+    closeEditModal();renderStats();renderPast();showToast(ok?'Situation updated \u2713':'Updated locally -- Sheet sync pending.',ok?'success':'');
+  }else if(_editCtx.type==='thought'){
+    var th=thoughts.find(function(t){return t.id===_editCtx.id;});if(!th){closeEditModal();return;}
+    th.heading=document.getElementById('edit-th-heading').value.trim();th.text=document.getElementById('edit-th-text').value.trim();th.url=document.getElementById('edit-th-url').value.trim();
+    var selCatEl=document.querySelector('#edit-cat-pills .thp.on'),selEmoEl2=document.querySelector('#edit-emo-pills .thp.on');th.category=selCatEl?selCatEl.dataset.val:th.category;th.emotion=selEmoEl2?selEmoEl2.dataset.val:th.emotion;saveThoughts();
+    var ok2=await postToSheet({sheet:'Thoughts',action:'edit_thought',sheetId:th.sheetId||'',dateISO:th.dateISO,heading:th.heading,text:th.text,url:th.url,category:th.category,emotion:th.emotion});
+    closeEditModal();renderThoughts();showToast(ok2?'Thought updated \u2713':'Updated locally -- Sheet sync pending.',ok2?'success':'');
+  }else if(_editCtx.type==='post'){
+    var p=posts.find(function(x){return x.id===_editCtx.id;});if(!p){closeEditModal();return;}
+    p.heading=document.getElementById('edit-post-heading').value.trim();p.desc=document.getElementById('edit-post-desc').value.trim();p.url=document.getElementById('edit-post-url').value.trim();
+    var selSrcEl=document.querySelector('#edit-src-pills .src-pill[class*="on-"]'),selEmoEl3=document.querySelector('#edit-post-emo-pills .pep.on');p.source=selSrcEl?selSrcEl.dataset.src:p.source;p.emotion=selEmoEl3?selEmoEl3.dataset.val:p.emotion;savePosts();
+    var ok3=await postToSheet({sheet:'Posts',action:'edit_post',sheetId:p.sheetId||'',dateISO:p.dateISO,heading:p.heading,desc:p.desc,source:p.source,url:p.url,emotion:p.emotion});
+    closeEditModal();renderPosts();showToast(ok3?'Post updated \u2713':'Updated locally -- Sheet sync pending.',ok3?'success':'');
   }
-
-  btn.textContent = 'Save changes ↗'; btn.disabled = false;
+  btn.textContent='Save changes \u2197';btn.disabled=false;
 }
-
-/* Close modal on backdrop click */
-document.getElementById('edit-modal').addEventListener('click', function(e){
-  if (e.target === this) closeEditModal();
-});
 
 /* START */
 init();
-setInterval(function(){
-  document.getElementById('time-now').textContent=new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true});
-},60000);
-
+setInterval(function(){document.getElementById('time-now').textContent=new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true});},60000);
 </script>
 </body>
 </html>
