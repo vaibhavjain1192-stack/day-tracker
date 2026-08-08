@@ -24,14 +24,17 @@
   --tr:0.16s ease
 }
 html{font-size:15px}
-body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:1.55;min-height:100vh;-webkit-font-smoothing:antialiased}
-.nav{position:sticky;top:0;z-index:40;background:rgba(15,17,23,0.95);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);padding:0 1.25rem}
-.nav-inner{max-width:860px;margin:0 auto;display:flex;align-items:center;overflow-x:auto}
-.tab{padding:.7rem 1rem;font-size:12px;font-weight:500;font-family:var(--fb);color:var(--text-3);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;transition:color var(--tr),border-color var(--tr);display:flex;align-items:center;gap:5px;margin-bottom:-1px;white-space:nowrap;flex-shrink:0}
+body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:1.55;min-height:100vh;-webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%;touch-action:pan-y}
+.nav{position:fixed;bottom:0;left:0;right:0;z-index:100;background:rgba(15,17,23,0.97);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-top:1px solid var(--border);padding:0;padding-bottom:env(safe-area-inset-bottom)}
+.nav-inner{display:flex;align-items:stretch;width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.nav-inner::-webkit-scrollbar{display:none}
+.tab{flex:1;min-width:60px;padding:.55rem .25rem .45rem;font-size:9px;font-weight:500;font-family:var(--fb);color:var(--text-3);background:none;border:none;border-top:2px solid transparent;cursor:pointer;transition:color var(--tr),border-color var(--tr);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;white-space:nowrap;flex-shrink:0;line-height:1.2}
+.tab-icon{font-size:18px;line-height:1;display:block}
+.tab-label{font-size:9px;display:block}
 .tab:hover{color:var(--text-2)}
-.tab.on{color:var(--text-1);border-bottom-color:var(--gold)}
+.tab.on{color:var(--gold);border-top-color:var(--gold)}
 .badge{font-size:10px;font-family:var(--fm);background:var(--rose-dim);color:var(--rose);border:1px solid rgba(224,123,123,0.22);border-radius:20px;padding:1px 5px;min-width:18px;text-align:center}
-.pg{max-width:860px;margin:0 auto;padding:1.5rem 1.25rem 3rem;display:none}
+.pg{max-width:860px;margin:0 auto;padding:1rem 1rem 6rem;display:none}
 .pg.on{display:block}
 .hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1rem;gap:1rem}
 .eyebrow{font-family:var(--fm);font-size:10px;color:var(--gold);letter-spacing:0.13em;text-transform:uppercase;margin-bottom:4px}
@@ -245,13 +248,34 @@ body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:
 .q-skel-md{width:100%;height:28px;margin-top:4px}
 .q-loading-note{font-size:11px;color:var(--text-3);margin-top:10px;text-align:center}
 @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+/* MOTIVATION PAGE */
+.mot-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:1rem;transition:all var(--tr);position:relative}
+.mot-card:hover{border-color:var(--border-md)}
+.mot-card.pinned{border-color:rgba(201,168,76,0.4);background:var(--gold-glow)}
+.mot-card-cat{font-size:9px;font-family:var(--fm);text-transform:uppercase;letter-spacing:0.12em;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.mot-cat-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.mot-card-text{font-size:13px;color:var(--text-1);line-height:1.7;white-space:pre-line}
+.mot-card-foot{display:flex;justify-content:space-between;align-items:center;margin-top:.625rem;padding-top:.5rem;border-top:1px solid var(--border)}
+.mot-pin-btn{font-size:10px;background:none;border:none;cursor:pointer;color:var(--text-3);font-family:var(--fb);padding:3px 6px;border-radius:var(--rsm);transition:color var(--tr)}
+.mot-pin-btn:hover{color:var(--gold)}
+.mot-pin-btn.pinned{color:var(--gold);font-weight:600}
+.mot-log{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+@media(max-width:580px){.mot-log{grid-template-columns:1fr}}
+.mot-cat-pills{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px}
+.mcp{padding:3px 11px;font-size:11px;border-radius:20px;border:1px solid var(--border-md);color:var(--text-2);background:transparent;cursor:pointer;transition:all var(--tr);font-family:var(--fb)}
+.mcp:hover{background:var(--surface);color:var(--text-1)}
+.mcp.on{border-color:var(--border-md)}
+.mot-filter-bar{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:1rem}
+.mf{padding:4px 11px;font-size:11px;border-radius:20px;border:1px solid var(--border);color:var(--text-3);background:transparent;cursor:pointer;font-family:var(--fb);transition:all var(--tr)}
+.mf:hover{color:var(--text-1);border-color:var(--border-md)}
+.mf.on{color:var(--text-1);border-color:var(--border-md);background:var(--surface)}
 /* TOAST */
-.toast{position:fixed;bottom:1.25rem;right:1.25rem;background:#1E2333;border:1px solid var(--border-md);border-radius:var(--r);padding:10px 16px;font-size:12px;color:var(--text-1);box-shadow:0 6px 24px rgba(0,0,0,0.4);opacity:0;transform:translateY(6px);transition:all 0.22s ease;pointer-events:none;z-index:100;max-width:280px}
+.toast{position:fixed;bottom:5.5rem;right:1rem;background:#1E2333;border:1px solid var(--border-md);border-radius:var(--r);padding:10px 16px;font-size:12px;color:var(--text-1);box-shadow:0 6px 24px rgba(0,0,0,0.4);opacity:0;transform:translateY(6px);transition:all 0.22s ease;pointer-events:none;z-index:100;max-width:280px}
 .toast.show{opacity:1;transform:translateY(0)}
 .toast.success{border-color:rgba(107,191,142,0.32)}
 .toast.error{border-color:rgba(224,123,123,0.32)}
 hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
-@media(max-width:580px){
+@media(max-width:640px){
   .sit-flds,.th-add-grid{grid-template-columns:1fr!important}
   .past-stats{grid-template-columns:repeat(2,1fr)!important}
   .hdr{flex-wrap:wrap}
@@ -260,6 +284,19 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
   .pillar{width:calc(50% - 3px)}
   .pillar-detail{width:100%}
   .int-row{grid-template-columns:1fr}
+  .mot-log{grid-template-columns:1fr!important}
+  .df-row{flex-wrap:wrap}
+  .tb{flex-wrap:wrap}
+  .th-filter-bar{flex-wrap:wrap}
+  .goals-card-head{flex-wrap:wrap;gap:4px}
+  .q-actions{flex-wrap:wrap;justify-content:flex-end}
+  .sit-foot,.th-add-foot,.mot-card-foot,.post-card-foot,.th-card-foot,.sc-foot{flex-wrap:wrap;gap:6px}
+  .past-title{font-size:1.25rem}
+  .greeting{font-size:1.5rem}
+  .daynum{font-size:2rem}
+  .psearch{min-width:100%}
+  .src-pills{flex-wrap:wrap}
+  .ef-bar,.pef-bar,.post-src-filter-bar,.mot-filter-bar{flex-wrap:wrap}
 }
 </style>
 </head>
@@ -268,11 +305,12 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
 
 <nav class="nav">
   <div class="nav-inner">
-    <button class="tab on" onclick="switchTab('morning')">&#9728; Morning</button>
-    <button class="tab" onclick="switchTab('situations')">&#128250; Situations <span class="badge" id="sit-badge">0</span></button>
-    <button class="tab" onclick="switchTab('thoughts')">&#128161; Thoughts <span class="badge" id="th-badge">0</span></button>
-    <button class="tab" onclick="switchTab('posts')">&#128204; Posts <span class="badge" id="post-badge">0</span></button>
-    <button class="tab" onclick="switchTab('habits')">&#127775; Habits <span class="badge" id="hab-badge">0</span></button>
+    <button class="tab on" onclick="switchTab('morning')"><span class="tab-icon">&#9728;&#65039;</span><span class="tab-label">Morning</span></button>
+    <button class="tab" onclick="switchTab('situations')"><span class="tab-icon">&#128250;</span><span class="tab-label">Situations <span class="badge" id="sit-badge">0</span></span></button>
+    <button class="tab" onclick="switchTab('thoughts')"><span class="tab-icon">&#128161;</span><span class="tab-label">Thoughts <span class="badge" id="th-badge">0</span></span></button>
+    <button class="tab" onclick="switchTab('posts')"><span class="tab-icon">&#128204;</span><span class="tab-label">Posts <span class="badge" id="post-badge">0</span></span></button>
+    <button class="tab" onclick="switchTab('habits')"><span class="tab-icon">&#127775;</span><span class="tab-label">Habits <span class="badge" id="hab-badge">0</span></span></button>
+    <button class="tab" onclick="switchTab('motivation')"><span class="tab-icon">&#128293;</span><span class="tab-label">Motivation</span></button>
   </div>
 </nav>
 
@@ -585,6 +623,65 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
   </div>
 </div><!-- /pg-habits -->
 
+<!-- TAB 6: MOTIVATION -->
+<div class="pg" id="pg-motivation">
+  <div class="past-hdr">
+    <div class="past-title">Morning Motivation</div>
+    <div class="past-sub">Your personal reading list for every morning — habits, practices and principles to live by.</div>
+  </div>
+
+  <!-- Category filter -->
+  <div class="mot-filter-bar" id="mot-cat-filter">
+    <button class="mf on" data-mc="all" onclick="setMotCatFilter(this)">All</button>
+    <button class="mf" data-mc="habit" onclick="setMotCatFilter(this)">&#127775; Habit</button>
+    <button class="mf" data-mc="practice" onclick="setMotCatFilter(this)">&#129490; Practice</button>
+    <button class="mf" data-mc="principle" onclick="setMotCatFilter(this)">&#128214; Principle</button>
+    <button class="mf" data-mc="mantra" onclick="setMotCatFilter(this)">&#128591; Mantra</button>
+    <button class="mf" data-mc="reminder" onclick="setMotCatFilter(this)">&#128276; Reminder</button>
+  </div>
+
+  <!-- Search + sort -->
+  <div class="th-filter-bar" style="margin-bottom:1rem">
+    <input class="psearch" id="mot-search" type="text" placeholder="Search..." oninput="renderMotivation()" style="flex:1">
+    <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-2);cursor:pointer">
+      <input type="checkbox" id="mot-pinned-only" onchange="renderMotivation()">
+      &#128204; Pinned only
+    </label>
+    <button class="btn" onclick="exportMotCSV()">Export CSV</button>
+  </div>
+
+  <div class="pmeta" id="mot-meta"></div>
+  <div class="mot-log" id="mot-log"></div>
+
+  <!-- Add new entry -->
+  <div class="lbl" style="margin-top:1.5rem">Add an entry <span class="lbl-line"></span></div>
+  <div class="sit-block" style="background:var(--card);border:1px solid var(--border);border-radius:var(--rlg);padding:1rem">
+    <div style="margin-bottom:10px">
+      <label class="sfl">Category</label>
+      <div class="mot-cat-pills">
+        <button class="mcp" onclick="selMotCat(this)" data-val="habit" style="--mc:#C9A84C">&#127775; Habit</button>
+        <button class="mcp" onclick="selMotCat(this)" data-val="practice" style="--mc:#4ECDC4">&#129490; Practice</button>
+        <button class="mcp" onclick="selMotCat(this)" data-val="principle" style="--mc:#6BBF8E">&#128214; Principle</button>
+        <button class="mcp" onclick="selMotCat(this)" data-val="mantra" style="--mc:#E07B7B">&#128591; Mantra</button>
+        <button class="mcp" onclick="selMotCat(this)" data-val="reminder" style="--mc:#9A97A0">&#128276; Reminder</button>
+      </div>
+    </div>
+    <div style="margin-bottom:10px">
+      <label class="sfl">Habit / practice / principle</label>
+      <textarea class="sin" id="mot-text" rows="4" placeholder="e.g. Every morning before I touch my phone, I sit for 5 minutes in silence. No input. Just presence. This one habit sets the tone for the entire day.&#10;&#10;Or: I will not compete with others. I compete only with who I was yesterday."></textarea>
+    </div>
+    <div class="sit-foot">
+      <span class="sync-txt" id="mot-sync">Ready to add</span>
+      <button class="btn gold" onclick="addMotEntry()">Add to morning read &#8599;</button>
+    </div>
+  </div>
+
+  <div class="foot" style="margin-top:1.5rem">
+    <span class="foot-note">Stored locally · read every morning</span>
+    <button class="btn" onclick="switchTab('morning')">&#8592; Morning</button>
+  </div>
+</div><!-- /pg-motivation -->
+
 <!-- EDIT MODAL -->
 <div id="edit-modal" style="display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);overflow-y:auto;padding:2rem 1rem">
   <div style="max-width:620px;margin:0 auto;background:var(--card);border:1px solid var(--border-md);border-radius:var(--rlg);overflow:hidden">
@@ -668,12 +765,13 @@ function switchTab(tab){
   document.querySelectorAll('.pg').forEach(function(p){p.classList.remove('on');});
   document.querySelectorAll('.tab').forEach(function(b){b.classList.remove('on');});
   document.getElementById('pg-'+tab).classList.add('on');
-  var idx=tab==='morning'?0:tab==='situations'?1:tab==='thoughts'?2:tab==='posts'?3:4;
+  var idx=tab==='morning'?0:tab==='situations'?1:tab==='thoughts'?2:tab==='posts'?3:tab==='habits'?4:5;
   document.querySelectorAll('.tab')[idx].classList.add('on');
   if(tab==='situations'){renderStats();renderPast();}
   if(tab==='thoughts')renderThoughts();
   if(tab==='posts')renderPosts();
   if(tab==='habits')renderHabits();
+  if(tab==='motivation')renderMotivation();
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
@@ -697,6 +795,7 @@ function init(){
     loadThoughts();updateThBadge();
     loadPosts();updatePostBadge();
     loadHabits();updateHabBadge();
+    loadMotivation();
   }catch(e){console.error('Local:',e);}
   setIntentionsState('loading');
   Promise.all([fetchFromSheet(),fetchAllSituations(),fetchAllThoughts(),fetchAllPosts(),fetchAllHabits()])
@@ -992,6 +1091,13 @@ async function saveEditModal(){
     saveHabits();
     var ok4=await postToSheet({sheet:'Habits',action:'edit_habit',sheetId:h.sheetId||'',dateISO:h.dateISO,emotion:h.emotion,text:h.text});
     closeEditModal();renderHabits();showToast(ok4?'Habit updated ✓':'Updated locally -- Sheet sync pending.',ok4?'success':'');
+  }else if(_editCtx.type==='motivation'){
+    var e=motEntries.find(function(x){return x.id===_editCtx.id;}); if(!e){closeEditModal();return;}
+    var selCatEl=document.querySelector('#edit-mot-cat-pills .mcp.on');
+    if(selCatEl) e.category=selCatEl.dataset.val;
+    e.text=document.getElementById('edit-mot-text').value.trim();
+    saveMotivation(); closeEditModal(); renderMotivation();
+    showToast('Entry updated ✓','success');
   }
   btn.textContent='Save changes ↗';btn.disabled=false;
 }
@@ -1080,6 +1186,131 @@ function replaceHabitsFromSheet(s){
   var pending=habits.filter(function(h){return h.sheetId&&!sheetIds[h.sheetId];});
   habits=fromSheet.concat(pending);habits.sort(function(a,b){return b.timestamp-a.timestamp;});
   saveHabits();updateHabBadge();if(document.getElementById('pg-habits').classList.contains('on'))renderHabits();
+}
+
+/* MOTIVATION */
+var motEntries = [];
+var selMotCategory = '';
+var motCatFilter = 'all';
+
+var MOT_CAT_COLORS = {habit:'#C9A84C', practice:'#4ECDC4', principle:'#6BBF8E', mantra:'#E07B7B', reminder:'#9A97A0'};
+var MOT_CAT_ICONS  = {habit:'&#127775;', practice:'&#129490;', principle:'&#128214;', mantra:'&#128591;', reminder:'&#128276;'};
+
+function loadMotivation(){try{var r=localStorage.getItem('morning_motivation');if(r)motEntries=JSON.parse(r);}catch(e){motEntries=[];}}
+function saveMotivation(){localStorage.setItem('morning_motivation',JSON.stringify(motEntries));}
+
+function selMotCat(el){
+  document.querySelectorAll('.mot-cat-pills .mcp').forEach(function(p){
+    p.classList.remove('on'); p.style.background=''; p.style.borderColor=''; p.style.color='';
+  });
+  selMotCategory=(selMotCategory===el.dataset.val)?'':el.dataset.val;
+  if(selMotCategory){
+    el.classList.add('on');
+    var col=MOT_CAT_COLORS[selMotCategory]||'var(--gold)';
+    el.style.background=col+'22'; el.style.borderColor=col+'88'; el.style.color=col;
+  }
+}
+
+function setMotCatFilter(el){
+  document.querySelectorAll('#mot-cat-filter .mf').forEach(function(p){p.classList.remove('on');});
+  el.classList.add('on'); motCatFilter=el.dataset.mc; renderMotivation();
+}
+
+function addMotEntry(){
+  var text=document.getElementById('mot-text').value.trim();
+  if(!text){showToast('Write your habit, practice or principle first.','error');return;}
+  if(!selMotCategory){showToast('Pick a category first.','error');return;}
+  var e={id:Date.now(),timestamp:Date.now(),category:selMotCategory,text:text,pinned:false};
+  motEntries.unshift(e); saveMotivation();
+  document.getElementById('mot-text').value=''; selMotCategory='';
+  document.querySelectorAll('.mot-cat-pills .mcp').forEach(function(p){p.classList.remove('on');p.style.background='';p.style.borderColor='';p.style.color='';});
+  document.getElementById('mot-sync').textContent='Added ✓'; document.getElementById('mot-sync').className='sync-txt ok';
+  showToast('Added to your morning read ✓','success'); renderMotivation();
+}
+
+function togglePin(id){
+  var e=motEntries.find(function(x){return x.id===id;}); if(!e)return;
+  e.pinned=!e.pinned; saveMotivation(); renderMotivation();
+}
+
+function motCardHTML(e){
+  var col=MOT_CAT_COLORS[e.category]||'#9A97A0';
+  var icon=MOT_CAT_ICONS[e.category]||'';
+  var catLabel=e.category?e.category.charAt(0).toUpperCase()+e.category.slice(1):'';
+  return '<div class="mot-card'+(e.pinned?' pinned':'')+'">'+
+    '<div class="mot-card-cat"><div class="mot-cat-dot" style="background:'+col+'"></div>'+
+    '<span style="color:'+col+'">'+icon+' '+catLabel+'</span>'+
+    (e.pinned?'<span style="margin-left:auto;font-size:10px;color:var(--gold)">&#128204; pinned</span>':'')+'</div>'+
+    '<div class="mot-card-text">'+escH(e.text)+'</div>'+
+    '<div class="mot-card-foot">'+
+      '<button class="del-btn" onclick="delMotEntry('+e.id+')">&#128465; Delete</button>'+
+      '<div style="display:flex;gap:6px">'+
+        '<button class="mot-pin-btn'+(e.pinned?' pinned':'')+'" onclick="togglePin('+e.id+')">'+(e.pinned?'&#128204; Unpin':'&#128204; Pin for top')+'</button>'+
+        '<button class="btn" style="font-size:11px;padding:4px 12px" onclick="editMotEntry('+e.id+')">✏ Edit</button>'+
+      '</div>'+
+    '</div>'+
+  '</div>';
+}
+
+function renderMotivation(){
+  var search=(document.getElementById('mot-search').value||'').toLowerCase().trim();
+  var pinnedOnly=document.getElementById('mot-pinned-only').checked;
+  var list=motEntries.slice();
+  if(motCatFilter!=='all') list=list.filter(function(e){return e.category===motCatFilter;});
+  if(pinnedOnly) list=list.filter(function(e){return e.pinned;});
+  if(search) list=list.filter(function(e){return(e.text+e.category).toLowerCase().includes(search);});
+  // Pinned always float to top
+  list.sort(function(a,b){
+    if(a.pinned&&!b.pinned)return -1; if(!a.pinned&&b.pinned)return 1;
+    return b.timestamp-a.timestamp;
+  });
+  document.getElementById('mot-meta').textContent=list.length+' of '+motEntries.length+' entr'+(motEntries.length!==1?'ies':'y');
+  var log=document.getElementById('mot-log');
+  if(!list.length){
+    log.innerHTML='<div class="sit-empty" style="grid-column:1/-1"><div style="font-size:28px;margin-bottom:10px">&#128293;</div>'+
+      (motEntries.length===0?'Nothing here yet.<br>Add the first habit or principle you want to read every morning.':'No matches for the current filter.')+'</div>';
+    return;
+  }
+  log.innerHTML=list.map(motCardHTML).join('');
+}
+
+function delMotEntry(id){
+  if(!confirm('Delete this entry?'))return;
+  motEntries=motEntries.filter(function(e){return e.id!==id;}); saveMotivation(); renderMotivation();
+  showToast('Deleted.','');
+}
+
+function pickMotCat(el){
+  document.querySelectorAll('#edit-mot-cat-pills .mcp').forEach(function(b){b.classList.remove('on');b.style.background='';b.style.borderColor='';b.style.color='';});
+  el.classList.add('on');
+  var col=MOT_CAT_COLORS[el.dataset.val]||'#9A97A0';
+  el.style.background=col+'22'; el.style.borderColor=col+'88'; el.style.color=col;
+}
+
+function editMotEntry(id){
+  var e=motEntries.find(function(x){return x.id===id;}); if(!e)return;
+  var catOpts=['habit','practice','principle','mantra','reminder'];
+  var catPills=catOpts.map(function(c){
+    var col=MOT_CAT_COLORS[c]||'#9A97A0';
+    var icon=MOT_CAT_ICONS[c]||'';
+    var active=e.category===c;
+    var st=active?('background:'+col+'22;border-color:'+col+'88;color:'+col):'';
+    return '<button class="mcp'+(active?' on':'')+'" data-val="'+c+'" style="'+st+'" onclick="pickMotCat(this)">'+icon+' '+c+'</button>';
+  }).join('');
+  var html='<div style="margin-bottom:10px"><label class="sfl">Category</label>'+
+    '<div class="mot-cat-pills" id="edit-mot-cat-pills">'+catPills+'</div></div>'+
+    '<div><label class="sfl">Habit / practice / principle</label>'+
+    '<textarea class="sin" id="edit-mot-text" rows="6">'+escH(e.text)+'</textarea></div>';
+  openEditModal('Edit entry',html,{type:'motivation',id:id});
+}
+
+function exportMotCSV(){
+  if(!motEntries.length){showToast('Nothing to export.','error');return;}
+  var h=['Category','Pinned','Entry'];
+  var rows=motEntries.map(function(e){return[e.category||'',e.pinned?'yes':'no',e.text||''].map(function(v){return'"'+String(v).replace(/"/g,'""')+'"';}).join(',');});
+  var a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent([h.join(',')].concat(rows).join('\n'));
+  a.download='morning-motivation.csv'; a.click(); showToast('CSV exported ✓','success');
 }
 
 /* START */
