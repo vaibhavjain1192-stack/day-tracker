@@ -677,7 +677,7 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
   </div>
 
   <div class="foot" style="margin-top:1.5rem">
-    <span class="foot-note">Stored locally · read every morning</span>
+    <span class="foot-note">Stored locally · synced to Google Sheets</span>
     <button class="btn" onclick="switchTab('morning')">&#8592; Morning</button>
   </div>
 </div><!-- /pg-motivation -->
@@ -798,7 +798,7 @@ function init(){
     loadMotivation();
   }catch(e){console.error('Local:',e);}
   setIntentionsState('loading');
-  Promise.all([fetchFromSheet(),fetchAllSituations(),fetchAllThoughts(),fetchAllPosts(),fetchAllHabits()])
+  Promise.all([fetchFromSheet(),fetchAllSituations(),fetchAllThoughts(),fetchAllPosts(),fetchAllHabits(),fetchAllMotivation()])
     .then(function(res){
       var d=res[0];
       if(d&&d.morning&&(d.morning.priority||d.morning.emotional_intention||d.morning.gratitude)){
@@ -1216,21 +1216,31 @@ function setMotCatFilter(el){
   el.classList.add('on'); motCatFilter=el.dataset.mc; renderMotivation();
 }
 
-function addMotEntry(){
+async function addMotEntry(){
   var text=document.getElementById('mot-text').value.trim();
   if(!text){showToast('Write your habit, practice or principle first.','error');return;}
   if(!selMotCategory){showToast('Pick a category first.','error');return;}
-  var e={id:Date.now(),timestamp:Date.now(),category:selMotCategory,text:text,pinned:false};
+  var now=new Date(), mid=String(Date.now());
+  var e={id:Date.now(),timestamp:Date.now(),sheetId:mid,
+    dateISO:isoDate(now),date:now.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}),
+    category:selMotCategory,text:text,pinned:false};
   motEntries.unshift(e); saveMotivation();
   document.getElementById('mot-text').value=''; selMotCategory='';
   document.querySelectorAll('.mot-cat-pills .mcp').forEach(function(p){p.classList.remove('on');p.style.background='';p.style.borderColor='';p.style.color='';});
-  document.getElementById('mot-sync').textContent='Added ✓'; document.getElementById('mot-sync').className='sync-txt ok';
-  showToast('Added to your morning read ✓','success'); renderMotivation();
+  var syncEl=document.getElementById('mot-sync');
+  syncEl.textContent='Syncing…'; syncEl.className='sync-txt syncing';
+  var ok=await postToSheet({sheet:'Motivation',sheetId:mid,date:e.date,dateISO:e.dateISO,category:e.category,text:e.text,pinned:'no'});
+  syncEl.textContent=ok?'Synced to Sheet ✓':'Saved locally (Sheet unreachable)';
+  syncEl.className='sync-txt '+(ok?'ok':'err');
+  showToast(ok?'Added to morning read ✓':'Saved locally — sync failed.',ok?'success':'error');
+  renderMotivation();
 }
 
-function togglePin(id){
+async function togglePin(id){
   var e=motEntries.find(function(x){return x.id===id;}); if(!e)return;
   e.pinned=!e.pinned; saveMotivation(); renderMotivation();
+  await postToSheet({sheet:'Motivation',action:'edit_motivation',
+    sheetId:e.sheetId||'',category:e.category,text:e.text,pinned:e.pinned?'yes':'no'});
 }
 
 function motCardHTML(e){
@@ -1274,9 +1284,11 @@ function renderMotivation(){
   log.innerHTML=list.map(motCardHTML).join('');
 }
 
-function delMotEntry(id){
+async function delMotEntry(id){
   if(!confirm('Delete this entry?'))return;
-  motEntries=motEntries.filter(function(e){return e.id!==id;}); saveMotivation(); renderMotivation();
+  var e=motEntries.find(function(x){return x.id===id;});
+  motEntries=motEntries.filter(function(x){return x.id!==id;}); saveMotivation(); renderMotivation();
+  if(e&&e.sheetId) await postToSheet({sheet:'Motivation',action:'delete_motivation',sheetId:e.sheetId||''});
   showToast('Deleted.','');
 }
 
@@ -1302,6 +1314,32 @@ function editMotEntry(id){
     '<div><label class="sfl">Habit / practice / principle</label>'+
     '<textarea class="sin" id="edit-mot-text" rows="6">'+escH(e.text)+'</textarea></div>';
   openEditModal('Edit entry',html,{type:'motivation',id:id});
+}
+
+function fetchAllMotivation(){
+  return new Promise(function(resolve){
+    try{
+      fetch(WORKER_URL+'?action=getAllMotivation').then(function(r){return r.ok?r.json():null;})
+        .then(function(d){if(d&&d.status==='ok'&&Array.isArray(d.motivation))replaceMotivationFromSheet(d.motivation);resolve();})
+        .catch(function(){resolve();});
+    }catch(e){resolve();}
+  });
+}
+
+function replaceMotivationFromSheet(s){
+  var fromSheet=s.map(function(x,i){
+    return{id:x.sheetId?parseInt(x.sheetId,10):Date.now()+i,
+      timestamp:x.dateISO?new Date(x.dateISO).getTime():Date.now(),
+      dateISO:x.dateISO||'',date:x.date||'',
+      sheetId:x.sheetId||'',category:x.category||'',
+      text:x.text||'',pinned:x.pinned==='yes'};
+  });
+  var sheetIds={};s.forEach(function(x){if(x.sheetId)sheetIds[x.sheetId]=true;});
+  var pending=motEntries.filter(function(e){return e.sheetId&&!sheetIds[e.sheetId];});
+  motEntries=fromSheet.concat(pending);
+  motEntries.sort(function(a,b){if(a.pinned&&!b.pinned)return -1;if(!a.pinned&&b.pinned)return 1;return b.timestamp-a.timestamp;});
+  saveMotivation();
+  if(document.getElementById('pg-motivation').classList.contains('on'))renderMotivation();
 }
 
 function exportMotCSV(){
