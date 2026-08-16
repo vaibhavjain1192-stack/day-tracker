@@ -26,11 +26,10 @@
 html{font-size:15px}
 body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:1.55;min-height:100vh;-webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%;touch-action:pan-y}
 .nav{position:fixed;bottom:0;left:0;right:0;z-index:100;background:rgba(15,17,23,0.97);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-top:1px solid var(--border);padding:0;padding-bottom:env(safe-area-inset-bottom)}
-.nav-inner{display:flex;align-items:stretch;width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
-.nav-inner::-webkit-scrollbar{display:none}
-.tab{flex:1;min-width:60px;padding:.55rem .25rem .45rem;font-size:9px;font-weight:500;font-family:var(--fb);color:var(--text-3);background:none;border:none;border-top:2px solid transparent;cursor:pointer;transition:color var(--tr),border-color var(--tr);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;white-space:nowrap;flex-shrink:0;line-height:1.2}
-.tab-icon{font-size:18px;line-height:1;display:block}
-.tab-label{font-size:9px;display:block}
+.nav-inner{display:flex;align-items:stretch;width:100%}
+.tab{flex:1;min-width:0;padding:.5rem .1rem .4rem;font-size:8px;font-weight:500;font-family:var(--fb);color:var(--text-3);background:none;border:none;border-top:2px solid transparent;cursor:pointer;transition:color var(--tr),border-color var(--tr);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;line-height:1.1;overflow:hidden}
+.tab-icon{font-size:16px;line-height:1;display:block;flex-shrink:0}
+.tab-label{font-size:7.5px;display:block;width:100%;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 1px}
 .tab:hover{color:var(--text-2)}
 .tab.on{color:var(--gold);border-top-color:var(--gold)}
 .badge{font-size:10px;font-family:var(--fm);background:var(--rose-dim);color:var(--rose);border:1px solid rgba(224,123,123,0.22);border-radius:20px;padding:1px 5px;min-width:18px;text-align:center}
@@ -292,6 +291,11 @@ body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:
 .toast.success{border-color:rgba(107,191,142,0.32)}
 .toast.error{border-color:rgba(224,123,123,0.32)}
 hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
+@media(max-width:400px){
+  .tab-label{display:none}
+  .tab{padding:.6rem .1rem}
+  .tab-icon{font-size:20px}
+}
 @media(max-width:640px){
   .sit-flds,.th-add-grid{grid-template-columns:1fr!important}
   .past-stats{grid-template-columns:repeat(2,1fr)!important}
