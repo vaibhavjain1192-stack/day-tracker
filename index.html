@@ -877,25 +877,35 @@ function init(){
     document.getElementById('mantra-text').textContent='\u201C'+m.text+'\u201D';
     document.getElementById('mantra-source').textContent=m.src;
   }catch(e){console.error('Header:',e);}
+  // Only load checklist state from localStorage (not synced to Sheet)
   try{
     var stored=getTodayStored();
     if(stored.checked)Object.assign(checked,stored.checked);
     renderChecklist();updateStreak();
-    loadSituations();updateBadge();
-    loadThoughts();updateThBadge();
-    loadPosts();updatePostBadge();
-    loadHabits();updateHabBadge();
-    loadMotivation();
-    loadGratitude();
   }catch(e){console.error('Local:',e);}
+
+  // Clear all in-memory arrays — Sheet is always the source of truth
+  situations=[]; thoughts=[]; posts=[]; habits=[]; motEntries=[]; gratEntries=[];
+  updateBadge(); updateThBadge(); updatePostBadge(); updateHabBadge();
+
+  // Show shimmer/loading state on morning intentions
   setIntentionsState('loading');
-  Promise.all([fetchFromSheet(),fetchAllSituations(),fetchAllThoughts(),fetchAllPosts(),fetchAllHabits(),fetchAllMotivation(),fetchAllGratitude()])
-    .then(function(res){
-      var d=res[0];
-      if(d&&d.morning&&(d.morning.priority||d.morning.emotional_intention||d.morning.gratitude)){
-        showReadView(d.morning.priority||'',d.morning.emotional_intention||'',d.morning.gratitude||'');
-      }else{setIntentionsState('form');}
-    }).catch(function(){setIntentionsState('form');});
+
+  // Fetch everything from Sheet in parallel — no localStorage fallback for display
+  Promise.all([
+    fetchFromSheet(),
+    fetchAllSituations(),
+    fetchAllThoughts(),
+    fetchAllPosts(),
+    fetchAllHabits(),
+    fetchAllMotivation(),
+    fetchAllGratitude()
+  ]).then(function(res){
+    var d=res[0];
+    if(d&&d.morning&&(d.morning.priority||d.morning.emotional_intention||d.morning.gratitude)){
+      showReadView(d.morning.priority||'',d.morning.emotional_intention||'',d.morning.gratitude||'');
+    }else{setIntentionsState('form');}
+  }).catch(function(){setIntentionsState('form');});
 }
 
 function setIntentionsState(s){
@@ -987,7 +997,9 @@ function togSC(id){var c=document.getElementById('sc-'+id);if(c)c.classList.togg
 async function saveSt(id){var area=document.getElementById('str-'+id);if(!area)return;var sit=situations.find(function(s){return s.id===id;});if(!sit)return;sit.strategy=area.value.trim();saveSits();await postToSheet({sheet:'Situations',action:'update_strategy',dateISO:sit.dateISO,title:sit.title,strategy:sit.strategy});renderPast();setTimeout(function(){var c=document.getElementById('sc-'+id);if(c)c.classList.add('open');},30);showToast('Strategy saved \u2713','success');}
 function delSit(id){if(!confirm('Delete this situation?'))return;situations=situations.filter(function(s){return s.id!==id;});saveSits();updateBadge();renderStats();renderPast();showToast('Deleted.','');}
 function fetchAllSituations(){return new Promise(function(resolve){try{fetch(WORKER_URL+'?action=getAllSituations').then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&d.status==='ok'&&Array.isArray(d.situations))replaceSituationsFromSheet(d.situations);resolve();}).catch(function(){resolve();});}catch(e){resolve();}});}
-function replaceSituationsFromSheet(s){situations=s.map(function(x,i){return{id:Date.now()+i,timestamp:x.dateISO?new Date(x.dateISO).getTime():Date.now(),dateISO:x.dateISO||'',date:x.date||'',title:x.title||'',trigger:x.trigger||'',reaction:x.reaction||'',emotion:x.emotion||'',strategy:x.strategy||''};});situations.sort(function(a,b){return b.timestamp-a.timestamp;});saveSits();updateBadge();if(document.getElementById('pg-situations').classList.contains('on')){renderStats();renderPast();}}
+function replaceSituationsFromSheet(s){
+  localStorage.removeItem('morning_situations');
+  situations=s.map(function(x,i){return{id:Date.now()+i,timestamp:x.dateISO?new Date(x.dateISO).getTime():Date.now(),dateISO:x.dateISO||'',date:x.date||'',title:x.title||'',trigger:x.trigger||'',reaction:x.reaction||'',emotion:x.emotion||'',strategy:x.strategy||''};});situations.sort(function(a,b){return b.timestamp-a.timestamp;});saveSits();updateBadge();if(document.getElementById('pg-situations').classList.contains('on')){renderStats();renderPast();}}
 
 /* PAST SITUATIONS TAB */
 function renderStats(){var total=situations.length,ws=situations.filter(function(s){return s.strategy;}).length;document.getElementById('st-total').textContent=total;document.getElementById('st-strat').textContent=ws;document.getElementById('st-pend').textContent=total-ws;var freq={};situations.forEach(function(s){if(s.emotion)freq[s.emotion]=(freq[s.emotion]||0)+1;});var top=Object.entries(freq).sort(function(a,b){return b[1]-a[1];})[0];document.getElementById('st-emo').textContent=top?(EMAP[top[0]]||'')+' '+top[0]:'--';}
@@ -1056,7 +1068,9 @@ function renderThoughts(){
 function delThought(id){if(!confirm('Delete this thought?'))return;thoughts=thoughts.filter(function(t){return t.id!==id;});saveThoughts();updateThBadge();renderThoughts();showToast('Deleted.','');}
 function exportThoughtsCSV(){if(!thoughts.length){showToast('Nothing to export.','error');return;}var h=['Date','Heading','Description','URL','Category','Emotion'];var rows=thoughts.map(function(t){return[t.date,t.heading||'',t.text||'',t.url||'',t.category||'',t.emotion||''].map(function(v){return'"'+String(v).replace(/"/g,'""')+'"';}).join(',');});var a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent([h.join(',')].concat(rows).join('\n'));a.download='thoughts-'+isoToday()+'.csv';a.click();showToast('CSV exported \u2713','success');}
 function fetchAllThoughts(){return new Promise(function(resolve){try{fetch(WORKER_URL+'?action=getAllThoughts').then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&d.status==='ok'&&Array.isArray(d.thoughts))replaceThoughtsFromSheet(d.thoughts);resolve();}).catch(function(){resolve();});}catch(e){resolve();}});}
-function replaceThoughtsFromSheet(s){var fromSheet=s.map(function(x,i){return{id:x.sheetId?parseInt(x.sheetId,10):Date.now()+i,timestamp:x.dateISO?new Date(x.dateISO).getTime():Date.now(),dateISO:x.dateISO||'',date:x.date||'',heading:x.heading||'',text:x.text||'',url:x.url||'',category:x.category||'',emotion:x.emotion||'',sheetId:x.sheetId||''};});var sheetIds={};s.forEach(function(x){if(x.sheetId)sheetIds[x.sheetId]=true;});var pending=thoughts.filter(function(t){return t.sheetId&&!sheetIds[t.sheetId];});thoughts=fromSheet.concat(pending);thoughts.sort(function(a,b){return b.timestamp-a.timestamp;});saveThoughts();updateThBadge();if(document.getElementById('pg-thoughts').classList.contains('on'))renderThoughts();}
+function replaceThoughtsFromSheet(s){
+  localStorage.removeItem('morning_thoughts');
+  var fromSheet=s.map(function(x,i){return{id:x.sheetId?parseInt(x.sheetId,10):Date.now()+i,timestamp:x.dateISO?new Date(x.dateISO).getTime():Date.now(),dateISO:x.dateISO||'',date:x.date||'',heading:x.heading||'',text:x.text||'',url:x.url||'',category:x.category||'',emotion:x.emotion||'',sheetId:x.sheetId||''};});var sheetIds={};s.forEach(function(x){if(x.sheetId)sheetIds[x.sheetId]=true;});var pending=thoughts.filter(function(t){return t.sheetId&&!sheetIds[t.sheetId];});thoughts=fromSheet.concat(pending);thoughts.sort(function(a,b){return b.timestamp-a.timestamp;});saveThoughts();updateThBadge();if(document.getElementById('pg-thoughts').classList.contains('on'))renderThoughts();}
 
 /* POSTS */
 function loadPosts(){try{var r=localStorage.getItem('morning_posts');if(r)posts=JSON.parse(r);}catch(e){posts=[];}}
@@ -1103,7 +1117,9 @@ function renderPosts(){
 function delPost(id){if(!confirm('Delete this post?'))return;posts=posts.filter(function(p){return p.id!==id;});savePosts();updatePostBadge();renderPosts();showToast('Deleted.','');}
 function exportPostsCSV(){if(!posts.length){showToast('Nothing to export.','error');return;}var h=['Date','Heading','Description','Source','URL','Emotion'];var rows=posts.map(function(p){return[p.date,p.heading||'',p.desc||'',p.source||'',p.url||'',p.emotion||''].map(function(v){return'"'+String(v).replace(/"/g,'""')+'"';}).join(',');});var a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent([h.join(',')].concat(rows).join('\n'));a.download='posts-'+isoToday()+'.csv';a.click();showToast('CSV exported \u2713','success');}
 function fetchAllPosts(){return new Promise(function(resolve){try{fetch(WORKER_URL+'?action=getAllPosts').then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&d.status==='ok'&&Array.isArray(d.posts))replacePostsFromSheet(d.posts);resolve();}).catch(function(){resolve();});}catch(e){resolve();}});}
-function replacePostsFromSheet(s){var fromSheet=s.map(function(x,i){return{id:x.sheetId?parseInt(x.sheetId,10):Date.now()+i,timestamp:x.dateISO?new Date(x.dateISO).getTime():Date.now(),dateISO:x.dateISO||'',date:x.date||'',heading:x.heading||'',desc:x.desc||'',source:x.source||'',url:x.url||'',emotion:x.emotion||'',sheetId:x.sheetId||''};});var sheetIds={};s.forEach(function(x){if(x.sheetId)sheetIds[x.sheetId]=true;});var pending=posts.filter(function(p){return p.sheetId&&!sheetIds[p.sheetId];});posts=fromSheet.concat(pending);posts.sort(function(a,b){return b.timestamp-a.timestamp;});savePosts();updatePostBadge();if(document.getElementById('pg-posts').classList.contains('on'))renderPosts();}
+function replacePostsFromSheet(s){
+  localStorage.removeItem('morning_posts');
+  var fromSheet=s.map(function(x,i){return{id:x.sheetId?parseInt(x.sheetId,10):Date.now()+i,timestamp:x.dateISO?new Date(x.dateISO).getTime():Date.now(),dateISO:x.dateISO||'',date:x.date||'',heading:x.heading||'',desc:x.desc||'',source:x.source||'',url:x.url||'',emotion:x.emotion||'',sheetId:x.sheetId||''};});var sheetIds={};s.forEach(function(x){if(x.sheetId)sheetIds[x.sheetId]=true;});var pending=posts.filter(function(p){return p.sheetId&&!sheetIds[p.sheetId];});posts=fromSheet.concat(pending);posts.sort(function(a,b){return b.timestamp-a.timestamp;});savePosts();updatePostBadge();if(document.getElementById('pg-posts').classList.contains('on'))renderPosts();}
 
 /* EDIT MODAL */
 var _editCtx=null;
@@ -1285,6 +1301,7 @@ function fetchAllHabits(){
   });
 }
 function replaceHabitsFromSheet(s){
+  localStorage.removeItem('morning_habits');
   var fromSheet=s.map(function(x,i){return{id:x.sheetId?parseInt(x.sheetId,10):Date.now()+i,timestamp:x.dateISO?new Date(x.dateISO).getTime():Date.now(),dateISO:x.dateISO||'',date:x.date||'',emotion:x.emotion||'',text:x.text||'',sheetId:x.sheetId||''};});
   var sheetIds={};s.forEach(function(x){if(x.sheetId)sheetIds[x.sheetId]=true;});
   var pending=habits.filter(function(h){return h.sheetId&&!sheetIds[h.sheetId];});
@@ -1431,6 +1448,7 @@ function fetchAllMotivation(){
 }
 
 function replaceMotivationFromSheet(s){
+  localStorage.removeItem('morning_motivation');
   var fromSheet=s.map(function(x,i){
     return{id:x.sheetId?parseInt(x.sheetId,10):Date.now()+i,
       timestamp:x.dateISO?new Date(x.dateISO).getTime():Date.now(),
@@ -1598,6 +1616,7 @@ function fetchAllGratitude(){
 }
 
 function replaceGratitudeFromSheet(s){
+  localStorage.removeItem('morning_gratitude');
   var fromSheet=s.map(function(x,i){
     return{
       id:x.sheetId?parseInt(x.sheetId,10):Date.now()+i,
