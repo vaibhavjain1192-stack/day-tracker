@@ -269,6 +269,23 @@ body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:
 .mf{padding:4px 11px;font-size:11px;border-radius:20px;border:1px solid var(--border);color:var(--text-3);background:transparent;cursor:pointer;font-family:var(--fb);transition:all var(--tr)}
 .mf:hover{color:var(--text-1);border-color:var(--border-md)}
 .mf.on{color:var(--text-1);border-color:var(--border-md);background:var(--surface)}
+/* GRATITUDE */
+.grat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:1rem;transition:border-color var(--tr)}
+.grat-card:hover{border-color:var(--border-md)}
+.grat-card-date{font-size:10px;color:var(--text-3);font-family:var(--fm);margin-bottom:6px;display:flex;align-items:center;gap:8px}
+.grat-streak-dot{width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block}
+.grat-items{list-style:none;padding:0;margin:0}
+.grat-items li{display:flex;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);font-size:13px;color:var(--text-1);line-height:1.5}
+.grat-items li:last-child{border-bottom:none}
+.grat-bullet{color:var(--gold);flex-shrink:0;margin-top:1px}
+.grat-card-foot{display:flex;justify-content:space-between;align-items:center;margin-top:.625rem;padding-top:.5rem;border-top:1px solid var(--border)}
+.grat-log{display:flex;flex-direction:column;gap:8px}
+.grat-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:1rem}
+.grat-streak-block{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:10px 12px;text-align:center}
+.grat-streak-num{font-family:var(--fd);font-size:1.6rem;color:var(--green);line-height:1}
+.grat-streak-lbl{font-size:10px;color:var(--text-3);margin-top:3px}
+.grat-input-row{display:flex;gap:8px;align-items:flex-start;margin-bottom:6px}
+.grat-num{width:22px;height:22px;border-radius:50%;background:var(--gold-dim);border:1px solid rgba(201,168,76,0.3);color:var(--gold);font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:8px;font-family:var(--fm)}
 /* TOAST */
 .toast{position:fixed;bottom:5.5rem;right:1rem;background:#1E2333;border:1px solid var(--border-md);border-radius:var(--r);padding:10px 16px;font-size:12px;color:var(--text-1);box-shadow:0 6px 24px rgba(0,0,0,0.4);opacity:0;transform:translateY(6px);transition:all 0.22s ease;pointer-events:none;z-index:100;max-width:280px}
 .toast.show{opacity:1;transform:translateY(0)}
@@ -311,6 +328,7 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
     <button class="tab" onclick="switchTab('posts')"><span class="tab-icon">&#128204;</span><span class="tab-label">Posts <span class="badge" id="post-badge">0</span></span></button>
     <button class="tab" onclick="switchTab('habits')"><span class="tab-icon">&#127775;</span><span class="tab-label">Habits <span class="badge" id="hab-badge">0</span></span></button>
     <button class="tab" onclick="switchTab('motivation')"><span class="tab-icon">&#128293;</span><span class="tab-label">Motivation</span></button>
+    <button class="tab" onclick="switchTab('gratitude')"><span class="tab-icon">&#128591;</span><span class="tab-label">Gratitude</span></button>
   </div>
 </nav>
 
@@ -682,6 +700,73 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
   </div>
 </div><!-- /pg-motivation -->
 
+<!-- TAB 7: GRATITUDE -->
+<div class="pg" id="pg-gratitude">
+  <div class="past-hdr">
+    <div class="past-title">Gratitude Journal</div>
+    <div class="past-sub">Three things you are grateful for, every morning. Small habit. Big shift.</div>
+  </div>
+
+  <!-- Stats -->
+  <div class="grat-stats">
+    <div class="grat-streak-block">
+      <div class="grat-streak-num" id="grat-streak-num">0</div>
+      <div class="grat-streak-lbl">&#128293; Day streak</div>
+    </div>
+    <div class="grat-streak-block">
+      <div class="grat-streak-num" id="grat-total-num" style="color:var(--gold)">0</div>
+      <div class="grat-streak-lbl">Total entries</div>
+    </div>
+    <div class="grat-streak-block">
+      <div class="grat-streak-num" id="grat-today-status" style="font-size:1.3rem">&#8212;</div>
+      <div class="grat-streak-lbl">Today</div>
+    </div>
+  </div>
+
+  <!-- Search + filter -->
+  <div class="th-filter-bar" style="margin-bottom:1rem">
+    <input class="psearch" id="grat-search" type="text" placeholder="Search entries..." oninput="renderGratitude()" style="flex:1">
+    <select class="psort" id="grat-sort" onchange="renderGratitude()">
+      <option value="newest">Newest first</option>
+      <option value="oldest">Oldest first</option>
+    </select>
+    <button class="btn" onclick="exportGratCSV()">Export CSV</button>
+  </div>
+
+  <div class="pmeta" id="grat-meta"></div>
+  <div class="grat-log" id="grat-log"></div>
+
+  <!-- Add today's entry -->
+  <div class="lbl" style="margin-top:1.5rem">Today's gratitude <span class="lbl-line"></span></div>
+  <div class="sit-block" style="background:var(--card);border:1px solid var(--border);border-radius:var(--rlg);padding:1rem">
+    <div style="font-size:12px;color:var(--text-2);margin-bottom:10px">What are three things you are genuinely grateful for right now? Be specific.</div>
+    <div class="grat-input-row"><div class="grat-num">1</div><textarea class="sin" id="grat-1" rows="2" placeholder="e.g. My family is healthy and present in my life..."></textarea></div>
+    <div class="grat-input-row"><div class="grat-num">2</div><textarea class="sin" id="grat-2" rows="2" placeholder="e.g. I had a moment of real clarity this morning..."></textarea></div>
+    <div class="grat-input-row"><div class="grat-num">3</div><textarea class="sin" id="grat-3" rows="2" placeholder="e.g. Someone believed in me when I needed it most..."></textarea></div>
+    <div style="margin-top:8px">
+      <label class="sfl">One word for how you feel right now <span style="color:var(--text-3);font-weight:400">(optional)</span></label>
+      <div class="pemo-pills" id="grat-emo-pills">
+        <button class="pep" onclick="selGratEmo(this)" data-val="grateful">&#128591; Grateful</button>
+        <button class="pep" onclick="selGratEmo(this)" data-val="hopeful">&#127775; Hopeful</button>
+        <button class="pep" onclick="selGratEmo(this)" data-val="peaceful">&#129490; Peaceful</button>
+        <button class="pep" onclick="selGratEmo(this)" data-val="joyful">&#128516; Joyful</button>
+        <button class="pep" onclick="selGratEmo(this)" data-val="content">&#129392; Content</button>
+        <button class="pep" onclick="selGratEmo(this)" data-val="motivated">&#128293; Motivated</button>
+        <button class="pep" onclick="selGratEmo(this)" data-val="calm">&#129528; Calm</button>
+      </div>
+    </div>
+    <div class="sit-foot" style="margin-top:10px">
+      <span class="sync-txt" id="grat-sync">Ready</span>
+      <button class="btn gold" onclick="addGratitude()">Save gratitude &#8599;</button>
+    </div>
+  </div>
+
+  <div class="foot" style="margin-top:1.5rem">
+    <span class="foot-note">Synced to Google Sheets</span>
+    <button class="btn" onclick="switchTab('morning')">&#8592; Morning</button>
+  </div>
+</div><!-- /pg-gratitude -->
+
 <!-- EDIT MODAL -->
 <div id="edit-modal" style="display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);overflow-y:auto;padding:2rem 1rem">
   <div style="max-width:620px;margin:0 auto;background:var(--card);border:1px solid var(--border-md);border-radius:var(--rlg);overflow:hidden">
@@ -765,13 +850,14 @@ function switchTab(tab){
   document.querySelectorAll('.pg').forEach(function(p){p.classList.remove('on');});
   document.querySelectorAll('.tab').forEach(function(b){b.classList.remove('on');});
   document.getElementById('pg-'+tab).classList.add('on');
-  var idx=tab==='morning'?0:tab==='situations'?1:tab==='thoughts'?2:tab==='posts'?3:tab==='habits'?4:5;
+  var idx=tab==='morning'?0:tab==='situations'?1:tab==='thoughts'?2:tab==='posts'?3:tab==='habits'?4:tab==='motivation'?5:6;
   document.querySelectorAll('.tab')[idx].classList.add('on');
   if(tab==='situations'){renderStats();renderPast();}
   if(tab==='thoughts')renderThoughts();
   if(tab==='posts')renderPosts();
   if(tab==='habits')renderHabits();
   if(tab==='motivation')renderMotivation();
+  if(tab==='gratitude'){renderGratitude();updateGratStats();}
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
@@ -796,9 +882,10 @@ function init(){
     loadPosts();updatePostBadge();
     loadHabits();updateHabBadge();
     loadMotivation();
+    loadGratitude();
   }catch(e){console.error('Local:',e);}
   setIntentionsState('loading');
-  Promise.all([fetchFromSheet(),fetchAllSituations(),fetchAllThoughts(),fetchAllPosts(),fetchAllHabits(),fetchAllMotivation()])
+  Promise.all([fetchFromSheet(),fetchAllSituations(),fetchAllThoughts(),fetchAllPosts(),fetchAllHabits(),fetchAllMotivation(),fetchAllGratitude()])
     .then(function(res){
       var d=res[0];
       if(d&&d.morning&&(d.morning.priority||d.morning.emotional_intention||d.morning.gratitude)){
@@ -1098,6 +1185,19 @@ async function saveEditModal(){
     e.text=document.getElementById('edit-mot-text').value.trim();
     saveMotivation(); closeEditModal(); renderMotivation();
     showToast('Entry updated ✓','success');
+  }else if(_editCtx.type==='gratitude'){
+    var e=gratEntries.find(function(x){return x.id===_editCtx.id;}); if(!e){closeEditModal();return;}
+    var g1=document.getElementById('edit-grat-1').value.trim();
+    var g2=document.getElementById('edit-grat-2').value.trim();
+    var g3=document.getElementById('edit-grat-3').value.trim();
+    e.items=[g1,g2,g3].filter(function(x){return x.length>0;});
+    var selEmoEl=document.querySelector('#edit-grat-emo-pills .pep.on');
+    e.emotion=selEmoEl?selEmoEl.dataset.val:e.emotion;
+    saveGratitude();
+    var ok=await postToSheet({sheet:'Gratitude',action:'edit_gratitude',sheetId:e.sheetId||'',
+      dateISO:e.dateISO,item1:e.items[0]||'',item2:e.items[1]||'',item3:e.items[2]||'',emotion:e.emotion});
+    closeEditModal(); updateGratStats(); renderGratitude();
+    showToast(ok?'Entry updated ✓':'Updated locally — Sheet sync pending.',ok?'success':'');
   }
   btn.textContent='Save changes ↗';btn.disabled=false;
 }
@@ -1349,6 +1449,166 @@ function exportMotCSV(){
   var a=document.createElement('a');
   a.href='data:text/csv;charset=utf-8,'+encodeURIComponent([h.join(',')].concat(rows).join('\n'));
   a.download='morning-motivation.csv'; a.click(); showToast('CSV exported ✓','success');
+}
+
+/* GRATITUDE */
+var gratEntries = [];
+var selGratEmotion = '';
+
+function loadGratitude(){ try{var r=localStorage.getItem('morning_gratitude');if(r)gratEntries=JSON.parse(r);}catch(e){gratEntries=[];} }
+function saveGratitude(){ localStorage.setItem('morning_gratitude',JSON.stringify(gratEntries)); }
+
+function selGratEmo(el){
+  document.querySelectorAll('#grat-emo-pills .pep').forEach(function(p){p.classList.remove('on');});
+  selGratEmotion=(selGratEmotion===el.dataset.val)?'':el.dataset.val;
+  if(selGratEmotion) el.classList.add('on');
+}
+
+async function addGratitude(){
+  var g1=document.getElementById('grat-1').value.trim();
+  var g2=document.getElementById('grat-2').value.trim();
+  var g3=document.getElementById('grat-3').value.trim();
+  if(!g1&&!g2&&!g3){showToast('Write at least one thing you are grateful for.','error');return;}
+  var now=new Date(), gid=String(Date.now());
+  var entry={
+    id:Date.now(), timestamp:Date.now(), sheetId:gid,
+    dateISO:isoDate(now),
+    date:now.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}),
+    items:[g1,g2,g3].filter(function(x){return x.length>0;}),
+    emotion:selGratEmotion
+  };
+  // Remove any existing entry for today (one per day)
+  gratEntries=gratEntries.filter(function(e){return e.dateISO!==entry.dateISO;});
+  gratEntries.unshift(entry); saveGratitude();
+  // Clear form
+  ['grat-1','grat-2','grat-3'].forEach(function(id){document.getElementById(id).value='';});
+  selGratEmotion='';
+  document.querySelectorAll('#grat-emo-pills .pep').forEach(function(p){p.classList.remove('on');});
+  var syncEl=document.getElementById('grat-sync');
+  syncEl.textContent='Syncing…'; syncEl.className='sync-txt syncing';
+  var ok=await postToSheet({
+    sheet:'Gratitude', sheetId:gid,
+    date:entry.date, dateISO:entry.dateISO,
+    item1:entry.items[0]||'', item2:entry.items[1]||'', item3:entry.items[2]||'',
+    emotion:entry.emotion
+  });
+  syncEl.textContent=ok?'Synced to Sheet ✓':'Saved locally (Sheet unreachable)';
+  syncEl.className='sync-txt '+(ok?'ok':'err');
+  showToast(ok?'Gratitude saved ✓':'Saved locally — sync failed.',ok?'success':'error');
+  updateGratStats(); renderGratitude();
+}
+
+var GRAT_EMO_ICONS={grateful:'&#128591;',hopeful:'&#127775;',peaceful:'&#129490;',joyful:'&#128516;',content:'&#129392;',motivated:'&#128293;',calm:'&#129528;'};
+
+function gratCardHTML(e){
+  var emoBadge=e.emotion?'<span class="th-emo-badge">'+(GRAT_EMO_ICONS[e.emotion]||'')+' '+e.emotion+'</span>':'';
+  var items=e.items.map(function(it){return '<li><span class="grat-bullet">&#128591;</span>'+escH(it)+'</li>';}).join('');
+  return '<div class="grat-card">'+
+    '<div class="grat-card-date"><div class="grat-streak-dot"></div>'+e.date+emoBadge+'</div>'+
+    '<ul class="grat-items">'+items+'</ul>'+
+    '<div class="grat-card-foot">'+
+      '<button class="del-btn" onclick="delGratEntry('+e.id+')">&#128465; Delete</button>'+
+      '<button class="btn" style="font-size:11px;padding:4px 12px" onclick="editGratEntry('+e.id+')">✏ Edit</button>'+
+    '</div>'+
+  '</div>';
+}
+
+function renderGratitude(){
+  var search=(document.getElementById('grat-search').value||'').toLowerCase().trim();
+  var sort=document.getElementById('grat-sort').value;
+  var list=gratEntries.slice();
+  if(search) list=list.filter(function(e){return (e.items.join(' ')+e.emotion).toLowerCase().includes(search);});
+  if(sort==='oldest') list.sort(function(a,b){return a.timestamp-b.timestamp;});
+  else list.sort(function(a,b){return b.timestamp-a.timestamp;});
+  document.getElementById('grat-meta').textContent=list.length+' of '+gratEntries.length+' entr'+(gratEntries.length!==1?'ies':'y');
+  var log=document.getElementById('grat-log');
+  if(!list.length){
+    log.innerHTML='<div class="sit-empty"><div style="font-size:28px;margin-bottom:10px">&#128591;</div>'+
+      (gratEntries.length===0?'Nothing yet.<br>Add your first three things to be grateful for today.':'No matches.')+'</div>';
+    return;
+  }
+  log.innerHTML=list.map(gratCardHTML).join('');
+}
+
+function updateGratStats(){
+  var total=gratEntries.length;
+  document.getElementById('grat-total-num').textContent=total;
+  // Streak
+  var streak=0; var today=new Date();
+  for(var i=0;i<365;i++){
+    var d=new Date(today); d.setDate(today.getDate()-i);
+    var iso=isoDate(d);
+    var found=gratEntries.find(function(e){return e.dateISO===iso;});
+    if(found) streak++;
+    else if(i>0) break;
+  }
+  document.getElementById('grat-streak-num').textContent=streak;
+  var todayIso=isoToday();
+  var todayEntry=gratEntries.find(function(e){return e.dateISO===todayIso;});
+  document.getElementById('grat-today-status').textContent=todayEntry?'✓ Done':'—';
+  document.getElementById('grat-today-status').style.color=todayEntry?'var(--green)':'var(--text-3)';
+}
+
+function delGratEntry(id){
+  if(!confirm('Delete this gratitude entry?'))return;
+  var e=gratEntries.find(function(x){return x.id===id;});
+  gratEntries=gratEntries.filter(function(x){return x.id!==id;}); saveGratitude();
+  if(e&&e.sheetId) postToSheet({sheet:'Gratitude',action:'delete_gratitude',sheetId:e.sheetId||''});
+  updateGratStats(); renderGratitude(); showToast('Deleted.','');
+}
+
+function editGratEntry(id){
+  var e=gratEntries.find(function(x){return x.id===id;}); if(!e)return;
+  var emoPills=['grateful','hopeful','peaceful','joyful','content','motivated','calm'].map(function(em){
+    return '<button class="pep'+(e.emotion===em?' on':'')+'" data-val="'+em+'" onclick="this.parentNode.querySelectorAll(\'.pep\').forEach(function(x){x.classList.remove(\'on\')});this.classList.add(\'on\')">'+(GRAT_EMO_ICONS[em]||'')+' '+em+'</button>';
+  }).join('');
+  var html=
+    '<div class="grat-input-row" style="margin-bottom:6px"><div class="grat-num">1</div><textarea class="sin" id="edit-grat-1" rows="2">'+escH(e.items[0]||'')+'</textarea></div>'+
+    '<div class="grat-input-row" style="margin-bottom:6px"><div class="grat-num">2</div><textarea class="sin" id="edit-grat-2" rows="2">'+escH(e.items[1]||'')+'</textarea></div>'+
+    '<div class="grat-input-row" style="margin-bottom:10px"><div class="grat-num">3</div><textarea class="sin" id="edit-grat-3" rows="2">'+escH(e.items[2]||'')+'</textarea></div>'+
+    '<label class="sfl">Feeling</label><div class="pemo-pills" id="edit-grat-emo-pills">'+emoPills+'</div>';
+  openEditModal('Edit gratitude entry',html,{type:'gratitude',id:id});
+}
+
+function exportGratCSV(){
+  if(!gratEntries.length){showToast('Nothing to export.','error');return;}
+  var h=['Date','Grateful for 1','Grateful for 2','Grateful for 3','Emotion'];
+  var rows=gratEntries.map(function(e){
+    return[e.date,e.items[0]||'',e.items[1]||'',e.items[2]||'',e.emotion||'']
+      .map(function(v){return '"'+String(v).replace(/"/g,'""')+'"';}).join(',');
+  });
+  var a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent([h.join(',')].concat(rows).join('\n'));
+  a.download='gratitude-'+isoToday()+'.csv'; a.click();
+  showToast('CSV exported ✓','success');
+}
+
+function fetchAllGratitude(){
+  return new Promise(function(resolve){
+    try{
+      fetch(WORKER_URL+'?action=getAllGratitude').then(function(r){return r.ok?r.json():null;})
+        .then(function(d){if(d&&d.status==='ok'&&Array.isArray(d.gratitude))replaceGratitudeFromSheet(d.gratitude);resolve();})
+        .catch(function(){resolve();});
+    }catch(e){resolve();}
+  });
+}
+
+function replaceGratitudeFromSheet(s){
+  var fromSheet=s.map(function(x,i){
+    return{
+      id:x.sheetId?parseInt(x.sheetId,10):Date.now()+i,
+      timestamp:x.dateISO?new Date(x.dateISO).getTime():Date.now(),
+      dateISO:x.dateISO||'', date:x.date||'',
+      sheetId:x.sheetId||'', emotion:x.emotion||'',
+      items:[x.item1||'',x.item2||'',x.item3||''].filter(function(v){return v.length>0;})
+    };
+  });
+  var sheetIds={};s.forEach(function(x){if(x.sheetId)sheetIds[x.sheetId]=true;});
+  var pending=gratEntries.filter(function(e){return e.sheetId&&!sheetIds[e.sheetId];});
+  gratEntries=fromSheet.concat(pending);
+  gratEntries.sort(function(a,b){return b.timestamp-a.timestamp;});
+  saveGratitude(); updateGratStats();
+  if(document.getElementById('pg-gratitude').classList.contains('on')) renderGratitude();
 }
 
 /* START */
