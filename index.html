@@ -27,7 +27,7 @@ html{font-size:15px}
 body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:1.55;min-height:100vh;-webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%;touch-action:pan-y}
 .nav{position:fixed;bottom:0;left:0;right:0;z-index:100;background:rgba(15,17,23,0.97);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-top:1px solid var(--border);padding:0;padding-bottom:env(safe-area-inset-bottom)}
 .nav-inner{display:flex;align-items:stretch;width:100%}
-.tab{flex:1;min-width:0;padding:.5rem .1rem .4rem;font-size:8px;font-weight:500;font-family:var(--fb);color:var(--text-3);background:none;border:none;border-top:2px solid transparent;cursor:pointer;transition:color var(--tr),border-color var(--tr);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;line-height:1.1;overflow:hidden}
+.tab{flex:1;min-width:0;padding:.5rem .1rem .4rem;font-weight:500;font-family:var(--fb);color:var(--text-3);background:none;border:none;border-top:2px solid transparent;cursor:pointer;transition:color var(--tr),border-color var(--tr);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;line-height:1.1;overflow:hidden}
 .tab-icon{font-size:16px;line-height:1;display:block;flex-shrink:0}
 .tab-label{font-size:7.5px;display:block;width:100%;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 1px}
 .tab:hover{color:var(--text-2)}
@@ -52,7 +52,6 @@ body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:
 .btn.gold{background:var(--gold);color:#0F1117;border-color:var(--gold)}
 .btn.gold:hover{background:#d4b55a}
 .btn.teal{background:var(--teal-dim);color:var(--teal);border-color:rgba(78,205,196,0.28)}
-.btn.teal:hover{background:rgba(78,205,196,0.16)}
 .btn.ghost{background:none;border:none;color:var(--text-3);padding:4px 8px;font-size:11px}
 .btn.ghost:hover{color:var(--text-1)}
 .goals-card{background:var(--card);border:1px solid var(--border);border-radius:var(--rlg);overflow:hidden}
@@ -66,19 +65,19 @@ body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:
 .goal-label{font-size:10px;font-family:var(--fm);color:var(--text-3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:2px}
 .goal-value{font-size:13px;color:var(--text-1);line-height:1.45}
 .goals-footer{display:flex;justify-content:space-between;align-items:center;padding:.6rem 1rem;border-top:1px solid var(--border);background:var(--surface)}
-.goals-synced{font-size:11px;color:var(--text-3)}
-.goals-synced.ok{color:var(--green)}
+.goals-synced{font-size:11px;color:var(--text-3)}.goals-synced.ok{color:var(--green)}
 .q-wrap{background:var(--card);border:1px solid var(--border);border-radius:var(--rlg);padding:1rem}
-.q-item{margin-bottom:.875rem}
-.q-item:last-of-type{margin-bottom:0}
+.q-item{margin-bottom:.875rem}.q-item:last-of-type{margin-bottom:0}
 .q-lbl{font-size:11px;color:var(--text-2);margin-bottom:5px;font-weight:500}
 .q-in{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--rsm);padding:7px 10px;font-size:13px;color:var(--text-1);font-family:var(--fb);resize:none;outline:none;line-height:1.5;transition:border-color var(--tr)}
-.q-in:focus{border-color:rgba(201,168,76,0.38)}
-.q-in::placeholder{color:var(--text-3)}
+.q-in:focus{border-color:rgba(201,168,76,0.38)}.q-in::placeholder{color:var(--text-3)}
 .q-actions{display:flex;justify-content:flex-end;align-items:center;gap:6px;margin-top:.75rem}
-.save-st{font-size:11px;color:var(--text-3)}
-.save-st.ok{color:var(--green)}
-.save-st.err{color:var(--rose)}
+.save-st{font-size:11px;color:var(--text-3)}.save-st.ok{color:var(--green)}.save-st.err{color:var(--rose)}
+.q-loading-card{background:var(--card);border:1px solid var(--border);border-radius:var(--rlg);padding:1rem}
+.q-skel{background:linear-gradient(90deg,var(--surface) 25%,#232840 50%,var(--surface) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:4px;height:12px;margin-bottom:4px}
+.q-skel-sm{width:55%;height:10px}.q-skel-lg{width:100%;height:28px;margin-top:4px;margin-bottom:6px}.q-skel-md{width:100%;height:28px;margin-top:4px}
+.q-loading-note{font-size:11px;color:var(--text-3);margin-top:10px;text-align:center}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
 .pillars-wrap{display:flex;gap:10px;align-items:flex-start}
 .pillars-list{display:flex;flex-direction:column;gap:5px;flex-shrink:0;width:148px}
 .pillar{display:flex;align-items:center;gap:9px;background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:9px 12px;cursor:pointer;transition:all var(--tr);text-align:left;width:100%}
@@ -92,14 +91,10 @@ body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:
 .pillar-detail{flex:1;min-width:0;background:var(--card);border:1px solid var(--border);border-radius:var(--rlg);padding:1rem;display:none}
 .pillar-detail.on{display:block}
 .p-head{display:flex;gap:10px;align-items:flex-start;margin-bottom:.875rem}
-.p-e{font-size:22px;line-height:1}
-.p-title{font-family:var(--fd);font-size:1.05rem;color:var(--text-1)}
-.p-sub{font-size:11px;color:var(--text-2);margin-top:2px}
-.p-row{display:flex;gap:9px;padding:8px 0;border-bottom:1px solid var(--border)}
-.p-row:last-child{border-bottom:none}
+.p-e{font-size:22px;line-height:1}.p-title{font-family:var(--fd);font-size:1.05rem;color:var(--text-1)}.p-sub{font-size:11px;color:var(--text-2);margin-top:2px}
+.p-row{display:flex;gap:9px;padding:8px 0;border-bottom:1px solid var(--border)}.p-row:last-child{border-bottom:none}
 .p-dot{width:5px;height:5px;border-radius:50%;background:var(--gold);flex-shrink:0;margin-top:5px}
-.p-t{font-size:12px;font-weight:500;color:var(--text-1)}
-.p-s{font-size:11px;color:var(--text-2);margin-top:2px;line-height:1.5}
+.p-t{font-size:12px;font-weight:500;color:var(--text-1)}.p-s{font-size:11px;color:var(--text-2);margin-top:2px;line-height:1.5}
 .pillar-empty{flex:1;display:flex;align-items:center;justify-content:center;min-height:160px;background:var(--card);border:1px dashed var(--border);border-radius:var(--rlg);color:var(--text-3);font-size:11px;text-align:center;padding:1rem;line-height:1.6}
 .pillar-empty.hidden{display:none}
 .cl-block{background:var(--card);border:1px solid var(--border);border-radius:var(--rlg);padding:.875rem}
@@ -109,8 +104,7 @@ body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:
 .cl-row.done .cl-box{background:var(--green);border-color:var(--green)}
 .cl-tick{color:#0F1117;font-size:10px;font-weight:700;display:none}
 .cl-row.done .cl-tick{display:block}
-.cl-txt{font-size:13px;color:var(--text-1);flex:1}
-.cl-row.done .cl-txt{color:var(--text-3);text-decoration:line-through}
+.cl-txt{font-size:13px;color:var(--text-1);flex:1}.cl-row.done .cl-txt{color:var(--text-3);text-decoration:line-through}
 .cl-tag{font-size:9px;font-family:var(--fm);color:var(--text-3);padding:1px 6px;border:1px solid var(--border);border-radius:20px;white-space:nowrap}
 .prog-wrap{margin-top:.875rem}
 .prog-meta{display:flex;justify-content:space-between;font-size:11px;color:var(--text-3);margin-bottom:5px}
@@ -119,27 +113,20 @@ body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:
 .prog-fill{height:100%;background:linear-gradient(90deg,var(--teal),var(--green));border-radius:2px;transition:width 0.3s ease}
 .int-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .int-tile{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:.75rem}
-.int-e{font-size:18px;margin-bottom:5px}
-.int-t{font-size:12px;font-weight:600;color:var(--text-1);margin-bottom:3px}
-.int-b{font-size:11px;color:var(--text-2);line-height:1.45}
+.int-e{font-size:18px;margin-bottom:5px}.int-t{font-size:12px;font-weight:600;color:var(--text-1);margin-bottom:3px}.int-b{font-size:11px;color:var(--text-2);line-height:1.45}
 .sit-block{background:var(--card);border:1px solid var(--border);border-radius:var(--rlg);padding:1rem}
 .sfl{font-size:11px;color:var(--text-2);font-weight:500;margin-bottom:5px;display:block}
 .sin{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--rsm);padding:7px 10px;font-size:13px;color:var(--text-1);font-family:var(--fb);resize:none;outline:none;line-height:1.5;transition:border-color var(--tr)}
-.sin:focus{border-color:rgba(224,123,123,0.4)}
-.sin::placeholder{color:var(--text-3)}
+.sin:focus{border-color:rgba(224,123,123,0.4)}.sin::placeholder{color:var(--text-3)}
 .sit-flds{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
 .epills{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px}
 .ep{padding:3px 10px;font-size:11px;border-radius:20px;border:1px solid var(--border-md);color:var(--text-2);background:transparent;cursor:pointer;transition:all var(--tr);font-family:var(--fb)}
 .ep:hover{background:var(--surface);color:var(--text-1)}
 .ep.on{background:var(--rose-dim);border-color:rgba(224,123,123,0.38);color:var(--rose)}
 .sit-foot{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px}
-.sync-txt{font-size:11px;color:var(--text-3)}
-.sync-txt.ok{color:var(--green)}
-.sync-txt.syncing{color:var(--gold)}
-.sync-txt.err{color:var(--rose)}
+.sync-txt{font-size:11px;color:var(--text-3)}.sync-txt.ok{color:var(--green)}.sync-txt.syncing{color:var(--gold)}.sync-txt.err{color:var(--rose)}
 .foot{display:flex;justify-content:space-between;align-items:center;margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--border);flex-wrap:wrap;gap:6px}
-.foot-note{font-size:11px;color:var(--text-3)}
-.foot-btns{display:flex;gap:6px}
+.foot-note{font-size:11px;color:var(--text-3)}.foot-btns{display:flex;gap:6px}
 .past-hdr{margin-bottom:1rem}
 .past-title{font-family:var(--fd);font-size:1.5rem;color:var(--text-1);margin-bottom:4px}
 .past-sub{font-size:13px;color:var(--text-2)}
@@ -147,14 +134,12 @@ body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:
 .stat{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:10px 12px}
 .stat-n{font-family:var(--fd);font-size:1.5rem;color:var(--text-1);line-height:1}
 .stat-l{font-size:10px;color:var(--text-3);margin-top:3px}
-.stat.rose .stat-n{color:var(--rose)}
-.stat.teal .stat-n{color:var(--teal)}
+.stat.rose .stat-n{color:var(--rose)}.stat.teal .stat-n{color:var(--teal)}
 .df-panel{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:.75rem 1rem;margin-bottom:1rem}
 .df-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .df-lbl{font-size:11px;color:var(--text-2);font-weight:500;white-space:nowrap}
 .d-in{background:var(--surface);border:1px solid var(--border);border-radius:var(--rsm);padding:5px 8px;font-size:12px;color:var(--text-1);font-family:var(--fm);outline:none;transition:border-color var(--tr);cursor:pointer}
-.d-in:focus{border-color:var(--gold)}
-.df-sep{font-size:11px;color:var(--text-3)}
+.d-in:focus{border-color:var(--gold)}.df-sep{font-size:11px;color:var(--text-3)}
 .dq-row{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px}
 .dq{padding:3px 10px;font-size:10px;border-radius:20px;border:1px solid var(--border);color:var(--text-3);background:transparent;cursor:pointer;font-family:var(--fb);transition:all var(--tr)}
 .dq:hover{color:var(--text-1);border-color:var(--border-md)}
@@ -167,6 +152,10 @@ body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:
 .ef{padding:4px 11px;font-size:11px;border-radius:20px;border:1px solid var(--border);color:var(--text-3);background:transparent;cursor:pointer;font-family:var(--fb);transition:all var(--tr)}
 .ef:hover{color:var(--text-1);border-color:var(--border-md)}
 .ef.on{background:var(--rose-dim);border-color:rgba(224,123,123,0.32);color:var(--rose)}
+.pef-bar{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:.75rem}
+.pef{padding:4px 11px;font-size:11px;border-radius:20px;border:1px solid var(--border);color:var(--text-3);background:transparent;cursor:pointer;font-family:var(--fb);transition:all var(--tr)}
+.pef:hover{color:var(--text-1);border-color:var(--border-md)}
+.pef.on{background:var(--teal-dim);border-color:rgba(78,205,196,0.32);color:var(--teal)}
 .pmeta{font-size:11px;color:var(--text-3);margin-bottom:8px;font-family:var(--fm)}
 .sit-log{display:flex;flex-direction:column;gap:8px}
 .sc{background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;transition:border-color var(--tr)}
@@ -181,18 +170,15 @@ body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:
 .sc.open .sc-tog{transform:rotate(180deg)}
 .sc-body{display:none;border-top:1px solid var(--border);padding:11px 14px}
 .sc.open .sc-body{display:block}
-.sb-sec{margin-bottom:10px}
-.sb-sec:last-child{margin-bottom:0}
+.sb-sec{margin-bottom:10px}.sb-sec:last-child{margin-bottom:0}
 .sb-lbl{font-family:var(--fm);font-size:9px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:4px}
 .sb-txt{font-size:12px;color:var(--text-2);line-height:1.55}
 .strat-area{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--rsm);padding:8px 10px;font-size:12px;color:var(--text-1);font-family:var(--fb);resize:none;outline:none;line-height:1.5;transition:border-color var(--tr);min-height:70px}
-.strat-area:focus{border-color:rgba(78,205,196,0.38)}
-.strat-area::placeholder{color:var(--text-3)}
+.strat-area:focus{border-color:rgba(78,205,196,0.38)}.strat-area::placeholder{color:var(--text-3)}
 .sc-foot{display:flex;justify-content:space-between;align-items:center;margin-top:8px;gap:6px;flex-wrap:wrap}
 .del-btn{font-size:10px;color:var(--text-3);background:none;border:none;cursor:pointer;padding:3px 6px;border-radius:var(--rsm);font-family:var(--fb);transition:color var(--tr)}
 .del-btn:hover{color:var(--rose)}
 .sit-empty{text-align:center;padding:2.5rem 1rem;background:var(--card);border:1px dashed var(--border);border-radius:var(--r);color:var(--text-3);font-size:12px;line-height:1.7}
-/* THOUGHTS */
 .th-add-block{background:var(--card);border:1px solid var(--border);border-radius:var(--rlg);padding:1rem;margin-bottom:1rem}
 .th-add-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
 .th-field-full{grid-column:1/-1}
@@ -206,12 +192,11 @@ body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:
 .th-card,.post-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:1rem;transition:border-color var(--tr)}
 .th-card:hover,.post-card:hover{border-color:var(--border-md)}
 .th-card-heading,.post-card-heading{font-size:14px;font-weight:600;color:var(--text-1);margin-bottom:.5rem;line-height:1.35}
-.th-card-body,.post-card-body{margin-bottom:.6rem}
-.th-bullets,.post-bullets{margin:4px 0 4px 1rem;padding:0;list-style:none}
-.th-bullets li,.post-bullets li{position:relative;padding-left:14px;font-size:13px;color:var(--text-2);line-height:1.6;margin-bottom:2px}
-.th-bullets li::before,.post-bullets li::before{content:'·';position:absolute;left:0;color:var(--gold);font-size:16px;line-height:1.35}
-.th-para,.post-para{font-size:13px;color:var(--text-2);line-height:1.6;margin-bottom:4px}
-.th-para:last-child,.post-para:last-child{margin-bottom:0}
+.th-card-body{margin-bottom:.6rem}
+.th-bullets{margin:4px 0 4px 1rem;padding:0;list-style:none}
+.th-bullets li{position:relative;padding-left:14px;font-size:13px;color:var(--text-2);line-height:1.6;margin-bottom:2px}
+.th-bullets li::before{content:'·';position:absolute;left:0;color:var(--gold);font-size:16px;line-height:1.35}
+.th-para{font-size:13px;color:var(--text-2);line-height:1.6;margin-bottom:4px}.th-para:last-child{margin-bottom:0}
 .th-card-meta,.post-card-meta{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:.5rem}
 .th-cat-badge{font-size:10px;padding:2px 8px;border-radius:20px;background:var(--gold-dim);border:1px solid rgba(201,168,76,0.28);color:var(--gold)}
 .th-emo-badge{font-size:10px;padding:2px 8px;border-radius:20px;background:var(--teal-dim);border:1px solid rgba(78,205,196,0.28);color:var(--teal)}
@@ -219,7 +204,6 @@ body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:
 .th-url,.post-url{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--gold);text-decoration:none;word-break:break-all}
 .th-url:hover,.post-url:hover{text-decoration:underline}
 .th-card-foot,.post-card-foot{display:flex;justify-content:space-between;align-items:center;margin-top:.5rem;padding-top:.5rem;border-top:1px solid var(--border)}
-/* POSTS */
 .post-src-badge{font-size:10px;padding:2px 9px;border-radius:20px;font-weight:500}
 .post-src-li{background:rgba(10,102,194,0.15);border:1px solid rgba(10,102,194,0.3);color:#5b9bd5}
 .post-src-ig{background:rgba(225,48,108,0.12);border:1px solid rgba(225,48,108,0.3);color:#e1306c}
@@ -239,15 +223,6 @@ body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:
 .pef{padding:4px 11px;font-size:11px;border-radius:20px;border:1px solid var(--border);color:var(--text-3);background:transparent;cursor:pointer;font-family:var(--fb);transition:all var(--tr)}
 .pef:hover{color:var(--text-1);border-color:var(--border-md)}
 .pef.on{background:var(--teal-dim);border-color:rgba(78,205,196,0.32);color:var(--teal)}
-/* LOADING SKELETON */
-.q-loading-card{background:var(--card);border:1px solid var(--border);border-radius:var(--rlg);padding:1rem}
-.q-skel{background:linear-gradient(90deg,var(--surface) 25%,#232840 50%,var(--surface) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:4px;height:12px;margin-bottom:4px}
-.q-skel-sm{width:55%;height:10px}
-.q-skel-lg{width:100%;height:28px;margin-top:4px;margin-bottom:6px}
-.q-skel-md{width:100%;height:28px;margin-top:4px}
-.q-loading-note{font-size:11px;color:var(--text-3);margin-top:10px;text-align:center}
-@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
-/* MOTIVATION PAGE */
 .mot-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:1rem;transition:all var(--tr);position:relative}
 .mot-card:hover{border-color:var(--border-md)}
 .mot-card.pinned{border-color:rgba(201,168,76,0.4);background:var(--gold-glow)}
@@ -256,19 +231,15 @@ body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:
 .mot-card-text{font-size:13px;color:var(--text-1);line-height:1.7;white-space:pre-line}
 .mot-card-foot{display:flex;justify-content:space-between;align-items:center;margin-top:.625rem;padding-top:.5rem;border-top:1px solid var(--border)}
 .mot-pin-btn{font-size:10px;background:none;border:none;cursor:pointer;color:var(--text-3);font-family:var(--fb);padding:3px 6px;border-radius:var(--rsm);transition:color var(--tr)}
-.mot-pin-btn:hover{color:var(--gold)}
-.mot-pin-btn.pinned{color:var(--gold);font-weight:600}
+.mot-pin-btn:hover{color:var(--gold)}.mot-pin-btn.pinned{color:var(--gold);font-weight:600}
 .mot-log{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-@media(max-width:580px){.mot-log{grid-template-columns:1fr}}
 .mot-cat-pills{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px}
 .mcp{padding:3px 11px;font-size:11px;border-radius:20px;border:1px solid var(--border-md);color:var(--text-2);background:transparent;cursor:pointer;transition:all var(--tr);font-family:var(--fb)}
 .mcp:hover{background:var(--surface);color:var(--text-1)}
-.mcp.on{border-color:var(--border-md)}
 .mot-filter-bar{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:1rem}
 .mf{padding:4px 11px;font-size:11px;border-radius:20px;border:1px solid var(--border);color:var(--text-3);background:transparent;cursor:pointer;font-family:var(--fb);transition:all var(--tr)}
 .mf:hover{color:var(--text-1);border-color:var(--border-md)}
 .mf.on{color:var(--text-1);border-color:var(--border-md);background:var(--surface)}
-/* GRATITUDE */
 .grat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:1rem;transition:border-color var(--tr)}
 .grat-card:hover{border-color:var(--border-md)}
 .grat-card-date{font-size:10px;color:var(--text-3);font-family:var(--fm);margin-bottom:6px;display:flex;align-items:center;gap:8px}
@@ -285,45 +256,26 @@ body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:
 .grat-streak-lbl{font-size:10px;color:var(--text-3);margin-top:3px}
 .grat-input-row{display:flex;gap:8px;align-items:flex-start;margin-bottom:6px}
 .grat-num{width:22px;height:22px;border-radius:50%;background:var(--gold-dim);border:1px solid rgba(201,168,76,0.3);color:var(--gold);font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:8px;font-family:var(--fm)}
-/* TOAST */
-.toast{position:fixed;bottom:5.5rem;right:1rem;background:#1E2333;border:1px solid var(--border-md);border-radius:var(--r);padding:10px 16px;font-size:12px;color:var(--text-1);box-shadow:0 6px 24px rgba(0,0,0,0.4);opacity:0;transform:translateY(6px);transition:all 0.22s ease;pointer-events:none;z-index:100;max-width:280px}
+.toast{position:fixed;bottom:5.5rem;right:1rem;background:#1E2333;border:1px solid var(--border-md);border-radius:var(--r);padding:10px 16px;font-size:12px;color:var(--text-1);box-shadow:0 6px 24px rgba(0,0,0,0.4);opacity:0;transform:translateY(6px);transition:all 0.22s ease;pointer-events:none;z-index:200;max-width:280px}
 .toast.show{opacity:1;transform:translateY(0)}
-.toast.success{border-color:rgba(107,191,142,0.32)}
-.toast.error{border-color:rgba(224,123,123,0.32)}
+.toast.success{border-color:rgba(107,191,142,0.32)}.toast.error{border-color:rgba(224,123,123,0.32)}
 hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
-@media(max-width:400px){
-  .tab-label{display:none}
-  .tab{padding:.6rem .1rem}
-  .tab-icon{font-size:20px}
-}
+@media(max-width:400px){.tab-label{display:none}.tab{padding:.6rem .1rem}.tab-icon{font-size:20px}}
 @media(max-width:640px){
   .sit-flds,.th-add-grid{grid-template-columns:1fr!important}
   .past-stats{grid-template-columns:repeat(2,1fr)!important}
-  .hdr{flex-wrap:wrap}
-  .pillars-wrap{flex-direction:column}
+  .hdr{flex-wrap:wrap}.pillars-wrap{flex-direction:column}
   .pillars-list{width:100%;flex-direction:row;flex-wrap:wrap}
-  .pillar{width:calc(50% - 3px)}
-  .pillar-detail{width:100%}
-  .int-row{grid-template-columns:1fr}
-  .mot-log{grid-template-columns:1fr!important}
-  .df-row{flex-wrap:wrap}
-  .tb{flex-wrap:wrap}
-  .th-filter-bar{flex-wrap:wrap}
-  .goals-card-head{flex-wrap:wrap;gap:4px}
-  .q-actions{flex-wrap:wrap;justify-content:flex-end}
-  .sit-foot,.th-add-foot,.mot-card-foot,.post-card-foot,.th-card-foot,.sc-foot{flex-wrap:wrap;gap:6px}
-  .past-title{font-size:1.25rem}
-  .greeting{font-size:1.5rem}
-  .daynum{font-size:2rem}
-  .psearch{min-width:100%}
-  .src-pills{flex-wrap:wrap}
-  .ef-bar,.pef-bar,.post-src-filter-bar,.mot-filter-bar{flex-wrap:wrap}
+  .pillar{width:calc(50% - 3px)}.pillar-detail{width:100%}
+  .int-row{grid-template-columns:1fr}.mot-log{grid-template-columns:1fr!important}
+  .grat-stats{grid-template-columns:repeat(3,1fr)}
+  .past-title{font-size:1.25rem}.greeting{font-size:1.5rem}.daynum{font-size:2rem}
+  .psearch{min-width:100%}.sit-flds{grid-template-columns:1fr}
 }
 </style>
 </head>
 <body>
 <div class="toast" id="toast"></div>
-
 <nav class="nav">
   <div class="nav-inner">
     <button class="tab on" onclick="switchTab('morning')"><span class="tab-icon">&#9728;&#65039;</span><span class="tab-label">Morning</span></button>
@@ -338,187 +290,45 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
 
 <!-- TAB 1: MORNING -->
 <div class="pg on" id="pg-morning">
-  <div class="hdr">
-    <div class="hdr-l">
-      <div class="eyebrow" id="time-now">--</div>
-      <h1 class="greeting" id="greeting">Good morning</h1>
-      <div class="dateline" id="date-line">Loading...</div>
-    </div>
-    <div class="hdr-r">
-      <div class="daynum" id="day-num">--</div>
-      <div class="daynum-lbl">Day of year</div>
-    </div>
-  </div>
-  <div class="mantra">
-    <div class="mantra-q" id="mantra-text">"..."</div>
-    <div class="mantra-src" id="mantra-source"></div>
-  </div>
+  <div class="hdr"><div class="hdr-l"><div class="eyebrow" id="time-now">--</div><h1 class="greeting" id="greeting">Good morning</h1><div class="dateline" id="date-line">Loading...</div></div><div class="hdr-r"><div class="daynum" id="day-num">--</div><div class="daynum-lbl">Day of year</div></div></div>
+  <div class="mantra"><div class="mantra-q" id="mantra-text">"..."</div><div class="mantra-src" id="mantra-source"></div></div>
   <hr class="d">
-  <!-- Loading state -->
-  <div id="q-loading-wrap" style="display:none">
-    <div class="lbl">Today's intentions <span class="lbl-line"></span></div>
-    <div class="q-loading-card">
-      <div class="q-skel q-skel-sm"></div><div class="q-skel q-skel-lg"></div>
-      <div class="q-skel q-skel-sm" style="margin-top:8px"></div><div class="q-skel q-skel-lg"></div>
-      <div class="q-skel q-skel-sm" style="margin-top:8px"></div><div class="q-skel q-skel-md"></div>
-      <div class="q-loading-note">Checking your Sheet for today's intentions...</div>
-    </div>
-  </div>
-  <!-- Form state -->
-  <div id="q-form-wrap">
-    <div class="lbl">Today's intentions <span class="lbl-line"></span></div>
-    <div class="q-wrap">
-      <div class="q-item"><div class="q-lbl">What is the one thing that, if I do it today, makes everything else easier?</div><textarea class="q-in" id="q1" rows="2" placeholder="Your single top priority for today..."></textarea></div>
-      <div class="q-item"><div class="q-lbl">How do I want to show up emotionally today?</div><textarea class="q-in" id="q2" rows="2" placeholder="Calm, focused, patient, present..."></textarea></div>
-      <div class="q-item"><div class="q-lbl">What am I genuinely grateful for right now?</div><textarea class="q-in" id="q3" rows="2" placeholder="Name one specific thing..."></textarea></div>
-      <div class="q-actions"><span class="save-st" id="save-status"></span><button class="btn" onclick="clearQuestions()">Clear</button><button class="btn gold" onclick="saveToSheet()">Save intentions &#8599;</button></div>
-    </div>
-  </div>
-  <!-- Read state -->
-  <div id="q-read-wrap" style="display:none">
-    <div class="lbl">Today's intentions <span class="lbl-line"></span> <button class="btn ghost" onclick="editIntentions()">Edit</button></div>
-    <div class="goals-card">
-      <div class="goals-card-head"><span class="goals-card-title">Your day is set &#10003;</span><span class="goals-card-date" id="goals-date"></span></div>
-      <div class="goals-body">
-        <div class="goal-row"><div class="goal-icon">&#127919;</div><div class="goal-col"><div class="goal-label">Top priority</div><div class="goal-value" id="goal-q1">--</div></div></div>
-        <div class="goal-row"><div class="goal-icon">&#10084;&#65039;</div><div class="goal-col"><div class="goal-label">Emotional intention</div><div class="goal-value" id="goal-q2">--</div></div></div>
-        <div class="goal-row"><div class="goal-icon">&#128591;</div><div class="goal-col"><div class="goal-label">Gratitude</div><div class="goal-value" id="goal-q3">--</div></div></div>
-      </div>
-      <div class="goals-footer"><span class="goals-synced" id="goals-synced-lbl">Synced to Sheet &#10003;</span><button class="btn ghost" onclick="editIntentions()">&#9998; Edit intentions</button></div>
-    </div>
-  </div>
+  <div id="q-loading-wrap" style="display:none"><div class="lbl">Today's intentions <span class="lbl-line"></span></div><div class="q-loading-card"><div class="q-skel q-skel-sm"></div><div class="q-skel q-skel-lg"></div><div class="q-skel q-skel-sm" style="margin-top:8px"></div><div class="q-skel q-skel-lg"></div><div class="q-skel q-skel-sm" style="margin-top:8px"></div><div class="q-skel q-skel-md"></div><div class="q-loading-note">Fetching your intentions...</div></div></div>
+  <div id="q-form-wrap"><div class="lbl">Today's intentions <span class="lbl-line"></span></div><div class="q-wrap"><div class="q-item"><div class="q-lbl">What is the one thing that, if I do it today, makes everything else easier?</div><textarea class="q-in" id="q1" rows="2" placeholder="Your single top priority for today..."></textarea></div><div class="q-item"><div class="q-lbl">How do I want to show up emotionally today?</div><textarea class="q-in" id="q2" rows="2" placeholder="Calm, focused, patient, present..."></textarea></div><div class="q-item"><div class="q-lbl">What am I genuinely grateful for right now?</div><textarea class="q-in" id="q3" rows="2" placeholder="Name one specific thing..."></textarea></div><div class="q-actions"><span class="save-st" id="save-status"></span><button class="btn" onclick="clearQuestions()">Clear</button><button class="btn gold" onclick="saveToSheet()">Save intentions &#8599;</button></div></div></div>
+  <div id="q-read-wrap" style="display:none"><div class="lbl">Today's intentions <span class="lbl-line"></span> <button class="btn ghost" onclick="editIntentions()">Edit</button></div><div class="goals-card"><div class="goals-card-head"><span class="goals-card-title">Your day is set &#10003;</span><span class="goals-card-date" id="goals-date"></span></div><div class="goals-body"><div class="goal-row"><div class="goal-icon">&#127919;</div><div class="goal-col"><div class="goal-label">Top priority</div><div class="goal-value" id="goal-q1">--</div></div></div><div class="goal-row"><div class="goal-icon">&#10084;&#65039;</div><div class="goal-col"><div class="goal-label">Emotional intention</div><div class="goal-value" id="goal-q2">--</div></div></div><div class="goal-row"><div class="goal-icon">&#128591;</div><div class="goal-col"><div class="goal-label">Gratitude</div><div class="goal-value" id="goal-q3">--</div></div></div></div><div class="goals-footer"><span class="goals-synced" id="goals-synced-lbl">Synced to Sheet &#10003;</span><button class="btn ghost" onclick="editIntentions()">&#9998; Edit intentions</button></div></div></div>
   <hr class="d">
   <div class="lbl">Five pillars <span class="lbl-line"></span></div>
-  <div class="pillars-wrap">
-    <div class="pillars-list">
-      <button class="pillar" onclick="togglePillar(0)"><span class="pillar-e">&#129504;</span><div class="pillar-lbl">Mental strength</div><span class="pillar-arr">&#9654;</span></button>
-      <button class="pillar" onclick="togglePillar(1)"><span class="pillar-e">&#10084;&#65039;</span><div class="pillar-lbl">Emotional control</div><span class="pillar-arr">&#9654;</span></button>
-      <button class="pillar" onclick="togglePillar(2)"><span class="pillar-e">&#127919;</span><div class="pillar-lbl">Focus &amp; clarity</div><span class="pillar-arr">&#9654;</span></button>
-      <button class="pillar" onclick="togglePillar(3)"><span class="pillar-e">&#9889;</span><div class="pillar-lbl">Body &amp; energy</div><span class="pillar-arr">&#9654;</span></button>
-      <button class="pillar" onclick="togglePillar(4)"><span class="pillar-e">&#129306;</span><div class="pillar-lbl">Relationships</div><span class="pillar-arr">&#9654;</span></button>
-    </div>
-    <div class="pillar-detail" id="pillar-detail"></div>
-    <div class="pillar-empty" id="pillar-empty">Tap a pillar<br>to explore its principles</div>
-  </div>
+  <div class="pillars-wrap"><div class="pillars-list"><button class="pillar" onclick="togglePillar(0)"><span class="pillar-e">&#129504;</span><div class="pillar-lbl">Mental strength</div><span class="pillar-arr">&#9654;</span></button><button class="pillar" onclick="togglePillar(1)"><span class="pillar-e">&#10084;&#65039;</span><div class="pillar-lbl">Emotional control</div><span class="pillar-arr">&#9654;</span></button><button class="pillar" onclick="togglePillar(2)"><span class="pillar-e">&#127919;</span><div class="pillar-lbl">Focus &amp; clarity</div><span class="pillar-arr">&#9654;</span></button><button class="pillar" onclick="togglePillar(3)"><span class="pillar-e">&#9889;</span><div class="pillar-lbl">Body &amp; energy</div><span class="pillar-arr">&#9654;</span></button><button class="pillar" onclick="togglePillar(4)"><span class="pillar-e">&#129306;</span><div class="pillar-lbl">Relationships</div><span class="pillar-arr">&#9654;</span></button></div><div class="pillar-detail" id="pillar-detail"></div><div class="pillar-empty" id="pillar-empty">Tap a pillar to explore its principles</div></div>
   <hr class="d">
   <div class="lbl">Daily checklist <span class="lbl-line"></span></div>
-  <div class="cl-block"><div id="cl-list"></div>
-    <div class="prog-wrap"><div class="prog-meta"><span>Practices</span><span class="prog-ct" id="prog-txt">0/8</span></div><div class="prog-track"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div></div>
-  </div>
+  <div class="cl-block"><div id="cl-list"></div><div class="prog-wrap"><div class="prog-meta"><span>Practices</span><span class="prog-ct" id="prog-txt">0/8</span></div><div class="prog-track"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div></div></div>
   <hr class="d">
   <div class="lbl">Anchor intentions <span class="lbl-line"></span></div>
-  <div class="int-row" style="margin-bottom:2rem">
-    <div class="int-tile"><div class="int-e">&#9208;&#65039;</div><div class="int-t">Pause before reacting</div><div class="int-b">3 deep breaths before responding to anything charged.</div></div>
-    <div class="int-tile"><div class="int-e">&#127919;</div><div class="int-t">One task, full focus</div><div class="int-b">No tabs, no phone -- one thing at a time during deep work.</div></div>
-    <div class="int-tile"><div class="int-e">&#127807;</div><div class="int-t">Hard thing first</div><div class="int-b">Most important work before email or meetings steal the morning.</div></div>
-  </div>
-  <div class="foot">
-    <span class="foot-note" id="streak-txt"></span>
-    <div class="foot-btns">
-      <button class="btn" onclick="switchTab('situations')">&#128250; Situations</button>
-      <button class="btn" onclick="resetDay()">&#8635; Reset day</button>
-    </div>
-  </div>
+  <div class="int-row" style="margin-bottom:1rem"><div class="int-tile"><div class="int-e">&#9208;&#65039;</div><div class="int-t">Pause before reacting</div><div class="int-b">3 deep breaths before responding to anything charged.</div></div><div class="int-tile"><div class="int-e">&#127919;</div><div class="int-t">One task, full focus</div><div class="int-b">No tabs, no phone — one thing at a time during deep work.</div></div><div class="int-tile"><div class="int-e">&#127807;</div><div class="int-t">Hard thing first</div><div class="int-b">Most important work before email or meetings steal the morning.</div></div></div>
+  <div class="foot"><span class="foot-note" id="streak-txt"></span><div class="foot-btns"><button class="btn" onclick="switchTab('situations')">&#128250; Situations</button><button class="btn" onclick="resetDay()">&#8635; Reset day</button></div></div>
 </div>
 
 <!-- TAB 2: SITUATIONS -->
 <div class="pg" id="pg-situations">
-  <div class="past-hdr"><div class="past-title">Past Situations</div><div class="past-sub">Your full log -- filter by date, emotion, or keyword.</div></div>
-  <div class="past-stats">
-    <div class="stat"><div class="stat-n" id="st-total">0</div><div class="stat-l">Total logged</div></div>
-    <div class="stat teal"><div class="stat-n" id="st-strat">0</div><div class="stat-l">Have strategies</div></div>
-    <div class="stat rose"><div class="stat-n" id="st-pend">0</div><div class="stat-l">Needs reflection</div></div>
-    <div class="stat"><div class="stat-n" id="st-emo" style="font-size:1.1rem">--</div><div class="stat-l">Top emotion</div></div>
-  </div>
-  <div class="df-panel">
-    <div class="df-row"><span class="df-lbl">Date range:</span><input type="date" class="d-in" id="date-from" onchange="renderPast()"><span class="df-sep">to</span><input type="date" class="d-in" id="date-to" onchange="renderPast()"><button class="btn" onclick="clearDateFilter()" style="font-size:10px;padding:4px 9px">Clear</button></div>
-    <div class="dq-row">
-      <button class="dq on" data-r="all" onclick="setRange(this,'all')">All time</button>
-      <button class="dq" data-r="today" onclick="setRange(this,'today')">Today</button>
-      <button class="dq" data-r="week" onclick="setRange(this,'week')">This week</button>
-      <button class="dq" data-r="month" onclick="setRange(this,'month')">This month</button>
-      <button class="dq" data-r="3m" onclick="setRange(this,'3m')">Last 3 months</button>
-    </div>
-  </div>
-  <div class="tb">
-    <input class="psearch" id="psearch" type="text" placeholder="Search keyword..." oninput="renderPast()">
-    <select class="psort" id="psort" onchange="renderPast()"><option value="newest">Newest first</option><option value="oldest">Oldest first</option><option value="no-strat">Needs strategy</option><option value="has-strat">Has strategy</option></select>
-    <button class="btn" onclick="exportCSV()">Export CSV</button>
-  </div>
-  <div class="ef-bar">
-    <button class="ef on" data-f="all" onclick="setEmoFilter(this)">All</button>
-    <button class="ef" data-f="anger" onclick="setEmoFilter(this)">&#128548; Anger</button>
-    <button class="ef" data-f="anxiety" onclick="setEmoFilter(this)">&#128560; Anxiety</button>
-    <button class="ef" data-f="frustration" onclick="setEmoFilter(this)">&#128547; Frustration</button>
-    <button class="ef" data-f="hurt" onclick="setEmoFilter(this)">&#128148; Hurt</button>
-    <button class="ef" data-f="shame" onclick="setEmoFilter(this)">&#128532; Shame</button>
-    <button class="ef" data-f="overwhelm" onclick="setEmoFilter(this)">&#127754; Overwhelm</button>
-    <button class="ef" data-f="fear" onclick="setEmoFilter(this)">&#128552; Fear</button>
-    <button class="ef" data-f="jealousy" onclick="setEmoFilter(this)">&#128065; Jealousy</button>
-  </div>
+  <div class="past-hdr"><div class="past-title">Past Situations</div><div class="past-sub">Your full log — filter by date, emotion, or keyword.</div></div>
+  <div class="past-stats"><div class="stat"><div class="stat-n" id="st-total">0</div><div class="stat-l">Total logged</div></div><div class="stat teal"><div class="stat-n" id="st-strat">0</div><div class="stat-l">Have strategies</div></div><div class="stat rose"><div class="stat-n" id="st-pend">0</div><div class="stat-l">Needs reflection</div></div><div class="stat"><div class="stat-n" id="st-emo" style="font-size:1.1rem">--</div><div class="stat-l">Top emotion</div></div></div>
+  <div class="df-panel"><div class="df-row"><span class="df-lbl">Date range:</span><input type="date" class="d-in" id="date-from" onchange="renderPast()"><span class="df-sep">to</span><input type="date" class="d-in" id="date-to" onchange="renderPast()"><button class="btn" onclick="clearDateFilter()" style="font-size:10px;padding:4px 9px">Clear</button></div><div class="dq-row"><button class="dq on" data-r="all" onclick="setRange(this,'all')">All time</button><button class="dq" data-r="today" onclick="setRange(this,'today')">Today</button><button class="dq" data-r="week" onclick="setRange(this,'week')">This week</button><button class="dq" data-r="month" onclick="setRange(this,'month')">This month</button><button class="dq" data-r="3m" onclick="setRange(this,'3m')">Last 3 months</button></div></div>
+  <div class="tb"><input class="psearch" id="psearch" type="text" placeholder="Search keyword..." oninput="renderPast()"><select class="psort" id="psort" onchange="renderPast()"><option value="newest">Newest first</option><option value="oldest">Oldest first</option><option value="no-strat">Needs strategy</option><option value="has-strat">Has strategy</option></select><button class="btn" onclick="exportCSV()">Export CSV</button></div>
+  <div class="ef-bar"><button class="ef on" data-f="all" onclick="setEmoFilter(this)">All</button><button class="ef" data-f="anger" onclick="setEmoFilter(this)">&#128548; Anger</button><button class="ef" data-f="anxiety" onclick="setEmoFilter(this)">&#128560; Anxiety</button><button class="ef" data-f="frustration" onclick="setEmoFilter(this)">&#128547; Frustration</button><button class="ef" data-f="hurt" onclick="setEmoFilter(this)">&#128148; Hurt</button><button class="ef" data-f="shame" onclick="setEmoFilter(this)">&#128532; Shame</button><button class="ef" data-f="overwhelm" onclick="setEmoFilter(this)">&#127754; Overwhelm</button><button class="ef" data-f="fear" onclick="setEmoFilter(this)">&#128552; Fear</button><button class="ef" data-f="jealousy" onclick="setEmoFilter(this)">&#128065; Jealousy</button></div>
   <div class="pmeta" id="pmeta"></div>
   <div class="sit-log" id="past-log"></div>
   <div class="lbl" style="margin-top:1.5rem">Log a new situation <span class="lbl-line"></span></div>
-  <div class="sit-block">
-    <div style="margin-bottom:8px"><label class="sfl">What happened?</label><textarea class="sin" id="sit-title" rows="2" placeholder="e.g. I raised my voice during a disagreement about a deadline..."></textarea></div>
-    <div class="sit-flds">
-      <div><label class="sfl">What triggered me?</label><textarea class="sin" id="sit-trigger" rows="3" placeholder="The words, tone, or circumstance..."></textarea></div>
-      <div><label class="sfl">How did I respond?</label><textarea class="sin" id="sit-reaction" rows="3" placeholder="What I said, did, or felt..."></textarea></div>
-    </div>
-    <label class="sfl">Dominant emotion</label>
-    <div class="epills">
-      <button class="ep" onclick="selEmo(this)" data-val="anger">&#128548; Anger</button>
-      <button class="ep" onclick="selEmo(this)" data-val="anxiety">&#128560; Anxiety</button>
-      <button class="ep" onclick="selEmo(this)" data-val="frustration">&#128547; Frustration</button>
-      <button class="ep" onclick="selEmo(this)" data-val="hurt">&#128148; Hurt</button>
-      <button class="ep" onclick="selEmo(this)" data-val="shame">&#128532; Shame</button>
-      <button class="ep" onclick="selEmo(this)" data-val="overwhelm">&#127754; Overwhelm</button>
-      <button class="ep" onclick="selEmo(this)" data-val="fear">&#128552; Fear</button>
-      <button class="ep" onclick="selEmo(this)" data-val="jealousy">&#128065; Jealousy</button>
-    </div>
-    <div class="sit-foot"><span class="sync-txt" id="sit-sync">Ready to log</span><button class="btn gold" onclick="addSituation()">Log situation &#8599;</button></div>
-  </div>
+  <div class="sit-block"><div style="margin-bottom:8px"><label class="sfl">What happened?</label><textarea class="sin" id="sit-title" rows="2" placeholder="e.g. I raised my voice during a disagreement about a deadline..."></textarea></div><div class="sit-flds"><div><label class="sfl">What triggered me?</label><textarea class="sin" id="sit-trigger" rows="3" placeholder="The words, tone, or circumstance..."></textarea></div><div><label class="sfl">How did I respond?</label><textarea class="sin" id="sit-reaction" rows="3" placeholder="What I said, did, or felt..."></textarea></div></div><label class="sfl">Dominant emotion</label><div class="epills"><button class="ep" onclick="selEmo(this)" data-val="anger">&#128548; Anger</button><button class="ep" onclick="selEmo(this)" data-val="anxiety">&#128560; Anxiety</button><button class="ep" onclick="selEmo(this)" data-val="frustration">&#128547; Frustration</button><button class="ep" onclick="selEmo(this)" data-val="hurt">&#128148; Hurt</button><button class="ep" onclick="selEmo(this)" data-val="shame">&#128532; Shame</button><button class="ep" onclick="selEmo(this)" data-val="overwhelm">&#127754; Overwhelm</button><button class="ep" onclick="selEmo(this)" data-val="fear">&#128552; Fear</button><button class="ep" onclick="selEmo(this)" data-val="jealousy">&#128065; Jealousy</button></div><div class="sit-foot"><span class="sync-txt" id="sit-sync">Ready to log</span><button class="btn gold" onclick="addSituation()">Log situation &#8599;</button></div></div>
   <div class="foot" style="margin-top:1.25rem"><span class="foot-note">Stored locally · synced to Google Sheets</span><button class="btn" onclick="switchTab('morning')">&#8592; Morning</button></div>
 </div>
 
 <!-- TAB 3: THOUGHTS -->
 <div class="pg" id="pg-thoughts">
   <div class="past-hdr"><div class="past-title">Good Thoughts</div><div class="past-sub">Your personal repository of ideas, insights and inspirations.</div></div>
-  <div class="th-add-block">
-    <div class="th-add-grid">
-      <div class="th-field-full"><label class="sfl">Heading / title <span style="color:var(--text-3);font-weight:400">(what is this insight about?)</span></label><input class="sin" id="th-heading" type="text" placeholder="e.g. On staying calm under pressure..."></div>
-      <div class="th-field-full"><label class="sfl">Description / key points <span style="color:var(--text-3);font-weight:400">(start each bullet with &bull; or -)</span></label><textarea class="sin" id="th-text" rows="5" placeholder="&#8226; The main insight&#10;&#8226; Why this matters to you&#10;&#8226; How you will apply this"></textarea><div style="font-size:10px;color:var(--text-3);margin-top:4px">Tip: Start each line with <code style="background:rgba(255,255,255,0.07);padding:1px 5px;border-radius:3px;color:var(--text-2)">&#8226;</code> or <code style="background:rgba(255,255,255,0.07);padding:1px 5px;border-radius:3px;color:var(--text-2)">-</code> to create bullets</div></div>
-      <div><label class="sfl">Category</label><div class="th-cat-pills" id="th-cat-pills"><button class="thp" onclick="selThCat(this)" data-val="mindset">&#129504; Mindset</button><button class="thp" onclick="selThCat(this)" data-val="emotion">&#10084;&#65039; Emotion</button><button class="thp" onclick="selThCat(this)" data-val="focus">&#127919; Focus</button><button class="thp" onclick="selThCat(this)" data-val="discipline">&#9889; Discipline</button><button class="thp" onclick="selThCat(this)" data-val="relationships">&#129306; Relationships</button><button class="thp" onclick="selThCat(this)" data-val="philosophy">&#128214; Philosophy</button><button class="thp" onclick="selThCat(this)" data-val="business">&#128188; Business</button><button class="thp" onclick="selThCat(this)" data-val="life">&#127807; Life</button></div></div>
-      <div><label class="sfl">How does it make you feel?</label><div class="th-emo-pills" id="th-emo-pills"><button class="thp" onclick="selThEmo(this)" data-val="inspired">&#10024; Inspired</button><button class="thp" onclick="selThEmo(this)" data-val="calm">&#129528; Calm</button><button class="thp" onclick="selThEmo(this)" data-val="motivated">&#128293; Motivated</button><button class="thp" onclick="selThEmo(this)" data-val="grateful">&#128591; Grateful</button><button class="thp" onclick="selThEmo(this)" data-val="reflective">&#129710; Reflective</button><button class="thp" onclick="selThEmo(this)" data-val="challenged">&#128170; Challenged</button></div></div>
-    </div>
-    <div class="th-field-full" style="margin-bottom:10px"><label class="sfl">Source or URL <span style="color:var(--text-3);font-weight:400">(optional)</span></label><input class="sin" id="th-url" type="text" placeholder="https://... or Author / Book / Podcast name"></div>
-    <div class="th-add-foot"><span class="sync-txt" id="th-sync">Add your first thought</span><button class="btn gold" onclick="addThought()">Save thought &#8599;</button></div>
-  </div>
-  <div class="th-filter-bar">
-    <input class="psearch" id="th-search" type="text" placeholder="Search thoughts..." oninput="renderThoughts()" style="flex:1;min-width:160px">
-    <select class="psort" id="th-sort" onchange="renderThoughts()"><option value="newest">Newest first</option><option value="oldest">Oldest first</option></select>
-    <button class="btn" onclick="exportThoughtsCSV()">Export CSV</button>
-  </div>
-  <div class="ef-bar" id="th-cat-filter">
-    <button class="ef on" data-c="all" onclick="setThCatFilter(this)">All</button>
-    <button class="ef" data-c="mindset" onclick="setThCatFilter(this)">&#129504; Mindset</button>
-    <button class="ef" data-c="emotion" onclick="setThCatFilter(this)">&#10084;&#65039; Emotion</button>
-    <button class="ef" data-c="focus" onclick="setThCatFilter(this)">&#127919; Focus</button>
-    <button class="ef" data-c="discipline" onclick="setThCatFilter(this)">&#9889; Discipline</button>
-    <button class="ef" data-c="relationships" onclick="setThCatFilter(this)">&#129306; Relationships</button>
-    <button class="ef" data-c="philosophy" onclick="setThCatFilter(this)">&#128214; Philosophy</button>
-    <button class="ef" data-c="business" onclick="setThCatFilter(this)">&#128188; Business</button>
-    <button class="ef" data-c="life" onclick="setThCatFilter(this)">&#127807; Life</button>
-  </div>
-  <div class="ef-bar" id="th-emo-filter">
-    <button class="ef on" data-e="all" onclick="setThEmoFilter(this)">All feelings</button>
-    <button class="ef" data-e="inspired" onclick="setThEmoFilter(this)">&#10024; Inspired</button>
-    <button class="ef" data-e="calm" onclick="setThEmoFilter(this)">&#129528; Calm</button>
-    <button class="ef" data-e="motivated" onclick="setThEmoFilter(this)">&#128293; Motivated</button>
-    <button class="ef" data-e="grateful" onclick="setThEmoFilter(this)">&#128591; Grateful</button>
-    <button class="ef" data-e="reflective" onclick="setThEmoFilter(this)">&#129710; Reflective</button>
-    <button class="ef" data-e="challenged" onclick="setThEmoFilter(this)">&#128170; Challenged</button>
-  </div>
+  <div class="th-add-block"><div class="th-add-grid"><div class="th-field-full"><label class="sfl">Heading / title</label><input class="sin" id="th-heading" type="text" placeholder="What is this insight about?"></div><div class="th-field-full"><label class="sfl">Description / key points <span style="color:var(--text-3);font-weight:400">(&#8226; or - for bullets)</span></label><textarea class="sin" id="th-text" rows="5" placeholder="&#8226; The main insight&#10;&#8226; Why this matters&#10;&#8226; How you will apply it"></textarea></div><div><label class="sfl">Category</label><div class="th-cat-pills" id="th-cat-pills"><button class="thp" onclick="selThCat(this)" data-val="mindset">&#129504; Mindset</button><button class="thp" onclick="selThCat(this)" data-val="emotion">&#10084;&#65039; Emotion</button><button class="thp" onclick="selThCat(this)" data-val="focus">&#127919; Focus</button><button class="thp" onclick="selThCat(this)" data-val="discipline">&#9889; Discipline</button><button class="thp" onclick="selThCat(this)" data-val="relationships">&#129306; Relationships</button><button class="thp" onclick="selThCat(this)" data-val="philosophy">&#128214; Philosophy</button><button class="thp" onclick="selThCat(this)" data-val="business">&#128188; Business</button><button class="thp" onclick="selThCat(this)" data-val="life">&#127807; Life</button></div></div><div><label class="sfl">How does it make you feel?</label><div class="th-emo-pills" id="th-emo-pills"><button class="thp" onclick="selThEmo(this)" data-val="inspired">&#10024; Inspired</button><button class="thp" onclick="selThEmo(this)" data-val="calm">&#129528; Calm</button><button class="thp" onclick="selThEmo(this)" data-val="motivated">&#128293; Motivated</button><button class="thp" onclick="selThEmo(this)" data-val="grateful">&#128591; Grateful</button><button class="thp" onclick="selThEmo(this)" data-val="reflective">&#129710; Reflective</button><button class="thp" onclick="selThEmo(this)" data-val="challenged">&#128170; Challenged</button></div></div></div><div class="th-field-full" style="margin-bottom:10px"><label class="sfl">Source or URL <span style="color:var(--text-3);font-weight:400">(optional)</span></label><input class="sin" id="th-url" type="text" placeholder="https://... or Author / Book / Podcast name"></div><div class="th-add-foot"><span class="sync-txt" id="th-sync">Add your first thought</span><button class="btn gold" onclick="addThought()">Save thought &#8599;</button></div></div>
+  <div class="th-filter-bar"><input class="psearch" id="th-search" type="text" placeholder="Search thoughts..." oninput="renderThoughts()" style="flex:1;min-width:160px"><select class="psort" id="th-sort" onchange="renderThoughts()"><option value="newest">Newest first</option><option value="oldest">Oldest first</option></select><button class="btn" onclick="exportThoughtsCSV()">Export CSV</button></div>
+  <div class="ef-bar" id="th-cat-filter"><button class="ef on" data-c="all" onclick="setThCatFilter(this)">All</button><button class="ef" data-c="mindset" onclick="setThCatFilter(this)">&#129504; Mindset</button><button class="ef" data-c="emotion" onclick="setThCatFilter(this)">&#10084;&#65039; Emotion</button><button class="ef" data-c="focus" onclick="setThCatFilter(this)">&#127919; Focus</button><button class="ef" data-c="discipline" onclick="setThCatFilter(this)">&#9889; Discipline</button><button class="ef" data-c="relationships" onclick="setThCatFilter(this)">&#129306; Relationships</button><button class="ef" data-c="philosophy" onclick="setThCatFilter(this)">&#128214; Philosophy</button><button class="ef" data-c="business" onclick="setThCatFilter(this)">&#128188; Business</button><button class="ef" data-c="life" onclick="setThCatFilter(this)">&#127807; Life</button></div>
+  <div class="ef-bar" id="th-emo-filter"><button class="ef on" data-e="all" onclick="setThEmoFilter(this)">All feelings</button><button class="ef" data-e="inspired" onclick="setThEmoFilter(this)">&#10024; Inspired</button><button class="ef" data-e="calm" onclick="setThEmoFilter(this)">&#129528; Calm</button><button class="ef" data-e="motivated" onclick="setThEmoFilter(this)">&#128293; Motivated</button><button class="ef" data-e="grateful" onclick="setThEmoFilter(this)">&#128591; Grateful</button><button class="ef" data-e="reflective" onclick="setThEmoFilter(this)">&#129710; Reflective</button><button class="ef" data-e="challenged" onclick="setThEmoFilter(this)">&#128170; Challenged</button></div>
   <div class="pmeta" id="th-meta"></div>
   <div class="th-log" id="th-log"></div>
   <div class="foot" style="margin-top:1.25rem"><span class="foot-note">Stored locally · synced to Google Sheets</span><button class="btn" onclick="switchTab('morning')">&#8592; Morning</button></div>
@@ -526,263 +336,59 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
 
 <!-- TAB 4: POSTS -->
 <div class="pg" id="pg-posts">
-  <div class="past-hdr"><div class="past-title">Favourite Posts</div><div class="past-sub">Inspiring posts from across the internet -- saved with context and emotion.</div></div>
-  <div class="post-src-filter-bar">
-    <button class="pef on" data-ps="all" onclick="setPostSrcFilter(this)">All sources</button>
-    <button class="pef" data-ps="linkedin" onclick="setPostSrcFilter(this)">&#128188; LinkedIn</button>
-    <button class="pef" data-ps="instagram" onclick="setPostSrcFilter(this)">&#128248; Instagram</button>
-    <button class="pef" data-ps="other" onclick="setPostSrcFilter(this)">&#127760; Other</button>
-  </div>
-  <div class="pef-bar">
-    <button class="pef on" data-pe="all" onclick="setPostEmoFilter(this)">All emotions</button>
-    <button class="pef" data-pe="inspired" onclick="setPostEmoFilter(this)">&#10024; Inspired</button>
-    <button class="pef" data-pe="motivated" onclick="setPostEmoFilter(this)">&#128293; Motivated</button>
-    <button class="pef" data-pe="calm" onclick="setPostEmoFilter(this)">&#129528; Calm</button>
-    <button class="pef" data-pe="grateful" onclick="setPostEmoFilter(this)">&#128591; Grateful</button>
-    <button class="pef" data-pe="reflective" onclick="setPostEmoFilter(this)">&#129710; Reflective</button>
-    <button class="pef" data-pe="challenged" onclick="setPostEmoFilter(this)">&#128170; Challenged</button>
-    <button class="pef" data-pe="joyful" onclick="setPostEmoFilter(this)">&#128516; Joyful</button>
-  </div>
-  <div class="th-filter-bar" style="margin-bottom:1rem">
-    <input class="psearch" id="post-search" type="text" placeholder="Search posts..." oninput="renderPosts()" style="flex:1">
-    <select class="psort" id="post-sort" onchange="renderPosts()"><option value="newest">Newest first</option><option value="oldest">Oldest first</option></select>
-    <button class="btn" onclick="exportPostsCSV()">Export CSV</button>
-  </div>
+  <div class="past-hdr"><div class="past-title">Favourite Posts</div><div class="past-sub">Inspiring posts from across the internet — saved with context and emotion.</div></div>
+  <div class="post-src-filter-bar"><button class="pef on" data-ps="all" onclick="setPostSrcFilter(this)">All sources</button><button class="pef" data-ps="linkedin" onclick="setPostSrcFilter(this)">&#128188; LinkedIn</button><button class="pef" data-ps="instagram" onclick="setPostSrcFilter(this)">&#128248; Instagram</button><button class="pef" data-ps="other" onclick="setPostSrcFilter(this)">&#127760; Other</button></div>
+  <div class="pef-bar"><button class="pef on" data-pe="all" onclick="setPostEmoFilter(this)">All emotions</button><button class="pef" data-pe="inspired" onclick="setPostEmoFilter(this)">&#10024; Inspired</button><button class="pef" data-pe="motivated" onclick="setPostEmoFilter(this)">&#128293; Motivated</button><button class="pef" data-pe="calm" onclick="setPostEmoFilter(this)">&#129528; Calm</button><button class="pef" data-pe="grateful" onclick="setPostEmoFilter(this)">&#128591; Grateful</button><button class="pef" data-pe="reflective" onclick="setPostEmoFilter(this)">&#129710; Reflective</button><button class="pef" data-pe="challenged" onclick="setPostEmoFilter(this)">&#128170; Challenged</button><button class="pef" data-pe="joyful" onclick="setPostEmoFilter(this)">&#128516; Joyful</button></div>
+  <div class="th-filter-bar" style="margin-bottom:1rem"><input class="psearch" id="post-search" type="text" placeholder="Search posts..." oninput="renderPosts()" style="flex:1"><select class="psort" id="post-sort" onchange="renderPosts()"><option value="newest">Newest first</option><option value="oldest">Oldest first</option></select><button class="btn" onclick="exportPostsCSV()">Export CSV</button></div>
   <div class="pmeta" id="post-meta"></div>
   <div class="post-log" id="post-log"></div>
   <div class="lbl" style="margin-top:1.5rem">Save a post <span class="lbl-line"></span></div>
-  <div class="sit-block" style="background:var(--card);border:1px solid var(--border);border-radius:var(--rlg);padding:1rem">
-    <div style="margin-bottom:8px"><label class="sfl">Heading</label><input class="sin" id="post-heading" type="text" placeholder="What is this post about?"></div>
-    <div style="margin-bottom:8px"><label class="sfl">Description <span style="color:var(--text-3);font-weight:400">(&bull; or - for bullets)</span></label><textarea class="sin" id="post-desc" rows="4" placeholder="&#8226; Key takeaway&#10;&#8226; Why it resonated..."></textarea></div>
-    <div style="margin-bottom:8px">
-      <label class="sfl">Source</label>
-      <div class="src-pills">
-        <button class="src-pill" id="src-li" onclick="selPostSrc('linkedin')">&#128188; LinkedIn</button>
-        <button class="src-pill" id="src-ig" onclick="selPostSrc('instagram')">&#128248; Instagram</button>
-        <button class="src-pill" id="src-ot" onclick="selPostSrc('other')">&#127760; Other</button>
-      </div>
-    </div>
-    <div style="margin-bottom:8px"><label class="sfl">URL <span style="color:var(--text-3);font-weight:400">(optional)</span></label><input class="sin" id="post-url" type="text" placeholder="https://..."></div>
-    <div style="margin-bottom:8px">
-      <label class="sfl">What emotion does this help with?</label>
-      <div class="pemo-pills">
-        <button class="pep" onclick="selPostEmo(this)" data-val="inspired">&#10024; Inspired</button>
-        <button class="pep" onclick="selPostEmo(this)" data-val="motivated">&#128293; Motivated</button>
-        <button class="pep" onclick="selPostEmo(this)" data-val="calm">&#129528; Calm</button>
-        <button class="pep" onclick="selPostEmo(this)" data-val="grateful">&#128591; Grateful</button>
-        <button class="pep" onclick="selPostEmo(this)" data-val="reflective">&#129710; Reflective</button>
-        <button class="pep" onclick="selPostEmo(this)" data-val="challenged">&#128170; Challenged</button>
-        <button class="pep" onclick="selPostEmo(this)" data-val="joyful">&#128516; Joyful</button>
-      </div>
-    </div>
-    <div class="sit-foot"><span class="sync-txt" id="post-sync">Ready to save</span><button class="btn gold" onclick="addPost()">Save post &#8599;</button></div>
-  </div>
+  <div class="sit-block"><div style="margin-bottom:8px"><label class="sfl">Heading</label><input class="sin" id="post-heading" type="text" placeholder="What is this post about?"></div><div style="margin-bottom:8px"><label class="sfl">Description <span style="color:var(--text-3);font-weight:400">(&#8226; or - for bullets)</span></label><textarea class="sin" id="post-desc" rows="4" placeholder="&#8226; Key takeaway&#10;&#8226; Why it resonated..."></textarea></div><div style="margin-bottom:8px"><label class="sfl">Source</label><div class="src-pills"><button class="src-pill" id="src-li" onclick="selPostSrc('linkedin')">&#128188; LinkedIn</button><button class="src-pill" id="src-ig" onclick="selPostSrc('instagram')">&#128248; Instagram</button><button class="src-pill" id="src-ot" onclick="selPostSrc('other')">&#127760; Other</button></div></div><div style="margin-bottom:8px"><label class="sfl">URL <span style="color:var(--text-3);font-weight:400">(optional)</span></label><input class="sin" id="post-url" type="text" placeholder="https://..."></div><div style="margin-bottom:8px"><label class="sfl">What emotion does this help with?</label><div class="pemo-pills"><button class="pep" onclick="selPostEmo(this)" data-val="inspired">&#10024; Inspired</button><button class="pep" onclick="selPostEmo(this)" data-val="motivated">&#128293; Motivated</button><button class="pep" onclick="selPostEmo(this)" data-val="calm">&#129528; Calm</button><button class="pep" onclick="selPostEmo(this)" data-val="grateful">&#128591; Grateful</button><button class="pep" onclick="selPostEmo(this)" data-val="reflective">&#129710; Reflective</button><button class="pep" onclick="selPostEmo(this)" data-val="challenged">&#128170; Challenged</button><button class="pep" onclick="selPostEmo(this)" data-val="joyful">&#128516; Joyful</button></div></div><div class="sit-foot"><span class="sync-txt" id="post-sync">Ready to save</span><button class="btn gold" onclick="addPost()">Save post &#8599;</button></div></div>
   <div class="foot" style="margin-top:1.5rem"><span class="foot-note">Stored locally · synced to Google Sheets</span><button class="btn" onclick="switchTab('morning')">&#8592; Morning</button></div>
 </div>
 
 <!-- TAB 5: HABITS -->
 <div class="pg" id="pg-habits">
-  <div class="past-hdr">
-    <div class="past-title">Emotion Habits</div>
-    <div class="past-sub">Practical habits to control an emotion — your personal toolkit for staying grounded.</div>
-  </div>
-
-  <!-- Filter by emotion -->
-  <div class="ef-bar" id="hab-emo-filter" style="margin-bottom:1rem">
-    <button class="ef on" data-he="all" onclick="setHabEmoFilter(this)">All emotions</button>
-    <button class="ef" data-he="anger" onclick="setHabEmoFilter(this)">&#128548; Anger</button>
-    <button class="ef" data-he="anxiety" onclick="setHabEmoFilter(this)">&#128560; Anxiety</button>
-    <button class="ef" data-he="frustration" onclick="setHabEmoFilter(this)">&#128547; Frustration</button>
-    <button class="ef" data-he="hurt" onclick="setHabEmoFilter(this)">&#128148; Hurt</button>
-    <button class="ef" data-he="shame" onclick="setHabEmoFilter(this)">&#128532; Shame</button>
-    <button class="ef" data-he="overwhelm" onclick="setHabEmoFilter(this)">&#127754; Overwhelm</button>
-    <button class="ef" data-he="fear" onclick="setHabEmoFilter(this)">&#128552; Fear</button>
-    <button class="ef" data-he="jealousy" onclick="setHabEmoFilter(this)">&#128065; Jealousy</button>
-    <button class="ef" data-he="sadness" onclick="setHabEmoFilter(this)">&#128546; Sadness</button>
-    <button class="ef" data-he="stress" onclick="setHabEmoFilter(this)">&#128165; Stress</button>
-  </div>
-
-  <!-- Search -->
-  <div class="th-filter-bar" style="margin-bottom:1rem">
-    <input class="psearch" id="hab-search" type="text" placeholder="Search habits..." oninput="renderHabits()" style="flex:1">
-    <button class="btn" onclick="exportHabitsCSV()">Export CSV</button>
-  </div>
-
+  <div class="past-hdr"><div class="past-title">Emotion Habits</div><div class="past-sub">Practical habits to control an emotion — your personal toolkit for staying grounded.</div></div>
+  <div class="ef-bar" id="hab-emo-filter"><button class="ef on" data-he="all" onclick="setHabEmoFilter(this)">All emotions</button><button class="ef" data-he="anger" onclick="setHabEmoFilter(this)">&#128548; Anger</button><button class="ef" data-he="anxiety" onclick="setHabEmoFilter(this)">&#128560; Anxiety</button><button class="ef" data-he="frustration" onclick="setHabEmoFilter(this)">&#128547; Frustration</button><button class="ef" data-he="hurt" onclick="setHabEmoFilter(this)">&#128148; Hurt</button><button class="ef" data-he="shame" onclick="setHabEmoFilter(this)">&#128532; Shame</button><button class="ef" data-he="overwhelm" onclick="setHabEmoFilter(this)">&#127754; Overwhelm</button><button class="ef" data-he="fear" onclick="setHabEmoFilter(this)">&#128552; Fear</button><button class="ef" data-he="jealousy" onclick="setHabEmoFilter(this)">&#128065; Jealousy</button><button class="ef" data-he="sadness" onclick="setHabEmoFilter(this)">&#128546; Sadness</button><button class="ef" data-he="stress" onclick="setHabEmoFilter(this)">&#128165; Stress</button></div>
+  <div class="th-filter-bar" style="margin-bottom:1rem"><input class="psearch" id="hab-search" type="text" placeholder="Search habits..." oninput="renderHabits()" style="flex:1"><button class="btn" onclick="exportHabitsCSV()">Export CSV</button></div>
   <div class="pmeta" id="hab-meta"></div>
   <div class="post-log" id="hab-log"></div>
-
-  <!-- Add new habit -->
   <div class="lbl" style="margin-top:1.5rem">Add a habit <span class="lbl-line"></span></div>
-  <div class="sit-block" style="background:var(--card);border:1px solid var(--border);border-radius:var(--rlg);padding:1rem">
-    <div style="margin-bottom:10px">
-      <label class="sfl">Emotion this habit helps with</label>
-      <div class="epills" id="hab-emo-pills">
-        <button class="ep" onclick="selHabEmo(this)" data-val="anger">&#128548; Anger</button>
-        <button class="ep" onclick="selHabEmo(this)" data-val="anxiety">&#128560; Anxiety</button>
-        <button class="ep" onclick="selHabEmo(this)" data-val="frustration">&#128547; Frustration</button>
-        <button class="ep" onclick="selHabEmo(this)" data-val="hurt">&#128148; Hurt</button>
-        <button class="ep" onclick="selHabEmo(this)" data-val="shame">&#128532; Shame</button>
-        <button class="ep" onclick="selHabEmo(this)" data-val="overwhelm">&#127754; Overwhelm</button>
-        <button class="ep" onclick="selHabEmo(this)" data-val="fear">&#128552; Fear</button>
-        <button class="ep" onclick="selHabEmo(this)" data-val="jealousy">&#128065; Jealousy</button>
-        <button class="ep" onclick="selHabEmo(this)" data-val="sadness">&#128546; Sadness</button>
-        <button class="ep" onclick="selHabEmo(this)" data-val="stress">&#128165; Stress</button>
-      </div>
-    </div>
-    <div style="margin-bottom:10px">
-      <label class="sfl">The habit / practical action</label>
-      <textarea class="sin" id="hab-text" rows="3" placeholder="e.g. When anger rises, step away for 90 seconds. Breathe out longer than you breathe in. Return only when your voice is calm."></textarea>
-    </div>
-    <div class="sit-foot">
-      <span class="sync-txt" id="hab-sync">Ready to add</span>
-      <button class="btn gold" onclick="addHabit()">Add habit &#8599;</button>
-    </div>
-  </div>
-
-  <div class="foot" style="margin-top:1.5rem">
-    <span class="foot-note">Stored locally · synced to Google Sheets</span>
-    <button class="btn" onclick="switchTab('morning')">&#8592; Morning</button>
-  </div>
-</div><!-- /pg-habits -->
+  <div class="sit-block"><div style="margin-bottom:10px"><label class="sfl">Emotion this habit helps with</label><div class="epills" id="hab-emo-pills"><button class="ep" onclick="selHabEmo(this)" data-val="anger">&#128548; Anger</button><button class="ep" onclick="selHabEmo(this)" data-val="anxiety">&#128560; Anxiety</button><button class="ep" onclick="selHabEmo(this)" data-val="frustration">&#128547; Frustration</button><button class="ep" onclick="selHabEmo(this)" data-val="hurt">&#128148; Hurt</button><button class="ep" onclick="selHabEmo(this)" data-val="shame">&#128532; Shame</button><button class="ep" onclick="selHabEmo(this)" data-val="overwhelm">&#127754; Overwhelm</button><button class="ep" onclick="selHabEmo(this)" data-val="fear">&#128552; Fear</button><button class="ep" onclick="selHabEmo(this)" data-val="jealousy">&#128065; Jealousy</button><button class="ep" onclick="selHabEmo(this)" data-val="sadness">&#128546; Sadness</button><button class="ep" onclick="selHabEmo(this)" data-val="stress">&#128165; Stress</button></div></div><div style="margin-bottom:10px"><label class="sfl">The habit / practical action</label><textarea class="sin" id="hab-text" rows="3" placeholder="e.g. When anger rises, step away for 90 seconds. Breathe out longer than you breathe in..."></textarea></div><div class="sit-foot"><span class="sync-txt" id="hab-sync">Ready to add</span><button class="btn gold" onclick="addHabit()">Add habit &#8599;</button></div></div>
+  <div class="foot" style="margin-top:1.5rem"><span class="foot-note">Stored locally · synced to Google Sheets</span><button class="btn" onclick="switchTab('morning')">&#8592; Morning</button></div>
+</div>
 
 <!-- TAB 6: MOTIVATION -->
 <div class="pg" id="pg-motivation">
-  <div class="past-hdr">
-    <div class="past-title">Morning Motivation</div>
-    <div class="past-sub">Your personal reading list for every morning — habits, practices and principles to live by.</div>
-  </div>
-
-  <!-- Category filter -->
-  <div class="mot-filter-bar" id="mot-cat-filter">
-    <button class="mf on" data-mc="all" onclick="setMotCatFilter(this)">All</button>
-    <button class="mf" data-mc="habit" onclick="setMotCatFilter(this)">&#127775; Habit</button>
-    <button class="mf" data-mc="practice" onclick="setMotCatFilter(this)">&#129490; Practice</button>
-    <button class="mf" data-mc="principle" onclick="setMotCatFilter(this)">&#128214; Principle</button>
-    <button class="mf" data-mc="mantra" onclick="setMotCatFilter(this)">&#128591; Mantra</button>
-    <button class="mf" data-mc="reminder" onclick="setMotCatFilter(this)">&#128276; Reminder</button>
-  </div>
-
-  <!-- Search + sort -->
-  <div class="th-filter-bar" style="margin-bottom:1rem">
-    <input class="psearch" id="mot-search" type="text" placeholder="Search..." oninput="renderMotivation()" style="flex:1">
-    <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-2);cursor:pointer">
-      <input type="checkbox" id="mot-pinned-only" onchange="renderMotivation()">
-      &#128204; Pinned only
-    </label>
-    <button class="btn" onclick="exportMotCSV()">Export CSV</button>
-  </div>
-
+  <div class="past-hdr"><div class="past-title">Morning Motivation</div><div class="past-sub">Your personal reading list — habits, practices and principles to live by.</div></div>
+  <div class="mot-filter-bar" id="mot-cat-filter"><button class="mf on" data-mc="all" onclick="setMotCatFilter(this)">All</button><button class="mf" data-mc="habit" onclick="setMotCatFilter(this)">&#127775; Habit</button><button class="mf" data-mc="practice" onclick="setMotCatFilter(this)">&#129490; Practice</button><button class="mf" data-mc="principle" onclick="setMotCatFilter(this)">&#128214; Principle</button><button class="mf" data-mc="mantra" onclick="setMotCatFilter(this)">&#128591; Mantra</button><button class="mf" data-mc="reminder" onclick="setMotCatFilter(this)">&#128276; Reminder</button></div>
+  <div class="th-filter-bar" style="margin-bottom:1rem"><input class="psearch" id="mot-search" type="text" placeholder="Search..." oninput="renderMotivation()" style="flex:1"><label style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-2);cursor:pointer"><input type="checkbox" id="mot-pinned-only" onchange="renderMotivation()">&#128204; Pinned only</label><button class="btn" onclick="exportMotCSV()">Export CSV</button></div>
   <div class="pmeta" id="mot-meta"></div>
   <div class="mot-log" id="mot-log"></div>
-
-  <!-- Add new entry -->
   <div class="lbl" style="margin-top:1.5rem">Add an entry <span class="lbl-line"></span></div>
-  <div class="sit-block" style="background:var(--card);border:1px solid var(--border);border-radius:var(--rlg);padding:1rem">
-    <div style="margin-bottom:10px">
-      <label class="sfl">Category</label>
-      <div class="mot-cat-pills">
-        <button class="mcp" onclick="selMotCat(this)" data-val="habit" style="--mc:#C9A84C">&#127775; Habit</button>
-        <button class="mcp" onclick="selMotCat(this)" data-val="practice" style="--mc:#4ECDC4">&#129490; Practice</button>
-        <button class="mcp" onclick="selMotCat(this)" data-val="principle" style="--mc:#6BBF8E">&#128214; Principle</button>
-        <button class="mcp" onclick="selMotCat(this)" data-val="mantra" style="--mc:#E07B7B">&#128591; Mantra</button>
-        <button class="mcp" onclick="selMotCat(this)" data-val="reminder" style="--mc:#9A97A0">&#128276; Reminder</button>
-      </div>
-    </div>
-    <div style="margin-bottom:10px">
-      <label class="sfl">Habit / practice / principle</label>
-      <textarea class="sin" id="mot-text" rows="4" placeholder="e.g. Every morning before I touch my phone, I sit for 5 minutes in silence. No input. Just presence. This one habit sets the tone for the entire day.&#10;&#10;Or: I will not compete with others. I compete only with who I was yesterday."></textarea>
-    </div>
-    <div class="sit-foot">
-      <span class="sync-txt" id="mot-sync">Ready to add</span>
-      <button class="btn gold" onclick="addMotEntry()">Add to morning read &#8599;</button>
-    </div>
-  </div>
-
-  <div class="foot" style="margin-top:1.5rem">
-    <span class="foot-note">Stored locally · synced to Google Sheets</span>
-    <button class="btn" onclick="switchTab('morning')">&#8592; Morning</button>
-  </div>
-</div><!-- /pg-motivation -->
+  <div class="sit-block"><div style="margin-bottom:10px"><label class="sfl">Category</label><div class="mot-cat-pills"><button class="mcp" onclick="selMotCat(this)" data-val="habit">&#127775; Habit</button><button class="mcp" onclick="selMotCat(this)" data-val="practice">&#129490; Practice</button><button class="mcp" onclick="selMotCat(this)" data-val="principle">&#128214; Principle</button><button class="mcp" onclick="selMotCat(this)" data-val="mantra">&#128591; Mantra</button><button class="mcp" onclick="selMotCat(this)" data-val="reminder">&#128276; Reminder</button></div></div><div style="margin-bottom:10px"><label class="sfl">Habit / practice / principle</label><textarea class="sin" id="mot-text" rows="4" placeholder="e.g. Every morning before I touch my phone, I sit for 5 minutes in silence..."></textarea></div><div class="sit-foot"><span class="sync-txt" id="mot-sync">Ready to add</span><button class="btn gold" onclick="addMotEntry()">Add to morning read &#8599;</button></div></div>
+  <div class="foot" style="margin-top:1.5rem"><span class="foot-note">Stored locally · synced to Google Sheets</span><button class="btn" onclick="switchTab('morning')">&#8592; Morning</button></div>
+</div>
 
 <!-- TAB 7: GRATITUDE -->
 <div class="pg" id="pg-gratitude">
-  <div class="past-hdr">
-    <div class="past-title">Gratitude Journal</div>
-    <div class="past-sub">Three things you are grateful for, every morning. Small habit. Big shift.</div>
-  </div>
-
-  <!-- Stats -->
-  <div class="grat-stats">
-    <div class="grat-streak-block">
-      <div class="grat-streak-num" id="grat-streak-num">0</div>
-      <div class="grat-streak-lbl">&#128293; Day streak</div>
-    </div>
-    <div class="grat-streak-block">
-      <div class="grat-streak-num" id="grat-total-num" style="color:var(--gold)">0</div>
-      <div class="grat-streak-lbl">Total entries</div>
-    </div>
-    <div class="grat-streak-block">
-      <div class="grat-streak-num" id="grat-today-status" style="font-size:1.3rem">&#8212;</div>
-      <div class="grat-streak-lbl">Today</div>
-    </div>
-  </div>
-
-  <!-- Search + filter -->
-  <div class="th-filter-bar" style="margin-bottom:1rem">
-    <input class="psearch" id="grat-search" type="text" placeholder="Search entries..." oninput="renderGratitude()" style="flex:1">
-    <select class="psort" id="grat-sort" onchange="renderGratitude()">
-      <option value="newest">Newest first</option>
-      <option value="oldest">Oldest first</option>
-    </select>
-    <button class="btn" onclick="exportGratCSV()">Export CSV</button>
-  </div>
-
+  <div class="past-hdr"><div class="past-title">Gratitude Journal</div><div class="past-sub">Three things you are grateful for, every morning. Small habit. Big shift.</div></div>
+  <div class="grat-stats"><div class="grat-streak-block"><div class="grat-streak-num" id="grat-streak-num">0</div><div class="grat-streak-lbl">&#128293; Day streak</div></div><div class="grat-streak-block"><div class="grat-streak-num" id="grat-total-num" style="color:var(--gold)">0</div><div class="grat-streak-lbl">Total entries</div></div><div class="grat-streak-block"><div class="grat-streak-num" id="grat-today-status" style="font-size:1.3rem">&#8212;</div><div class="grat-streak-lbl">Today</div></div></div>
+  <div class="th-filter-bar" style="margin-bottom:1rem"><input class="psearch" id="grat-search" type="text" placeholder="Search entries..." oninput="renderGratitude()" style="flex:1"><select class="psort" id="grat-sort" onchange="renderGratitude()"><option value="newest">Newest first</option><option value="oldest">Oldest first</option></select><button class="btn" onclick="exportGratCSV()">Export CSV</button></div>
   <div class="pmeta" id="grat-meta"></div>
   <div class="grat-log" id="grat-log"></div>
-
-  <!-- Add today's entry -->
   <div class="lbl" style="margin-top:1.5rem">Today's gratitude <span class="lbl-line"></span></div>
-  <div class="sit-block" style="background:var(--card);border:1px solid var(--border);border-radius:var(--rlg);padding:1rem">
-    <div style="font-size:12px;color:var(--text-2);margin-bottom:10px">What are three things you are genuinely grateful for right now? Be specific.</div>
-    <div class="grat-input-row"><div class="grat-num">1</div><textarea class="sin" id="grat-1" rows="2" placeholder="e.g. My family is healthy and present in my life..."></textarea></div>
-    <div class="grat-input-row"><div class="grat-num">2</div><textarea class="sin" id="grat-2" rows="2" placeholder="e.g. I had a moment of real clarity this morning..."></textarea></div>
-    <div class="grat-input-row"><div class="grat-num">3</div><textarea class="sin" id="grat-3" rows="2" placeholder="e.g. Someone believed in me when I needed it most..."></textarea></div>
-    <div style="margin-top:8px">
-      <label class="sfl">One word for how you feel right now <span style="color:var(--text-3);font-weight:400">(optional)</span></label>
-      <div class="pemo-pills" id="grat-emo-pills">
-        <button class="pep" onclick="selGratEmo(this)" data-val="grateful">&#128591; Grateful</button>
-        <button class="pep" onclick="selGratEmo(this)" data-val="hopeful">&#127775; Hopeful</button>
-        <button class="pep" onclick="selGratEmo(this)" data-val="peaceful">&#129490; Peaceful</button>
-        <button class="pep" onclick="selGratEmo(this)" data-val="joyful">&#128516; Joyful</button>
-        <button class="pep" onclick="selGratEmo(this)" data-val="content">&#129392; Content</button>
-        <button class="pep" onclick="selGratEmo(this)" data-val="motivated">&#128293; Motivated</button>
-        <button class="pep" onclick="selGratEmo(this)" data-val="calm">&#129528; Calm</button>
-      </div>
-    </div>
-    <div class="sit-foot" style="margin-top:10px">
-      <span class="sync-txt" id="grat-sync">Ready</span>
-      <button class="btn gold" onclick="addGratitude()">Save gratitude &#8599;</button>
-    </div>
-  </div>
-
-  <div class="foot" style="margin-top:1.5rem">
-    <span class="foot-note">Synced to Google Sheets</span>
-    <button class="btn" onclick="switchTab('morning')">&#8592; Morning</button>
-  </div>
-</div><!-- /pg-gratitude -->
+  <div class="sit-block"><div style="font-size:12px;color:var(--text-2);margin-bottom:10px">What are three things you are genuinely grateful for right now? Be specific.</div><div class="grat-input-row"><div class="grat-num">1</div><textarea class="sin" id="grat-1" rows="2" placeholder="e.g. My family is healthy and present in my life..."></textarea></div><div class="grat-input-row"><div class="grat-num">2</div><textarea class="sin" id="grat-2" rows="2" placeholder="e.g. I had a moment of real clarity this morning..."></textarea></div><div class="grat-input-row"><div class="grat-num">3</div><textarea class="sin" id="grat-3" rows="2" placeholder="e.g. Someone believed in me when I needed it most..."></textarea></div><div style="margin-top:8px"><label class="sfl">How do you feel right now? <span style="color:var(--text-3);font-weight:400">(optional)</span></label><div class="pemo-pills" id="grat-emo-pills"><button class="pep" onclick="selGratEmo(this)" data-val="grateful">&#128591; Grateful</button><button class="pep" onclick="selGratEmo(this)" data-val="hopeful">&#127775; Hopeful</button><button class="pep" onclick="selGratEmo(this)" data-val="peaceful">&#129490; Peaceful</button><button class="pep" onclick="selGratEmo(this)" data-val="joyful">&#128516; Joyful</button><button class="pep" onclick="selGratEmo(this)" data-val="content">&#129392; Content</button><button class="pep" onclick="selGratEmo(this)" data-val="motivated">&#128293; Motivated</button><button class="pep" onclick="selGratEmo(this)" data-val="calm">&#129528; Calm</button></div></div><div class="sit-foot"><span class="sync-txt" id="grat-sync">Ready</span><button class="btn gold" onclick="addGratitude()">Save gratitude &#8599;</button></div></div>
+  <div class="foot" style="margin-top:1.5rem"><span class="foot-note">Synced to Google Sheets</span><button class="btn" onclick="switchTab('morning')">&#8592; Morning</button></div>
+</div>
 
 <!-- EDIT MODAL -->
 <div id="edit-modal" style="display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);overflow-y:auto;padding:2rem 1rem">
   <div style="max-width:620px;margin:0 auto;background:var(--card);border:1px solid var(--border-md);border-radius:var(--rlg);overflow:hidden">
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:1rem 1.25rem;border-bottom:1px solid var(--border)">
-      <div style="font-size:14px;font-weight:600;color:var(--text-1)" id="modal-title">Edit</div>
-      <button onclick="closeEditModal()" style="background:none;border:none;color:var(--text-2);font-size:20px;cursor:pointer;line-height:1;padding:0 4px">&times;</button>
-    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:1rem 1.25rem;border-bottom:1px solid var(--border)"><div style="font-size:14px;font-weight:600;color:var(--text-1)" id="modal-title">Edit</div><button onclick="closeEditModal()" style="background:none;border:none;color:var(--text-2);font-size:20px;cursor:pointer;line-height:1;padding:0 4px">&times;</button></div>
     <div style="padding:1.25rem" id="modal-body"></div>
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:.875rem 1.25rem;border-top:1px solid var(--border);background:var(--surface)">
-      <button class="btn" onclick="closeEditModal()">Cancel</button>
-      <button class="btn gold" id="modal-save-btn" onclick="saveEditModal()">Save changes &#8599;</button>
-    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:.875rem 1.25rem;border-top:1px solid var(--border);background:var(--surface)"><button class="btn" onclick="closeEditModal()">Cancel</button><button class="btn gold" id="modal-save-btn" onclick="saveEditModal()">Save changes &#8599;</button></div>
   </div>
 </div>
 
@@ -1203,8 +809,11 @@ async function saveEditModal(){
     var selCatEl=document.querySelector('#edit-mot-cat-pills .mcp.on');
     if(selCatEl) e.category=selCatEl.dataset.val;
     e.text=document.getElementById('edit-mot-text').value.trim();
-    saveMotivation(); closeEditModal(); renderMotivation();
-    showToast('Entry updated ✓','success');
+    saveMotivation();
+    var okm=await postToSheet({sheet:'Motivation',action:'edit_motivation',
+      sheetId:e.sheetId||'',category:e.category,text:e.text,pinned:e.pinned?'yes':'no'});
+    closeEditModal(); renderMotivation();
+    showToast(okm?'Entry updated ✓':'Updated locally — Sheet sync pending.',okm?'success':'');
   }else if(_editCtx.type==='gratitude'){
     var e=gratEntries.find(function(x){return x.id===_editCtx.id;}); if(!e){closeEditModal();return;}
     var g1=document.getElementById('edit-grat-1').value.trim();
@@ -1637,6 +1246,7 @@ function replaceGratitudeFromSheet(s){
 /* START */
 init();
 setInterval(function(){document.getElementById('time-now').textContent=new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true});},60000);
+
 </script>
 </body>
 </html>
