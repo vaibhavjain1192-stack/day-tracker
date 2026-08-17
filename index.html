@@ -355,7 +355,7 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
   <div class="pmeta" id="hab-meta"></div>
   <div class="post-log" id="hab-log"></div>
   <div class="lbl" style="margin-top:1.5rem">Add a habit <span class="lbl-line"></span></div>
-  <div class="sit-block"><div style="margin-bottom:10px"><label class="sfl">Emotion this habit helps with</label><div class="epills" id="hab-emo-pills"><button class="ep" onclick="selHabEmo(this)" data-val="anger">&#128548; Anger</button><button class="ep" onclick="selHabEmo(this)" data-val="anxiety">&#128560; Anxiety</button><button class="ep" onclick="selHabEmo(this)" data-val="frustration">&#128547; Frustration</button><button class="ep" onclick="selHabEmo(this)" data-val="hurt">&#128148; Hurt</button><button class="ep" onclick="selHabEmo(this)" data-val="shame">&#128532; Shame</button><button class="ep" onclick="selHabEmo(this)" data-val="overwhelm">&#127754; Overwhelm</button><button class="ep" onclick="selHabEmo(this)" data-val="fear">&#128552; Fear</button><button class="ep" onclick="selHabEmo(this)" data-val="jealousy">&#128065; Jealousy</button><button class="ep" onclick="selHabEmo(this)" data-val="sadness">&#128546; Sadness</button><button class="ep" onclick="selHabEmo(this)" data-val="stress">&#128165; Stress</button></div></div><div style="margin-bottom:10px"><label class="sfl">The habit / practical action</label><textarea class="sin" id="hab-text" rows="3" placeholder="e.g. When anger rises, step away for 90 seconds. Breathe out longer than you breathe in..."></textarea></div><div class="sit-foot"><span class="sync-txt" id="hab-sync">Ready to add</span><button class="btn gold" onclick="addHabit()">Add habit &#8599;</button></div></div>
+  <div class="sit-block"><div style="margin-bottom:10px"><label class="sfl">Emotion this habit helps with</label><div class="epills" id="hab-emo-pills"><button class="ep" onclick="selHabEmo(this)" data-val="anger">&#128548; Anger</button><button class="ep" onclick="selHabEmo(this)" data-val="anxiety">&#128560; Anxiety</button><button class="ep" onclick="selHabEmo(this)" data-val="frustration">&#128547; Frustration</button><button class="ep" onclick="selHabEmo(this)" data-val="hurt">&#128148; Hurt</button><button class="ep" onclick="selHabEmo(this)" data-val="shame">&#128532; Shame</button><button class="ep" onclick="selHabEmo(this)" data-val="overwhelm">&#127754; Overwhelm</button><button class="ep" onclick="selHabEmo(this)" data-val="fear">&#128552; Fear</button><button class="ep" onclick="selHabEmo(this)" data-val="jealousy">&#128065; Jealousy</button><button class="ep" onclick="selHabEmo(this)" data-val="sadness">&#128546; Sadness</button><button class="ep" onclick="selHabEmo(this)" data-val="stress">&#128165; Stress</button></div></div><div style="margin-bottom:10px"><label class="sfl">The habit / practical action</label><textarea class="sin" id="hab-text" rows="3" placeholder="&#8226; Do one thing at a time. Slowly, deliberately.&#10;&#8226; Use the body as anchor. Feet on floor.&#10;&#8226; When you drift, notice one physical sensation."></textarea></div><div class="sit-foot"><span class="sync-txt" id="hab-sync">Ready to add</span><button class="btn gold" onclick="addHabit()">Add habit &#8599;</button></div></div>
   <div class="foot" style="margin-top:1.5rem"><span class="foot-note">Stored locally · synced to Google Sheets</span><button class="btn" onclick="switchTab('morning')">&#8592; Morning</button></div>
 </div>
 
@@ -860,11 +860,14 @@ async function addHabit(){
 
 function habCardHTML(h){
   var emoBadge=h.emotion?'<span class="emo-badge" style="background:rgba(201,168,76,0.11);border-color:rgba(201,168,76,0.28);color:var(--gold)">'+(HAB_EMO_ICONS[h.emotion]||'')+' '+h.emotion+'</span>':'';
+  // Convert || separators (old format) to newlines so they render as paragraphs
+  var normalised=(h.text||'').replace(/\s*\|\|\s*/g,'\n');
+  var bodyHtml=renderBullets(normalised);
   return '<div class="post-card" id="hab-'+h.id+'">'+
     '<div class="post-card-meta">'+emoBadge+'<span class="post-date">'+h.date+'</span></div>'+
-    '<div style="font-size:13px;color:var(--text-1);line-height:1.65;margin-bottom:.6rem">'+escH(h.text)+'</div>'+
+    '<div class="th-card-body" style="margin-bottom:.6rem">'+bodyHtml+'</div>'+
     '<div class="post-card-foot"><button class="del-btn" onclick="delHabit('+h.id+')">&#128465; Delete</button>'+
-    '<button class="btn" style="font-size:11px;padding:4px 12px" onclick="editHabit('+h.id+')">✏ Edit</button></div>'+
+    '<button class="btn" style="font-size:11px;padding:4px 12px" onclick="editHabit('+h.id+')">&#9998; Edit</button></div>'+
   '</div>';
 }
 
@@ -887,7 +890,9 @@ function editHabit(id){
   var emoOpts=['anger','anxiety','frustration','hurt','shame','overwhelm','fear','jealousy','sadness','stress'];
   var emoPills=emoOpts.map(function(e){return '<button class="ep'+(h.emotion===e?' on':'')+'" data-val="'+e+'" onclick="this.parentNode.querySelectorAll(\'.ep\').forEach(function(x){x.classList.remove(\'on\')});this.classList.add(\'on\')">'+(HAB_EMO_ICONS[e]||'')+' '+e+'</button>';}).join('');
   var html='<div style="margin-bottom:10px"><label class="sfl">Emotion</label><div class="epills" id="edit-hab-emo-pills">'+emoPills+'</div></div>'+
-    '<div><label class="sfl">The habit / practical action</label><textarea class="sin" id="edit-hab-text" rows="4">'+escH(h.text)+'</textarea></div>';
+    '<div><label class="sfl">The habit / practical action <span style="color:var(--text-3);font-weight:400">(&#8226; or - for bullets)</span></label>'+
+    '<textarea class="sin" id="edit-hab-text" rows="8">'+escH(h.text)+'</textarea>'+
+    '<div style="font-size:10px;color:var(--text-3);margin-top:4px">Start each line with <code style="background:rgba(255,255,255,0.07);padding:1px 5px;border-radius:3px;color:var(--text-2)">&#8226;</code> or <code style="background:rgba(255,255,255,0.07);padding:1px 5px;border-radius:3px;color:var(--text-2)">-</code> to create bullet points</div></div>';
   openEditModal('Edit habit',html,{type:'habit',id:id});
 }
 
