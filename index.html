@@ -422,12 +422,33 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
 <script>
 'use strict';
 const WORKER_URL='https://muddy-shadow-1aa7.vaibhavjain-1192.workers.dev';
+const FETCH_TIMEOUT=15000;
+
+async function sheetFetch(url,opts){
+  var ctrl=new AbortController();
+  var tid=setTimeout(function(){ctrl.abort();},FETCH_TIMEOUT);
+  try{
+    var resp=await fetch(url,Object.assign({signal:ctrl.signal},opts||{}));
+    clearTimeout(tid);
+    if(!resp.ok) throw new Error('HTTP '+resp.status);
+    return await resp.json();
+  }catch(e){ clearTimeout(tid); console.warn('[sheetFetch]',url,e.message||e); return null; }
+}
 
 /* POST to Sheet */
-function postToSheet(data){return new Promise(function(resolve){try{var b=new URLSearchParams();b.append('payload',JSON.stringify(data));fetch(WORKER_URL,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:b.toString()}).then(function(r){resolve(r&&r.ok);}).catch(function(){resolve(false);});}catch(e){resolve(false);}});}
+async function postToSheet(data){
+  try{
+    var b=new URLSearchParams(); b.append('payload',JSON.stringify(data));
+    var d=await sheetFetch(WORKER_URL,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:b.toString()});
+    return !!(d&&d.status==='ok');
+  }catch(e){return false;}
+}
 
 /* GET from Sheet */
-function fetchFromSheet(){return new Promise(function(resolve){try{fetch(WORKER_URL+'?action=getToday&date='+isoToday(),{method:'GET'}).then(function(r){return r.ok?r.json():null;}).then(function(d){resolve((d&&d.status==='ok')?d:null);}).catch(function(){resolve(null);});}catch(e){resolve(null);}});}
+async function fetchFromSheet(){
+  var d=await sheetFetch(WORKER_URL+'?action=getToday&date='+isoToday());
+  return (d&&d.status==='ok')?d:null;
+}
 
 var MANTRAS=[
   {text:"You don't have to be perfect. You just have to begin.",src:"-- James Clear"},
@@ -524,20 +545,26 @@ function init(){
   // Show shimmer/loading state on morning intentions
   setIntentionsState('loading');
 
-  // Fetch everything from Sheet in parallel — no localStorage fallback for display
-  Promise.all([
-    fetchFromSheet(),
-    fetchAllSituations(),
-    fetchAllThoughts(),
-    fetchAllPosts(),
-    fetchAllMotivation(),
-    fetchAllGratitude()
-  ]).then(function(res){
-    var d=res[0];
-    if(d&&d.morning&&(d.morning.priority||d.morning.emotional_intention||d.morning.gratitude)){
+  // Fetch everything from Sheet in parallel — Sheet is single source of truth
+  (async function(){
+    try{
+      var results=await Promise.all([
+        fetchFromSheet(),
+        fetchAllSituations(),
+        fetchAllThoughts(),
+        fetchAllPosts(),
+        fetchAllMotivation(),
+        fetchAllGratitude()
+      ]);
+      var d=results[0];
+      if(d&&d.morning&&(d.morning.priority||d.morning.emotional_intention)){
         showReadView(d.morning.priority||'',d.morning.emotional_intention||'');
-    }else{setIntentionsState('form');}
-  }).catch(function(){setIntentionsState('form');});
+      }else{setIntentionsState('form');}
+    }catch(e){
+      console.error('[init fetch error]',e);
+      setIntentionsState('form');
+    }
+  })();
 }
 
 function setIntentionsState(s){
@@ -627,7 +654,11 @@ function sitCardHTML(s){
 function togSC(id){var c=document.getElementById('sc-'+id);if(c)c.classList.toggle('open');}
 async function saveSt(id){var area=document.getElementById('str-'+id);if(!area)return;var sit=situations.find(function(s){return s.id===id;});if(!sit)return;sit.strategy=area.value.trim();saveSits();await postToSheet({sheet:'Situations',action:'update_strategy',dateISO:sit.dateISO,title:sit.title,strategy:sit.strategy});renderPast();setTimeout(function(){var c=document.getElementById('sc-'+id);if(c)c.classList.add('open');},30);showToast('Strategy saved \u2713','success');}
 function delSit(id){if(!confirm('Delete this situation?'))return;situations=situations.filter(function(s){return s.id!==id;});saveSits();updateBadge();renderStats();renderPast();showToast('Deleted.','');}
-function fetchAllSituations(){return new Promise(function(resolve){try{fetch(WORKER_URL+'?action=getAllSituations').then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&d.status==='ok'&&Array.isArray(d.situations))replaceSituationsFromSheet(d.situations);resolve();}).catch(function(){resolve();});}catch(e){resolve();}});}
+async function fetchAllSituations(){
+  var d=await sheetFetch(WORKER_URL+'?action=getAllSituations');
+  if(d&&d.status==='ok'&&Array.isArray(d.situations)) replaceSituationsFromSheet(d.situations);
+  else console.warn('[Situations] bad response:',d);
+}
 function replaceSituationsFromSheet(s){
   localStorage.removeItem('morning_situations');
   situations=s.map(function(x,i){return{id:Date.now()+i,timestamp:x.dateISO?new Date(x.dateISO).getTime():Date.now(),dateISO:x.dateISO||'',date:x.date||'',title:x.title||'',trigger:x.trigger||'',reaction:x.reaction||'',emotion:x.emotion||'',strategy:x.strategy||''};});situations.sort(function(a,b){return b.timestamp-a.timestamp;});saveSits();updateBadge();if(document.getElementById('pg-situations').classList.contains('on')){renderStats();renderPast();}}
@@ -698,7 +729,11 @@ function renderThoughts(){
 }
 function delThought(id){if(!confirm('Delete this thought?'))return;thoughts=thoughts.filter(function(t){return t.id!==id;});saveThoughts();updateThBadge();renderThoughts();showToast('Deleted.','');}
 function exportThoughtsCSV(){if(!thoughts.length){showToast('Nothing to export.','error');return;}var h=['Date','Heading','Description','URL','Category','Emotion'];var rows=thoughts.map(function(t){return[t.date,t.heading||'',t.text||'',t.url||'',t.category||'',t.emotion||''].map(function(v){return'"'+String(v).replace(/"/g,'""')+'"';}).join(',');});var a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent([h.join(',')].concat(rows).join('\n'));a.download='thoughts-'+isoToday()+'.csv';a.click();showToast('CSV exported \u2713','success');}
-function fetchAllThoughts(){return new Promise(function(resolve){try{fetch(WORKER_URL+'?action=getAllThoughts').then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&d.status==='ok'&&Array.isArray(d.thoughts))replaceThoughtsFromSheet(d.thoughts);resolve();}).catch(function(){resolve();});}catch(e){resolve();}});}
+async function fetchAllThoughts(){
+  var d=await sheetFetch(WORKER_URL+'?action=getAllThoughts');
+  if(d&&d.status==='ok'&&Array.isArray(d.thoughts)) replaceThoughtsFromSheet(d.thoughts);
+  else console.warn('[Thoughts] bad response:',d);
+}
 function replaceThoughtsFromSheet(s){
   localStorage.removeItem('morning_thoughts');
   var fromSheet=s.map(function(x,i){return{id:x.sheetId?parseInt(x.sheetId,10):Date.now()+i,timestamp:x.dateISO?new Date(x.dateISO).getTime():Date.now(),dateISO:x.dateISO||'',date:x.date||'',heading:x.heading||'',text:x.text||'',url:x.url||'',category:x.category||'',emotion:x.emotion||'',sheetId:x.sheetId||''};});var sheetIds={};s.forEach(function(x){if(x.sheetId)sheetIds[x.sheetId]=true;});var pending=thoughts.filter(function(t){return t.sheetId&&!sheetIds[t.sheetId];});thoughts=fromSheet.concat(pending);thoughts.sort(function(a,b){return b.timestamp-a.timestamp;});saveThoughts();updateThBadge();if(document.getElementById('pg-thoughts').classList.contains('on'))renderThoughts();}
@@ -747,7 +782,11 @@ function renderPosts(){
 }
 function delPost(id){if(!confirm('Delete this post?'))return;posts=posts.filter(function(p){return p.id!==id;});savePosts();updatePostBadge();renderPosts();showToast('Deleted.','');}
 function exportPostsCSV(){if(!posts.length){showToast('Nothing to export.','error');return;}var h=['Date','Heading','Description','Source','URL','Emotion'];var rows=posts.map(function(p){return[p.date,p.heading||'',p.desc||'',p.source||'',p.url||'',p.emotion||''].map(function(v){return'"'+String(v).replace(/"/g,'""')+'"';}).join(',');});var a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent([h.join(',')].concat(rows).join('\n'));a.download='posts-'+isoToday()+'.csv';a.click();showToast('CSV exported \u2713','success');}
-function fetchAllPosts(){return new Promise(function(resolve){try{fetch(WORKER_URL+'?action=getAllPosts').then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&d.status==='ok'&&Array.isArray(d.posts))replacePostsFromSheet(d.posts);resolve();}).catch(function(){resolve();});}catch(e){resolve();}});}
+async function fetchAllPosts(){
+  var d=await sheetFetch(WORKER_URL+'?action=getAllPosts');
+  if(d&&d.status==='ok'&&Array.isArray(d.posts)) replacePostsFromSheet(d.posts);
+  else console.warn('[Posts] bad response:',d);
+}
 function replacePostsFromSheet(s){
   localStorage.removeItem('morning_posts');
   var fromSheet=s.map(function(x,i){return{id:x.sheetId?parseInt(x.sheetId,10):Date.now()+i,timestamp:x.dateISO?new Date(x.dateISO).getTime():Date.now(),dateISO:x.dateISO||'',date:x.date||'',heading:x.heading||'',desc:x.desc||'',source:x.source||'',url:x.url||'',emotion:x.emotion||'',sheetId:x.sheetId||''};});var sheetIds={};s.forEach(function(x){if(x.sheetId)sheetIds[x.sheetId]=true;});var pending=posts.filter(function(p){return p.sheetId&&!sheetIds[p.sheetId];});posts=fromSheet.concat(pending);posts.sort(function(a,b){return b.timestamp-a.timestamp;});savePosts();updatePostBadge();if(document.getElementById('pg-posts').classList.contains('on'))renderPosts();}
@@ -1076,14 +1115,10 @@ function editMotEntry(id){
   openEditModal('Edit entry',html,{type:'motivation',id:id});
 }
 
-function fetchAllMotivation(){
-  return new Promise(function(resolve){
-    try{
-      fetch(WORKER_URL+'?action=getAllMotivation').then(function(r){return r.ok?r.json():null;})
-        .then(function(d){if(d&&d.status==='ok'&&Array.isArray(d.motivation))replaceMotivationFromSheet(d.motivation);resolve();})
-        .catch(function(){resolve();});
-    }catch(e){resolve();}
-  });
+async function fetchAllMotivation(){
+  var d=await sheetFetch(WORKER_URL+'?action=getAllMotivation');
+  if(d&&d.status==='ok'&&Array.isArray(d.motivation)) replaceMotivationFromSheet(d.motivation);
+  else console.warn('[Motivation] bad response:',d);
 }
 
 function replaceMotivationFromSheet(s){
@@ -1244,14 +1279,10 @@ function exportGratCSV(){
   showToast('CSV exported ✓','success');
 }
 
-function fetchAllGratitude(){
-  return new Promise(function(resolve){
-    try{
-      fetch(WORKER_URL+'?action=getAllGratitude').then(function(r){return r.ok?r.json():null;})
-        .then(function(d){if(d&&d.status==='ok'&&Array.isArray(d.gratitude))replaceGratitudeFromSheet(d.gratitude);resolve();})
-        .catch(function(){resolve();});
-    }catch(e){resolve();}
-  });
+async function fetchAllGratitude(){
+  var d=await sheetFetch(WORKER_URL+'?action=getAllGratitude');
+  if(d&&d.status==='ok'&&Array.isArray(d.gratitude)) replaceGratitudeFromSheet(d.gratitude);
+  else console.warn('[Gratitude] bad response:',d);
 }
 
 function replaceGratitudeFromSheet(s){
