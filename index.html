@@ -256,6 +256,16 @@ body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:
 .grat-streak-lbl{font-size:10px;color:var(--text-3);margin-top:3px}
 .grat-input-row{display:flex;gap:8px;align-items:flex-start;margin-bottom:6px}
 .grat-num{width:22px;height:22px;border-radius:50%;background:var(--gold-dim);border:1px solid rgba(201,168,76,0.3);color:var(--gold);font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:8px;font-family:var(--fm)}
+.th-habit-item{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)}
+.th-habit-item:last-child{border-bottom:none}
+.th-habit-cb{width:17px;height:17px;border-radius:4px;border:1.5px solid var(--border-md);flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all var(--tr);background:var(--surface)}
+.th-habit-cb.done{background:var(--green);border-color:var(--green)}
+.th-habit-tick{color:#0F1117;font-size:10px;font-weight:700;display:none}
+.th-habit-cb.done .th-habit-tick{display:block}
+.th-habit-text{flex:1;font-size:13px;color:var(--text-1);cursor:pointer}
+.th-habit-cb.done + .th-habit-text{color:var(--text-3);text-decoration:line-through}
+.th-habit-del{background:none;border:none;color:var(--text-3);cursor:pointer;font-size:14px;padding:0 4px;line-height:1;transition:color var(--tr)}
+.th-habit-del:hover{color:var(--rose)}
 .toast{position:fixed;bottom:5.5rem;right:1rem;background:#1E2333;border:1px solid var(--border-md);border-radius:var(--r);padding:10px 16px;font-size:12px;color:var(--text-1);box-shadow:0 6px 24px rgba(0,0,0,0.4);opacity:0;transform:translateY(6px);transition:all 0.22s ease;pointer-events:none;z-index:200;max-width:280px}
 .toast.show{opacity:1;transform:translateY(0)}
 .toast.success{border-color:rgba(107,191,142,0.32)}.toast.error{border-color:rgba(224,123,123,0.32)}
@@ -282,7 +292,6 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
     <button class="tab" onclick="switchTab('situations')"><span class="tab-icon">&#128250;</span><span class="tab-label">Situations <span class="badge" id="sit-badge">0</span></span></button>
     <button class="tab" onclick="switchTab('thoughts')"><span class="tab-icon">&#128161;</span><span class="tab-label">Thoughts <span class="badge" id="th-badge">0</span></span></button>
     <button class="tab" onclick="switchTab('posts')"><span class="tab-icon">&#128204;</span><span class="tab-label">Posts <span class="badge" id="post-badge">0</span></span></button>
-    <button class="tab" onclick="switchTab('habits')"><span class="tab-icon">&#127775;</span><span class="tab-label">Habits <span class="badge" id="hab-badge">0</span></span></button>
     <button class="tab" onclick="switchTab('motivation')"><span class="tab-icon">&#128293;</span><span class="tab-label">Motivation</span></button>
     <button class="tab" onclick="switchTab('gratitude')"><span class="tab-icon">&#128591;</span><span class="tab-label">Gratitude</span></button>
   </div>
@@ -294,8 +303,37 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
   <div class="mantra"><div class="mantra-q" id="mantra-text">"..."</div><div class="mantra-src" id="mantra-source"></div></div>
   <hr class="d">
   <div id="q-loading-wrap" style="display:none"><div class="lbl">Today's intentions <span class="lbl-line"></span></div><div class="q-loading-card"><div class="q-skel q-skel-sm"></div><div class="q-skel q-skel-lg"></div><div class="q-skel q-skel-sm" style="margin-top:8px"></div><div class="q-skel q-skel-lg"></div><div class="q-skel q-skel-sm" style="margin-top:8px"></div><div class="q-skel q-skel-md"></div><div class="q-loading-note">Fetching your intentions...</div></div></div>
-  <div id="q-form-wrap"><div class="lbl">Today's intentions <span class="lbl-line"></span></div><div class="q-wrap"><div class="q-item"><div class="q-lbl">What is the one thing that, if I do it today, makes everything else easier?</div><textarea class="q-in" id="q1" rows="2" placeholder="Your single top priority for today..."></textarea></div><div class="q-item"><div class="q-lbl">How do I want to show up emotionally today?</div><textarea class="q-in" id="q2" rows="2" placeholder="Calm, focused, patient, present..."></textarea></div><div class="q-item"><div class="q-lbl">What am I genuinely grateful for right now?</div><textarea class="q-in" id="q3" rows="2" placeholder="Name one specific thing..."></textarea></div><div class="q-actions"><span class="save-st" id="save-status"></span><button class="btn" onclick="clearQuestions()">Clear</button><button class="btn gold" onclick="saveToSheet()">Save intentions &#8599;</button></div></div></div>
-  <div id="q-read-wrap" style="display:none"><div class="lbl">Today's intentions <span class="lbl-line"></span> <button class="btn ghost" onclick="editIntentions()">Edit</button></div><div class="goals-card"><div class="goals-card-head"><span class="goals-card-title">Your day is set &#10003;</span><span class="goals-card-date" id="goals-date"></span></div><div class="goals-body"><div class="goal-row"><div class="goal-icon">&#127919;</div><div class="goal-col"><div class="goal-label">Top priority</div><div class="goal-value" id="goal-q1">--</div></div></div><div class="goal-row"><div class="goal-icon">&#10084;&#65039;</div><div class="goal-col"><div class="goal-label">Emotional intention</div><div class="goal-value" id="goal-q2">--</div></div></div><div class="goal-row"><div class="goal-icon">&#128591;</div><div class="goal-col"><div class="goal-label">Gratitude</div><div class="goal-value" id="goal-q3">--</div></div></div></div><div class="goals-footer"><span class="goals-synced" id="goals-synced-lbl">Synced to Sheet &#10003;</span><button class="btn ghost" onclick="editIntentions()">&#9998; Edit intentions</button></div></div></div>
+  <div id="q-form-wrap">
+    <div class="lbl">Today's intentions <span class="lbl-line"></span></div>
+    <div class="q-wrap">
+      <div class="q-item"><div class="q-lbl">What is the one thing that, if I do it today, makes everything else easier?</div><textarea class="q-in" id="q1" rows="2" placeholder="Your single top priority for today..."></textarea></div>
+      <div class="q-item"><div class="q-lbl">How do I want to show up emotionally today?</div><textarea class="q-in" id="q2" rows="2" placeholder="Calm, focused, patient, present..."></textarea></div>
+      <div class="q-actions"><span class="save-st" id="save-status"></span><button class="btn" onclick="clearQuestions()">Clear</button><button class="btn gold" onclick="saveToSheet()">Save intentions &#8599;</button></div>
+    </div>
+    <hr class="d">
+    <!-- Gratitude linked section -->
+    <div class="lbl">Today's gratitude <span class="lbl-line"></span> <button class="btn ghost" onclick="switchTab('gratitude')" style="font-size:10px">See all &#8594;</button></div>
+    <div class="q-wrap" style="background:var(--gold-glow);border-color:rgba(201,168,76,0.18)">
+      <div style="font-size:11px;color:var(--text-2);margin-bottom:8px">Three specific things you are grateful for right now. <span style="color:var(--text-3)">(Saved to Gratitude tab)</span></div>
+      <div class="grat-input-row"><div class="grat-num">1</div><textarea class="sin" id="morning-grat-1" rows="1" placeholder="e.g. My family is healthy and present..."></textarea></div>
+      <div class="grat-input-row"><div class="grat-num">2</div><textarea class="sin" id="morning-grat-2" rows="1" placeholder="e.g. I had a moment of clarity this morning..."></textarea></div>
+      <div class="grat-input-row"><div class="grat-num">3</div><textarea class="sin" id="morning-grat-3" rows="1" placeholder="e.g. Someone showed up for me when I needed it..."></textarea></div>
+      <div class="q-actions" style="margin-top:6px"><span class="sync-txt" id="morning-grat-sync"></span><button class="btn gold" onclick="saveMorningGratitude()">Save gratitude &#8599;</button></div>
+    </div>
+    <hr class="d">
+    <!-- Today's habits -->
+    <div class="lbl">Today's habits to follow <span class="lbl-line"></span></div>
+    <div class="q-wrap">
+      <div style="font-size:11px;color:var(--text-2);margin-bottom:8px">List the habits you commit to practising today.</div>
+      <div id="today-habits-list"></div>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <input class="sin" id="today-habit-input" type="text" placeholder="e.g. Pause for 3 breaths before reacting..." style="flex:1" onkeydown="if(event.key==='Enter'){addTodayHabit();event.preventDefault();}">
+        <button class="btn gold" onclick="addTodayHabit()" style="white-space:nowrap">+ Add</button>
+      </div>
+      <div class="q-actions" style="margin-top:6px"><button class="btn" onclick="clearTodayHabits()">Clear all</button></div>
+    </div>
+  </div>
+  <div id="q-read-wrap" style="display:none"><div class="lbl">Today's intentions <span class="lbl-line"></span> <button class="btn ghost" onclick="editIntentions()">Edit</button></div><div class="goals-card"><div class="goals-card-head"><span class="goals-card-title">Your day is set &#10003;</span><span class="goals-card-date" id="goals-date"></span></div><div class="goals-body"><div class="goal-row"><div class="goal-icon">&#127919;</div><div class="goal-col"><div class="goal-label">Top priority</div><div class="goal-value" id="goal-q1">--</div></div></div><div class="goal-row"><div class="goal-icon">&#10084;&#65039;</div><div class="goal-col"><div class="goal-label">Emotional intention</div><div class="goal-value" id="goal-q2">--</div></div></div></div><div class="goals-footer"><span class="goals-synced" id="goals-synced-lbl">Synced to Sheet &#10003;</span><button class="btn ghost" onclick="editIntentions()">&#9998; Edit intentions</button></div></div></div>
   <hr class="d">
   <div class="lbl">Five pillars <span class="lbl-line"></span></div>
   <div class="pillars-wrap"><div class="pillars-list"><button class="pillar" onclick="togglePillar(0)"><span class="pillar-e">&#129504;</span><div class="pillar-lbl">Mental strength</div><span class="pillar-arr">&#9654;</span></button><button class="pillar" onclick="togglePillar(1)"><span class="pillar-e">&#10084;&#65039;</span><div class="pillar-lbl">Emotional control</div><span class="pillar-arr">&#9654;</span></button><button class="pillar" onclick="togglePillar(2)"><span class="pillar-e">&#127919;</span><div class="pillar-lbl">Focus &amp; clarity</div><span class="pillar-arr">&#9654;</span></button><button class="pillar" onclick="togglePillar(3)"><span class="pillar-e">&#9889;</span><div class="pillar-lbl">Body &amp; energy</div><span class="pillar-arr">&#9654;</span></button><button class="pillar" onclick="togglePillar(4)"><span class="pillar-e">&#129306;</span><div class="pillar-lbl">Relationships</div><span class="pillar-arr">&#9654;</span></button></div><div class="pillar-detail" id="pillar-detail"></div><div class="pillar-empty" id="pillar-empty">Tap a pillar to explore its principles</div></div>
@@ -347,17 +385,6 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
   <div class="foot" style="margin-top:1.5rem"><span class="foot-note">Stored locally · synced to Google Sheets</span><button class="btn" onclick="switchTab('morning')">&#8592; Morning</button></div>
 </div>
 
-<!-- TAB 5: HABITS -->
-<div class="pg" id="pg-habits">
-  <div class="past-hdr"><div class="past-title">Emotion Habits</div><div class="past-sub">Practical habits to control an emotion — your personal toolkit for staying grounded.</div></div>
-  <div class="ef-bar" id="hab-emo-filter"><button class="ef on" data-he="all" onclick="setHabEmoFilter(this)">All emotions</button><button class="ef" data-he="anger" onclick="setHabEmoFilter(this)">&#128548; Anger</button><button class="ef" data-he="anxiety" onclick="setHabEmoFilter(this)">&#128560; Anxiety</button><button class="ef" data-he="frustration" onclick="setHabEmoFilter(this)">&#128547; Frustration</button><button class="ef" data-he="hurt" onclick="setHabEmoFilter(this)">&#128148; Hurt</button><button class="ef" data-he="shame" onclick="setHabEmoFilter(this)">&#128532; Shame</button><button class="ef" data-he="overwhelm" onclick="setHabEmoFilter(this)">&#127754; Overwhelm</button><button class="ef" data-he="fear" onclick="setHabEmoFilter(this)">&#128552; Fear</button><button class="ef" data-he="jealousy" onclick="setHabEmoFilter(this)">&#128065; Jealousy</button><button class="ef" data-he="sadness" onclick="setHabEmoFilter(this)">&#128546; Sadness</button><button class="ef" data-he="stress" onclick="setHabEmoFilter(this)">&#128165; Stress</button></div>
-  <div class="th-filter-bar" style="margin-bottom:1rem"><input class="psearch" id="hab-search" type="text" placeholder="Search habits..." oninput="renderHabits()" style="flex:1"><button class="btn" onclick="exportHabitsCSV()">Export CSV</button></div>
-  <div class="pmeta" id="hab-meta"></div>
-  <div class="post-log" id="hab-log"></div>
-  <div class="lbl" style="margin-top:1.5rem">Add a habit <span class="lbl-line"></span></div>
-  <div class="sit-block"><div style="margin-bottom:10px"><label class="sfl">Emotion this habit helps with</label><div class="epills" id="hab-emo-pills"><button class="ep" onclick="selHabEmo(this)" data-val="anger">&#128548; Anger</button><button class="ep" onclick="selHabEmo(this)" data-val="anxiety">&#128560; Anxiety</button><button class="ep" onclick="selHabEmo(this)" data-val="frustration">&#128547; Frustration</button><button class="ep" onclick="selHabEmo(this)" data-val="hurt">&#128148; Hurt</button><button class="ep" onclick="selHabEmo(this)" data-val="shame">&#128532; Shame</button><button class="ep" onclick="selHabEmo(this)" data-val="overwhelm">&#127754; Overwhelm</button><button class="ep" onclick="selHabEmo(this)" data-val="fear">&#128552; Fear</button><button class="ep" onclick="selHabEmo(this)" data-val="jealousy">&#128065; Jealousy</button><button class="ep" onclick="selHabEmo(this)" data-val="sadness">&#128546; Sadness</button><button class="ep" onclick="selHabEmo(this)" data-val="stress">&#128165; Stress</button></div></div><div style="margin-bottom:10px"><label class="sfl">The habit / practical action</label><textarea class="sin" id="hab-text" rows="3" placeholder="&#8226; Do one thing at a time. Slowly, deliberately.&#10;&#8226; Use the body as anchor. Feet on floor.&#10;&#8226; When you drift, notice one physical sensation."></textarea></div><div class="sit-foot"><span class="sync-txt" id="hab-sync">Ready to add</span><button class="btn gold" onclick="addHabit()">Add habit &#8599;</button></div></div>
-  <div class="foot" style="margin-top:1.5rem"><span class="foot-note">Stored locally · synced to Google Sheets</span><button class="btn" onclick="switchTab('morning')">&#8592; Morning</button></div>
-</div>
 
 <!-- TAB 6: MOTIVATION -->
 <div class="pg" id="pg-motivation">
@@ -460,12 +487,11 @@ function switchTab(tab){
   document.querySelectorAll('.pg').forEach(function(p){p.classList.remove('on');});
   document.querySelectorAll('.tab').forEach(function(b){b.classList.remove('on');});
   document.getElementById('pg-'+tab).classList.add('on');
-  var idx=tab==='morning'?0:tab==='situations'?1:tab==='thoughts'?2:tab==='posts'?3:tab==='habits'?4:tab==='motivation'?5:6;
+  var idx=tab==='morning'?0:tab==='situations'?1:tab==='thoughts'?2:tab==='posts'?3:tab==='motivation'?4:5;
   document.querySelectorAll('.tab')[idx].classList.add('on');
   if(tab==='situations'){renderStats();renderPast();}
   if(tab==='thoughts')renderThoughts();
   if(tab==='posts')renderPosts();
-  if(tab==='habits')renderHabits();
   if(tab==='motivation')renderMotivation();
   if(tab==='gratitude'){renderGratitude();updateGratStats();}
   window.scrollTo({top:0,behavior:'smooth'});
@@ -488,6 +514,7 @@ function init(){
     var stored=getTodayStored();
     if(stored.checked)Object.assign(checked,stored.checked);
     renderChecklist();updateStreak();
+    loadTodayHabits();renderTodayHabits();
   }catch(e){console.error('Local:',e);}
 
   // Clear all in-memory arrays — Sheet is always the source of truth
@@ -503,13 +530,12 @@ function init(){
     fetchAllSituations(),
     fetchAllThoughts(),
     fetchAllPosts(),
-    fetchAllHabits(),
     fetchAllMotivation(),
     fetchAllGratitude()
   ]).then(function(res){
     var d=res[0];
     if(d&&d.morning&&(d.morning.priority||d.morning.emotional_intention||d.morning.gratitude)){
-      showReadView(d.morning.priority||'',d.morning.emotional_intention||'',d.morning.gratitude||'');
+        showReadView(d.morning.priority||'',d.morning.emotional_intention||'');
     }else{setIntentionsState('form');}
   }).catch(function(){setIntentionsState('form');});
 }
@@ -519,10 +545,10 @@ function setIntentionsState(s){
   document.getElementById('q-form-wrap').style.display=s==='form'?'block':'none';
   document.getElementById('q-read-wrap').style.display=s==='read'?'block':'none';
 }
-function showReadView(q1,q2,q3){
+function showReadView(q1,q2){
   document.getElementById('goal-q1').textContent=q1||'--';
   document.getElementById('goal-q2').textContent=q2||'--';
-  document.getElementById('goal-q3').textContent=q3||'--';
+
   document.getElementById('goals-date').textContent=new Date().toLocaleDateString('en-IN',{day:'numeric',month:'short'});
   var lbl=document.getElementById('goals-synced-lbl');lbl.textContent='Synced to Sheet \u2713';lbl.className='goals-synced ok';
   document.getElementById('q1').value=q1||'';document.getElementById('q2').value=q2||'';document.getElementById('q3').value=q3||'';
@@ -531,10 +557,9 @@ function showReadView(q1,q2,q3){
 function editIntentions(){
   document.getElementById('q1').value=document.getElementById('goal-q1').textContent.replace('--','');
   document.getElementById('q2').value=document.getElementById('goal-q2').textContent.replace('--','');
-  document.getElementById('q3').value=document.getElementById('goal-q3').textContent.replace('--','');
   setIntentionsState('form');document.getElementById('q1').focus();
 }
-function clearQuestions(){['q1','q2','q3'].forEach(function(id){document.getElementById(id).value='';});document.getElementById('save-status').textContent='';}
+function clearQuestions(){['q1','q2'].forEach(function(id){document.getElementById(id).value='';});document.getElementById('save-status').textContent='';}
 
 async function saveToSheet(){
   var q1=document.getElementById('q1').value.trim(),q2=document.getElementById('q2').value.trim(),q3=document.getElementById('q3').value.trim();
@@ -543,7 +568,7 @@ async function saveToSheet(){
   var now=new Date();
   var ok=await postToSheet({sheet:'Morning Reflections',date:now.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}),dateISO:isoDate(now),time:now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true}),priority:q1,emotional_intention:q2,gratitude:q3,checklist_done:CHECKLIST.filter(function(i){return checked[i.k];}).map(function(i){return i.t;}).join(' | '),score:CHECKLIST.filter(function(i){return checked[i.k];}).length+'/'+CHECKLIST.length});
   saveTodayLocal({checked:checked});
-  if(ok){setSt('Saved \u2713',true);showToast('Intentions saved to Sheet \u2713','success');showReadView(q1,q2,q3);}
+  if(ok){setSt('Saved \u2713',true);showToast('Intentions saved to Sheet \u2713','success');showReadView(q1,q2);}
   else{setSt('Network error -- please retry.',false);showToast('Could not reach Sheet.','error');}
 }
 function setSt(msg,ok){var el=document.getElementById('save-status');el.textContent=msg;el.className='save-st'+(ok===true?' ok':ok===false?' err':'');}
@@ -920,7 +945,7 @@ function replaceHabitsFromSheet(s){
   var sheetIds={};s.forEach(function(x){if(x.sheetId)sheetIds[x.sheetId]=true;});
   var pending=habits.filter(function(h){return h.sheetId&&!sheetIds[h.sheetId];});
   habits=fromSheet.concat(pending);habits.sort(function(a,b){return b.timestamp-a.timestamp;});
-  saveHabits();updateHabBadge();if(document.getElementById('pg-habits').classList.contains('on'))renderHabits();
+  saveHabits();updateHabBadge();
 }
 
 /* MOTIVATION */
@@ -1246,6 +1271,73 @@ function replaceGratitudeFromSheet(s){
   gratEntries.sort(function(a,b){return b.timestamp-a.timestamp;});
   saveGratitude(); updateGratStats();
   if(document.getElementById('pg-gratitude').classList.contains('on')) renderGratitude();
+}
+
+/* MORNING GRATITUDE LINK */
+async function saveMorningGratitude(){
+  var g1=document.getElementById('morning-grat-1').value.trim();
+  var g2=document.getElementById('morning-grat-2').value.trim();
+  var g3=document.getElementById('morning-grat-3').value.trim();
+  if(!g1&&!g2&&!g3){showToast('Write at least one thing you are grateful for.','error');return;}
+  var now=new Date(), gid=String(Date.now());
+  var entry={id:Date.now(),timestamp:Date.now(),sheetId:gid,
+    dateISO:isoDate(now),date:now.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}),
+    items:[g1,g2,g3].filter(function(x){return x.length>0;}),
+    emotion:'grateful'};
+  // Remove any existing entry for today
+  gratEntries=gratEntries.filter(function(e){return e.dateISO!==entry.dateISO;});
+  gratEntries.unshift(entry); saveGratitude(); updateGratStats();
+  // Sync to Sheet
+  var syncEl=document.getElementById('morning-grat-sync');
+  syncEl.textContent='Syncing…'; syncEl.className='sync-txt syncing';
+  var ok=await postToSheet({sheet:'Gratitude',sheetId:gid,date:entry.date,dateISO:entry.dateISO,
+    item1:entry.items[0]||'',item2:entry.items[1]||'',item3:entry.items[2]||'',emotion:'grateful'});
+  syncEl.textContent=ok?'Saved to Gratitude tab ✓':'Saved locally (Sheet unreachable)';
+  syncEl.className='sync-txt '+(ok?'ok':'err');
+  showToast(ok?'Gratitude saved ✓':'Saved locally.', ok?'success':'error');
+  // Clear fields
+  ['morning-grat-1','morning-grat-2','morning-grat-3'].forEach(function(id){document.getElementById(id).value='';});
+}
+
+/* TODAY'S HABITS — stored in localStorage, resets each day */
+var todayHabits=[];
+
+function loadTodayHabits(){
+  var key='today_habits_'+isoToday();
+  try{var r=localStorage.getItem(key);todayHabits=r?JSON.parse(r):[];}catch(e){todayHabits=[];}
+}
+function saveTodayHabits(){
+  localStorage.setItem('today_habits_'+isoToday(),JSON.stringify(todayHabits));
+}
+function renderTodayHabits(){
+  var el=document.getElementById('today-habits-list');
+  if(!el)return;
+  if(!todayHabits.length){el.innerHTML='<div style="font-size:12px;color:var(--text-3);padding:6px 0">No habits added yet — add one below.</div>';return;}
+  el.innerHTML=todayHabits.map(function(h,i){
+    return '<div class="th-habit-item">'+
+      '<div class="th-habit-cb'+(h.done?' done':'')+'" onclick="toggleTodayHabit('+i+')"><span class="th-habit-tick">✓</span></div>'+
+      '<span class="th-habit-text" onclick="toggleTodayHabit('+i+')">'+escH(h.text)+'</span>'+
+      '<button class="th-habit-del" onclick="removeTodayHabit('+i+')">×</button>'+
+    '</div>';
+  }).join('');
+}
+function addTodayHabit(){
+  var inp=document.getElementById('today-habit-input');
+  var text=(inp.value||'').trim(); if(!text)return;
+  todayHabits.push({text:text,done:false}); saveTodayHabits(); renderTodayHabits();
+  inp.value=''; inp.focus();
+}
+function toggleTodayHabit(i){
+  if(todayHabits[i])todayHabits[i].done=!todayHabits[i].done;
+  saveTodayHabits(); renderTodayHabits();
+}
+function removeTodayHabit(i){
+  todayHabits.splice(i,1); saveTodayHabits(); renderTodayHabits();
+}
+function clearTodayHabits(){
+  if(!todayHabits.length)return;
+  if(!confirm('Clear all habits for today?'))return;
+  todayHabits=[]; saveTodayHabits(); renderTodayHabits();
 }
 
 /* START */
