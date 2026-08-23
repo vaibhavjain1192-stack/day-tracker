@@ -540,7 +540,7 @@ function init(){
 
   // Clear all in-memory arrays — Sheet is always the source of truth
   situations=[]; thoughts=[]; posts=[]; habits=[]; motEntries=[]; gratEntries=[];
-  updateBadge(); updateThBadge(); updatePostBadge(); updateHabBadge();
+  updateBadge(); updateThBadge(); updatePostBadge();
 
   // Show shimmer/loading state on morning intentions
   setIntentionsState('loading');
@@ -901,7 +901,7 @@ var HAB_EMO_ICONS={anger:'&#128548;',anxiety:'&#128560;',frustration:'&#128547;'
 
 function loadHabits(){try{var r=localStorage.getItem('morning_habits');if(r)habits=JSON.parse(r);}catch(e){habits=[];}}
 function saveHabits(){localStorage.setItem('morning_habits',JSON.stringify(habits));}
-function updateHabBadge(){document.getElementById('hab-badge').textContent=habits.length;}
+function updateHabBadge(){var el=document.getElementById('hab-badge');if(el)el.textContent=habits.length;}
 
 function selHabEmo(el){document.querySelectorAll('#hab-emo-pills .ep').forEach(function(p){p.classList.remove('on');});selHabEmotion=(selHabEmotion===el.dataset.val)?'':el.dataset.val;if(selHabEmotion)el.classList.add('on');}
 function setHabEmoFilter(el){document.querySelectorAll('#hab-emo-filter .ef').forEach(function(p){p.classList.remove('on');});el.classList.add('on');habEmoFilter=el.dataset.he;renderHabits();}
