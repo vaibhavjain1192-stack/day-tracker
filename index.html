@@ -1180,6 +1180,7 @@ var selGratEmotion = '';
 
 function loadGratitude(){ try{var r=localStorage.getItem('morning_gratitude');if(r)gratEntries=JSON.parse(r);}catch(e){gratEntries=[];} }
 function saveGratitude(){ localStorage.setItem('morning_gratitude',JSON.stringify(gratEntries)); }
+function updateGratBadge(){ var el=document.getElementById('grat-badge'); if(el) el.textContent=gratEntries.length; }
 
 function selGratEmo(el){
   document.querySelectorAll('#grat-emo-pills .pep').forEach(function(p){p.classList.remove('on');});
