@@ -265,6 +265,8 @@ body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:
 .th-habit-text{flex:1;font-size:13px;color:var(--text-1);cursor:pointer}
 .th-habit-cb.done + .th-habit-text{color:var(--text-3);text-decoration:line-through}
 .th-habit-del{background:none;border:none;color:var(--text-3);cursor:pointer;font-size:14px;padding:0 4px;line-height:1;transition:color var(--tr)}
+.th-habit-edit{background:none;border:none;color:var(--text-3);cursor:pointer;font-size:12px;padding:0 4px;line-height:1;transition:color var(--tr);flex-shrink:0}
+.th-habit-edit:hover{color:var(--gold)}
 .hab-streak{font-size:10px;font-family:var(--fm);color:var(--gold);background:var(--gold-dim);border:1px solid rgba(201,168,76,0.28);border-radius:20px;padding:1px 8px;white-space:nowrap;flex-shrink:0}
 .hab-chip{font-size:11px;font-family:var(--fb);color:var(--text-2);background:transparent;border:1px dashed var(--border-md);border-radius:20px;padding:3px 11px;cursor:pointer;transition:all var(--tr);text-align:left}
 .hab-chip:hover{background:var(--surface);color:var(--text-1);border-style:solid;border-color:var(--gold)}
@@ -922,6 +924,38 @@ function editPost(id){
 async function saveEditModal(){
   if(!_editCtx)return;
   if(_editCtx.type==='diag'){closeEditModal();return;}
+
+  if(_editCtx.type==='habit'){
+    var btnH=document.getElementById('modal-save-btn');
+    var oldText=_editCtx.oldText;
+    var newText=(document.getElementById('edit-habit-text').value||'').trim();
+    if(!newText){ showToast('Habit cannot be empty.','error'); return; }
+    if(newText===oldText){ closeEditModal(); return; }
+    if(habitList.some(function(t){return t.toLowerCase()===newText.toLowerCase() && t!==oldText;})){
+      showToast('You already follow a habit with that wording.','error'); return;
+    }
+    btnH.textContent='Saving...'; btnH.disabled=true;
+
+    // Update in-memory state first so the UI responds immediately
+    habitList=habitList.map(function(t){return t===oldText?newText:t;});
+    Object.keys(habitDone).forEach(function(d){
+      habitDone[d]=habitDone[d].map(function(t){return t===oldText?newText:t;});
+    });
+    habitArchive=habitArchive.map(function(t){return t===oldText?newText:t;});
+    renderTodayHabits();
+
+    // Rewrite the label across every row in the Sheet
+    var okR=await postToSheet({sheet:'TodayHabits',action:'rename_habit',oldText:oldText,newText:newText});
+    // Then write today's row so the current tick state is right
+    if(okR) await saveTodayHabits();
+    // Pull it all back so what you see is exactly what the Sheet holds
+    if(okR) await fetchAllTodayHabits();
+
+    btnH.textContent='Save changes \u2197'; btnH.disabled=false;
+    closeEditModal();
+    showToast(okR?'Habit updated \u2713':'Updated locally \u2014 Sheet sync failed.',okR?'success':'error');
+    return;
+  }
   var btn=document.getElementById('modal-save-btn');btn.textContent='Saving...';btn.disabled=true;
   if(_editCtx.type==='situation'){
     var sit=situations.find(function(s){return s.id===_editCtx.id;});if(!sit){closeEditModal();return;}
@@ -1561,6 +1595,7 @@ function renderTodayHabits(){
       '<div class="th-habit-cb'+(done?' done':'')+'" onclick="toggleTodayHabit(\''+esc+'\')"><span class="th-habit-tick">\u2713</span></div>'+
       '<span class="th-habit-text" onclick="toggleTodayHabit(\''+esc+'\')">'+escH(t)+'</span>'+
       streakHtml+
+      '<button class="th-habit-edit" onclick="editTodayHabit(\''+esc+'\')" title="Edit wording">\u270e</button>'+
       '<button class="th-habit-del" onclick="removeTodayHabit(\''+esc+'\')" title="Stop following">\u00d7</button>'+
     '</div>';
   }).join('');
@@ -1578,6 +1613,17 @@ function renderHabitArchive(){
       var esc=escH(t).replace(/'/g,"\\'");
       return '<button class="hab-chip" onclick="restoreHabit(\''+esc+'\')">+ '+escH(t)+'</button>';
     }).join('')+'</div>';
+}
+
+function editTodayHabit(text){
+  var streak=habitStreak(text);
+  var note = streak>0
+    ? '<div style="font-size:11px;color:var(--text-3);margin-top:8px;line-height:1.6">Your '+streak+
+      '-day streak is preserved \u2014 the wording is updated everywhere in the Sheet, including past days.</div>'
+    : '<div style="font-size:11px;color:var(--text-3);margin-top:8px;line-height:1.6">The wording is updated everywhere in the Sheet, including past days.</div>';
+  var html='<label class="sfl">Habit wording</label>'+
+    '<textarea class="sin" id="edit-habit-text" rows="3">'+escH(text)+'</textarea>'+note;
+  openEditModal('Edit habit',html,{type:'habit',oldText:text});
 }
 
 function addTodayHabit(){
