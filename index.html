@@ -301,6 +301,7 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
 <div class="pg on" id="pg-morning">
   <div class="hdr"><div class="hdr-l"><div class="eyebrow" id="time-now">--</div><h1 class="greeting" id="greeting">Good morning</h1><div class="dateline" id="date-line">Loading...</div></div><div class="hdr-r"><div class="daynum" id="day-num">--</div><div class="daynum-lbl">Day of year</div></div></div>
   <div class="mantra"><div class="mantra-q" id="mantra-text">"..."</div><div class="mantra-src" id="mantra-source"></div></div>
+  <div id="sync-banner" style="display:none;font-size:11px;padding:8px 12px;border-radius:var(--rsm);margin-bottom:1rem;font-family:var(--fm)"></div>
   <hr class="d">
   <div id="q-loading-wrap" style="display:none"><div class="lbl">Today's intentions <span class="lbl-line"></span></div><div class="q-loading-card"><div class="q-skel q-skel-sm"></div><div class="q-skel q-skel-lg"></div><div class="q-skel q-skel-sm" style="margin-top:8px"></div><div class="q-skel q-skel-lg"></div><div class="q-skel q-skel-sm" style="margin-top:8px"></div><div class="q-skel q-skel-md"></div><div class="q-loading-note">Fetching your intentions...</div></div></div>
   <div id="q-form-wrap">
@@ -436,6 +437,7 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
 'use strict';
 const WORKER_URL='https://muddy-shadow-1aa7.vaibhavjain-1192.workers.dev';
 const FETCH_TIMEOUT=15000;
+var DIAG={};  // diagnostics collected during fetch
 
 async function sheetFetch(url,opts){
   var ctrl=new AbortController();
@@ -581,11 +583,55 @@ function init(){
       if(d&&d.morning&&(d.morning.priority||d.morning.emotional_intention)){
         showReadView(d.morning.priority||'',d.morning.emotional_intention||'');
       }else{setIntentionsState('form');}
+      // Show what loaded from Sheet — stays until tapped
+      showSyncBanner(true,'Sheet ✓ '+situations.length+' sit · '+thoughts.length+
+        ' th · '+posts.length+' posts · '+motEntries.length+' mot · '+
+        gratEntries.length+' grat   (tap for details)');
     }catch(e){
       console.error('[init fetch error]',e);
       setIntentionsState('form');
+      showSyncBanner(false,'⚠ Could not reach Google Sheet. Check your connection or Worker URL.');
     }
   })();
+}
+
+function showSyncBanner(ok,msg){
+  var el=document.getElementById('sync-banner');
+  if(!el)return;
+  el.style.display='block';
+  el.textContent=msg;
+  el.style.cursor='pointer';
+  el.onclick=function(){ showDiagnostics(); };
+  if(ok){
+    el.style.background='rgba(107,191,142,0.08)';
+    el.style.border='1px solid rgba(107,191,142,0.25)';
+    el.style.color='var(--green)';
+  }else{
+    el.style.background='rgba(224,123,123,0.08)';
+    el.style.border='1px solid rgba(224,123,123,0.3)';
+    el.style.color='var(--rose)';
+  }
+}
+
+function showDiagnostics(){
+  var lines=[
+    'Today (browser): '+isoToday(),
+    '',
+    'Gratitude fetch: '+(DIAG.gratRaw||'not run'),
+    'Today match: '+(DIAG.gratToday||'not checked'),
+    'Dates in Sheet: '+(DIAG.gratDates||'none'),
+    '',
+    'Motivation fetch: '+(DIAG.motRaw||'not run'),
+    '',
+    'In memory: '+situations.length+' situations, '+thoughts.length+' thoughts, '+
+      posts.length+' posts, '+motEntries.length+' motivation, '+gratEntries.length+' gratitude',
+    '',
+    'Today habits (local): '+todayHabits.length+' items',
+    'Habit sheet sync: '+(DIAG.habSync||'not attempted yet')
+  ];
+  var html='<pre style="font-family:var(--fm);font-size:11px;color:var(--text-2);white-space:pre-wrap;line-height:1.7;margin:0">'+
+    escH(lines.join('\n'))+'</pre>';
+  openEditModal('Sheet diagnostics',html,{type:'diag'});
 }
 
 function setIntentionsState(s){
@@ -869,6 +915,7 @@ function editPost(id){
 
 async function saveEditModal(){
   if(!_editCtx)return;
+  if(_editCtx.type==='diag'){closeEditModal();return;}
   var btn=document.getElementById('modal-save-btn');btn.textContent='Saving...';btn.disabled=true;
   if(_editCtx.type==='situation'){
     var sit=situations.find(function(s){return s.id===_editCtx.id;});if(!sit){closeEditModal();return;}
@@ -1145,6 +1192,7 @@ function editMotEntry(id){
 
 async function fetchAllMotivation(){
   var d=await sheetFetch(WORKER_URL+'?action=getAllMotivation');
+  DIAG.motRaw = d ? (d.status+' / '+(Array.isArray(d.motivation)?d.motivation.length+' rows':'no array')) : 'NULL response';
   if(d&&d.status==='ok'&&Array.isArray(d.motivation)) replaceMotivationFromSheet(d.motivation);
   else console.warn('[Motivation] bad response:',d);
 }
@@ -1309,6 +1357,7 @@ function exportGratCSV(){
 
 async function fetchAllGratitude(){
   var d=await sheetFetch(WORKER_URL+'?action=getAllGratitude');
+  DIAG.gratRaw = d ? (d.status+' / '+(Array.isArray(d.gratitude)?d.gratitude.length+' rows':'no array')) : 'NULL response';
   if(d&&d.status==='ok'&&Array.isArray(d.gratitude)) replaceGratitudeFromSheet(d.gratitude);
   else console.warn('[Gratitude] bad response:',d);
 }
@@ -1329,10 +1378,44 @@ function replaceGratitudeFromSheet(s){
   gratEntries=fromSheet.concat(pending);
   gratEntries.sort(function(a,b){return b.timestamp-a.timestamp;});
   updateGratStats(); updateGratBadge();
+  fillMorningGratitude();
   if(document.getElementById('pg-gratitude').classList.contains('on')) renderGratitude();
 }
 
 /* MORNING GRATITUDE LINK */
+/* Pre-fill morning gratitude inputs with today's entry from Sheet */
+function normISO(d){
+  if(!d) return '';
+  var s=String(d).trim();
+  // Already YYYY-MM-DD
+  if(/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+  // Try parsing anything else (ISO timestamp, locale string, Date object)
+  var dt=new Date(s);
+  if(isNaN(dt.getTime())) return s;
+  return dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0');
+}
+
+function fillMorningGratitude(){
+  var todayIso=isoToday();
+  var todayEntry=gratEntries.find(function(e){return normISO(e.dateISO)===todayIso;});
+  DIAG.gratToday = todayEntry ? 'FOUND' : 'none for '+todayIso;
+  DIAG.gratDates = gratEntries.map(function(e){return normISO(e.dateISO);}).join(', ');
+  var i1=document.getElementById('morning-grat-1');
+  var i2=document.getElementById('morning-grat-2');
+  var i3=document.getElementById('morning-grat-3');
+  var syncEl=document.getElementById('morning-grat-sync');
+  if(!i1||!i2||!i3) return;
+  if(todayEntry){
+    i1.value=(todayEntry.items&&todayEntry.items[0])||'';
+    i2.value=(todayEntry.items&&todayEntry.items[1])||'';
+    i3.value=(todayEntry.items&&todayEntry.items[2])||'';
+    if(syncEl){syncEl.textContent='Loaded from Sheet \u2713';syncEl.className='sync-txt ok';}
+  }else{
+    i1.value=''; i2.value=''; i3.value='';
+    if(syncEl){syncEl.textContent='No entry saved for today yet';syncEl.className='sync-txt';}
+  }
+}
+
 async function saveMorningGratitude(){
   var g1=document.getElementById('morning-grat-1').value.trim();
   var g2=document.getElementById('morning-grat-2').value.trim();
@@ -1354,8 +1437,7 @@ async function saveMorningGratitude(){
   syncEl.textContent=ok?'Saved to Gratitude tab ✓':'Saved locally (Sheet unreachable)';
   syncEl.className='sync-txt '+(ok?'ok':'err');
   showToast(ok?'Gratitude saved ✓':'Saved locally.', ok?'success':'error');
-  // Clear fields
-  ['morning-grat-1','morning-grat-2','morning-grat-3'].forEach(function(id){document.getElementById(id).value='';});
+  // Keep values visible so you can see what was saved
 }
 
 /* TODAY'S HABITS — stored in localStorage, resets each day */
