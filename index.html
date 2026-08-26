@@ -538,6 +538,14 @@ function init(){
     loadTodayHabits();renderTodayHabits();
   }catch(e){console.error('Local:',e);}
 
+  // Wipe ALL Sheet-synced localStorage keys on every load
+  // so stale data from a previous session can never appear
+  var SHEET_KEYS=[
+    'morning_situations','morning_thoughts','morning_posts',
+    'morning_habits','morning_motivation','morning_gratitude'
+  ];
+  SHEET_KEYS.forEach(function(k){ localStorage.removeItem(k); });
+
   // Clear all in-memory arrays — Sheet is always the source of truth
   situations=[]; thoughts=[]; posts=[]; habits=[]; motEntries=[]; gratEntries=[];
   updateBadge(); updateThBadge(); updatePostBadge();
@@ -578,7 +586,7 @@ function showReadView(q1,q2){
 
   document.getElementById('goals-date').textContent=new Date().toLocaleDateString('en-IN',{day:'numeric',month:'short'});
   var lbl=document.getElementById('goals-synced-lbl');lbl.textContent='Synced to Sheet \u2713';lbl.className='goals-synced ok';
-  document.getElementById('q1').value=q1||'';document.getElementById('q2').value=q2||'';document.getElementById('q3').value=q3||'';
+  document.getElementById('q1').value=q1||'';document.getElementById('q2').value=q2||'';
   setIntentionsState('read');
 }
 function editIntentions(){
@@ -589,13 +597,20 @@ function editIntentions(){
 function clearQuestions(){['q1','q2'].forEach(function(id){document.getElementById(id).value='';});document.getElementById('save-status').textContent='';}
 
 async function saveToSheet(){
-  var q1=document.getElementById('q1').value.trim(),q2=document.getElementById('q2').value.trim(),q3=document.getElementById('q3').value.trim();
-  if(!q1&&!q2&&!q3){showToast('Fill in at least one intention first.','error');return;}
+  var q1=document.getElementById('q1').value.trim(),q2=document.getElementById('q2').value.trim();
+  if(!q1&&!q2){showToast('Fill in at least one intention first.','error');return;}
   setSt('Saving...',null);
   var now=new Date();
-  var ok=await postToSheet({sheet:'Morning Reflections',date:now.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}),dateISO:isoDate(now),time:now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true}),priority:q1,emotional_intention:q2,gratitude:q3,checklist_done:CHECKLIST.filter(function(i){return checked[i.k];}).map(function(i){return i.t;}).join(' | '),score:CHECKLIST.filter(function(i){return checked[i.k];}).length+'/'+CHECKLIST.length});
+  var ok=await postToSheet({sheet:'Morning Reflections',
+    date:now.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}),
+    dateISO:isoDate(now),
+    time:now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true}),
+    priority:q1, emotional_intention:q2, gratitude:'',
+    checklist_done:CHECKLIST.filter(function(i){return checked[i.k];}).map(function(i){return i.t;}).join(' | '),
+    score:CHECKLIST.filter(function(i){return checked[i.k];}).length+'/'+CHECKLIST.length
+  });
   saveTodayLocal({checked:checked});
-  if(ok){setSt('Saved \u2713',true);showToast('Intentions saved to Sheet \u2713','success');showReadView(q1,q2);}
+  if(ok){setSt('Saved ✓',true);showToast('Intentions saved to Sheet ✓','success');showReadView(q1,q2);}
   else{setSt('Network error -- please retry.',false);showToast('Could not reach Sheet.','error');}
 }
 function setSt(msg,ok){var el=document.getElementById('save-status');el.textContent=msg;el.className='save-st'+(ok===true?' ok':ok===false?' err':'');}
@@ -661,7 +676,7 @@ async function fetchAllSituations(){
 }
 function replaceSituationsFromSheet(s){
   localStorage.removeItem('morning_situations');
-  situations=s.map(function(x,i){return{id:Date.now()+i,timestamp:x.dateISO?new Date(x.dateISO).getTime():Date.now(),dateISO:x.dateISO||'',date:x.date||'',title:x.title||'',trigger:x.trigger||'',reaction:x.reaction||'',emotion:x.emotion||'',strategy:x.strategy||''};});situations.sort(function(a,b){return b.timestamp-a.timestamp;});saveSits();updateBadge();if(document.getElementById('pg-situations').classList.contains('on')){renderStats();renderPast();}}
+  situations=s.map(function(x,i){return{id:Date.now()+i,timestamp:x.dateISO?new Date(x.dateISO).getTime():Date.now(),dateISO:x.dateISO||'',date:x.date||'',title:x.title||'',trigger:x.trigger||'',reaction:x.reaction||'',emotion:x.emotion||'',strategy:x.strategy||''};});situations.sort(function(a,b){return b.timestamp-a.timestamp;});updateBadge();if(document.getElementById('pg-situations').classList.contains('on')){renderStats();renderPast();}}
 
 /* PAST SITUATIONS TAB */
 function renderStats(){var total=situations.length,ws=situations.filter(function(s){return s.strategy;}).length;document.getElementById('st-total').textContent=total;document.getElementById('st-strat').textContent=ws;document.getElementById('st-pend').textContent=total-ws;var freq={};situations.forEach(function(s){if(s.emotion)freq[s.emotion]=(freq[s.emotion]||0)+1;});var top=Object.entries(freq).sort(function(a,b){return b[1]-a[1];})[0];document.getElementById('st-emo').textContent=top?(EMAP[top[0]]||'')+' '+top[0]:'--';}
@@ -736,7 +751,7 @@ async function fetchAllThoughts(){
 }
 function replaceThoughtsFromSheet(s){
   localStorage.removeItem('morning_thoughts');
-  var fromSheet=s.map(function(x,i){return{id:x.sheetId?parseInt(x.sheetId,10):Date.now()+i,timestamp:x.dateISO?new Date(x.dateISO).getTime():Date.now(),dateISO:x.dateISO||'',date:x.date||'',heading:x.heading||'',text:x.text||'',url:x.url||'',category:x.category||'',emotion:x.emotion||'',sheetId:x.sheetId||''};});var sheetIds={};s.forEach(function(x){if(x.sheetId)sheetIds[x.sheetId]=true;});var pending=thoughts.filter(function(t){return t.sheetId&&!sheetIds[t.sheetId];});thoughts=fromSheet.concat(pending);thoughts.sort(function(a,b){return b.timestamp-a.timestamp;});saveThoughts();updateThBadge();if(document.getElementById('pg-thoughts').classList.contains('on'))renderThoughts();}
+  var fromSheet=s.map(function(x,i){return{id:x.sheetId?parseInt(x.sheetId,10):Date.now()+i,timestamp:x.dateISO?new Date(x.dateISO).getTime():Date.now(),dateISO:x.dateISO||'',date:x.date||'',heading:x.heading||'',text:x.text||'',url:x.url||'',category:x.category||'',emotion:x.emotion||'',sheetId:x.sheetId||''};});var sheetIds={};s.forEach(function(x){if(x.sheetId)sheetIds[x.sheetId]=true;});var pending=thoughts.filter(function(t){return t.sheetId&&!sheetIds[t.sheetId];});thoughts=fromSheet.concat(pending);thoughts.sort(function(a,b){return b.timestamp-a.timestamp;});updateThBadge();if(document.getElementById('pg-thoughts').classList.contains('on'))renderThoughts();}
 
 /* POSTS */
 function loadPosts(){try{var r=localStorage.getItem('morning_posts');if(r)posts=JSON.parse(r);}catch(e){posts=[];}}
@@ -789,7 +804,7 @@ async function fetchAllPosts(){
 }
 function replacePostsFromSheet(s){
   localStorage.removeItem('morning_posts');
-  var fromSheet=s.map(function(x,i){return{id:x.sheetId?parseInt(x.sheetId,10):Date.now()+i,timestamp:x.dateISO?new Date(x.dateISO).getTime():Date.now(),dateISO:x.dateISO||'',date:x.date||'',heading:x.heading||'',desc:x.desc||'',source:x.source||'',url:x.url||'',emotion:x.emotion||'',sheetId:x.sheetId||''};});var sheetIds={};s.forEach(function(x){if(x.sheetId)sheetIds[x.sheetId]=true;});var pending=posts.filter(function(p){return p.sheetId&&!sheetIds[p.sheetId];});posts=fromSheet.concat(pending);posts.sort(function(a,b){return b.timestamp-a.timestamp;});savePosts();updatePostBadge();if(document.getElementById('pg-posts').classList.contains('on'))renderPosts();}
+  var fromSheet=s.map(function(x,i){return{id:x.sheetId?parseInt(x.sheetId,10):Date.now()+i,timestamp:x.dateISO?new Date(x.dateISO).getTime():Date.now(),dateISO:x.dateISO||'',date:x.date||'',heading:x.heading||'',desc:x.desc||'',source:x.source||'',url:x.url||'',emotion:x.emotion||'',sheetId:x.sheetId||''};});var sheetIds={};s.forEach(function(x){if(x.sheetId)sheetIds[x.sheetId]=true;});var pending=posts.filter(function(p){return p.sheetId&&!sheetIds[p.sheetId];});posts=fromSheet.concat(pending);posts.sort(function(a,b){return b.timestamp-a.timestamp;});updatePostBadge();if(document.getElementById('pg-posts').classList.contains('on'))renderPosts();}
 
 /* EDIT MODAL */
 var _editCtx=null;
@@ -1134,7 +1149,6 @@ function replaceMotivationFromSheet(s){
   var pending=motEntries.filter(function(e){return e.sheetId&&!sheetIds[e.sheetId];});
   motEntries=fromSheet.concat(pending);
   motEntries.sort(function(a,b){if(a.pinned&&!b.pinned)return -1;if(!a.pinned&&b.pinned)return 1;return b.timestamp-a.timestamp;});
-  saveMotivation();
   if(document.getElementById('pg-motivation').classList.contains('on'))renderMotivation();
 }
 
@@ -1300,7 +1314,7 @@ function replaceGratitudeFromSheet(s){
   var pending=gratEntries.filter(function(e){return e.sheetId&&!sheetIds[e.sheetId];});
   gratEntries=fromSheet.concat(pending);
   gratEntries.sort(function(a,b){return b.timestamp-a.timestamp;});
-  saveGratitude(); updateGratStats();
+  updateGratStats(); updateGratBadge();
   if(document.getElementById('pg-gratitude').classList.contains('on')) renderGratitude();
 }
 
@@ -1339,6 +1353,15 @@ function loadTodayHabits(){
 }
 function saveTodayHabits(){
   localStorage.setItem('today_habits_'+isoToday(),JSON.stringify(todayHabits));
+  // Sync today's habit list to Morning Reflections sheet (habits column)
+  var now=new Date();
+  var habitText=todayHabits.map(function(h){return (h.done?'[x] ':'[ ] ')+h.text;}).join(' | ');
+  postToSheet({sheet:'Morning Reflections',
+    date:now.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}),
+    dateISO:isoDate(now),
+    time:now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true}),
+    today_habits:habitText
+  });
 }
 function renderTodayHabits(){
   var el=document.getElementById('today-habits-list');
