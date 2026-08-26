@@ -310,30 +310,43 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
       <div class="q-item"><div class="q-lbl">How do I want to show up emotionally today?</div><textarea class="q-in" id="q2" rows="2" placeholder="Calm, focused, patient, present..."></textarea></div>
       <div class="q-actions"><span class="save-st" id="save-status"></span><button class="btn" onclick="clearQuestions()">Clear</button><button class="btn gold" onclick="saveToSheet()">Save intentions &#8599;</button></div>
     </div>
-    <hr class="d">
-    <!-- Gratitude linked section -->
-    <div class="lbl">Today's gratitude <span class="lbl-line"></span> <button class="btn ghost" onclick="switchTab('gratitude')" style="font-size:10px">See all &#8594;</button></div>
-    <div class="q-wrap" style="background:var(--gold-glow);border-color:rgba(201,168,76,0.18)">
-      <div style="font-size:11px;color:var(--text-2);margin-bottom:8px">Three specific things you are grateful for right now. <span style="color:var(--text-3)">(Saved to Gratitude tab)</span></div>
-      <div class="grat-input-row"><div class="grat-num">1</div><textarea class="sin" id="morning-grat-1" rows="1" placeholder="e.g. My family is healthy and present..."></textarea></div>
-      <div class="grat-input-row"><div class="grat-num">2</div><textarea class="sin" id="morning-grat-2" rows="1" placeholder="e.g. I had a moment of clarity this morning..."></textarea></div>
-      <div class="grat-input-row"><div class="grat-num">3</div><textarea class="sin" id="morning-grat-3" rows="1" placeholder="e.g. Someone showed up for me when I needed it..."></textarea></div>
-      <div class="q-actions" style="margin-top:6px"><span class="sync-txt" id="morning-grat-sync"></span><button class="btn gold" onclick="saveMorningGratitude()">Save gratitude &#8599;</button></div>
-    </div>
-    <hr class="d">
-    <!-- Today's habits -->
-    <div class="lbl">Today's habits to follow <span class="lbl-line"></span></div>
-    <div class="q-wrap">
-      <div style="font-size:11px;color:var(--text-2);margin-bottom:8px">List the habits you commit to practising today.</div>
-      <div id="today-habits-list"></div>
-      <div style="display:flex;gap:8px;margin-top:8px">
-        <input class="sin" id="today-habit-input" type="text" placeholder="e.g. Pause for 3 breaths before reacting..." style="flex:1" onkeydown="if(event.key==='Enter'){addTodayHabit();event.preventDefault();}">
-        <button class="btn gold" onclick="addTodayHabit()" style="white-space:nowrap">+ Add</button>
+  </div>
+  <div id="q-read-wrap" style="display:none">
+    <div class="lbl">Today's intentions <span class="lbl-line"></span> <button class="btn ghost" onclick="editIntentions()">Edit</button></div>
+    <div class="goals-card">
+      <div class="goals-card-head"><span class="goals-card-title">Your day is set &#10003;</span><span class="goals-card-date" id="goals-date"></span></div>
+      <div class="goals-body">
+        <div class="goal-row"><div class="goal-icon">&#127919;</div><div class="goal-col"><div class="goal-label">Top priority</div><div class="goal-value" id="goal-q1">--</div></div></div>
+        <div class="goal-row"><div class="goal-icon">&#10084;&#65039;</div><div class="goal-col"><div class="goal-label">Emotional intention</div><div class="goal-value" id="goal-q2">--</div></div></div>
       </div>
-      <div class="q-actions" style="margin-top:6px"><button class="btn" onclick="clearTodayHabits()">Clear all</button></div>
+      <div class="goals-footer"><span class="goals-synced" id="goals-synced-lbl">Synced to Sheet &#10003;</span><button class="btn ghost" onclick="editIntentions()">&#9998; Edit intentions</button></div>
     </div>
   </div>
-  <div id="q-read-wrap" style="display:none"><div class="lbl">Today's intentions <span class="lbl-line"></span> <button class="btn ghost" onclick="editIntentions()">Edit</button></div><div class="goals-card"><div class="goals-card-head"><span class="goals-card-title">Your day is set &#10003;</span><span class="goals-card-date" id="goals-date"></span></div><div class="goals-body"><div class="goal-row"><div class="goal-icon">&#127919;</div><div class="goal-col"><div class="goal-label">Top priority</div><div class="goal-value" id="goal-q1">--</div></div></div><div class="goal-row"><div class="goal-icon">&#10084;&#65039;</div><div class="goal-col"><div class="goal-label">Emotional intention</div><div class="goal-value" id="goal-q2">--</div></div></div></div><div class="goals-footer"><span class="goals-synced" id="goals-synced-lbl">Synced to Sheet &#10003;</span><button class="btn ghost" onclick="editIntentions()">&#9998; Edit intentions</button></div></div></div>
+  <!-- Gratitude — always visible, never toggled by intentions state -->
+  <hr class="d">
+  <div class="lbl">Today's gratitude <span class="lbl-line"></span> <button class="btn ghost" onclick="switchTab('gratitude')" style="font-size:10px">See all &#8594;</button></div>
+  <div class="q-wrap" style="background:var(--gold-glow);border-color:rgba(201,168,76,0.18)">
+    <div style="font-size:11px;color:var(--text-2);margin-bottom:8px">Three specific things you are grateful for right now. <span style="color:var(--text-3)">(Saved to Gratitude tab)</span></div>
+    <div class="grat-input-row"><div class="grat-num">1</div><textarea class="sin" id="morning-grat-1" rows="1" placeholder="e.g. My family is healthy and present..."></textarea></div>
+    <div class="grat-input-row"><div class="grat-num">2</div><textarea class="sin" id="morning-grat-2" rows="1" placeholder="e.g. I had a moment of clarity this morning..."></textarea></div>
+    <div class="grat-input-row"><div class="grat-num">3</div><textarea class="sin" id="morning-grat-3" rows="1" placeholder="e.g. Someone showed up for me when I needed it..."></textarea></div>
+    <div class="q-actions" style="margin-top:6px"><span class="sync-txt" id="morning-grat-sync"></span><button class="btn gold" onclick="saveMorningGratitude()">Save gratitude &#8599;</button></div>
+  </div>
+  <!-- Today's habits — always visible -->
+  <hr class="d">
+  <div class="lbl">Today's habits to follow <span class="lbl-line"></span></div>
+  <div class="q-wrap">
+    <div style="font-size:11px;color:var(--text-2);margin-bottom:8px">List the habits you commit to practising today.</div>
+    <div id="today-habits-list"></div>
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <input class="sin" id="today-habit-input" type="text" placeholder="e.g. Pause for 3 breaths before reacting..." style="flex:1" onkeydown="if(event.key==='Enter'){addTodayHabit();event.preventDefault();}">
+      <button class="btn gold" onclick="addTodayHabit()" style="white-space:nowrap">+ Add</button>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;flex-wrap:wrap;gap:6px">
+      <span class="sync-txt" id="hab-day-sync"></span>
+      <button class="btn" onclick="clearTodayHabits()">Clear all</button>
+    </div>
+  </div>
   <hr class="d">
   <div class="lbl">Five pillars <span class="lbl-line"></span></div>
   <div class="pillars-wrap"><div class="pillars-list"><button class="pillar" onclick="togglePillar(0)"><span class="pillar-e">&#129504;</span><div class="pillar-lbl">Mental strength</div><span class="pillar-arr">&#9654;</span></button><button class="pillar" onclick="togglePillar(1)"><span class="pillar-e">&#10084;&#65039;</span><div class="pillar-lbl">Emotional control</div><span class="pillar-arr">&#9654;</span></button><button class="pillar" onclick="togglePillar(2)"><span class="pillar-e">&#127919;</span><div class="pillar-lbl">Focus &amp; clarity</div><span class="pillar-arr">&#9654;</span></button><button class="pillar" onclick="togglePillar(3)"><span class="pillar-e">&#9889;</span><div class="pillar-lbl">Body &amp; energy</div><span class="pillar-arr">&#9654;</span></button><button class="pillar" onclick="togglePillar(4)"><span class="pillar-e">&#129306;</span><div class="pillar-lbl">Relationships</div><span class="pillar-arr">&#9654;</span></button></div><div class="pillar-detail" id="pillar-detail"></div><div class="pillar-empty" id="pillar-empty">Tap a pillar to explore its principles</div></div>
@@ -1353,14 +1366,21 @@ function loadTodayHabits(){
 }
 function saveTodayHabits(){
   localStorage.setItem('today_habits_'+isoToday(),JSON.stringify(todayHabits));
-  // Sync today's habit list to Morning Reflections sheet (habits column)
+  // Sync to Sheet — upsert today's habit list by date
   var now=new Date();
-  var habitText=todayHabits.map(function(h){return (h.done?'[x] ':'[ ] ')+h.text;}).join(' | ');
-  postToSheet({sheet:'Morning Reflections',
+  var habitText=todayHabits.map(function(h){return (h.done?'[✓] ':'[ ] ')+h.text;}).join(' | ');
+  var syncEl=document.getElementById('hab-day-sync');
+  if(syncEl){ syncEl.textContent='Syncing…'; syncEl.className='sync-txt syncing'; }
+  postToSheet({
+    sheet:'TodayHabits',
     date:now.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}),
     dateISO:isoDate(now),
-    time:now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true}),
-    today_habits:habitText
+    habits:habitText
+  }).then(function(ok){
+    if(syncEl){
+      syncEl.textContent=ok?'Saved to Sheet ✓':'Saved locally';
+      syncEl.className='sync-txt '+(ok?'ok':'err');
+    }
   });
 }
 function renderTodayHabits(){
