@@ -265,6 +265,9 @@ body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:
 .th-habit-text{flex:1;font-size:13px;color:var(--text-1);cursor:pointer}
 .th-habit-cb.done + .th-habit-text{color:var(--text-3);text-decoration:line-through}
 .th-habit-del{background:none;border:none;color:var(--text-3);cursor:pointer;font-size:14px;padding:0 4px;line-height:1;transition:color var(--tr)}
+.hab-streak{font-size:10px;font-family:var(--fm);color:var(--gold);background:var(--gold-dim);border:1px solid rgba(201,168,76,0.28);border-radius:20px;padding:1px 8px;white-space:nowrap;flex-shrink:0}
+.hab-chip{font-size:11px;font-family:var(--fb);color:var(--text-2);background:transparent;border:1px dashed var(--border-md);border-radius:20px;padding:3px 11px;cursor:pointer;transition:all var(--tr);text-align:left}
+.hab-chip:hover{background:var(--surface);color:var(--text-1);border-style:solid;border-color:var(--gold)}
 .th-habit-del:hover{color:var(--rose)}
 .toast{position:fixed;bottom:5.5rem;right:1rem;background:#1E2333;border:1px solid var(--border-md);border-radius:var(--r);padding:10px 16px;font-size:12px;color:var(--text-1);box-shadow:0 6px 24px rgba(0,0,0,0.4);opacity:0;transform:translateY(6px);transition:all 0.22s ease;pointer-events:none;z-index:200;max-width:280px}
 .toast.show{opacity:1;transform:translateY(0)}
@@ -335,17 +338,18 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
   </div>
   <!-- Today's habits — always visible -->
   <hr class="d">
-  <div class="lbl">Today's habits to follow <span class="lbl-line"></span></div>
+  <div class="lbl">Habits I'm following <span class="lbl-line"></span></div>
   <div class="q-wrap">
-    <div style="font-size:11px;color:var(--text-2);margin-bottom:8px">List the habits you commit to practising today.</div>
+    <div style="font-size:11px;color:var(--text-2);margin-bottom:10px">These stay on your list every day until you remove them. Tick them off as you go &#8212; the ticks reset each morning.</div>
     <div id="today-habits-list"></div>
-    <div style="display:flex;gap:8px;margin-top:8px">
+    <div id="habit-archive-box" style="display:none"></div>
+    <div style="display:flex;gap:8px;margin-top:10px">
       <input class="sin" id="today-habit-input" type="text" placeholder="e.g. Pause for 3 breaths before reacting..." style="flex:1" onkeydown="if(event.key==='Enter'){addTodayHabit();event.preventDefault();}">
       <button class="btn gold" onclick="addTodayHabit()" style="white-space:nowrap">+ Add</button>
     </div>
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;flex-wrap:wrap;gap:6px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;flex-wrap:wrap;gap:6px">
       <span class="sync-txt" id="hab-day-sync"></span>
-      <button class="btn" onclick="clearTodayHabits()">Clear all</button>
+      <button class="btn" onclick="clearTodayHabits()">Untick all</button>
     </div>
   </div>
   <hr class="d">
@@ -1380,6 +1384,225 @@ function replaceGratitudeFromSheet(s){
   updateGratStats(); updateGratBadge();
   fillMorningGratitude();
   if(document.getElementById('pg-gratitude').classList.contains('on')) renderGratitude();
+}
+
+/* MORNING GRATITUDE LINK */
+/* Pre-fill morning gratitude inputs with today's entry from Sheet */
+function normISO(d){
+  if(!d) return '';
+  var s=String(d).trim();
+  // Already YYYY-MM-DD
+  if(/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+  // Try parsing anything else (ISO timestamp, locale string, Date object)
+  var dt=new Date(s);
+  if(isNaN(dt.getTime())) return s;
+  return dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0');
+}
+
+function fillMorningGratitude(){
+  var todayIso=isoToday();
+  var todayEntry=gratEntries.find(function(e){return normISO(e.dateISO)===todayIso;});
+  DIAG.gratToday = todayEntry ? 'FOUND' : 'none for '+todayIso;
+  DIAG.gratDates = gratEntries.map(function(e){return normISO(e.dateISO);}).join(', ');
+  var i1=document.getElementById('morning-grat-1');
+  var i2=document.getElementById('morning-grat-2');
+  var i3=document.getElementById('morning-grat-3');
+  var syncEl=document.getElementById('morning-grat-sync');
+  if(!i1||!i2||!i3) return;
+  if(todayEntry){
+    i1.value=(todayEntry.items&&todayEntry.items[0])||'';
+    i2.value=(todayEntry.items&&todayEntry.items[1])||'';
+    i3.value=(todayEntry.items&&todayEntry.items[2])||'';
+    if(syncEl){syncEl.textContent='Loaded from Sheet \u2713';syncEl.className='sync-txt ok';}
+  }else{
+    i1.value=''; i2.value=''; i3.value='';
+    if(syncEl){syncEl.textContent='No entry saved for today yet';syncEl.className='sync-txt';}
+  }
+}
+
+async function saveMorningGratitude(){
+  var g1=document.getElementById('morning-grat-1').value.trim();
+  var g2=document.getElementById('morning-grat-2').value.trim();
+  var g3=document.getElementById('morning-grat-3').value.trim();
+  if(!g1&&!g2&&!g3){showToast('Write at least one thing you are grateful for.','error');return;}
+  var now=new Date(), gid=String(Date.now());
+  var entry={id:Date.now(),timestamp:Date.now(),sheetId:gid,
+    dateISO:isoDate(now),date:now.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}),
+    items:[g1,g2,g3].filter(function(x){return x.length>0;}),
+    emotion:'grateful'};
+  // Remove any existing entry for today
+  gratEntries=gratEntries.filter(function(e){return e.dateISO!==entry.dateISO;});
+  gratEntries.unshift(entry); saveGratitude(); updateGratStats();
+  // Sync to Sheet
+  var syncEl=document.getElementById('morning-grat-sync');
+  syncEl.textContent='Syncing…'; syncEl.className='sync-txt syncing';
+  var ok=await postToSheet({sheet:'Gratitude',sheetId:gid,date:entry.date,dateISO:entry.dateISO,
+    item1:entry.items[0]||'',item2:entry.items[1]||'',item3:entry.items[2]||'',emotion:'grateful'});
+  syncEl.textContent=ok?'Saved to Gratitude tab ✓':'Saved locally (Sheet unreachable)';
+  syncEl.className='sync-txt '+(ok?'ok':'err');
+  showToast(ok?'Gratitude saved ✓':'Saved locally.', ok?'success':'error');
+  // Keep values visible so you can see what was saved
+}
+
+/* ═══════════════════════════════════════════════════
+   DAILY HABITS — persistent list, per-day completion
+   habitList : [{id, text, created}]           (persists)
+   habitDone : {'YYYY-MM-DD': [id, id, ...]}   (per day)
+═══════════════════════════════════════════════════ */
+var habitList=[];      // the habits you're currently working on
+var habitDone={};      // completion record keyed by date
+var habitArchive=[];   // removed habits, available to re-add
+
+function loadTodayHabits(){
+  try{ habitList=JSON.parse(localStorage.getItem('habit_list')||'[]'); }catch(e){ habitList=[]; }
+  try{ habitDone=JSON.parse(localStorage.getItem('habit_done')||'{}'); }catch(e){ habitDone={}; }
+  try{ habitArchive=JSON.parse(localStorage.getItem('habit_archive')||'[]'); }catch(e){ habitArchive=[]; }
+  pruneHabitDone();
+}
+
+/* Keep only the last 90 days of completion records */
+function pruneHabitDone(){
+  var keys=Object.keys(habitDone);
+  if(keys.length<=90) return;
+  keys.sort();
+  keys.slice(0,keys.length-90).forEach(function(k){ delete habitDone[k]; });
+}
+
+function saveTodayHabits(){
+  localStorage.setItem('habit_list',JSON.stringify(habitList));
+  localStorage.setItem('habit_done',JSON.stringify(habitDone));
+  localStorage.setItem('habit_archive',JSON.stringify(habitArchive));
+  syncHabitsToSheet();
+}
+
+function syncHabitsToSheet(){
+  var now=new Date(), today=isoToday();
+  var doneToday=habitDone[today]||[];
+  var text=habitList.map(function(h){
+    return (doneToday.indexOf(h.id)>-1?'[\u2713] ':'[ ] ')+h.text;
+  }).join(' | ');
+  var syncEl=document.getElementById('hab-day-sync');
+  if(syncEl){ syncEl.textContent='Syncing\u2026'; syncEl.className='sync-txt syncing'; }
+  postToSheet({
+    sheet:'TodayHabits',
+    date:now.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}),
+    dateISO:today,
+    habits:text
+  }).then(function(ok){
+    DIAG.habSync = ok ? 'OK \u2014 written to TodayHabits sheet' : 'FAILED \u2014 script rejected or unreachable';
+    if(syncEl){
+      syncEl.textContent=ok?'Saved to Sheet \u2713':'Sheet sync failed';
+      syncEl.className='sync-txt '+(ok?'ok':'err');
+    }
+  });
+}
+
+/* How many consecutive days (ending today or yesterday) this habit was done */
+function habitStreak(id){
+  var streak=0, d=new Date();
+  for(var i=0;i<365;i++){
+    var iso=isoDate(d);
+    var done=(habitDone[iso]||[]).indexOf(id)>-1;
+    if(done){ streak++; }
+    else if(i>0){ break; }   // today not-yet-done doesn't break the streak
+    d.setDate(d.getDate()-1);
+  }
+  return streak;
+}
+
+function renderTodayHabits(){
+  var el=document.getElementById('today-habits-list');
+  if(!el) return;
+  var today=isoToday();
+  var doneToday=habitDone[today]||[];
+
+  if(!habitList.length){
+    el.innerHTML='<div style="font-size:12px;color:var(--text-3);padding:6px 0">'+
+      'No habits yet \u2014 add one below. It will stay here every day until you remove it.</div>';
+    renderHabitArchive();
+    return;
+  }
+
+  el.innerHTML=habitList.map(function(h){
+    var done=doneToday.indexOf(h.id)>-1;
+    var streak=habitStreak(h.id);
+    var streakHtml = streak>1
+      ? '<span class="hab-streak">\ud83d\udd25 '+streak+'d</span>'
+      : (streak===1 ? '<span class="hab-streak" style="color:var(--green);border-color:rgba(107,191,142,0.3);background:rgba(107,191,142,0.08)">day 1</span>' : '');
+    return '<div class="th-habit-item">'+
+      '<div class="th-habit-cb'+(done?' done':'')+'" onclick="toggleTodayHabit(\''+h.id+'\')"><span class="th-habit-tick">\u2713</span></div>'+
+      '<span class="th-habit-text" onclick="toggleTodayHabit(\''+h.id+'\')">'+escH(h.text)+'</span>'+
+      streakHtml+
+      '<button class="th-habit-del" onclick="removeTodayHabit(\''+h.id+'\')" title="Stop following this habit">\u00d7</button>'+
+    '</div>';
+  }).join('');
+  renderHabitArchive();
+}
+
+/* Show previously-removed habits as one-tap re-add chips */
+function renderHabitArchive(){
+  var box=document.getElementById('habit-archive-box');
+  if(!box) return;
+  if(!habitArchive.length){ box.style.display='none'; return; }
+  box.style.display='block';
+  box.innerHTML='<div style="font-size:10px;font-family:var(--fm);color:var(--text-3);letter-spacing:0.1em;text-transform:uppercase;margin:10px 0 6px">Previously followed</div>'+
+    '<div style="display:flex;flex-wrap:wrap;gap:5px">'+
+    habitArchive.map(function(h){
+      return '<button class="hab-chip" onclick="restoreHabit(\''+h.id+'\')">+ '+escH(h.text)+'</button>';
+    }).join('')+'</div>';
+}
+
+function addTodayHabit(){
+  var inp=document.getElementById('today-habit-input');
+  var text=(inp.value||'').trim(); if(!text) return;
+  // Don't add a duplicate of something already in the list
+  if(habitList.some(function(h){return h.text.toLowerCase()===text.toLowerCase();})){
+    showToast('That habit is already on your list.','error'); inp.value=''; return;
+  }
+  // If it's in the archive, restore it rather than creating a duplicate
+  var archived=habitArchive.filter(function(h){return h.text.toLowerCase()===text.toLowerCase();})[0];
+  if(archived){ restoreHabit(archived.id); inp.value=''; return; }
+  habitList.push({id:'h'+Date.now(),text:text,created:isoToday()});
+  saveTodayHabits(); renderTodayHabits();
+  inp.value=''; inp.focus();
+}
+
+function toggleTodayHabit(id){
+  var today=isoToday();
+  if(!habitDone[today]) habitDone[today]=[];
+  var i=habitDone[today].indexOf(id);
+  if(i>-1) habitDone[today].splice(i,1);
+  else habitDone[today].push(id);
+  saveTodayHabits(); renderTodayHabits();
+}
+
+/* Removing sends it to the archive so you can pick it up again later */
+function removeTodayHabit(id){
+  var h=habitList.filter(function(x){return x.id===id;})[0];
+  if(!h) return;
+  if(!confirm('Stop following "'+h.text+'"?\n\nIt moves to "Previously followed" so you can re-add it anytime.')) return;
+  habitList=habitList.filter(function(x){return x.id!==id;});
+  if(!habitArchive.some(function(x){return x.id===id;})) habitArchive.unshift(h);
+  if(habitArchive.length>12) habitArchive=habitArchive.slice(0,12);
+  saveTodayHabits(); renderTodayHabits();
+  showToast('Moved to previously followed.','');
+}
+
+function restoreHabit(id){
+  var h=habitArchive.filter(function(x){return x.id===id;})[0];
+  if(!h) return;
+  habitArchive=habitArchive.filter(function(x){return x.id!==id;});
+  if(!habitList.some(function(x){return x.id===id;})) habitList.push(h);
+  saveTodayHabits(); renderTodayHabits();
+  showToast('Following again \u2713','success');
+}
+
+function clearTodayHabits(){
+  var today=isoToday();
+  if(!habitList.length) return;
+  if(!confirm("Untick all habits for today?\n\nYour habit list stays \u2014 this only clears today's ticks.")) return;
+  habitDone[today]=[];
+  saveTodayHabits(); renderTodayHabits();
 }
 
 /* MORNING GRATITUDE LINK */
