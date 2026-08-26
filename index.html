@@ -554,7 +554,7 @@ function init(){
     var stored=getTodayStored();
     if(stored.checked)Object.assign(checked,stored.checked);
     renderChecklist();updateStreak();
-    loadTodayHabits();renderTodayHabits();
+    renderTodayHabits();
   }catch(e){console.error('Local:',e);}
 
   // Wipe ALL Sheet-synced localStorage keys on every load
@@ -581,7 +581,8 @@ function init(){
         fetchAllThoughts(),
         fetchAllPosts(),
         fetchAllMotivation(),
-        fetchAllGratitude()
+        fetchAllGratitude(),
+        fetchAllTodayHabits()
       ]);
       var d=results[0];
       if(d&&d.morning&&(d.morning.priority||d.morning.emotional_intention)){
@@ -630,7 +631,8 @@ function showDiagnostics(){
     'In memory: '+situations.length+' situations, '+thoughts.length+' thoughts, '+
       posts.length+' posts, '+motEntries.length+' motivation, '+gratEntries.length+' gratitude',
     '',
-    'Today habits (local): '+todayHabits.length+' items',
+    'Habits fetch: '+(DIAG.habRaw||'not run'),
+    'Habits loaded: '+(DIAG.habLoaded||'none'),
     'Habit sheet sync: '+(DIAG.habSync||'not attempted yet')
   ];
   var html='<pre style="font-family:var(--fm);font-size:11px;color:var(--text-2);white-space:pre-wrap;line-height:1.7;margin:0">'+
@@ -1445,66 +1447,94 @@ async function saveMorningGratitude(){
 }
 
 /* ═══════════════════════════════════════════════════
-   DAILY HABITS — persistent list, per-day completion
-   habitList : [{id, text, created}]           (persists)
-   habitDone : {'YYYY-MM-DD': [id, id, ...]}   (per day)
-═══════════════════════════════════════════════════ */
-var habitList=[];      // the habits you're currently working on
-var habitDone={};      // completion record keyed by date
-var habitArchive=[];   // removed habits, available to re-add
+   DAILY HABITS — Sheet is the source of truth
 
-function loadTodayHabits(){
-  try{ habitList=JSON.parse(localStorage.getItem('habit_list')||'[]'); }catch(e){ habitList=[]; }
-  try{ habitDone=JSON.parse(localStorage.getItem('habit_done')||'{}'); }catch(e){ habitDone={}; }
-  try{ habitArchive=JSON.parse(localStorage.getItem('habit_archive')||'[]'); }catch(e){ habitArchive=[]; }
-  pruneHabitDone();
+   TodayHabits sheet holds one row per day:
+     Date | Date ISO | Habits | Saved At
+   where Habits is "[✓] text | [ ] text | ..."
+
+   On every load we rebuild from those rows:
+     habitList    — habits in the most recent row
+     habitDone    — {dateISO: [text, ...]} ticked per day
+     habitArchive — seen in older rows, dropped since
+
+   Habits are keyed by TEXT so state survives the
+   round-trip through the Sheet with no local IDs.
+═══════════════════════════════════════════════════ */
+var habitList=[];      // [text, ...] currently followed
+var habitDone={};      // {dateISO: [text, ...]}
+var habitArchive=[];   // [text, ...] previously followed
+
+/* "[✓] Wait 30s | [ ] Read" → [{text, done}] */
+function parseHabitCell(cell){
+  if(!cell) return [];
+  return String(cell).split('|').map(function(part){
+    var s=part.trim(); if(!s) return null;
+    var done=/^\[\s*[\u2713xX]\s*\]/.test(s);
+    return { text:s.replace(/^\[[^\]]*\]\s*/,'').trim(), done:done };
+  }).filter(function(x){ return x && x.text; });
 }
 
-/* Keep only the last 90 days of completion records */
-function pruneHabitDone(){
-  var keys=Object.keys(habitDone);
-  if(keys.length<=90) return;
-  keys.sort();
-  keys.slice(0,keys.length-90).forEach(function(k){ delete habitDone[k]; });
+async function fetchAllTodayHabits(){
+  var d=await sheetFetch(WORKER_URL+'?action=getAllTodayHabits');
+  DIAG.habRaw = d ? (d.status+' / '+(Array.isArray(d.todayHabits)?d.todayHabits.length+' rows':'no array')) : 'NULL response';
+  if(d&&d.status==='ok'&&Array.isArray(d.todayHabits)) replaceHabitsFromSheet(d.todayHabits);
+  else console.warn('[TodayHabits] bad response:',d);
+}
+
+function replaceHabitsFromSheet(rows){
+  localStorage.removeItem('habit_list');
+  localStorage.removeItem('habit_done');
+  localStorage.removeItem('habit_archive');
+  habitList=[]; habitDone={}; habitArchive=[];
+  if(!rows.length){ renderTodayHabits(); return; }
+
+  rows.sort(function(a,b){ return (a.dateISO||'').localeCompare(b.dateISO||''); });
+
+  var seenEver=[];
+  rows.forEach(function(r){
+    var parsed=parseHabitCell(r.habits);
+    habitDone[r.dateISO]=parsed.filter(function(h){return h.done;}).map(function(h){return h.text;});
+    parsed.forEach(function(h){ if(seenEver.indexOf(h.text)===-1) seenEver.push(h.text); });
+  });
+
+  var latest=rows[rows.length-1];
+  habitList=parseHabitCell(latest.habits).map(function(h){return h.text;});
+  habitArchive=seenEver.filter(function(t){ return habitList.indexOf(t)===-1; }).slice(0,12);
+
+  DIAG.habLoaded=habitList.length+' active, '+habitArchive.length+' archived, '+Object.keys(habitDone).length+' days';
+  renderTodayHabits();
 }
 
 function saveTodayHabits(){
-  localStorage.setItem('habit_list',JSON.stringify(habitList));
-  localStorage.setItem('habit_done',JSON.stringify(habitDone));
-  localStorage.setItem('habit_archive',JSON.stringify(habitArchive));
-  syncHabitsToSheet();
-}
-
-function syncHabitsToSheet(){
   var now=new Date(), today=isoToday();
   var doneToday=habitDone[today]||[];
-  var text=habitList.map(function(h){
-    return (doneToday.indexOf(h.id)>-1?'[\u2713] ':'[ ] ')+h.text;
+  var text=habitList.map(function(t){
+    return (doneToday.indexOf(t)>-1?'[\u2713] ':'[ ] ')+t;
   }).join(' | ');
   var syncEl=document.getElementById('hab-day-sync');
   if(syncEl){ syncEl.textContent='Syncing\u2026'; syncEl.className='sync-txt syncing'; }
-  postToSheet({
+  return postToSheet({
     sheet:'TodayHabits',
     date:now.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}),
     dateISO:today,
     habits:text
   }).then(function(ok){
-    DIAG.habSync = ok ? 'OK \u2014 written to TodayHabits sheet' : 'FAILED \u2014 script rejected or unreachable';
+    DIAG.habSync = ok ? 'OK \u2014 written to TodayHabits' : 'FAILED \u2014 script rejected or unreachable';
     if(syncEl){
       syncEl.textContent=ok?'Saved to Sheet \u2713':'Sheet sync failed';
       syncEl.className='sync-txt '+(ok?'ok':'err');
     }
+    return ok;
   });
 }
 
-/* How many consecutive days (ending today or yesterday) this habit was done */
-function habitStreak(id){
+function habitStreak(text){
   var streak=0, d=new Date();
   for(var i=0;i<365;i++){
     var iso=isoDate(d);
-    var done=(habitDone[iso]||[]).indexOf(id)>-1;
-    if(done){ streak++; }
-    else if(i>0){ break; }   // today not-yet-done doesn't break the streak
+    if((habitDone[iso]||[]).indexOf(text)>-1) streak++;
+    else if(i>0) break;
     d.setDate(d.getDate()-1);
   }
   return streak;
@@ -1513,33 +1543,30 @@ function habitStreak(id){
 function renderTodayHabits(){
   var el=document.getElementById('today-habits-list');
   if(!el) return;
-  var today=isoToday();
-  var doneToday=habitDone[today]||[];
+  var doneToday=habitDone[isoToday()]||[];
 
   if(!habitList.length){
     el.innerHTML='<div style="font-size:12px;color:var(--text-3);padding:6px 0">'+
-      'No habits yet \u2014 add one below. It will stay here every day until you remove it.</div>';
-    renderHabitArchive();
-    return;
+      'No habits yet \u2014 add one below. It stays on your list every day until you remove it.</div>';
+    renderHabitArchive(); return;
   }
 
-  el.innerHTML=habitList.map(function(h){
-    var done=doneToday.indexOf(h.id)>-1;
-    var streak=habitStreak(h.id);
-    var streakHtml = streak>1
-      ? '<span class="hab-streak">\ud83d\udd25 '+streak+'d</span>'
-      : (streak===1 ? '<span class="hab-streak" style="color:var(--green);border-color:rgba(107,191,142,0.3);background:rgba(107,191,142,0.08)">day 1</span>' : '');
+  el.innerHTML=habitList.map(function(t){
+    var done=doneToday.indexOf(t)>-1;
+    var s=habitStreak(t);
+    var streakHtml = s>1 ? '<span class="hab-streak">\ud83d\udd25 '+s+'d</span>'
+      : (s===1 ? '<span class="hab-streak" style="color:var(--green);border-color:rgba(107,191,142,0.3);background:rgba(107,191,142,0.08)">day 1</span>' : '');
+    var esc=escH(t).replace(/'/g,"\\'");
     return '<div class="th-habit-item">'+
-      '<div class="th-habit-cb'+(done?' done':'')+'" onclick="toggleTodayHabit(\''+h.id+'\')"><span class="th-habit-tick">\u2713</span></div>'+
-      '<span class="th-habit-text" onclick="toggleTodayHabit(\''+h.id+'\')">'+escH(h.text)+'</span>'+
+      '<div class="th-habit-cb'+(done?' done':'')+'" onclick="toggleTodayHabit(\''+esc+'\')"><span class="th-habit-tick">\u2713</span></div>'+
+      '<span class="th-habit-text" onclick="toggleTodayHabit(\''+esc+'\')">'+escH(t)+'</span>'+
       streakHtml+
-      '<button class="th-habit-del" onclick="removeTodayHabit(\''+h.id+'\')" title="Stop following this habit">\u00d7</button>'+
+      '<button class="th-habit-del" onclick="removeTodayHabit(\''+esc+'\')" title="Stop following">\u00d7</button>'+
     '</div>';
   }).join('');
   renderHabitArchive();
 }
 
-/* Show previously-removed habits as one-tap re-add chips */
 function renderHabitArchive(){
   var box=document.getElementById('habit-archive-box');
   if(!box) return;
@@ -1547,61 +1574,53 @@ function renderHabitArchive(){
   box.style.display='block';
   box.innerHTML='<div style="font-size:10px;font-family:var(--fm);color:var(--text-3);letter-spacing:0.1em;text-transform:uppercase;margin:10px 0 6px">Previously followed</div>'+
     '<div style="display:flex;flex-wrap:wrap;gap:5px">'+
-    habitArchive.map(function(h){
-      return '<button class="hab-chip" onclick="restoreHabit(\''+h.id+'\')">+ '+escH(h.text)+'</button>';
+    habitArchive.map(function(t){
+      var esc=escH(t).replace(/'/g,"\\'");
+      return '<button class="hab-chip" onclick="restoreHabit(\''+esc+'\')">+ '+escH(t)+'</button>';
     }).join('')+'</div>';
 }
 
 function addTodayHabit(){
   var inp=document.getElementById('today-habit-input');
   var text=(inp.value||'').trim(); if(!text) return;
-  // Don't add a duplicate of something already in the list
-  if(habitList.some(function(h){return h.text.toLowerCase()===text.toLowerCase();})){
+  if(habitList.some(function(t){return t.toLowerCase()===text.toLowerCase();})){
     showToast('That habit is already on your list.','error'); inp.value=''; return;
   }
-  // If it's in the archive, restore it rather than creating a duplicate
-  var archived=habitArchive.filter(function(h){return h.text.toLowerCase()===text.toLowerCase();})[0];
-  if(archived){ restoreHabit(archived.id); inp.value=''; return; }
-  habitList.push({id:'h'+Date.now(),text:text,created:isoToday()});
+  var archived=habitArchive.filter(function(t){return t.toLowerCase()===text.toLowerCase();})[0];
+  if(archived){ restoreHabit(archived); inp.value=''; return; }
+  habitList.push(text);
   saveTodayHabits(); renderTodayHabits();
   inp.value=''; inp.focus();
 }
 
-function toggleTodayHabit(id){
+function toggleTodayHabit(text){
   var today=isoToday();
   if(!habitDone[today]) habitDone[today]=[];
-  var i=habitDone[today].indexOf(id);
-  if(i>-1) habitDone[today].splice(i,1);
-  else habitDone[today].push(id);
+  var i=habitDone[today].indexOf(text);
+  if(i>-1) habitDone[today].splice(i,1); else habitDone[today].push(text);
   saveTodayHabits(); renderTodayHabits();
 }
 
-/* Removing sends it to the archive so you can pick it up again later */
-function removeTodayHabit(id){
-  var h=habitList.filter(function(x){return x.id===id;})[0];
-  if(!h) return;
-  if(!confirm('Stop following "'+h.text+'"?\n\nIt moves to "Previously followed" so you can re-add it anytime.')) return;
-  habitList=habitList.filter(function(x){return x.id!==id;});
-  if(!habitArchive.some(function(x){return x.id===id;})) habitArchive.unshift(h);
+function removeTodayHabit(text){
+  if(!confirm('Stop following "'+text+'"?\n\nIt moves to "Previously followed" so you can re-add it anytime.')) return;
+  habitList=habitList.filter(function(t){return t!==text;});
+  if(habitArchive.indexOf(text)===-1) habitArchive.unshift(text);
   if(habitArchive.length>12) habitArchive=habitArchive.slice(0,12);
   saveTodayHabits(); renderTodayHabits();
   showToast('Moved to previously followed.','');
 }
 
-function restoreHabit(id){
-  var h=habitArchive.filter(function(x){return x.id===id;})[0];
-  if(!h) return;
-  habitArchive=habitArchive.filter(function(x){return x.id!==id;});
-  if(!habitList.some(function(x){return x.id===id;})) habitList.push(h);
+function restoreHabit(text){
+  habitArchive=habitArchive.filter(function(t){return t!==text;});
+  if(habitList.indexOf(text)===-1) habitList.push(text);
   saveTodayHabits(); renderTodayHabits();
   showToast('Following again \u2713','success');
 }
 
 function clearTodayHabits(){
-  var today=isoToday();
   if(!habitList.length) return;
   if(!confirm("Untick all habits for today?\n\nYour habit list stays \u2014 this only clears today's ticks.")) return;
-  habitDone[today]=[];
+  habitDone[isoToday()]=[];
   saveTodayHabits(); renderTodayHabits();
 }
 
@@ -1661,63 +1680,6 @@ async function saveMorningGratitude(){
   syncEl.className='sync-txt '+(ok?'ok':'err');
   showToast(ok?'Gratitude saved ✓':'Saved locally.', ok?'success':'error');
   // Keep values visible so you can see what was saved
-}
-
-/* TODAY'S HABITS — stored in localStorage, resets each day */
-var todayHabits=[];
-
-function loadTodayHabits(){
-  var key='today_habits_'+isoToday();
-  try{var r=localStorage.getItem(key);todayHabits=r?JSON.parse(r):[];}catch(e){todayHabits=[];}
-}
-function saveTodayHabits(){
-  localStorage.setItem('today_habits_'+isoToday(),JSON.stringify(todayHabits));
-  // Sync to Sheet — upsert today's habit list by date
-  var now=new Date();
-  var habitText=todayHabits.map(function(h){return (h.done?'[✓] ':'[ ] ')+h.text;}).join(' | ');
-  var syncEl=document.getElementById('hab-day-sync');
-  if(syncEl){ syncEl.textContent='Syncing…'; syncEl.className='sync-txt syncing'; }
-  postToSheet({
-    sheet:'TodayHabits',
-    date:now.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}),
-    dateISO:isoDate(now),
-    habits:habitText
-  }).then(function(ok){
-    if(syncEl){
-      syncEl.textContent=ok?'Saved to Sheet ✓':'Saved locally';
-      syncEl.className='sync-txt '+(ok?'ok':'err');
-    }
-  });
-}
-function renderTodayHabits(){
-  var el=document.getElementById('today-habits-list');
-  if(!el)return;
-  if(!todayHabits.length){el.innerHTML='<div style="font-size:12px;color:var(--text-3);padding:6px 0">No habits added yet — add one below.</div>';return;}
-  el.innerHTML=todayHabits.map(function(h,i){
-    return '<div class="th-habit-item">'+
-      '<div class="th-habit-cb'+(h.done?' done':'')+'" onclick="toggleTodayHabit('+i+')"><span class="th-habit-tick">✓</span></div>'+
-      '<span class="th-habit-text" onclick="toggleTodayHabit('+i+')">'+escH(h.text)+'</span>'+
-      '<button class="th-habit-del" onclick="removeTodayHabit('+i+')">×</button>'+
-    '</div>';
-  }).join('');
-}
-function addTodayHabit(){
-  var inp=document.getElementById('today-habit-input');
-  var text=(inp.value||'').trim(); if(!text)return;
-  todayHabits.push({text:text,done:false}); saveTodayHabits(); renderTodayHabits();
-  inp.value=''; inp.focus();
-}
-function toggleTodayHabit(i){
-  if(todayHabits[i])todayHabits[i].done=!todayHabits[i].done;
-  saveTodayHabits(); renderTodayHabits();
-}
-function removeTodayHabit(i){
-  todayHabits.splice(i,1); saveTodayHabits(); renderTodayHabits();
-}
-function clearTodayHabits(){
-  if(!todayHabits.length)return;
-  if(!confirm('Clear all habits for today?'))return;
-  todayHabits=[]; saveTodayHabits(); renderTodayHabits();
 }
 
 /* START */
