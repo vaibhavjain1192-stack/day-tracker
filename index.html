@@ -256,7 +256,13 @@ body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:
 .grat-streak-lbl{font-size:10px;color:var(--text-3);margin-top:3px}
 .grat-input-row{display:flex;gap:8px;align-items:flex-start;margin-bottom:6px}
 .grat-num{width:22px;height:22px;border-radius:50%;background:var(--gold-dim);border:1px solid rgba(201,168,76,0.3);color:var(--gold);font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:8px;font-family:var(--fm)}
-.th-habit-item{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)}
+.th-habit-item{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);background:var(--card);transition:background var(--tr),opacity var(--tr)}
+.th-habit-grip{cursor:grab;color:var(--text-3);font-size:13px;line-height:1;padding:2px 3px;flex-shrink:0;touch-action:none;user-select:none;-webkit-user-select:none;transition:color var(--tr)}
+.th-habit-grip:hover{color:var(--gold)}
+.th-habit-grip:active{cursor:grabbing}
+.th-habit-item.dragging{opacity:.4;background:var(--surface);border-radius:var(--rsm)}
+.th-habit-item.drag-over{box-shadow:inset 0 2px 0 var(--gold)}
+.th-habit-item.drag-over-below{box-shadow:inset 0 -2px 0 var(--gold)}
 .th-habit-item:last-child{border-bottom:none}
 .th-habit-cb{width:17px;height:17px;border-radius:4px;border:1.5px solid var(--border-md);flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all var(--tr);background:var(--surface)}
 .th-habit-cb.done{background:var(--green);border-color:var(--green)}
@@ -406,7 +412,7 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
   <hr class="d">
   <div class="lbl">Habits I'm following <span class="lbl-line"></span></div>
   <div class="q-wrap">
-    <div style="font-size:11px;color:var(--text-2);margin-bottom:10px">These stay on your list every day until you remove them. Tick them off as you go &#8212; the ticks reset each morning.</div>
+    <div style="font-size:11px;color:var(--text-2);margin-bottom:10px">These stay on your list every day until you remove them. Tick them off as you go &#8212; the ticks reset each morning. Drag &#9776; to reorder.</div>
     <div id="today-habits-list"></div>
     <div id="habit-archive-box" style="display:none"></div>
     <div style="display:flex;gap:8px;margin-top:10px">
@@ -1794,13 +1800,14 @@ function renderTodayHabits(){
     renderHabitArchive(); return;
   }
 
-  el.innerHTML=habitList.map(function(t){
+  el.innerHTML=habitList.map(function(t,idx){
     var done=doneToday.indexOf(t)>-1;
     var s=habitStreak(t);
     var streakHtml = s>1 ? '<span class="hab-streak">\ud83d\udd25 '+s+'d</span>'
       : (s===1 ? '<span class="hab-streak" style="color:var(--green);border-color:rgba(107,191,142,0.3);background:rgba(107,191,142,0.08)">day 1</span>' : '');
     var esc=escH(t).replace(/'/g,"\\'");
-    return '<div class="th-habit-item">'+
+    return '<div class="th-habit-item" data-habit="'+escH(t)+'" data-idx="'+idx+'">'+
+      '<span class="th-habit-grip" onpointerdown="startHabitDrag(event,'+idx+')" title="Drag to reorder">\u2630</span>'+
       '<div class="th-habit-cb'+(done?' done':'')+'" onclick="toggleTodayHabit(\''+esc+'\')"><span class="th-habit-tick">\u2713</span></div>'+
       '<span class="th-habit-text" onclick="toggleTodayHabit(\''+esc+'\')">'+escH(t)+'</span>'+
       streakHtml+
@@ -1833,6 +1840,76 @@ function editTodayHabit(text){
   var html='<label class="sfl">Habit wording</label>'+
     '<textarea class="sin" id="edit-habit-text" rows="3">'+escH(text)+'</textarea>'+note;
   openEditModal('Edit habit',html,{type:'habit',oldText:text});
+}
+
+/* ── Drag-to-reorder for the habit list ───────────────────
+   Pointer Events cover mouse and touch with one path.
+   The list order is the order written to the Sheet, so
+   committing a reorder is just a re-save.
+──────────────────────────────────────────────────────── */
+var _hDrag=null;
+
+function startHabitDrag(ev,idx){
+  ev.preventDefault();
+  var row=ev.target.closest('.th-habit-item');
+  if(!row) return;
+  _hDrag={from:idx,to:idx,row:row,moved:false};
+  row.classList.add('dragging');
+  try{ ev.target.setPointerCapture(ev.pointerId); }catch(e){}
+  document.addEventListener('pointermove',onHabitDragMove);
+  document.addEventListener('pointerup',endHabitDrag);
+  document.addEventListener('pointercancel',endHabitDrag);
+}
+
+function onHabitDragMove(ev){
+  if(!_hDrag) return;
+  var list=document.getElementById('today-habits-list');
+  if(!list) return;
+  var rows=Array.prototype.slice.call(list.querySelectorAll('.th-habit-item'));
+
+  rows.forEach(function(r){ r.classList.remove('drag-over','drag-over-below'); });
+
+  var target=null, below=false;
+  for(var i=0;i<rows.length;i++){
+    var b=rows[i].getBoundingClientRect();
+    if(ev.clientY>=b.top && ev.clientY<=b.bottom){
+      target=i; below=ev.clientY > b.top + b.height/2; break;
+    }
+    if(i===rows.length-1 && ev.clientY>b.bottom){ target=i; below=true; }
+    if(i===0 && ev.clientY<b.top){ target=0; below=false; }
+  }
+  if(target===null) return;
+
+  var dest=below?target+1:target;
+  if(dest>_hDrag.from) dest--;
+  dest=Math.max(0,Math.min(habitList.length-1,dest));
+  _hDrag.to=dest;
+  _hDrag.moved=true;
+
+  if(rows[target] && target!==_hDrag.from){
+    rows[target].classList.add(below?'drag-over-below':'drag-over');
+  }
+}
+
+function endHabitDrag(){
+  document.removeEventListener('pointermove',onHabitDragMove);
+  document.removeEventListener('pointerup',endHabitDrag);
+  document.removeEventListener('pointercancel',endHabitDrag);
+  if(!_hDrag){ return; }
+  var d=_hDrag; _hDrag=null;
+
+  var list=document.getElementById('today-habits-list');
+  if(list) list.querySelectorAll('.th-habit-item').forEach(function(r){
+    r.classList.remove('dragging','drag-over','drag-over-below');
+  });
+
+  if(!d.moved || d.to===d.from){ renderTodayHabits(); return; }
+
+  var moved=habitList.splice(d.from,1)[0];
+  habitList.splice(d.to,0,moved);
+  renderTodayHabits();
+  saveTodayHabits();
+  showToast('Order updated \u2713','success');
 }
 
 function addTodayHabit(){
