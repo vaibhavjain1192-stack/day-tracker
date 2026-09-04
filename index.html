@@ -296,9 +296,9 @@ body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:
 .rt-row{display:grid;grid-template-columns:68px 1fr 1fr 52px;gap:8px;align-items:center;padding:9px 0;border-bottom:1px solid var(--border)}
 .rt-row:last-child{border-bottom:none}
 .rt-row.done .rt-int,.rt-row.done .rt-hab{color:var(--text-3);text-decoration:line-through}
-.rt-time{font-family:var(--fm);font-size:11px;color:var(--gold);white-space:nowrap}
-.rt-int{font-size:12px;color:var(--text-1);line-height:1.45}
-.rt-hab{font-size:12px;color:var(--text-2);line-height:1.45}
+.rt-time{font-family:var(--fm);font-size:11px;color:var(--gold);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.rt-int{font-size:12px;color:var(--text-1);line-height:1.45;min-width:0;overflow-wrap:anywhere}
+.rt-hab{font-size:12px;color:var(--text-2);line-height:1.45;min-width:0;overflow-wrap:anywhere}
 .rt-acts{display:flex;gap:2px;align-items:center;justify-content:flex-end}
 .rt-cb{width:18px;height:18px;border-radius:5px;border:1.5px solid var(--border-md);flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all var(--tr);background:var(--surface)}
 .rt-cb.done{background:var(--green);border-color:var(--green)}
@@ -2150,10 +2150,24 @@ function itemsFor(name){
     .sort(function(a,b){ return timeToMin(a.time)-timeToMin(b.time); });
 }
 
+/* Sheets may hand back a full Date string for a time cell.
+   Reduce anything like "Sat Dec 30 1899 06:00:00 GMT+0521" to "6:00 AM". */
+function cleanTime(t){
+  if(!t) return '';
+  var s=String(t).trim();
+  var m=s.match(/\b(\d{1,2}):(\d{2})(?::\d{2})?\b/);
+  if(s.length>12 && m){
+    var h=parseInt(m[1],10), mn=m[2];
+    var ap=h<12?'AM':'PM'; var h12=h%12; if(h12===0) h12=12;
+    return h12+':'+mn+' '+ap;
+  }
+  return s;
+}
+
 /* "6:30 AM" / "18:45" / "" → minutes since midnight, blanks last */
 function timeToMin(t){
   if(!t) return 99999;
-  var s=String(t).trim().toUpperCase();
+  var s=cleanTime(t).toUpperCase();
   var m=s.match(/^(\d{1,2})[:.]?(\d{2})?\s*(AM|PM)?/);
   if(!m) return 99999;
   var h=parseInt(m[1],10), min=m[2]?parseInt(m[2],10):0;
@@ -2241,7 +2255,7 @@ function renderRoutine(){
   box.innerHTML=items.map(function(it){
     var isDone=done.indexOf(it.sheetId)>-1;
     return '<div class="rt-row'+(isDone?' done':'')+'">'+
-      '<div class="rt-time">'+escH(it.time||'\u2014')+'</div>'+
+      '<div class="rt-time" title="'+escH(cleanTime(it.time))+'">'+escH(cleanTime(it.time)||'\u2014')+'</div>'+
       '<div class="rt-int">'+escH(it.intention||'')+'</div>'+
       '<div class="rt-hab">'+escH(it.habit||'')+'</div>'+
       '<div class="rt-acts">'+
@@ -2388,7 +2402,7 @@ async function fetchAllRoutines(){
 
 function replaceRoutinesFromSheet(rows){
   routineItems=rows.map(function(r){
-    return {sheetId:r.sheetId||'',routine:r.routine||'',time:r.time||'',
+    return {sheetId:r.sheetId||'',routine:r.routine||'',time:cleanTime(r.time||''),
       intention:r.intention||'',habit:r.habit||''};
   });
   renderRoutine();
