@@ -285,6 +285,47 @@ body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:
 .kun-cat-pills{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px}
 .kcp{padding:3px 11px;font-size:11px;border-radius:20px;border:1px solid var(--border-md);color:var(--text-2);background:transparent;cursor:pointer;transition:all var(--tr);font-family:var(--fb)}
 .kcp:hover{background:var(--surface);color:var(--text-1)}
+/* TODAY'S ROUTINE */
+.rt-selector{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+.rt-pill{padding:4px 13px;font-size:11px;font-weight:500;border-radius:20px;border:1px solid var(--border-md);color:var(--text-2);background:transparent;cursor:pointer;transition:all var(--tr);font-family:var(--fb)}
+.rt-pill:hover{background:var(--surface);color:var(--text-1)}
+.rt-pill.on{background:var(--gold-dim);border-color:rgba(201,168,76,0.45);color:var(--gold)}
+.rt-pill.add{border-style:dashed;color:var(--text-3)}
+.rt-pill.add:hover{border-style:solid;border-color:var(--gold);color:var(--gold)}
+.rt-head{display:grid;grid-template-columns:68px 1fr 1fr 52px;gap:8px;padding:0 0 6px;font-family:var(--fm);font-size:9px;color:var(--text-3);letter-spacing:0.1em;text-transform:uppercase;border-bottom:1px solid var(--border)}
+.rt-row{display:grid;grid-template-columns:68px 1fr 1fr 52px;gap:8px;align-items:center;padding:9px 0;border-bottom:1px solid var(--border)}
+.rt-row:last-child{border-bottom:none}
+.rt-row.done .rt-int,.rt-row.done .rt-hab{color:var(--text-3);text-decoration:line-through}
+.rt-time{font-family:var(--fm);font-size:11px;color:var(--gold);white-space:nowrap}
+.rt-int{font-size:12px;color:var(--text-1);line-height:1.45}
+.rt-hab{font-size:12px;color:var(--text-2);line-height:1.45}
+.rt-acts{display:flex;gap:2px;align-items:center;justify-content:flex-end}
+.rt-cb{width:18px;height:18px;border-radius:5px;border:1.5px solid var(--border-md);flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all var(--tr);background:var(--surface)}
+.rt-cb.done{background:var(--green);border-color:var(--green)}
+.rt-tick{color:#0F1117;font-size:11px;font-weight:700;display:none}
+.rt-cb.done .rt-tick{display:block}
+.rt-mini{background:none;border:none;color:var(--text-3);cursor:pointer;font-size:11px;padding:0 2px;line-height:1;transition:color var(--tr)}
+.rt-mini:hover{color:var(--gold)}
+.rt-mini.del:hover{color:var(--rose)}
+.rt-add{display:grid;grid-template-columns:88px 1fr 1fr auto;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
+.rt-in-time{font-family:var(--fm)}
+.rt-progress{margin-top:12px}
+.rt-empty{text-align:center;padding:1.75rem 1rem;color:var(--text-3);font-size:12px;line-height:1.7}
+.rt-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+.rt-stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:10px 12px;text-align:center}
+.rt-stat-n{font-family:var(--fd);font-size:1.5rem;line-height:1;color:var(--gold)}
+.rt-stat-l{font-size:10px;color:var(--text-3);margin-top:3px}
+.rt-hist-lbl{font-family:var(--fm);font-size:9px;color:var(--text-3);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px}
+.rt-hist{display:flex;gap:4px;align-items:flex-end;flex-wrap:wrap}
+.rt-day{flex:1;min-width:16px;display:flex;flex-direction:column;align-items:center;gap:4px}
+.rt-bar{width:100%;height:44px;background:var(--surface);border-radius:3px;position:relative;overflow:hidden;border:1px solid var(--border)}
+.rt-bar-fill{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(180deg,var(--teal),var(--green));transition:height 0.3s ease}
+.rt-day-lbl{font-family:var(--fm);font-size:8px;color:var(--text-3)}
+@media(max-width:640px){
+  .rt-head,.rt-row{grid-template-columns:56px 1fr 46px}
+  .rt-col-hab,.rt-hab{display:none}
+  .rt-add{grid-template-columns:1fr;gap:6px}
+}
 .toast{position:fixed;bottom:5.5rem;right:1rem;background:#1E2333;border:1px solid var(--border-md);border-radius:var(--r);padding:10px 16px;font-size:12px;color:var(--text-1);box-shadow:0 6px 24px rgba(0,0,0,0.4);opacity:0;transform:translateY(6px);transition:all 0.22s ease;pointer-events:none;z-index:200;max-width:280px}
 .toast.show{opacity:1;transform:translateY(0)}
 .toast.success{border-color:rgba(107,191,142,0.32)}.toast.error{border-color:rgba(224,123,123,0.32)}
@@ -323,36 +364,43 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
   <div class="mantra"><div class="mantra-q" id="mantra-text">"..."</div><div class="mantra-src" id="mantra-source"></div></div>
   <div id="sync-banner" style="display:none;font-size:11px;padding:8px 12px;border-radius:var(--rsm);margin-bottom:1rem;font-family:var(--fm)"></div>
   <hr class="d">
-  <div id="q-loading-wrap" style="display:none"><div class="lbl">Today's intentions <span class="lbl-line"></span></div><div class="q-loading-card"><div class="q-skel q-skel-sm"></div><div class="q-skel q-skel-lg"></div><div class="q-skel q-skel-sm" style="margin-top:8px"></div><div class="q-skel q-skel-lg"></div><div class="q-skel q-skel-sm" style="margin-top:8px"></div><div class="q-skel q-skel-md"></div><div class="q-loading-note">Fetching your intentions...</div></div></div>
-  <div id="q-form-wrap">
-    <div class="lbl">Today's intentions <span class="lbl-line"></span></div>
-    <div class="q-wrap">
-      <div class="q-item"><div class="q-lbl">What is the one thing that, if I do it today, makes everything else easier?</div><textarea class="q-in" id="q1" rows="2" placeholder="Your single top priority for today..."></textarea></div>
-      <div class="q-item"><div class="q-lbl">How do I want to show up emotionally today?</div><textarea class="q-in" id="q2" rows="2" placeholder="Calm, focused, patient, present..."></textarea></div>
-      <div class="q-actions"><span class="save-st" id="save-status"></span><button class="btn" onclick="clearQuestions()">Clear</button><button class="btn gold" onclick="saveToSheet()">Save intentions &#8599;</button></div>
+  <!-- TODAY'S ROUTINE -->
+  <div class="lbl">Today's routine <span class="lbl-line"></span></div>
+  <div class="q-wrap">
+    <div class="rt-selector" id="rt-selector"></div>
+    <div class="rt-head">
+      <div class="rt-col-time">Time</div>
+      <div class="rt-col-int">Intention</div>
+      <div class="rt-col-hab">Habit</div>
+      <div class="rt-col-act"></div>
     </div>
-  </div>
-  <div id="q-read-wrap" style="display:none">
-    <div class="lbl">Today's intentions <span class="lbl-line"></span> <button class="btn ghost" onclick="editIntentions()">Edit</button></div>
-    <div class="goals-card">
-      <div class="goals-card-head"><span class="goals-card-title">Your day is set &#10003;</span><span class="goals-card-date" id="goals-date"></span></div>
-      <div class="goals-body">
-        <div class="goal-row"><div class="goal-icon">&#127919;</div><div class="goal-col"><div class="goal-label">Top priority</div><div class="goal-value" id="goal-q1">--</div></div></div>
-        <div class="goal-row"><div class="goal-icon">&#10084;&#65039;</div><div class="goal-col"><div class="goal-label">Emotional intention</div><div class="goal-value" id="goal-q2">--</div></div></div>
+    <div id="rt-items"></div>
+    <div class="rt-progress" id="rt-progress"></div>
+
+    <div class="rt-add" id="rt-add-form">
+      <input class="sin rt-in-time" id="rt-time" type="text" placeholder="6:30 AM">
+      <input class="sin" id="rt-intention" type="text" placeholder="Intention — why this matters">
+      <input class="sin" id="rt-habit" type="text" placeholder="Habit — what you actually do">
+      <button class="btn gold" onclick="addRoutineItem()" style="white-space:nowrap">+ Add</button>
+    </div>
+
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;flex-wrap:wrap;gap:6px">
+      <span class="sync-txt" id="rt-sync"></span>
+      <div style="display:flex;gap:6px">
+        <button class="btn" onclick="renameRoutine()">&#9998; Rename</button>
+        <button class="btn" onclick="untickRoutine()">Untick all</button>
       </div>
-      <div class="goals-footer"><span class="goals-synced" id="goals-synced-lbl">Synced to Sheet &#10003;</span><button class="btn ghost" onclick="editIntentions()">&#9998; Edit intentions</button></div>
     </div>
   </div>
-  <!-- Gratitude — always visible, never toggled by intentions state -->
-  <hr class="d">
-  <div class="lbl">Today's gratitude <span class="lbl-line"></span> <button class="btn ghost" onclick="switchTab('gratitude')" style="font-size:10px">See all &#8594;</button></div>
-  <div class="q-wrap" style="background:var(--gold-glow);border-color:rgba(201,168,76,0.18)">
-    <div style="font-size:11px;color:var(--text-2);margin-bottom:8px">Three specific things you are grateful for right now. <span style="color:var(--text-3)">(Saved to Gratitude tab)</span></div>
-    <div class="grat-input-row"><div class="grat-num">1</div><textarea class="sin" id="morning-grat-1" rows="1" placeholder="e.g. My family is healthy and present..."></textarea></div>
-    <div class="grat-input-row"><div class="grat-num">2</div><textarea class="sin" id="morning-grat-2" rows="1" placeholder="e.g. I had a moment of clarity this morning..."></textarea></div>
-    <div class="grat-input-row"><div class="grat-num">3</div><textarea class="sin" id="morning-grat-3" rows="1" placeholder="e.g. Someone showed up for me when I needed it..."></textarea></div>
-    <div class="q-actions" style="margin-top:6px"><span class="sync-txt" id="morning-grat-sync"></span><button class="btn gold" onclick="saveMorningGratitude()">Save gratitude &#8599;</button></div>
+
+  <!-- Completion history -->
+  <div class="lbl">Routine completion <span class="lbl-line"></span></div>
+  <div class="q-wrap">
+    <div class="rt-stats" id="rt-stats"></div>
+    <div class="rt-hist-lbl">Last 14 days</div>
+    <div class="rt-hist" id="rt-hist"></div>
   </div>
+
   <!-- Today's habits — always visible -->
   <hr class="d">
   <div class="lbl">Habits I'm following <span class="lbl-line"></span></div>
@@ -373,8 +421,12 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
   <div class="lbl">Five pillars <span class="lbl-line"></span></div>
   <div class="pillars-wrap"><div class="pillars-list"><button class="pillar" onclick="togglePillar(0)"><span class="pillar-e">&#129504;</span><div class="pillar-lbl">Mental strength</div><span class="pillar-arr">&#9654;</span></button><button class="pillar" onclick="togglePillar(1)"><span class="pillar-e">&#10084;&#65039;</span><div class="pillar-lbl">Emotional control</div><span class="pillar-arr">&#9654;</span></button><button class="pillar" onclick="togglePillar(2)"><span class="pillar-e">&#127919;</span><div class="pillar-lbl">Focus &amp; clarity</div><span class="pillar-arr">&#9654;</span></button><button class="pillar" onclick="togglePillar(3)"><span class="pillar-e">&#9889;</span><div class="pillar-lbl">Body &amp; energy</div><span class="pillar-arr">&#9654;</span></button><button class="pillar" onclick="togglePillar(4)"><span class="pillar-e">&#129306;</span><div class="pillar-lbl">Relationships</div><span class="pillar-arr">&#9654;</span></button></div><div class="pillar-detail" id="pillar-detail"></div><div class="pillar-empty" id="pillar-empty">Tap a pillar to explore its principles</div></div>
   <hr class="d">
-  <div class="lbl">Daily checklist <span class="lbl-line"></span></div>
-  <div class="cl-block"><div id="cl-list"></div><div class="prog-wrap"><div class="prog-meta"><span>Practices</span><span class="prog-ct" id="prog-txt">0/8</span></div><div class="prog-track"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div></div></div>
+  <div class="lbl" style="cursor:pointer" onclick="toggleChecklist()">
+    Daily checklist <span class="lbl-line"></span>
+    <span class="prog-ct" id="cl-mini" style="color:var(--text-2)">0/8</span>
+    <span id="cl-caret" style="transition:transform var(--tr);display:inline-block">&#9662;</span>
+  </div>
+  <div class="cl-block" id="cl-block" style="display:none"><div id="cl-list"></div><div class="prog-wrap"><div class="prog-meta"><span>Practices</span><span class="prog-ct" id="prog-txt">0/8</span></div><div class="prog-track"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div></div></div>
   <hr class="d">
   <div class="lbl">Anchor intentions <span class="lbl-line"></span></div>
   <div class="int-row" style="margin-bottom:1rem"><div class="int-tile"><div class="int-e">&#9208;&#65039;</div><div class="int-t">Pause before reacting</div><div class="int-b">3 deep breaths before responding to anything charged.</div></div><div class="int-tile"><div class="int-e">&#127919;</div><div class="int-t">One task, full focus</div><div class="int-b">No tabs, no phone — one thing at a time during deep work.</div></div><div class="int-tile"><div class="int-e">&#127807;</div><div class="int-t">Hard thing first</div><div class="int-b">Most important work before email or meetings steal the morning.</div></div></div>
@@ -644,6 +696,7 @@ function init(){
     if(stored.checked)Object.assign(checked,stored.checked);
     renderChecklist();updateStreak();
     renderTodayHabits();
+    renderRoutine();
   }catch(e){console.error('Local:',e);}
 
   // Wipe ALL Sheet-synced localStorage keys on every load
@@ -656,6 +709,7 @@ function init(){
 
   // Clear all in-memory arrays — Sheet is always the source of truth
   situations=[]; thoughts=[]; posts=[]; habits=[]; motEntries=[]; gratEntries=[]; kunEntries=[];
+  routineItems=[]; routineLog={};
   updateBadge(); updateThBadge(); updatePostBadge();
 
   // Show shimmer/loading state on morning intentions
@@ -683,6 +737,8 @@ function init(){
       if(Array.isArray(d.gratitude))   replaceGratitudeFromSheet(d.gratitude);
       if(Array.isArray(d.todayHabits)) replaceHabitsFromSheet(d.todayHabits);
       if(Array.isArray(d.kundali))     replaceKundaliFromSheet(d.kundali);
+      if(Array.isArray(d.routines))    replaceRoutinesFromSheet(d.routines);
+      if(Array.isArray(d.routineLog))  replaceRoutineLogFromSheet(d.routineLog);
 
       DIAG.gratRaw='ok / '+(d.gratitude||[]).length+' rows';
       DIAG.motRaw ='ok / '+(d.motivation||[]).length+' rows';
@@ -695,7 +751,7 @@ function init(){
 
       showSyncBanner(true,'Sheet \u2713 '+situations.length+' sit \u00b7 '+thoughts.length+
         ' th \u00b7 '+posts.length+' posts \u00b7 '+motEntries.length+' mot \u00b7 '+
-        gratEntries.length+' grat \u00b7 '+kunEntries.length+' kun   (tap for details)');
+        gratEntries.length+' grat \u00b7 '+routineItems.length+' routine   (tap for details)');
     }catch(e){
       console.error('[init fetch error]',e);
       DIAG.everything='EXCEPTION \u2014 '+(e.message||e);
@@ -749,11 +805,14 @@ function showDiagnostics(){
 }
 
 function setIntentionsState(s){
-  document.getElementById('q-loading-wrap').style.display=s==='loading'?'block':'none';
-  document.getElementById('q-form-wrap').style.display=s==='form'?'block':'none';
-  document.getElementById('q-read-wrap').style.display=s==='read'?'block':'none';
+  // Intentions were removed from the home page; this is now a no-op.
+  var w;
+  w=document.getElementById('q-loading-wrap'); if(w) w.style.display=s==='loading'?'block':'none';
+  w=document.getElementById('q-form-wrap');    if(w) w.style.display=s==='form'?'block':'none';
+  w=document.getElementById('q-read-wrap');    if(w) w.style.display=s==='read'?'block':'none';
 }
 function showReadView(q1,q2){
+  if(!document.getElementById('goal-q1')) return;
   document.getElementById('goal-q1').textContent=q1||'--';
   document.getElementById('goal-q2').textContent=q2||'--';
 
@@ -763,13 +822,15 @@ function showReadView(q1,q2){
   setIntentionsState('read');
 }
 function editIntentions(){
+  if(!document.getElementById('q1')) return;
   document.getElementById('q1').value=document.getElementById('goal-q1').textContent.replace('--','');
   document.getElementById('q2').value=document.getElementById('goal-q2').textContent.replace('--','');
   setIntentionsState('form');document.getElementById('q1').focus();
 }
-function clearQuestions(){['q1','q2'].forEach(function(id){document.getElementById(id).value='';});document.getElementById('save-status').textContent='';}
+function clearQuestions(){if(!document.getElementById('q1'))return;['q1','q2'].forEach(function(id){document.getElementById(id).value='';});document.getElementById('save-status').textContent='';}
 
 async function saveToSheet(){
+  if(!document.getElementById('q1')) return;
   var q1=document.getElementById('q1').value.trim(),q2=document.getElementById('q2').value.trim();
   if(!q1&&!q2){showToast('Fill in at least one intention first.','error');return;}
   setSt('Saving...',null);
@@ -802,7 +863,20 @@ function renderChecklist(){
   CHECKLIST.forEach(function(item){var done=!!checked[item.k],div=document.createElement('div');div.className='cl-row'+(done?' done':'');div.onclick=function(){toggleCheck(item.k);};div.innerHTML='<div class="cl-box"><span class="cl-tick">\u2713</span></div><div class="cl-txt">'+item.t+'</div><span class="cl-tag">'+item.tag+'</span>';el.appendChild(div);});updateProg();
 }
 function toggleCheck(k){checked[k]=!checked[k];saveTodayLocal({checked:checked});renderChecklist();}
-function updateProg(){var done=CHECKLIST.filter(function(i){return checked[i.k];}).length;document.getElementById('prog-txt').textContent=done+'/'+CHECKLIST.length;document.getElementById('prog-fill').style.width=Math.round(done/CHECKLIST.length*100)+'%';}
+function updateProg(){
+  var done=CHECKLIST.filter(function(i){return checked[i.k];}).length;
+  var t=document.getElementById('prog-txt'); if(t) t.textContent=done+'/'+CHECKLIST.length;
+  var m=document.getElementById('cl-mini');  if(m) m.textContent=done+'/'+CHECKLIST.length;
+  var f=document.getElementById('prog-fill');if(f) f.style.width=Math.round(done/CHECKLIST.length*100)+'%';
+}
+
+function toggleChecklist(){
+  var b=document.getElementById('cl-block'), c=document.getElementById('cl-caret');
+  if(!b)return;
+  var open=b.style.display!=='none';
+  b.style.display=open?'none':'block';
+  if(c) c.style.transform=open?'rotate(0deg)':'rotate(180deg)';
+}
 
 function todayKey(){var d=new Date();return 'morning_'+d.getFullYear()+'_'+(d.getMonth()+1)+'_'+d.getDate();}
 function getTodayStored(){try{var r=localStorage.getItem(todayKey());return r?JSON.parse(r):{};}catch(e){return{};}}
@@ -1049,6 +1123,7 @@ async function saveEditModal(){
     });
     habitArchive=habitArchive.map(function(t){return t===oldText?newText:t;});
     renderTodayHabits();
+    renderRoutine();
 
     // Rewrite the label across every row in the Sheet
     var okR=await postToSheet({sheet:'TodayHabits',action:'rename_habit',oldText:oldText,newText:newText});
@@ -1099,6 +1174,17 @@ async function saveEditModal(){
       sheetId:e.sheetId||'',category:e.category,text:e.text,pinned:e.pinned?'yes':'no'});
     closeEditModal(); renderMotivation();
     showToast(okm?'Entry updated ✓':'Updated locally — Sheet sync pending.',okm?'success':'');
+  }else if(_editCtx.type==='routine'){
+    var ri=routineItems.find(function(x){return x.sheetId===_editCtx.id;}); if(!ri){closeEditModal();return;}
+    ri.time=document.getElementById('edit-rt-time').value.trim();
+    ri.intention=document.getElementById('edit-rt-intention').value.trim();
+    ri.habit=document.getElementById('edit-rt-habit').value.trim();
+    renderRoutine();
+    var okrt=await postToSheet({sheet:'Routines',action:'edit_routine_item',sheetId:ri.sheetId,
+      time:ri.time,intention:ri.intention,habit:ri.habit});
+    if(okrt) await fetchAllRoutines();
+    closeEditModal(); renderRoutine();
+    showToast(okrt?'Item updated \u2713':'Updated locally \u2014 sync failed.',okrt?'success':'error');
   }else if(_editCtx.type==='kundali'){
     var ke=kunEntries.find(function(x){return x.id===_editCtx.id;}); if(!ke){closeEditModal();return;}
     var selCat=document.querySelector('#edit-kun-cat-pills .kcp.on');
@@ -1563,6 +1649,7 @@ function fillMorningGratitude(){
   var i1=document.getElementById('morning-grat-1');
   var i2=document.getElementById('morning-grat-2');
   var i3=document.getElementById('morning-grat-3');
+  if(!i1) return;   // section no longer on the home page
   var syncEl=document.getElementById('morning-grat-sync');
   if(!i1||!i2||!i3) return;
   if(todayEntry){
@@ -1577,7 +1664,8 @@ function fillMorningGratitude(){
 }
 
 async function saveMorningGratitude(){
-  var g1=document.getElementById('morning-grat-1').value.trim();
+  var _mg=document.getElementById('morning-grat-1'); if(!_mg) return;
+  var g1=_mg.value.trim();
   var g2=document.getElementById('morning-grat-2').value.trim();
   var g3=document.getElementById('morning-grat-3').value.trim();
   if(!g1&&!g2&&!g3){showToast('Write at least one thing you are grateful for.','error');return;}
@@ -1811,6 +1899,7 @@ function fillMorningGratitude(){
   var i1=document.getElementById('morning-grat-1');
   var i2=document.getElementById('morning-grat-2');
   var i3=document.getElementById('morning-grat-3');
+  if(!i1) return;   // section no longer on the home page
   var syncEl=document.getElementById('morning-grat-sync');
   if(!i1||!i2||!i3) return;
   if(todayEntry){
@@ -1825,7 +1914,8 @@ function fillMorningGratitude(){
 }
 
 async function saveMorningGratitude(){
-  var g1=document.getElementById('morning-grat-1').value.trim();
+  var _mg=document.getElementById('morning-grat-1'); if(!_mg) return;
+  var g1=_mg.value.trim();
   var g2=document.getElementById('morning-grat-2').value.trim();
   var g3=document.getElementById('morning-grat-3').value.trim();
   if(!g1&&!g2&&!g3){showToast('Write at least one thing you are grateful for.','error');return;}
@@ -2023,6 +2113,267 @@ function replaceKundaliFromSheet(s){
   });
   kunEntries.sort(function(a,b){return b.timestamp-a.timestamp;});
   renderKundali();
+}
+
+/* ═══════════════════════════════════════════════════
+   TODAY'S ROUTINE — Sheet-sourced
+
+   routineItems : [{sheetId, routine, time, intention, habit}]
+   routineLog   : {dateISO: {routineName: [sheetId, ...]}}
+
+   The item definitions and the daily completion record are
+   kept apart, so ticking today never edits the template and
+   past days keep their own history.
+═══════════════════════════════════════════════════ */
+var routineItems=[];
+var routineLog={};
+var activeRoutine='';
+
+function routineNames(){
+  var names=[];
+  routineItems.forEach(function(it){ if(it.routine && names.indexOf(it.routine)===-1) names.push(it.routine); });
+  Object.keys(routineLog).forEach(function(d){
+    Object.keys(routineLog[d]).forEach(function(r){ if(names.indexOf(r)===-1) names.push(r); });
+  });
+  if(!names.length) names=['Routine 1'];
+  return names.sort();
+}
+
+function itemsFor(name){
+  return routineItems.filter(function(it){ return it.routine===name; })
+    .sort(function(a,b){ return timeToMin(a.time)-timeToMin(b.time); });
+}
+
+/* "6:30 AM" / "18:45" / "" → minutes since midnight, blanks last */
+function timeToMin(t){
+  if(!t) return 99999;
+  var s=String(t).trim().toUpperCase();
+  var m=s.match(/^(\d{1,2})[:.]?(\d{2})?\s*(AM|PM)?/);
+  if(!m) return 99999;
+  var h=parseInt(m[1],10), min=m[2]?parseInt(m[2],10):0;
+  if(m[3]==='PM'&&h<12) h+=12;
+  if(m[3]==='AM'&&h===12) h=0;
+  return h*60+min;
+}
+
+function doneFor(name,iso){
+  return (routineLog[iso]&&routineLog[iso][name])||[];
+}
+
+function renderRoutineSelector(){
+  var el=document.getElementById('rt-selector'); if(!el) return;
+  var names=routineNames();
+  if(!activeRoutine||names.indexOf(activeRoutine)===-1) activeRoutine=names[0];
+  el.innerHTML=names.map(function(n){
+    return '<button class="rt-pill'+(n===activeRoutine?' on':'')+'" onclick="selectRoutine(\''+escH(n).replace(/'/g,"\\'")+'\')">'+escH(n)+'</button>';
+  }).join('')+'<button class="rt-pill add" onclick="newRoutine()">+ New routine</button>';
+}
+
+function selectRoutine(name){ activeRoutine=name; renderRoutine(); }
+
+function newRoutine(){
+  var n=prompt('Name the new routine:','Routine '+(routineNames().length+1));
+  if(!n||!n.trim()) return;
+  n=n.trim();
+  if(routineNames().indexOf(n)>-1){ showToast('That routine already exists.','error'); return; }
+  activeRoutine=n;
+  renderRoutine();
+  showToast('Add your first item to '+n+'.','');
+}
+
+function renameRoutine(){
+  if(!activeRoutine) return;
+  var n=prompt('Rename this routine:',activeRoutine);
+  if(!n||!n.trim()||n.trim()===activeRoutine) return;
+  n=n.trim();
+  if(routineNames().indexOf(n)>-1){ showToast('That name is already used.','error'); return; }
+  var oldName=activeRoutine;
+  routineItems.forEach(function(it){ if(it.routine===oldName) it.routine=n; });
+  Object.keys(routineLog).forEach(function(d){
+    if(routineLog[d][oldName]){ routineLog[d][n]=routineLog[d][oldName]; delete routineLog[d][oldName]; }
+  });
+  activeRoutine=n; renderRoutine();
+  postToSheet({sheet:'Routines',action:'rename_routine',oldName:oldName,newName:n})
+    .then(function(ok){ showToast(ok?'Renamed \u2713':'Renamed locally \u2014 sync failed.',ok?'success':'error'); });
+}
+
+function renderRoutine(){
+  renderRoutineSelector();
+  var box=document.getElementById('rt-items'); if(!box) return;
+  var items=itemsFor(activeRoutine);
+  var today=isoToday();
+  var done=doneFor(activeRoutine,today);
+
+  if(!items.length){
+    box.innerHTML='<div class="rt-empty">Nothing in <strong>'+escH(activeRoutine)+'</strong> yet.<br>Add your first time \u00b7 intention \u00b7 habit below.</div>';
+    document.getElementById('rt-progress').innerHTML='';
+    renderRoutineHistory();
+    return;
+  }
+
+  box.innerHTML=items.map(function(it){
+    var isDone=done.indexOf(it.sheetId)>-1;
+    return '<div class="rt-row'+(isDone?' done':'')+'">'+
+      '<div class="rt-time">'+escH(it.time||'\u2014')+'</div>'+
+      '<div class="rt-int">'+escH(it.intention||'')+'</div>'+
+      '<div class="rt-hab">'+escH(it.habit||'')+'</div>'+
+      '<div class="rt-acts">'+
+        '<button class="rt-mini" onclick="editRoutineItem(\''+it.sheetId+'\')" title="Edit">\u270e</button>'+
+        '<button class="rt-mini del" onclick="delRoutineItem(\''+it.sheetId+'\')" title="Remove">\u00d7</button>'+
+        '<div class="rt-cb'+(isDone?' done':'')+'" onclick="toggleRoutineItem(\''+it.sheetId+'\')"><span class="rt-tick">\u2713</span></div>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+
+  var pct=Math.round(done.length/items.length*100);
+  document.getElementById('rt-progress').innerHTML=
+    '<div class="prog-meta"><span>'+escH(activeRoutine)+' today</span>'+
+    '<span class="prog-ct">'+done.length+'/'+items.length+'</span></div>'+
+    '<div class="prog-track"><div class="prog-fill" style="width:'+pct+'%"></div></div>';
+
+  renderRoutineHistory();
+}
+
+/* Completion across the last 14 days, plus streak and average */
+function renderRoutineHistory(){
+  var statsEl=document.getElementById('rt-stats');
+  var histEl=document.getElementById('rt-hist');
+  if(!statsEl||!histEl) return;
+
+  var items=itemsFor(activeRoutine);
+  var total=items.length;
+  if(!total){
+    statsEl.innerHTML=''; histEl.innerHTML='<div class="rt-empty" style="padding:1rem">No items to track yet.</div>';
+    return;
+  }
+  var ids=items.map(function(i){return i.sheetId;});
+
+  var days=[], sum=0, fullDays=0;
+  for(var i=13;i>=0;i--){
+    var d=new Date(); d.setDate(d.getDate()-i);
+    var iso=isoDate(d);
+    var done=doneFor(activeRoutine,iso).filter(function(x){return ids.indexOf(x)>-1;});
+    var pct=Math.round(done.length/total*100);
+    days.push({iso:iso,label:String(d.getDate()),pct:pct});
+    sum+=pct; if(pct===100) fullDays++;
+  }
+
+  // Streak of 100% days ending today (today incomplete doesn't break it)
+  var streak=0;
+  for(var k=0;k<365;k++){
+    var dd=new Date(); dd.setDate(dd.getDate()-k);
+    var iso2=isoDate(dd);
+    var dn=doneFor(activeRoutine,iso2).filter(function(x){return ids.indexOf(x)>-1;});
+    if(dn.length===total) streak++;
+    else if(k>0) break;
+  }
+
+  statsEl.innerHTML=
+    '<div class="rt-stat"><div class="rt-stat-n" style="color:var(--green)">'+streak+'</div><div class="rt-stat-l">\ud83d\udd25 Day streak</div></div>'+
+    '<div class="rt-stat"><div class="rt-stat-n">'+Math.round(sum/14)+'%</div><div class="rt-stat-l">14-day average</div></div>'+
+    '<div class="rt-stat"><div class="rt-stat-n" style="color:var(--teal)">'+fullDays+'</div><div class="rt-stat-l">Full days</div></div>';
+
+  histEl.innerHTML=days.map(function(d){
+    return '<div class="rt-day" title="'+d.iso+' \u2014 '+d.pct+'%">'+
+      '<div class="rt-bar"><div class="rt-bar-fill" style="height:'+d.pct+'%"></div></div>'+
+      '<div class="rt-day-lbl">'+d.label+'</div></div>';
+  }).join('');
+}
+
+function addRoutineItem(){
+  var t=document.getElementById('rt-time').value.trim();
+  var i=document.getElementById('rt-intention').value.trim();
+  var h=document.getElementById('rt-habit').value.trim();
+  if(!i&&!h){ showToast('Add an intention or a habit.','error'); return; }
+  var id='r'+Date.now();
+  routineItems.push({sheetId:id,routine:activeRoutine,time:t,intention:i,habit:h});
+  document.getElementById('rt-time').value='';
+  document.getElementById('rt-intention').value='';
+  document.getElementById('rt-habit').value='';
+  renderRoutine();
+  rtSync(postToSheet({sheet:'Routines',sheetId:id,routine:activeRoutine,time:t,intention:i,habit:h}));
+}
+
+function toggleRoutineItem(id){
+  var today=isoToday();
+  if(!routineLog[today]) routineLog[today]={};
+  if(!routineLog[today][activeRoutine]) routineLog[today][activeRoutine]=[];
+  var arr=routineLog[today][activeRoutine];
+  var ix=arr.indexOf(id);
+  if(ix>-1) arr.splice(ix,1); else arr.push(id);
+  renderRoutine();
+  saveRoutineLog();
+}
+
+function saveRoutineLog(){
+  var now=new Date(), today=isoToday();
+  rtSync(postToSheet({sheet:'RoutineLog',
+    date:now.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}),
+    dateISO:today, routine:activeRoutine,
+    done:doneFor(activeRoutine,today).join(',')}));
+}
+
+function untickRoutine(){
+  var today=isoToday();
+  if(!doneFor(activeRoutine,today).length) return;
+  if(!confirm('Untick every item in '+activeRoutine+' for today?')) return;
+  if(routineLog[today]) routineLog[today][activeRoutine]=[];
+  renderRoutine(); saveRoutineLog();
+}
+
+function editRoutineItem(id){
+  var it=routineItems.find(function(x){return x.sheetId===id;}); if(!it) return;
+  var html='<div style="margin-bottom:10px"><label class="sfl">Time</label>'+
+    '<input class="sin" id="edit-rt-time" type="text" value="'+escH(it.time||'')+'" placeholder="6:30 AM"></div>'+
+    '<div style="margin-bottom:10px"><label class="sfl">Intention</label>'+
+    '<textarea class="sin" id="edit-rt-intention" rows="2">'+escH(it.intention||'')+'</textarea></div>'+
+    '<div><label class="sfl">Habit</label>'+
+    '<textarea class="sin" id="edit-rt-habit" rows="2">'+escH(it.habit||'')+'</textarea></div>';
+  openEditModal('Edit routine item',html,{type:'routine',id:id});
+}
+
+async function delRoutineItem(id){
+  var it=routineItems.find(function(x){return x.sheetId===id;}); if(!it) return;
+  if(!confirm('Remove this item from '+activeRoutine+'?')) return;
+  routineItems=routineItems.filter(function(x){return x.sheetId!==id;});
+  renderRoutine();
+  var ok=await postToSheet({sheet:'Routines',action:'delete_routine_item',sheetId:id});
+  if(ok) await fetchAllRoutines();
+  renderRoutine();
+  showToast('Removed.','');
+}
+
+function rtSync(promise){
+  var el=document.getElementById('rt-sync');
+  if(el){ el.textContent='Syncing\u2026'; el.className='sync-txt syncing'; }
+  return promise.then(function(ok){
+    DIAG.rtSync = ok ? 'OK' : 'FAILED';
+    if(el){ el.textContent=ok?'Saved to Sheet \u2713':'Sheet sync failed'; el.className='sync-txt '+(ok?'ok':'err'); }
+    return ok;
+  });
+}
+
+async function fetchAllRoutines(){
+  var d=await sheetFetch(WORKER_URL+'?action=getAllRoutines');
+  if(d&&d.status==='ok'&&Array.isArray(d.routines)) replaceRoutinesFromSheet(d.routines);
+}
+
+function replaceRoutinesFromSheet(rows){
+  routineItems=rows.map(function(r){
+    return {sheetId:r.sheetId||'',routine:r.routine||'',time:r.time||'',
+      intention:r.intention||'',habit:r.habit||''};
+  });
+  renderRoutine();
+}
+
+function replaceRoutineLogFromSheet(rows){
+  routineLog={};
+  rows.forEach(function(r){
+    if(!r.dateISO||!r.routine) return;
+    if(!routineLog[r.dateISO]) routineLog[r.dateISO]={};
+    routineLog[r.dateISO][r.routine]=String(r.done||'').split(',').map(function(s){return s.trim();}).filter(Boolean);
+  });
+  renderRoutine();
 }
 
 /* START */
