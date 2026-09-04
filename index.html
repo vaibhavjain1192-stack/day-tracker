@@ -298,8 +298,14 @@ body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:
 .rt-pill.on{background:var(--gold-dim);border-color:rgba(201,168,76,0.45);color:var(--gold)}
 .rt-pill.add{border-style:dashed;color:var(--text-3)}
 .rt-pill.add:hover{border-style:solid;border-color:var(--gold);color:var(--gold)}
-.rt-head{display:grid;grid-template-columns:68px 1fr 1fr 52px;gap:8px;padding:0 0 6px;font-family:var(--fm);font-size:9px;color:var(--text-3);letter-spacing:0.1em;text-transform:uppercase;border-bottom:1px solid var(--border)}
-.rt-row{display:grid;grid-template-columns:68px 1fr 1fr 52px;gap:8px;align-items:center;padding:9px 0;border-bottom:1px solid var(--border)}
+.rt-head{display:grid;grid-template-columns:20px 68px 1fr 1fr 52px;gap:8px;padding:0 0 6px;font-family:var(--fm);font-size:9px;color:var(--text-3);letter-spacing:0.1em;text-transform:uppercase;border-bottom:1px solid var(--border)}
+.rt-row{display:grid;grid-template-columns:20px 68px 1fr 1fr 52px;gap:8px;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);background:var(--card);transition:background var(--tr),opacity var(--tr)}
+.rt-grip{cursor:grab;color:var(--text-3);font-size:12px;line-height:1;touch-action:none;user-select:none;-webkit-user-select:none;transition:color var(--tr);text-align:center}
+.rt-grip:hover{color:var(--gold)}
+.rt-grip:active{cursor:grabbing}
+.rt-row.dragging{opacity:.4;background:var(--surface);border-radius:var(--rsm)}
+.rt-row.drag-over{box-shadow:inset 0 2px 0 var(--gold)}
+.rt-row.drag-over-below{box-shadow:inset 0 -2px 0 var(--gold)}
 .rt-row:last-child{border-bottom:none}
 .rt-row.done .rt-int,.rt-row.done .rt-hab{color:var(--text-3);text-decoration:line-through}
 .rt-time{font-family:var(--fm);font-size:11px;color:var(--gold);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
@@ -328,7 +334,7 @@ body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:
 .rt-bar-fill{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(180deg,var(--teal),var(--green));transition:height 0.3s ease}
 .rt-day-lbl{font-family:var(--fm);font-size:8px;color:var(--text-3)}
 @media(max-width:640px){
-  .rt-head,.rt-row{grid-template-columns:56px 1fr 46px}
+  .rt-head,.rt-row{grid-template-columns:18px 56px 1fr 46px}
   .rt-col-hab,.rt-hab{display:none}
   .rt-add{grid-template-columns:1fr;gap:6px}
 }
@@ -375,6 +381,7 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
   <div class="q-wrap">
     <div class="rt-selector" id="rt-selector"></div>
     <div class="rt-head">
+      <div></div>
       <div class="rt-col-time">Time</div>
       <div class="rt-col-int">Intention</div>
       <div class="rt-col-hab">Habit</div>
@@ -2222,9 +2229,15 @@ function routineNames(){
   return names.sort();
 }
 
+/* Manual order wins. Items with no order yet (legacy rows)
+   fall in behind, ordered by time so they aren't scrambled. */
 function itemsFor(name){
-  return routineItems.filter(function(it){ return it.routine===name; })
-    .sort(function(a,b){ return timeToMin(a.time)-timeToMin(b.time); });
+  var list=routineItems.filter(function(it){ return it.routine===name; });
+  var hasOrder=list.filter(function(i){ return i.order!==null && i.order!==undefined; });
+  var noOrder =list.filter(function(i){ return i.order===null || i.order===undefined; });
+  hasOrder.sort(function(a,b){ return a.order-b.order; });
+  noOrder.sort(function(a,b){ return timeToMin(a.time)-timeToMin(b.time); });
+  return hasOrder.concat(noOrder);
 }
 
 /* Sheets may hand back a full Date string for a time cell.
@@ -2329,9 +2342,10 @@ function renderRoutine(){
     return;
   }
 
-  box.innerHTML=items.map(function(it){
+  box.innerHTML=items.map(function(it,idx){
     var isDone=done.indexOf(it.sheetId)>-1;
-    return '<div class="rt-row'+(isDone?' done':'')+'">'+
+    return '<div class="rt-row'+(isDone?' done':'')+'" data-idx="'+idx+'">'+
+      '<span class="rt-grip" onpointerdown="startRtDrag(event,'+idx+')" title="Drag to reorder">\u2630</span>'+
       '<div class="rt-time" title="'+escH(cleanTime(it.time))+'">'+escH(cleanTime(it.time)||'\u2014')+'</div>'+
       '<div class="rt-int">'+escH(it.intention||'')+'</div>'+
       '<div class="rt-hab">'+escH(it.habit||'')+'</div>'+
@@ -2398,19 +2412,96 @@ function renderRoutineHistory(){
   }).join('');
 }
 
+/* ── Drag-to-reorder for routine items ────────────────────
+   The Order column in the Sheet holds the sequence, so a
+   drop just rewrites those numbers for the active routine.
+──────────────────────────────────────────────────────── */
+var _rtDrag=null;
+
+function startRtDrag(ev,idx){
+  ev.preventDefault();
+  var row=ev.target.closest('.rt-row');
+  if(!row) return;
+  _rtDrag={from:idx,to:idx,moved:false};
+  row.classList.add('dragging');
+  try{ ev.target.setPointerCapture(ev.pointerId); }catch(e){}
+  document.addEventListener('pointermove',onRtDragMove);
+  document.addEventListener('pointerup',endRtDrag);
+  document.addEventListener('pointercancel',endRtDrag);
+}
+
+function onRtDragMove(ev){
+  if(!_rtDrag) return;
+  var box=document.getElementById('rt-items');
+  if(!box) return;
+  var rows=Array.prototype.slice.call(box.querySelectorAll('.rt-row'));
+  rows.forEach(function(r){ r.classList.remove('drag-over','drag-over-below'); });
+
+  var target=null, below=false;
+  for(var i=0;i<rows.length;i++){
+    var b=rows[i].getBoundingClientRect();
+    if(ev.clientY>=b.top && ev.clientY<=b.bottom){
+      target=i; below=ev.clientY > b.top + b.height/2; break;
+    }
+    if(i===rows.length-1 && ev.clientY>b.bottom){ target=i; below=true; }
+    if(i===0 && ev.clientY<b.top){ target=0; below=false; }
+  }
+  if(target===null) return;
+
+  var dest=below?target+1:target;
+  if(dest>_rtDrag.from) dest--;
+  var max=itemsFor(activeRoutine).length-1;
+  dest=Math.max(0,Math.min(max,dest));
+  _rtDrag.to=dest; _rtDrag.moved=true;
+
+  if(rows[target] && target!==_rtDrag.from){
+    rows[target].classList.add(below?'drag-over-below':'drag-over');
+  }
+}
+
+function endRtDrag(){
+  document.removeEventListener('pointermove',onRtDragMove);
+  document.removeEventListener('pointerup',endRtDrag);
+  document.removeEventListener('pointercancel',endRtDrag);
+  if(!_rtDrag) return;
+  var d=_rtDrag; _rtDrag=null;
+
+  var box=document.getElementById('rt-items');
+  if(box) box.querySelectorAll('.rt-row').forEach(function(r){
+    r.classList.remove('dragging','drag-over','drag-over-below');
+  });
+
+  if(!d.moved || d.to===d.from){ renderRoutine(); return; }
+
+  // Reorder within this routine, then stamp fresh order numbers
+  var list=itemsFor(activeRoutine);
+  var moved=list.splice(d.from,1)[0];
+  list.splice(d.to,0,moved);
+  list.forEach(function(it,i){
+    var ref=routineItems.find(function(x){ return x.sheetId===it.sheetId; });
+    if(ref) ref.order=i;
+  });
+  renderRoutine();
+
+  rtSync(postToSheet({sheet:'Routines',action:'reorder_routine',
+    order:list.map(function(i){return i.sheetId;}).join(',')}))
+    .then(function(ok){ if(ok) showToast('Order updated \u2713','success'); });
+}
+
 function addRoutineItem(){
   var t=document.getElementById('rt-time').value.trim();
   var i=document.getElementById('rt-intention').value.trim();
   var h=document.getElementById('rt-habit').value.trim();
   if(!i&&!h){ showToast('Add an intention or a habit.','error'); return; }
   var id='r'+Date.now();
-  routineItems.push({sheetId:id,routine:activeRoutine,time:t,intention:i,habit:h});
+  var nextOrder=itemsFor(activeRoutine).length;
+  routineItems.push({sheetId:id,routine:activeRoutine,time:t,intention:i,habit:h,order:nextOrder});
   extraRoutines=extraRoutines.filter(function(r){ return r!==activeRoutine; });
   document.getElementById('rt-time').value='';
   document.getElementById('rt-intention').value='';
   document.getElementById('rt-habit').value='';
   renderRoutine();
-  rtSync(postToSheet({sheet:'Routines',sheetId:id,routine:activeRoutine,time:t,intention:i,habit:h}));
+  rtSync(postToSheet({sheet:'Routines',sheetId:id,routine:activeRoutine,time:t,intention:i,habit:h,order:nextOrder}));
 }
 
 function toggleRoutineItem(id){
@@ -2480,7 +2571,8 @@ async function fetchAllRoutines(){
 function replaceRoutinesFromSheet(rows){
   routineItems=rows.map(function(r){
     return {sheetId:r.sheetId||'',routine:r.routine||'',time:cleanTime(r.time||''),
-      intention:r.intention||'',habit:r.habit||''};
+      intention:r.intention||'',habit:r.habit||'',
+      order:(r.order===null||r.order===undefined)?null:Number(r.order)};
   });
   renderRoutine();
 }
