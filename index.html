@@ -388,6 +388,7 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
       <span class="sync-txt" id="rt-sync"></span>
       <div style="display:flex;gap:6px">
         <button class="btn" onclick="renameRoutine()">&#9998; Rename</button>
+        <button class="btn" onclick="deleteRoutine()">&#128465; Delete</button>
         <button class="btn" onclick="untickRoutine()">Untick all</button>
       </div>
     </div>
@@ -709,7 +710,7 @@ function init(){
 
   // Clear all in-memory arrays — Sheet is always the source of truth
   situations=[]; thoughts=[]; posts=[]; habits=[]; motEntries=[]; gratEntries=[]; kunEntries=[];
-  routineItems=[]; routineLog={};
+  routineItems=[]; routineLog={}; extraRoutines=[];
   updateBadge(); updateThBadge(); updatePostBadge();
 
   // Show shimmer/loading state on morning intentions
@@ -2128,6 +2129,7 @@ function replaceKundaliFromSheet(s){
 var routineItems=[];
 var routineLog={};
 var activeRoutine='';
+var extraRoutines=[];   // created but still empty — no rows in the Sheet yet
 
 function routineNames(){
   var names=[];
@@ -2135,6 +2137,10 @@ function routineNames(){
   Object.keys(routineLog).forEach(function(d){
     Object.keys(routineLog[d]).forEach(function(r){ if(names.indexOf(r)===-1) names.push(r); });
   });
+  // Routines created this session that have no items yet
+  extraRoutines.forEach(function(r){ if(r && names.indexOf(r)===-1) names.push(r); });
+  // Never drop the routine currently being viewed
+  if(activeRoutine && names.indexOf(activeRoutine)===-1) names.push(activeRoutine);
   if(!names.length) names=['Routine 1'];
   return names.sort();
 }
@@ -2176,6 +2182,7 @@ function newRoutine(){
   if(!n||!n.trim()) return;
   n=n.trim();
   if(routineNames().indexOf(n)>-1){ showToast('That routine already exists.','error'); return; }
+  extraRoutines.push(n);
   activeRoutine=n;
   renderRoutine();
   showToast('Add your first item to '+n+'.','');
@@ -2188,6 +2195,7 @@ function renameRoutine(){
   n=n.trim();
   if(routineNames().indexOf(n)>-1){ showToast('That name is already used.','error'); return; }
   var oldName=activeRoutine;
+  extraRoutines=extraRoutines.map(function(r){ return r===oldName?n:r; });
   routineItems.forEach(function(it){ if(it.routine===oldName) it.routine=n; });
   Object.keys(routineLog).forEach(function(d){
     if(routineLog[d][oldName]){ routineLog[d][n]=routineLog[d][oldName]; delete routineLog[d][oldName]; }
@@ -2195,6 +2203,25 @@ function renameRoutine(){
   activeRoutine=n; renderRoutine();
   postToSheet({sheet:'Routines',action:'rename_routine',oldName:oldName,newName:n})
     .then(function(ok){ showToast(ok?'Renamed \u2713':'Renamed locally \u2014 sync failed.',ok?'success':'error'); });
+}
+
+async function deleteRoutine(){
+  if(!activeRoutine) return;
+  var names=routineNames();
+  if(names.length<=1){ showToast('Keep at least one routine.','error'); return; }
+  var count=itemsFor(activeRoutine).length;
+  if(!confirm('Delete "'+activeRoutine+'"'+(count?' and its '+count+' item'+(count>1?'s':''):'')+'?\n\nCompletion history for it is kept in the Sheet.')) return;
+  var gone=activeRoutine;
+  routineItems=routineItems.filter(function(it){ return it.routine!==gone; });
+  extraRoutines=extraRoutines.filter(function(r){ return r!==gone; });
+  activeRoutine='';
+  renderRoutine();
+  if(count){
+    var ok=await postToSheet({sheet:'Routines',action:'delete_routine',routine:gone});
+    if(ok) await fetchAllRoutines();
+  }
+  renderRoutine();
+  showToast('Deleted "'+gone+'".','');
 }
 
 function renderRoutine(){
@@ -2287,6 +2314,7 @@ function addRoutineItem(){
   if(!i&&!h){ showToast('Add an intention or a habit.','error'); return; }
   var id='r'+Date.now();
   routineItems.push({sheetId:id,routine:activeRoutine,time:t,intention:i,habit:h});
+  extraRoutines=extraRoutines.filter(function(r){ return r!==activeRoutine; });
   document.getElementById('rt-time').value='';
   document.getElementById('rt-intention').value='';
   document.getElementById('rt-habit').value='';
