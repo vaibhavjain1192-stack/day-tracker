@@ -271,6 +271,20 @@ body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:
 .hab-chip{font-size:11px;font-family:var(--fb);color:var(--text-2);background:transparent;border:1px dashed var(--border-md);border-radius:20px;padding:3px 11px;cursor:pointer;transition:all var(--tr);text-align:left}
 .hab-chip:hover{background:var(--surface);color:var(--text-1);border-style:solid;border-color:var(--gold)}
 .th-habit-del:hover{color:var(--rose)}
+/* KUNDALI */
+.kun-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:1rem;transition:border-color var(--tr)}
+.kun-card:hover{border-color:var(--border-md)}
+.kun-card-head{display:flex;align-items:center;gap:8px;margin-bottom:.6rem;flex-wrap:wrap}
+.kun-cat{font-size:10px;font-family:var(--fm);text-transform:uppercase;letter-spacing:0.1em;padding:2px 10px;border-radius:20px;white-space:nowrap}
+.kun-date{font-size:10px;color:var(--text-3);font-family:var(--fm);margin-left:auto}
+.kun-learning{font-size:13px;color:var(--text-1);line-height:1.65;margin-bottom:.6rem;white-space:pre-line}
+.kun-logic-lbl{font-family:var(--fm);font-size:9px;color:var(--text-3);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:4px}
+.kun-logic{font-size:12px;color:var(--text-2);line-height:1.6;white-space:pre-line;padding-left:10px;border-left:2px solid var(--border-md)}
+.kun-card-foot{display:flex;justify-content:space-between;align-items:center;margin-top:.75rem;padding-top:.5rem;border-top:1px solid var(--border)}
+.kun-log{display:flex;flex-direction:column;gap:8px}
+.kun-cat-pills{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px}
+.kcp{padding:3px 11px;font-size:11px;border-radius:20px;border:1px solid var(--border-md);color:var(--text-2);background:transparent;cursor:pointer;transition:all var(--tr);font-family:var(--fb)}
+.kcp:hover{background:var(--surface);color:var(--text-1)}
 .toast{position:fixed;bottom:5.5rem;right:1rem;background:#1E2333;border:1px solid var(--border-md);border-radius:var(--r);padding:10px 16px;font-size:12px;color:var(--text-1);box-shadow:0 6px 24px rgba(0,0,0,0.4);opacity:0;transform:translateY(6px);transition:all 0.22s ease;pointer-events:none;z-index:200;max-width:280px}
 .toast.show{opacity:1;transform:translateY(0)}
 .toast.success{border-color:rgba(107,191,142,0.32)}.toast.error{border-color:rgba(224,123,123,0.32)}
@@ -299,6 +313,7 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
     <button class="tab" onclick="switchTab('posts')"><span class="tab-icon">&#128204;</span><span class="tab-label">Posts <span class="badge" id="post-badge">0</span></span></button>
     <button class="tab" onclick="switchTab('motivation')"><span class="tab-icon">&#128293;</span><span class="tab-label">Motivation</span></button>
     <button class="tab" onclick="switchTab('gratitude')"><span class="tab-icon">&#128591;</span><span class="tab-label">Gratitude</span></button>
+    <button class="tab" onclick="switchTab('kundali')"><span class="tab-icon">&#128337;</span><span class="tab-label">Kundali</span></button>
   </div>
 </nav>
 
@@ -430,6 +445,77 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
   <div class="foot" style="margin-top:1.5rem"><span class="foot-note">Synced to Google Sheets</span><button class="btn" onclick="switchTab('morning')">&#8592; Morning</button></div>
 </div>
 
+<!-- TAB 7: KUNDALI LEARNINGS -->
+<div class="pg" id="pg-kundali">
+  <div class="past-hdr">
+    <div class="past-title">Kundali Learnings</div>
+    <div class="past-sub">What your chart says, and the reasoning behind each reading.</div>
+  </div>
+
+  <div class="ef-bar" id="kun-cat-filter">
+    <button class="ef on" data-kc="all" onclick="setKunCatFilter(this)">All</button>
+    <button class="ef" data-kc="health" onclick="setKunCatFilter(this)">&#127807; Health</button>
+    <button class="ef" data-kc="career" onclick="setKunCatFilter(this)">&#128188; Career</button>
+    <button class="ef" data-kc="finances" onclick="setKunCatFilter(this)">&#128176; Finances</button>
+    <button class="ef" data-kc="relationships" onclick="setKunCatFilter(this)">&#128149; Relationships</button>
+    <button class="ef" data-kc="family" onclick="setKunCatFilter(this)">&#128106; Family</button>
+    <button class="ef" data-kc="property" onclick="setKunCatFilter(this)">&#127968; Property</button>
+    <button class="ef" data-kc="education" onclick="setKunCatFilter(this)">&#128218; Education</button>
+    <button class="ef" data-kc="spiritual" onclick="setKunCatFilter(this)">&#128329; Spiritual</button>
+    <button class="ef" data-kc="timing" onclick="setKunCatFilter(this)">&#8987; Timing</button>
+    <button class="ef" data-kc="general" onclick="setKunCatFilter(this)">&#10024; General</button>
+  </div>
+
+  <div class="th-filter-bar" style="margin-bottom:1rem">
+    <input class="psearch" id="kun-search" type="text" placeholder="Search learnings..." oninput="renderKundali()" style="flex:1">
+    <select class="psort" id="kun-sort" onchange="renderKundali()">
+      <option value="newest">Newest first</option>
+      <option value="oldest">Oldest first</option>
+      <option value="category">By category</option>
+    </select>
+    <button class="btn" onclick="exportKunCSV()">Export CSV</button>
+  </div>
+
+  <div class="pmeta" id="kun-meta"></div>
+  <div class="kun-log" id="kun-log"></div>
+
+  <div class="lbl" style="margin-top:1.5rem">Add a learning <span class="lbl-line"></span></div>
+  <div class="sit-block">
+    <div style="margin-bottom:10px">
+      <label class="sfl">Category</label>
+      <div class="kun-cat-pills">
+        <button class="kcp" onclick="selKunCat(this)" data-val="health">&#127807; Health</button>
+        <button class="kcp" onclick="selKunCat(this)" data-val="career">&#128188; Career</button>
+        <button class="kcp" onclick="selKunCat(this)" data-val="finances">&#128176; Finances</button>
+        <button class="kcp" onclick="selKunCat(this)" data-val="relationships">&#128149; Relationships</button>
+        <button class="kcp" onclick="selKunCat(this)" data-val="family">&#128106; Family</button>
+        <button class="kcp" onclick="selKunCat(this)" data-val="property">&#127968; Property</button>
+        <button class="kcp" onclick="selKunCat(this)" data-val="education">&#128218; Education</button>
+        <button class="kcp" onclick="selKunCat(this)" data-val="spiritual">&#128329; Spiritual</button>
+        <button class="kcp" onclick="selKunCat(this)" data-val="timing">&#8987; Timing</button>
+        <button class="kcp" onclick="selKunCat(this)" data-val="general">&#10024; General</button>
+      </div>
+    </div>
+    <div style="margin-bottom:10px">
+      <label class="sfl">The learning</label>
+      <textarea class="sin" id="kun-learning" rows="3" placeholder="e.g. Strong Saturn in the 10th brings slow but lasting career growth &#8212; results arrive after 35."></textarea>
+    </div>
+    <div style="margin-bottom:10px">
+      <label class="sfl">The logic behind it <span style="color:var(--text-3);font-weight:400">(planetary reasoning)</span></label>
+      <textarea class="sin" id="kun-logic" rows="4" placeholder="e.g. Saturn rules discipline and delayed reward. In the 10th house of karma it demands sustained effort before granting status. Its 3rd and 10th aspects reinforce..."></textarea>
+    </div>
+    <div class="sit-foot">
+      <span class="sync-txt" id="kun-sync">Ready</span>
+      <button class="btn gold" onclick="addKundali()">Save learning &#8599;</button>
+    </div>
+  </div>
+
+  <div class="foot" style="margin-top:1.5rem">
+    <span class="foot-note">Synced to Google Sheets</span>
+    <button class="btn" onclick="switchTab('morning')">&#8592; Morning</button>
+  </div>
+</div><!-- /pg-kundali -->
+
 <!-- EDIT MODAL -->
 <div id="edit-modal" style="display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);overflow-y:auto;padding:2rem 1rem">
   <div style="max-width:620px;margin:0 auto;background:var(--card);border:1px solid var(--border-md);border-radius:var(--rlg);overflow:hidden">
@@ -529,13 +615,14 @@ function switchTab(tab){
   document.querySelectorAll('.pg').forEach(function(p){p.classList.remove('on');});
   document.querySelectorAll('.tab').forEach(function(b){b.classList.remove('on');});
   document.getElementById('pg-'+tab).classList.add('on');
-  var idx=tab==='morning'?0:tab==='situations'?1:tab==='thoughts'?2:tab==='posts'?3:tab==='motivation'?4:5;
+  var idx=tab==='morning'?0:tab==='situations'?1:tab==='thoughts'?2:tab==='posts'?3:tab==='motivation'?4:tab==='gratitude'?5:6;
   document.querySelectorAll('.tab')[idx].classList.add('on');
   if(tab==='situations'){renderStats();renderPast();}
   if(tab==='thoughts')renderThoughts();
   if(tab==='posts')renderPosts();
   if(tab==='motivation')renderMotivation();
   if(tab==='gratitude'){renderGratitude();updateGratStats();}
+  if(tab==='kundali')renderKundali();
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
@@ -563,12 +650,12 @@ function init(){
   // so stale data from a previous session can never appear
   var SHEET_KEYS=[
     'morning_situations','morning_thoughts','morning_posts',
-    'morning_habits','morning_motivation','morning_gratitude'
+    'morning_habits','morning_motivation','morning_gratitude','morning_kundali'
   ];
   SHEET_KEYS.forEach(function(k){ localStorage.removeItem(k); });
 
   // Clear all in-memory arrays — Sheet is always the source of truth
-  situations=[]; thoughts=[]; posts=[]; habits=[]; motEntries=[]; gratEntries=[];
+  situations=[]; thoughts=[]; posts=[]; habits=[]; motEntries=[]; gratEntries=[]; kunEntries=[];
   updateBadge(); updateThBadge(); updatePostBadge();
 
   // Show shimmer/loading state on morning intentions
@@ -584,7 +671,8 @@ function init(){
         fetchAllPosts(),
         fetchAllMotivation(),
         fetchAllGratitude(),
-        fetchAllTodayHabits()
+        fetchAllTodayHabits(),
+        fetchAllKundali()
       ]);
       var d=results[0];
       if(d&&d.morning&&(d.morning.priority||d.morning.emotional_intention)){
@@ -633,6 +721,7 @@ function showDiagnostics(){
     'In memory: '+situations.length+' situations, '+thoughts.length+' thoughts, '+
       posts.length+' posts, '+motEntries.length+' motivation, '+gratEntries.length+' gratitude',
     '',
+    'Kundali fetch: '+(DIAG.kunRaw||'not run'),
     'Habits fetch: '+(DIAG.habRaw||'not run'),
     'Habits loaded: '+(DIAG.habLoaded||'none'),
     'Habit sheet sync: '+(DIAG.habSync||'not attempted yet')
@@ -993,6 +1082,20 @@ async function saveEditModal(){
       sheetId:e.sheetId||'',category:e.category,text:e.text,pinned:e.pinned?'yes':'no'});
     closeEditModal(); renderMotivation();
     showToast(okm?'Entry updated ✓':'Updated locally — Sheet sync pending.',okm?'success':'');
+  }else if(_editCtx.type==='kundali'){
+    var ke=kunEntries.find(function(x){return x.id===_editCtx.id;}); if(!ke){closeEditModal();return;}
+    var selCat=document.querySelector('#edit-kun-cat-pills .kcp.on');
+    var newLearning=document.getElementById('edit-kun-learning').value.trim();
+    if(!newLearning){showToast('The learning cannot be empty.','error');btn.textContent='Save changes \u2197';btn.disabled=false;return;}
+    if(selCat) ke.category=selCat.dataset.val;
+    ke.learning=newLearning;
+    ke.logic=document.getElementById('edit-kun-logic').value.trim();
+    renderKundali();
+    var okk=await postToSheet({sheet:'Kundali',action:'edit_kundali',sheetId:ke.sheetId||'',
+      category:ke.category,learning:ke.learning,logic:ke.logic});
+    if(okk) await fetchAllKundali();   // pull the updated row back from the Sheet
+    closeEditModal(); renderKundali();
+    showToast(okk?'Learning updated \u2713':'Updated locally \u2014 Sheet sync failed.',okk?'success':'error');
   }else if(_editCtx.type==='gratitude'){
     var e=gratEntries.find(function(x){return x.id===_editCtx.id;}); if(!e){closeEditModal();return;}
     var g1=document.getElementById('edit-grat-1').value.trim();
@@ -1726,6 +1829,183 @@ async function saveMorningGratitude(){
   syncEl.className='sync-txt '+(ok?'ok':'err');
   showToast(ok?'Gratitude saved ✓':'Saved locally.', ok?'success':'error');
   // Keep values visible so you can see what was saved
+}
+
+/* ═══════════════════════════════════════════════════
+   KUNDALI LEARNINGS — Sheet is the source of truth
+   Keyed by sheetId so edits always find the right row.
+═══════════════════════════════════════════════════ */
+var kunEntries=[];
+var selKunCategory='';
+var kunCatFilter='all';
+
+var KUN_CAT_COLORS={health:'#6BBF8E',career:'#C9A84C',finances:'#4ECDC4',relationships:'#E07B7B',
+  family:'#d98cb3',property:'#8b9dc3',education:'#b0a0d6',spiritual:'#e0c068',timing:'#9A97A0',general:'#7fb3d5'};
+var KUN_CAT_ICONS={health:'&#127807;',career:'&#128188;',finances:'&#128176;',relationships:'&#128149;',
+  family:'&#128106;',property:'&#127968;',education:'&#128218;',spiritual:'&#128329;',timing:'&#8987;',general:'&#10024;'};
+
+function selKunCat(el){
+  document.querySelectorAll('.kun-cat-pills .kcp').forEach(function(p){
+    p.classList.remove('on'); p.style.background=''; p.style.borderColor=''; p.style.color='';
+  });
+  selKunCategory=(selKunCategory===el.dataset.val)?'':el.dataset.val;
+  if(selKunCategory){
+    el.classList.add('on');
+    var c=KUN_CAT_COLORS[selKunCategory]||'#C9A84C';
+    el.style.background=c+'22'; el.style.borderColor=c+'88'; el.style.color=c;
+  }
+}
+
+function setKunCatFilter(el){
+  document.querySelectorAll('#kun-cat-filter .ef').forEach(function(p){p.classList.remove('on');});
+  el.classList.add('on'); kunCatFilter=el.dataset.kc; renderKundali();
+}
+
+async function addKundali(){
+  var learning=document.getElementById('kun-learning').value.trim();
+  var logic=document.getElementById('kun-logic').value.trim();
+  if(!learning){showToast('Write the learning first.','error');return;}
+  if(!selKunCategory){showToast('Pick a category first.','error');return;}
+  var now=new Date(), kid=String(Date.now());
+  var e={id:Date.now(),timestamp:Date.now(),sheetId:kid,
+    dateISO:isoDate(now),date:now.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}),
+    category:selKunCategory,learning:learning,logic:logic};
+  kunEntries.unshift(e);
+
+  document.getElementById('kun-learning').value='';
+  document.getElementById('kun-logic').value='';
+  selKunCategory='';
+  document.querySelectorAll('.kun-cat-pills .kcp').forEach(function(p){p.classList.remove('on');p.style.background='';p.style.borderColor='';p.style.color='';});
+
+  var syncEl=document.getElementById('kun-sync');
+  syncEl.textContent='Syncing\u2026'; syncEl.className='sync-txt syncing';
+  var ok=await postToSheet({sheet:'Kundali',sheetId:kid,date:e.date,dateISO:e.dateISO,
+    category:e.category,learning:e.learning,logic:e.logic});
+  syncEl.textContent=ok?'Saved to Sheet \u2713':'Saved locally (Sheet unreachable)';
+  syncEl.className='sync-txt '+(ok?'ok':'err');
+  showToast(ok?'Learning saved \u2713':'Saved locally \u2014 sync failed.',ok?'success':'error');
+  if(ok) await fetchAllKundali();   // pull back so UI matches the Sheet exactly
+  renderKundali();
+}
+
+function kunCardHTML(e){
+  var col=KUN_CAT_COLORS[e.category]||'#9A97A0';
+  var icon=KUN_CAT_ICONS[e.category]||'';
+  var label=e.category?e.category.charAt(0).toUpperCase()+e.category.slice(1):'';
+  return '<div class="kun-card">'+
+    '<div class="kun-card-head">'+
+      '<span class="kun-cat" style="background:'+col+'1f;border:1px solid '+col+'55;color:'+col+'">'+icon+' '+label+'</span>'+
+      '<span class="kun-date">'+e.date+'</span>'+
+    '</div>'+
+    '<div class="kun-learning">'+escH(e.learning)+'</div>'+
+    (e.logic?'<div class="kun-logic-lbl">Logic</div><div class="kun-logic">'+escH(e.logic)+'</div>':'')+
+    '<div class="kun-card-foot">'+
+      '<button class="del-btn" onclick="delKundali('+e.id+')">&#128465; Delete</button>'+
+      '<button class="btn" style="font-size:11px;padding:4px 12px" onclick="editKundali('+e.id+')">\u270e Edit</button>'+
+    '</div>'+
+  '</div>';
+}
+
+function renderKundali(){
+  var searchEl=document.getElementById('kun-search');
+  if(!searchEl) return;
+  var search=(searchEl.value||'').toLowerCase().trim();
+  var sort=document.getElementById('kun-sort').value;
+  var list=kunEntries.slice();
+  if(kunCatFilter!=='all') list=list.filter(function(e){return e.category===kunCatFilter;});
+  if(search) list=list.filter(function(e){
+    return ((e.learning||'')+(e.logic||'')+(e.category||'')).toLowerCase().includes(search);
+  });
+  if(sort==='oldest') list.sort(function(a,b){return a.timestamp-b.timestamp;});
+  else if(sort==='category') list.sort(function(a,b){return (a.category||'').localeCompare(b.category||'');});
+  else list.sort(function(a,b){return b.timestamp-a.timestamp;});
+
+  document.getElementById('kun-meta').textContent=list.length+' of '+kunEntries.length+' learning'+(kunEntries.length!==1?'s':'');
+  var log=document.getElementById('kun-log');
+  if(!list.length){
+    log.innerHTML='<div class="sit-empty"><div style="font-size:28px;margin-bottom:10px">&#128337;</div>'+
+      (kunEntries.length===0?'Nothing recorded yet.<br>Add your first Kundali learning below.':'No matches for this filter.')+'</div>';
+    return;
+  }
+  log.innerHTML=list.map(kunCardHTML).join('');
+}
+
+async function delKundali(id){
+  if(!confirm('Delete this learning?'))return;
+  var e=kunEntries.find(function(x){return x.id===id;});
+  kunEntries=kunEntries.filter(function(x){return x.id!==id;});
+  renderKundali();
+  if(e&&e.sheetId){
+    var ok=await postToSheet({sheet:'Kundali',action:'delete_kundali',sheetId:e.sheetId});
+    if(ok) await fetchAllKundali();
+    renderKundali();
+  }
+  showToast('Deleted.','');
+}
+
+function editKundali(id){
+  var e=kunEntries.find(function(x){return x.id===id;}); if(!e)return;
+  var cats=['health','career','finances','relationships','family','property','education','spiritual','timing','general'];
+  var pills=cats.map(function(c){
+    var col=KUN_CAT_COLORS[c]||'#9A97A0';
+    var active=e.category===c;
+    var st=active?('background:'+col+'22;border-color:'+col+'88;color:'+col):'';
+    return '<button class="kcp'+(active?' on':'')+'" data-val="'+c+'" style="'+st+'" onclick="pickKunCat(this)">'+(KUN_CAT_ICONS[c]||'')+' '+c+'</button>';
+  }).join('');
+  var html='<div style="margin-bottom:10px"><label class="sfl">Category</label>'+
+    '<div class="kun-cat-pills" id="edit-kun-cat-pills">'+pills+'</div></div>'+
+    '<div style="margin-bottom:10px"><label class="sfl">The learning</label>'+
+    '<textarea class="sin" id="edit-kun-learning" rows="4">'+escH(e.learning||'')+'</textarea></div>'+
+    '<div><label class="sfl">The logic behind it</label>'+
+    '<textarea class="sin" id="edit-kun-logic" rows="5">'+escH(e.logic||'')+'</textarea></div>';
+  openEditModal('Edit learning',html,{type:'kundali',id:id});
+}
+
+function pickKunCat(el){
+  document.querySelectorAll('#edit-kun-cat-pills .kcp').forEach(function(b){
+    b.classList.remove('on'); b.style.background=''; b.style.borderColor=''; b.style.color='';
+  });
+  el.classList.add('on');
+  var c=KUN_CAT_COLORS[el.dataset.val]||'#C9A84C';
+  el.style.background=c+'22'; el.style.borderColor=c+'88'; el.style.color=c;
+}
+
+function exportKunCSV(){
+  if(!kunEntries.length){showToast('Nothing to export.','error');return;}
+  var h=['Date','Category','Learning','Logic'];
+  var rows=kunEntries.map(function(e){
+    return [e.date,e.category||'',e.learning||'',e.logic||'']
+      .map(function(v){return '"'+String(v).replace(/"/g,'""')+'"';}).join(',');
+  });
+  var a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent([h.join(',')].concat(rows).join('\n'));
+  a.download='kundali-'+isoToday()+'.csv'; a.click();
+  showToast('CSV exported \u2713','success');
+}
+
+async function fetchAllKundali(){
+  var d=await sheetFetch(WORKER_URL+'?action=getAllKundali');
+  DIAG.kunRaw = d ? (d.status+' / '+(Array.isArray(d.kundali)?d.kundali.length+' rows':'no array')) : 'NULL response';
+  if(d&&d.status==='ok'&&Array.isArray(d.kundali)) replaceKundaliFromSheet(d.kundali);
+  else console.warn('[Kundali] bad response:',d);
+}
+
+function replaceKundaliFromSheet(s){
+  localStorage.removeItem('morning_kundali');
+  kunEntries=s.map(function(x,i){
+    return {
+      id:       x.sheetId?parseInt(x.sheetId,10):Date.now()+i,
+      timestamp:x.dateISO?new Date(x.dateISO).getTime():Date.now(),
+      dateISO:  x.dateISO  || '',
+      date:     x.date     || '',
+      sheetId:  x.sheetId  || '',
+      category: x.category || '',
+      learning: x.learning || '',
+      logic:    x.logic    || '',
+    };
+  });
+  kunEntries.sort(function(a,b){return b.timestamp-a.timestamp;});
+  renderKundali();
 }
 
 /* START */
