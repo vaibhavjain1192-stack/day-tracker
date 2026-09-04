@@ -528,7 +528,7 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
 <script>
 'use strict';
 const WORKER_URL='https://muddy-shadow-1aa7.vaibhavjain-1192.workers.dev';
-const FETCH_TIMEOUT=15000;
+const FETCH_TIMEOUT=45000;
 var DIAG={};  // diagnostics collected during fetch
 
 async function sheetFetch(url,opts){
@@ -661,31 +661,46 @@ function init(){
   // Show shimmer/loading state on morning intentions
   setIntentionsState('loading');
 
-  // Fetch everything from Sheet in parallel — Sheet is single source of truth
+  // ONE request for everything. Eight parallel requests made
+  // Apps Script queue internally and time out.
   (async function(){
     try{
-      var results=await Promise.all([
-        fetchFromSheet(),
-        fetchAllSituations(),
-        fetchAllThoughts(),
-        fetchAllPosts(),
-        fetchAllMotivation(),
-        fetchAllGratitude(),
-        fetchAllTodayHabits(),
-        fetchAllKundali()
-      ]);
-      var d=results[0];
-      if(d&&d.morning&&(d.morning.priority||d.morning.emotional_intention)){
+      var d=await sheetFetch(WORKER_URL+'?action=getEverything&date='+isoToday());
+      DIAG.everything = d ? d.status : 'NULL response';
+
+      if(!d||d.status!=='ok'){
+        DIAG.everything='FAILED \u2014 '+(d?JSON.stringify(d).slice(0,120):'no response');
+        setIntentionsState('form');
+        showSyncBanner(false,'\u26a0 Could not load from Sheet \u2014 tap for details');
+        return;
+      }
+
+      // Distribute the single payload to each collection
+      if(Array.isArray(d.situations))  replaceSituationsFromSheet(d.situations);
+      if(Array.isArray(d.thoughts))    replaceThoughtsFromSheet(d.thoughts);
+      if(Array.isArray(d.posts))       replacePostsFromSheet(d.posts);
+      if(Array.isArray(d.motivation))  replaceMotivationFromSheet(d.motivation);
+      if(Array.isArray(d.gratitude))   replaceGratitudeFromSheet(d.gratitude);
+      if(Array.isArray(d.todayHabits)) replaceHabitsFromSheet(d.todayHabits);
+      if(Array.isArray(d.kundali))     replaceKundaliFromSheet(d.kundali);
+
+      DIAG.gratRaw='ok / '+(d.gratitude||[]).length+' rows';
+      DIAG.motRaw ='ok / '+(d.motivation||[]).length+' rows';
+      DIAG.habRaw ='ok / '+(d.todayHabits||[]).length+' rows';
+      DIAG.kunRaw ='ok / '+(d.kundali||[]).length+' rows';
+
+      if(d.morning&&(d.morning.priority||d.morning.emotional_intention)){
         showReadView(d.morning.priority||'',d.morning.emotional_intention||'');
       }else{setIntentionsState('form');}
-      // Show what loaded from Sheet — stays until tapped
-      showSyncBanner(true,'Sheet ✓ '+situations.length+' sit · '+thoughts.length+
-        ' th · '+posts.length+' posts · '+motEntries.length+' mot · '+
-        gratEntries.length+' grat   (tap for details)');
+
+      showSyncBanner(true,'Sheet \u2713 '+situations.length+' sit \u00b7 '+thoughts.length+
+        ' th \u00b7 '+posts.length+' posts \u00b7 '+motEntries.length+' mot \u00b7 '+
+        gratEntries.length+' grat \u00b7 '+kunEntries.length+' kun   (tap for details)');
     }catch(e){
       console.error('[init fetch error]',e);
+      DIAG.everything='EXCEPTION \u2014 '+(e.message||e);
       setIntentionsState('form');
-      showSyncBanner(false,'⚠ Could not reach Google Sheet. Check your connection or Worker URL.');
+      showSyncBanner(false,'\u26a0 Could not reach Google Sheet \u2014 tap for details');
     }
   })();
 }
@@ -711,6 +726,8 @@ function showSyncBanner(ok,msg){
 function showDiagnostics(){
   var lines=[
     'Today (browser): '+isoToday(),
+    '',
+    'Bulk load: '+(DIAG.everything||'not run'),
     '',
     'Gratitude fetch: '+(DIAG.gratRaw||'not run'),
     'Today match: '+(DIAG.gratToday||'not checked'),
