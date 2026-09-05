@@ -27,12 +27,14 @@ html{font-size:15px}
 body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:1.55;min-height:100vh;-webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%;touch-action:pan-y}
 .nav{position:fixed;bottom:0;left:0;right:0;z-index:100;background:rgba(15,17,23,0.97);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-top:1px solid var(--border);padding:0;padding-bottom:env(safe-area-inset-bottom)}
 .nav-inner{display:flex;align-items:stretch;width:100%}
-.tab{flex:1;min-width:0;padding:.5rem .1rem .4rem;font-weight:500;font-family:var(--fb);color:var(--text-3);background:none;border:none;border-top:2px solid transparent;cursor:pointer;transition:color var(--tr),border-color var(--tr);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;line-height:1.1;overflow:hidden}
-.tab-icon{font-size:16px;line-height:1;display:block;flex-shrink:0}
-.tab-label{font-size:7.5px;display:block;width:100%;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 1px}
+.tab{flex:1;min-width:0;padding:.45rem .06rem .35rem;font-weight:500;font-family:var(--fb);color:var(--text-3);background:none;border:none;border-top:2px solid transparent;cursor:pointer;transition:color var(--tr),border-color var(--tr);display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:3px;line-height:1.1;overflow:visible}
+.tab-icon{font-size:17px;line-height:1;display:block;flex-shrink:0;position:relative}
+.tab-label{font-size:8.5px;display:block;width:100%;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;letter-spacing:-0.1px}
 .tab:hover{color:var(--text-2)}
 .tab.on{color:var(--gold);border-top-color:var(--gold)}
-.badge{font-size:10px;font-family:var(--fm);background:var(--rose-dim);color:var(--rose);border:1px solid rgba(224,123,123,0.22);border-radius:20px;padding:1px 5px;min-width:18px;text-align:center}
+/* Badge sits on the icon so it never steals width from the label */
+.badge{position:absolute;top:-4px;left:calc(50% + 5px);font-size:8px;font-family:var(--fm);background:var(--rose);color:#0F1117;border:none;border-radius:20px;padding:0 4px;min-width:13px;height:13px;line-height:13px;text-align:center;font-weight:600;box-shadow:0 0 0 2px rgba(15,17,23,0.97)}
+.badge:empty,.badge.zero{display:none}
 .pg{max-width:860px;margin:0 auto;padding:1rem 1rem 6rem;display:none}
 .pg.on{display:block}
 .hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1rem;gap:1rem}
@@ -78,25 +80,29 @@ body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:
 .q-skel-sm{width:55%;height:10px}.q-skel-lg{width:100%;height:28px;margin-top:4px;margin-bottom:6px}.q-skel-md{width:100%;height:28px;margin-top:4px}
 .q-loading-note{font-size:11px;color:var(--text-3);margin-top:10px;text-align:center}
 @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
-.pillars-wrap{display:flex;gap:10px;align-items:flex-start}
-.pillars-list{display:flex;flex-direction:column;gap:5px;flex-shrink:0;width:148px}
-.pillar{display:flex;align-items:center;gap:9px;background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:9px 12px;cursor:pointer;transition:all var(--tr);text-align:left;width:100%}
-.pillar:hover{border-color:var(--border-md);background:#222840}
-.pillar.on{border-color:var(--gold);background:var(--gold-dim)}
-.pillar-e{font-size:17px;flex-shrink:0;line-height:1}
-.pillar-lbl{font-size:11px;color:var(--text-2);font-weight:500;line-height:1.2}
-.pillar.on .pillar-lbl{color:var(--gold)}
-.pillar-arr{margin-left:auto;font-size:10px;color:var(--text-3);transition:transform var(--tr);flex-shrink:0}
-.pillar.on .pillar-arr{color:var(--gold);transform:rotate(90deg)}
-.pillar-detail{flex:1;min-width:0;background:var(--card);border:1px solid var(--border);border-radius:var(--rlg);padding:1rem;display:none}
-.pillar-detail.on{display:block}
-.p-head{display:flex;gap:10px;align-items:flex-start;margin-bottom:.875rem}
-.p-e{font-size:22px;line-height:1}.p-title{font-family:var(--fd);font-size:1.05rem;color:var(--text-1)}.p-sub{font-size:11px;color:var(--text-2);margin-top:2px}
-.p-row{display:flex;gap:9px;padding:8px 0;border-bottom:1px solid var(--border)}.p-row:last-child{border-bottom:none}
-.p-dot{width:5px;height:5px;border-radius:50%;background:var(--gold);flex-shrink:0;margin-top:5px}
-.p-t{font-size:12px;font-weight:500;color:var(--text-1)}.p-s{font-size:11px;color:var(--text-2);margin-top:2px;line-height:1.5}
-.pillar-empty{flex:1;display:flex;align-items:center;justify-content:center;min-height:160px;background:var(--card);border:1px dashed var(--border);border-radius:var(--rlg);color:var(--text-3);font-size:11px;text-align:center;padding:1rem;line-height:1.6}
-.pillar-empty.hidden{display:none}
+.pillars-wrap{display:flex;flex-direction:column;gap:8px}
+.pil{border:1px solid var(--border);border-radius:var(--r);overflow:hidden;background:var(--card);transition:border-color var(--tr)}
+.pil:hover{border-color:var(--border-md)}
+.pil.on{border-color:var(--pc)}
+.pil-hd{display:flex;align-items:center;gap:11px;padding:11px 13px;cursor:pointer;user-select:none;-webkit-user-select:none;border-left:3px solid var(--pc);transition:background var(--tr)}
+.pil-hd:hover{background:var(--surface)}
+.pil.on .pil-hd{background:color-mix(in srgb,var(--pc) 9%,transparent)}
+.pil-e{font-size:19px;line-height:1;flex-shrink:0}
+.pil-txt{flex:1;min-width:0}
+.pil-n{font-size:13px;font-weight:600;color:var(--text-1);line-height:1.25}
+.pil.on .pil-n{color:var(--pc)}
+.pil-s{font-size:11px;color:var(--text-3);margin-top:2px;line-height:1.4}
+.pil-cnt{font-family:var(--fm);font-size:10px;color:var(--text-3);background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:1px 8px;flex-shrink:0}
+.pil.on .pil-cnt{color:var(--pc);border-color:var(--pc);background:transparent}
+.pil-arr{font-size:10px;color:var(--text-3);transition:transform var(--tr);flex-shrink:0}
+.pil.on .pil-arr{transform:rotate(180deg);color:var(--pc)}
+.pil-body{display:none;padding:2px 13px 12px 13px;border-left:3px solid var(--pc)}
+.pil.on .pil-body{display:block}
+.pil-item{display:flex;gap:11px;padding:9px 0;border-bottom:1px solid var(--border)}
+.pil-item:last-child{border-bottom:none}
+.pil-num{flex-shrink:0;width:19px;height:19px;border-radius:50%;background:color-mix(in srgb,var(--pc) 16%,transparent);color:var(--pc);font-family:var(--fm);font-size:9px;font-weight:600;display:flex;align-items:center;justify-content:center;margin-top:1px}
+.pil-t{font-size:12px;font-weight:500;color:var(--text-1);line-height:1.4}
+.pil-d{font-size:11px;color:var(--text-2);margin-top:3px;line-height:1.55}
 .cl-block{background:var(--card);border:1px solid var(--border);border-radius:var(--rlg);padding:.875rem}
 .cl-row{display:flex;align-items:center;gap:9px;padding:6px 0;border-bottom:1px solid var(--border);cursor:pointer}
 .cl-row:last-child{border-bottom:none}
@@ -292,15 +298,20 @@ body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:
 .kcp{padding:3px 11px;font-size:11px;border-radius:20px;border:1px solid var(--border-md);color:var(--text-2);background:transparent;cursor:pointer;transition:all var(--tr);font-family:var(--fb)}
 .kcp:hover{background:var(--surface);color:var(--text-1)}
 /* COLLAPSIBLE SECTIONS */
-.sec-hd{font-family:var(--fm);font-size:9px;color:var(--text-3);letter-spacing:0.13em;text-transform:uppercase;margin:1.25rem 0 8px;display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;-webkit-user-select:none}
-.sec-hd:hover{color:var(--text-2)}
-.sec-hd .lbl-line{flex:1;height:1px;background:var(--border)}
-.sec-badge{font-family:var(--fm);font-size:10px;color:var(--text-2);background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:1px 8px;white-space:nowrap}
-.sec-badge.done{color:var(--green);border-color:rgba(107,191,142,0.3);background:rgba(107,191,142,0.08)}
-.sec-caret{font-size:10px;transition:transform var(--tr);display:inline-block;flex-shrink:0}
+.sec-hd{display:flex;align-items:center;gap:10px;margin:1.25rem 0 0;padding:12px 14px;background:var(--card);border:1px solid var(--border);border-radius:var(--r);cursor:pointer;user-select:none;-webkit-user-select:none;transition:all var(--tr);font-family:var(--fb);font-size:13px;font-weight:600;color:var(--text-1);letter-spacing:0;text-transform:none}
+.sec-hd:hover{border-color:var(--border-md);background:#222840}
+.sec-hd.open{border-bottom-left-radius:0;border-bottom-right-radius:0;border-bottom-color:transparent}
+.sec-hd .lbl-line{display:none}
+.sec-icon{font-size:15px;line-height:1;flex-shrink:0;width:20px;text-align:center}
+.sec-title{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sec-badge{font-family:var(--fm);font-size:11px;font-weight:500;color:var(--text-2);background:var(--surface);border:1px solid var(--border-md);border-radius:20px;padding:2px 10px;white-space:nowrap;flex-shrink:0}
+.sec-badge.done{color:var(--green);border-color:rgba(107,191,142,0.35);background:rgba(107,191,142,0.1)}
+.sec-caret{font-size:11px;color:var(--text-3);transition:transform var(--tr),color var(--tr);display:flex;align-items:center;justify-content:center;flex-shrink:0;width:22px;height:22px;border-radius:50%;background:var(--surface);border:1px solid var(--border)}
+.sec-hd:hover .sec-caret{color:var(--gold);border-color:rgba(201,168,76,0.35)}
 .sec-caret.open{transform:rotate(180deg)}
-.sec-body{overflow:hidden}
+.sec-body{overflow:hidden;border:1px solid var(--border);border-top:none;border-radius:0 0 var(--r) var(--r);padding:14px;background:rgba(30,35,51,0.35);margin-bottom:.25rem}
 .sec-body.closed{display:none}
+.sec-body > .q-wrap,.sec-body > .cl-block{background:transparent;border:none;padding:0}
 
 /* TODAY AT A GLANCE */
 .glance{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:1rem}
@@ -382,13 +393,16 @@ body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:
 .toast.show{opacity:1;transform:translateY(0)}
 .toast.success{border-color:rgba(107,191,142,0.32)}.toast.error{border-color:rgba(224,123,123,0.32)}
 hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
-@media(max-width:400px){.tab-label{display:none}.tab{padding:.6rem .1rem}.tab-icon{font-size:20px}}
+@media(max-width:400px){
+  .tab-label{font-size:7.5px}
+  .tab-icon{font-size:16px}
+  .tab{padding:.42rem .04rem .32rem}
+}
 @media(max-width:640px){
   .sit-flds,.th-add-grid{grid-template-columns:1fr!important}
   .past-stats{grid-template-columns:repeat(2,1fr)!important}
-  .hdr{flex-wrap:wrap}.pillars-wrap{flex-direction:column}
+  .hdr{flex-wrap:wrap}
   .pillars-list{width:100%;flex-direction:row;flex-wrap:wrap}
-  .pillar{width:calc(50% - 3px)}.pillar-detail{width:100%}
   .int-row{grid-template-columns:1fr}.mot-log{grid-template-columns:1fr!important}
   .grat-stats{grid-template-columns:repeat(3,1fr)}
   .past-title{font-size:1.25rem}.greeting{font-size:1.5rem}.daynum{font-size:2rem}
@@ -401,9 +415,9 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
 <nav class="nav">
   <div class="nav-inner">
     <button class="tab on" onclick="switchTab('morning')"><span class="tab-icon">&#9728;&#65039;</span><span class="tab-label">Morning</span></button>
-    <button class="tab" onclick="switchTab('situations')"><span class="tab-icon">&#128250;</span><span class="tab-label">Situations <span class="badge" id="sit-badge">0</span></span></button>
-    <button class="tab" onclick="switchTab('thoughts')"><span class="tab-icon">&#128161;</span><span class="tab-label">Thoughts <span class="badge" id="th-badge">0</span></span></button>
-    <button class="tab" onclick="switchTab('posts')"><span class="tab-icon">&#128204;</span><span class="tab-label">Posts <span class="badge" id="post-badge">0</span></span></button>
+    <button class="tab" onclick="switchTab('situations')"><span class="tab-icon">&#128250;<span class="badge" id="sit-badge">0</span></span><span class="tab-label">Situations</span></button>
+    <button class="tab" onclick="switchTab('thoughts')"><span class="tab-icon">&#128161;<span class="badge" id="th-badge">0</span></span><span class="tab-label">Thoughts</span></button>
+    <button class="tab" onclick="switchTab('posts')"><span class="tab-icon">&#128204;<span class="badge" id="post-badge">0</span></span><span class="tab-label">Posts</span></button>
     <button class="tab" onclick="switchTab('motivation')"><span class="tab-icon">&#128293;</span><span class="tab-label">Motivation</span></button>
     <button class="tab" onclick="switchTab('gratitude')"><span class="tab-icon">&#128591;</span><span class="tab-label">Gratitude</span></button>
     <button class="tab" onclick="switchTab('kundali')"><span class="tab-icon">&#128337;</span><span class="tab-label">Kundali</span></button>
@@ -418,7 +432,7 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
   <div class="glance" id="glance"></div>
   <hr class="d">
   <!-- TODAY'S ROUTINE -->
-  <div class="sec-hd" onclick="toggleSection('routine')">Today's routine <span class="lbl-line"></span><span class="sec-badge" id="badge-routine"></span><span class="sec-caret open" id="caret-routine">&#9662;</span></div>
+  <div class="sec-hd" id="hd-routine" onclick="toggleSection('routine')"><span class="sec-icon">&#128197;</span><span class="sec-title">Today's routine</span><span class="lbl-line"></span><span class="sec-badge" id="badge-routine"></span><span class="sec-caret open" id="caret-routine">&#9662;</span></div>
   <div class="sec-body" id="sec-routine">
     <div class="q-wrap">
     <div class="rt-cal" id="rt-cal"></div>
@@ -456,7 +470,7 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
   </div><!-- /sec-routine -->
 
   <!-- Completion history -->
-  <div class="sec-hd" onclick="toggleSection('rtstats')">Routine completion <span class="lbl-line"></span><span class="sec-badge" id="badge-rtstats"></span><span class="sec-caret open" id="caret-rtstats">&#9662;</span></div>
+  <div class="sec-hd" id="hd-rtstats" onclick="toggleSection('rtstats')"><span class="sec-icon">&#128200;</span><span class="sec-title">Routine completion</span><span class="lbl-line"></span><span class="sec-badge" id="badge-rtstats"></span><span class="sec-caret open" id="caret-rtstats">&#9662;</span></div>
   <div class="sec-body" id="sec-rtstats">
     <div class="q-wrap">
       <div class="rt-stats" id="rt-stats"></div>
@@ -465,8 +479,7 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
     </div>
   </div><!-- /sec-rtstats -->
 
-  <hr class="d">
-  <div class="sec-hd" onclick="toggleSection('habits')">Habits I'm following <span class="lbl-line"></span><span class="sec-badge" id="badge-habits"></span><span class="sec-caret open" id="caret-habits">&#9662;</span></div>
+  <div class="sec-hd" id="hd-habits" onclick="toggleSection('habits')"><span class="sec-icon">&#127775;</span><span class="sec-title">Habits I'm following</span><span class="lbl-line"></span><span class="sec-badge" id="badge-habits"></span><span class="sec-caret open" id="caret-habits">&#9662;</span></div>
   <div class="sec-body" id="sec-habits">
     <div class="q-wrap">
       <div style="font-size:11px;color:var(--text-2);margin-bottom:10px">These stay on your list every day until you remove them. Tick them off as you go &#8212; the ticks reset each morning. Drag &#9776; to reorder.</div>
@@ -483,20 +496,17 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
     </div>
   </div><!-- /sec-habits -->
 
-  <hr class="d">
-  <div class="sec-hd" onclick="toggleSection('checklist')">Daily checklist <span class="lbl-line"></span><span class="sec-badge" id="badge-checklist"></span><span class="sec-caret" id="caret-checklist">&#9662;</span></div>
+  <div class="sec-hd" id="hd-checklist" onclick="toggleSection('checklist')"><span class="sec-icon">&#9989;</span><span class="sec-title">Daily checklist</span><span class="lbl-line"></span><span class="sec-badge" id="badge-checklist"></span><span class="sec-caret" id="caret-checklist">&#9662;</span></div>
   <div class="sec-body closed" id="sec-checklist">
     <div class="cl-block" id="cl-block"><div id="cl-list"></div><div class="prog-wrap"><div class="prog-meta"><span>Practices</span><span class="prog-ct" id="prog-txt">0/8</span></div><div class="prog-track"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div></div></div>
   </div><!-- /sec-checklist -->
 
-  <hr class="d">
-  <div class="sec-hd" onclick="toggleSection('pillars')">Five pillars <span class="lbl-line"></span><span class="sec-badge" id="badge-pillars"></span><span class="sec-caret open" id="caret-pillars">&#9662;</span></div>
+  <div class="sec-hd" id="hd-pillars" onclick="toggleSection('pillars')"><span class="sec-icon">&#127963;</span><span class="sec-title">Five pillars</span><span class="lbl-line"></span><span class="sec-badge" id="badge-pillars"></span><span class="sec-caret open" id="caret-pillars">&#9662;</span></div>
   <div class="sec-body" id="sec-pillars">
-    <div class="pillars-wrap"><div class="pillars-list"><button class="pillar" onclick="togglePillar(0)"><span class="pillar-e">&#129504;</span><div class="pillar-lbl">Mental strength</div><span class="pillar-arr">&#9654;</span></button><button class="pillar" onclick="togglePillar(1)"><span class="pillar-e">&#10084;&#65039;</span><div class="pillar-lbl">Emotional control</div><span class="pillar-arr">&#9654;</span></button><button class="pillar" onclick="togglePillar(2)"><span class="pillar-e">&#127919;</span><div class="pillar-lbl">Focus &amp; clarity</div><span class="pillar-arr">&#9654;</span></button><button class="pillar" onclick="togglePillar(3)"><span class="pillar-e">&#9889;</span><div class="pillar-lbl">Body &amp; energy</div><span class="pillar-arr">&#9654;</span></button><button class="pillar" onclick="togglePillar(4)"><span class="pillar-e">&#129306;</span><div class="pillar-lbl">Relationships</div><span class="pillar-arr">&#9654;</span></button></div><div class="pillar-detail" id="pillar-detail"></div><div class="pillar-empty" id="pillar-empty">Tap a pillar to explore its principles</div></div>
-  </div><!-- /sec-pillars -->
+    <div class="pillars-wrap" id="pillars-wrap"></div>
+    </div><!-- /sec-pillars -->
 
-  <hr class="d">
-  <div class="sec-hd" onclick="toggleSection('anchors')">Anchor intentions <span class="lbl-line"></span><span class="sec-badge" id="badge-anchors"></span><span class="sec-caret open" id="caret-anchors">&#9662;</span></div>
+  <div class="sec-hd" id="hd-anchors" onclick="toggleSection('anchors')"><span class="sec-icon">&#9875;</span><span class="sec-title">Anchor intentions</span><span class="lbl-line"></span><span class="sec-badge" id="badge-anchors"></span><span class="sec-caret open" id="caret-anchors">&#9662;</span></div>
   <div class="sec-body" id="sec-anchors">
     <div class="int-row" style="margin-bottom:1rem"><div class="int-tile"><div class="int-e">&#9208;&#65039;</div><div class="int-t">Pause before reacting</div><div class="int-b">3 deep breaths before responding to anything charged.</div></div><div class="int-tile"><div class="int-e">&#127919;</div><div class="int-t">One task, full focus</div><div class="int-b">No tabs, no phone — one thing at a time during deep work.</div></div><div class="int-tile"><div class="int-e">&#127807;</div><div class="int-t">Hard thing first</div><div class="int-b">Most important work before email or meetings steal the morning.</div></div></div>
   </div><!-- /sec-anchors -->
@@ -697,6 +707,7 @@ var MANTRAS=[
   {text:"What you do today is what matters most.",src:"-- Jocko Willink"},
   {text:"The best investment you can make is in yourself.",src:"-- Warren Buffett"}
 ];
+var PILLAR_COLORS=['#b0a0d6','#E07B7B','#C9A84C','#6BBF8E','#4ECDC4'];
 var PILLARS=[
   {e:'&#129504;',n:'Mental strength',s:'Build a resilient, sharp, unshakeable mind',items:[{t:'Control only what is in your control',d:"Let go of outcomes. Focus entirely on your effort and attitude."},{t:'Embrace discomfort as growth',d:"Every hard moment is a deposit into your future self."},{t:'Reject negative self-talk immediately',d:"Name the thought, step back from it, replace with a neutral fact."},{t:'Focus on process, not results',d:"Show up fully. Results are a byproduct of consistent quality action."},{t:'Think long-term, act present',d:"What can I do right now that serves who I'm becoming in 5 years?"}]},
   {e:'&#10084;&#65039;',n:'Emotional control',s:'Stay regulated and intentional under pressure',items:[{t:'Pause before reacting',d:"Three deep breaths before responding to anything emotionally charged."},{t:"Name the emotion -- don't become it",d:'"I notice I feel frustrated" -- not "I am frustrated."'},{t:'Respond to what is, not what you fear',d:"Stay present. Catastrophising borrows suffering from the future."},{t:'Set the emotional tone first',d:"Your inner state radiates outward. People read energy before words."},{t:'Forgive quickly -- especially yourself',d:"Resentment drains mental RAM. Release it and reclaim the space."}]},
@@ -766,6 +777,7 @@ function init(){
     var stored=getTodayStored();
     if(stored.checked)Object.assign(checked,stored.checked);
     renderChecklist();updateStreak();
+    renderPillars();
     renderTodayHabits();
     renderRoutine();
     initSections();
@@ -922,14 +934,35 @@ async function saveToSheet(){
 }
 function setSt(msg,ok){var el=document.getElementById('save-status');el.textContent=msg;el.className='save-st'+(ok===true?' ok':ok===false?' err':'');}
 
-function togglePillar(id){
-  var btns=document.querySelectorAll('.pillar'),detail=document.getElementById('pillar-detail'),empty=document.getElementById('pillar-empty');
-  if(activePillar===id){activePillar=null;btns.forEach(function(b){b.classList.remove('on');});detail.classList.remove('on');detail.innerHTML='';empty.classList.remove('hidden');return;}
-  activePillar=id;btns.forEach(function(b){b.classList.remove('on');});btns[id].classList.add('on');
-  var p=PILLARS[id];
-  detail.innerHTML='<div class="p-head"><div class="p-e">'+p.e+'</div><div><div class="p-title">'+p.n+'</div><div class="p-sub">'+p.s+'</div></div></div>'+p.items.map(function(i){return '<div class="p-row"><div class="p-dot"></div><div><div class="p-t">'+i.t+'</div><div class="p-s">'+i.d+'</div></div></div>';}).join('');
-  detail.classList.add('on');empty.classList.add('hidden');
+function renderPillars(){
+  var wrap=document.getElementById('pillars-wrap'); if(!wrap) return;
+  wrap.innerHTML=PILLARS.map(function(p,i){
+    var col=PILLAR_COLORS[i]||'var(--gold)';
+    var open=activePillar===i;
+    return '<div class="pil'+(open?' on':'')+'" style="--pc:'+col+'">'+
+      '<div class="pil-hd" onclick="togglePillar('+i+')">'+
+        '<span class="pil-e">'+p.e+'</span>'+
+        '<div class="pil-txt"><div class="pil-n">'+p.n+'</div><div class="pil-s">'+p.s+'</div></div>'+
+        '<span class="pil-cnt">'+p.items.length+'</span>'+
+        '<span class="pil-arr">&#9662;</span>'+
+      '</div>'+
+      '<div class="pil-body">'+
+        p.items.map(function(it,j){
+          return '<div class="pil-item">'+
+            '<div class="pil-num">'+(j+1)+'</div>'+
+            '<div><div class="pil-t">'+it.t+'</div><div class="pil-d">'+it.d+'</div></div>'+
+          '</div>';
+        }).join('')+
+      '</div>'+
+    '</div>';
+  }).join('');
 }
+
+function togglePillar(id){
+  activePillar = (activePillar===id) ? null : id;
+  renderPillars();
+}
+
 
 function renderChecklist(){
   var el=document.getElementById('cl-list');el.innerHTML='';
@@ -955,7 +988,12 @@ function updateStreak(){var s=0,today=new Date();for(var i=0;i<365;i++){var d=ne
 /* SITUATIONS */
 function loadSituations(){try{var r=localStorage.getItem('morning_situations');if(r)situations=JSON.parse(r);}catch(e){situations=[];}}
 function saveSits(){localStorage.setItem('morning_situations',JSON.stringify(situations));}
-function updateBadge(){document.getElementById('sit-badge').textContent=situations.length;}
+function setBadge(id,n){
+  var el=document.getElementById(id); if(!el) return;
+  el.textContent=n;
+  el.classList.toggle('zero',!n);
+}
+function updateBadge(){ setBadge('sit-badge',situations.length); }
 function selEmo(el){document.querySelectorAll('.ep').forEach(function(p){p.classList.remove('on');});selEmotion=(selEmotion===el.dataset.val)?'':el.dataset.val;if(selEmotion)el.classList.add('on');}
 function setSyncTxt(state,msg){var el=document.getElementById('sit-sync');el.className='sync-txt '+state;el.textContent=msg;}
 async function addSituation(){
@@ -1017,7 +1055,7 @@ function exportCSV(){if(!situations.length){showToast('Nothing to export yet.','
 /* THOUGHTS */
 function loadThoughts(){try{var r=localStorage.getItem('morning_thoughts');if(r)thoughts=JSON.parse(r);}catch(e){thoughts=[];}}
 function saveThoughts(){localStorage.setItem('morning_thoughts',JSON.stringify(thoughts));}
-function updateThBadge(){document.getElementById('th-badge').textContent=thoughts.length;}
+function updateThBadge(){ setBadge('th-badge',thoughts.length); }
 function selThCat(el){document.querySelectorAll('#th-cat-pills .thp').forEach(function(p){p.classList.remove('on');});selThCategory=(selThCategory===el.dataset.val)?'':el.dataset.val;if(selThCategory)el.classList.add('on');}
 function selThEmo(el){document.querySelectorAll('#th-emo-pills .thp').forEach(function(p){p.classList.remove('on');});selThEmotion=(selThEmotion===el.dataset.val)?'':el.dataset.val;if(selThEmotion)el.classList.add('on');}
 function setThCatFilter(el){document.querySelectorAll('#th-cat-filter .ef').forEach(function(p){p.classList.remove('on');});el.classList.add('on');thCatFilter=el.dataset.c;renderThoughts();}
@@ -1071,7 +1109,7 @@ function replaceThoughtsFromSheet(s){
 /* POSTS */
 function loadPosts(){try{var r=localStorage.getItem('morning_posts');if(r)posts=JSON.parse(r);}catch(e){posts=[];}}
 function savePosts(){localStorage.setItem('morning_posts',JSON.stringify(posts));}
-function updatePostBadge(){document.getElementById('post-badge').textContent=posts.length;}
+function updatePostBadge(){ setBadge('post-badge',posts.length); }
 function selPostSrc(src){selPostSource=(selPostSource===src)?'':src;['li','ig','ot'].forEach(function(s){var el=document.getElementById('src-'+s);if(el)el.className='src-pill';});if(selPostSource){var el=document.getElementById('src-'+selPostSource.substring(0,2));if(el)el.className='src-pill on-'+selPostSource.substring(0,2);}}
 function selPostEmo(el){document.querySelectorAll('.pep').forEach(function(p){p.classList.remove('on');});selPostEmotion=(selPostEmotion===el.dataset.val)?'':el.dataset.val;if(selPostEmotion)el.classList.add('on');}
 function setPostSrcFilter(el){document.querySelectorAll('.post-src-filter-bar .pef').forEach(function(p){p.classList.remove('on');});el.classList.add('on');postSrcFilter=el.dataset.ps;renderPosts();}
@@ -2395,10 +2433,12 @@ function secOpen(key){
 function applySection(key){
   var body=document.getElementById('sec-'+key);
   var caret=document.getElementById('caret-'+key);
+  var hd=document.getElementById('hd-'+key);
   if(!body) return;
   var open=secOpen(key);
   body.classList.toggle('closed',!open);
   if(caret) caret.classList.toggle('open',open);
+  if(hd) hd.classList.toggle('open',open);
 }
 
 function toggleSection(key){
