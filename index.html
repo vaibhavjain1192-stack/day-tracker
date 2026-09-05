@@ -291,6 +291,24 @@ body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:
 .kun-cat-pills{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px}
 .kcp{padding:3px 11px;font-size:11px;border-radius:20px;border:1px solid var(--border-md);color:var(--text-2);background:transparent;cursor:pointer;transition:all var(--tr);font-family:var(--fb)}
 .kcp:hover{background:var(--surface);color:var(--text-1)}
+/* ROUTINE DATE STRIP */
+.rt-cal{display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:10px;margin-bottom:12px;border-bottom:1px solid var(--border)}
+.rt-cal::-webkit-scrollbar{display:none}
+.rt-cal-day{flex:0 0 auto;width:46px;padding:7px 0 6px;border-radius:var(--r);border:1px solid var(--border);background:var(--surface);cursor:pointer;text-align:center;transition:all var(--tr);position:relative}
+.rt-cal-day:hover{border-color:var(--border-md)}
+.rt-cal-day.sel{background:var(--gold-dim);border-color:var(--gold);}
+.rt-cal-day.today .rt-cal-num{color:var(--gold)}
+.rt-cal-dow{font-family:var(--fm);font-size:8px;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-3)}
+.rt-cal-num{font-family:var(--fd);font-size:1.05rem;line-height:1.15;color:var(--text-1)}
+.rt-cal-day.sel .rt-cal-num,.rt-cal-day.sel .rt-cal-dow{color:var(--gold)}
+.rt-cal-dot{width:5px;height:5px;border-radius:50%;margin:2px auto 0;background:transparent}
+.rt-cal-dot.part{background:var(--gold)}
+.rt-cal-dot.full{background:var(--green)}
+.rt-cal-tag{font-family:var(--fm);font-size:7px;color:var(--text-3);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 2px}
+.rt-cal-day.sel .rt-cal-tag{color:var(--gold)}
+.rt-daylbl{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:6px}
+.rt-daylbl-d{font-size:12px;color:var(--text-1);font-weight:500}
+.rt-daylbl-hint{font-size:10px;color:var(--text-3);font-family:var(--fm)}
 /* TODAY'S ROUTINE */
 .rt-selector{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--border)}
 .rt-pill{padding:4px 13px;font-size:11px;font-weight:500;border-radius:20px;border:1px solid var(--border-md);color:var(--text-2);background:transparent;cursor:pointer;transition:all var(--tr);font-family:var(--fb)}
@@ -378,6 +396,11 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
   <!-- TODAY'S ROUTINE -->
   <div class="lbl">Today's routine <span class="lbl-line"></span></div>
   <div class="q-wrap">
+    <div class="rt-cal" id="rt-cal"></div>
+    <div class="rt-daylbl">
+      <span class="rt-daylbl-d" id="rt-daylbl"></span>
+      <span class="rt-daylbl-hint">Pick a routine for this day</span>
+    </div>
     <div class="rt-selector" id="rt-selector"></div>
     <div class="rt-head">
       <div></div>
@@ -720,7 +743,7 @@ function init(){
 
   // Clear all in-memory arrays — Sheet is always the source of truth
   situations=[]; thoughts=[]; posts=[]; habits=[]; motEntries=[]; gratEntries=[]; kunEntries=[];
-  routineItems=[]; routineLog={}; extraRoutines=[];
+  routineItems=[]; routineLog={}; extraRoutines=[]; routineDay={}; selDate=isoToday();
   updateBadge(); updateThBadge(); updatePostBadge();
 
   // Show shimmer/loading state on morning intentions
@@ -750,6 +773,7 @@ function init(){
       if(Array.isArray(d.kundali))     replaceKundaliFromSheet(d.kundali);
       if(Array.isArray(d.routines))    replaceRoutinesFromSheet(d.routines);
       if(Array.isArray(d.routineLog))  replaceRoutineLogFromSheet(d.routineLog);
+      if(Array.isArray(d.routineDay))  replaceRoutineDayFromSheet(d.routineDay);
 
       DIAG.gratRaw='ok / '+(d.gratitude||[]).length+' rows';
       DIAG.motRaw ='ok / '+(d.motivation||[]).length+' rows';
@@ -2211,6 +2235,33 @@ var routineItems=[];
 var routineLog={};
 var activeRoutine='';
 var extraRoutines=[];   // created but still empty — no rows in the Sheet yet
+var routineDay={};      // {dateISO: routineName} which routine each day runs
+var selDate='';         // the day being viewed; defaults to today
+
+/* Days shown in the strip: a week back for review, three weeks ahead to plan */
+var CAL_BACK=7, CAL_FWD=21;
+
+function calDates(){
+  var out=[], d=new Date(); d.setDate(d.getDate()-CAL_BACK);
+  for(var i=0;i<CAL_BACK+1+CAL_FWD;i++){ out.push(isoDate(d)); d.setDate(d.getDate()+1); }
+  return out;
+}
+
+/* Routine assigned to a date. Falls back to the most recent
+   earlier assignment, so setting Monday carries forward until changed. */
+function routineForDate(iso){
+  if(routineDay[iso]) return routineDay[iso];
+  var prior=Object.keys(routineDay).filter(function(k){ return k<iso; }).sort();
+  if(prior.length) return routineDay[prior[prior.length-1]];
+  return routineNames()[0];
+}
+
+function fmtDayLabel(iso){
+  var p=iso.split('-'), d=new Date(+p[0],+p[1]-1,+p[2]);
+  var today=isoToday();
+  var prefix = iso===today ? 'Today \u00b7 ' : '';
+  return prefix+d.toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long'});
+}
 
 function routineNames(){
   var names=[];
@@ -2276,7 +2327,49 @@ function renderRoutineSelector(){
   }).join('')+'<button class="rt-pill add" onclick="newRoutine()">+ New routine</button>';
 }
 
-function selectRoutine(name){ activeRoutine=name; renderRoutine(); }
+/* Choosing a routine assigns it to the day being viewed */
+function selectRoutine(name){
+  activeRoutine=name;
+  if(!selDate) selDate=isoToday();
+  routineDay[selDate]=name;
+  renderRoutine();
+  var p=selDate.split('-'), dd=new Date(+p[0],+p[1]-1,+p[2]);
+  rtSync(postToSheet({sheet:'RoutineDay',
+    date:dd.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}),
+    dateISO:selDate, routine:name}));
+}
+
+function selectDate(iso){
+  selDate=iso;
+  activeRoutine=routineForDate(iso);
+  renderRoutine();
+}
+
+function renderCalendar(){
+  var el=document.getElementById('rt-cal'); if(!el) return;
+  var today=isoToday();
+  if(!selDate) selDate=today;
+  el.innerHTML=calDates().map(function(iso){
+    var p=iso.split('-'), d=new Date(+p[0],+p[1]-1,+p[2]);
+    var rt=routineForDate(iso);
+    var items=itemsFor(rt);
+    var done=(routineLog[iso]&&routineLog[iso][rt])||[];
+    var ids=items.map(function(i){return i.sheetId;});
+    var hit=done.filter(function(x){return ids.indexOf(x)>-1;}).length;
+    var dot = items.length&&hit===items.length ? 'full' : (hit>0 ? 'part' : '');
+    var short=(rt||'').replace(/routine\s*/i,'R');
+    return '<div class="rt-cal-day'+(iso===selDate?' sel':'')+(iso===today?' today':'')+'" onclick="selectDate(\''+iso+'\')">'+
+      '<div class="rt-cal-dow">'+d.toLocaleDateString('en-IN',{weekday:'short'}).slice(0,3)+'</div>'+
+      '<div class="rt-cal-num">'+d.getDate()+'</div>'+
+      '<div class="rt-cal-tag">'+escH(short)+'</div>'+
+      '<div class="rt-cal-dot '+dot+'"></div>'+
+    '</div>';
+  }).join('');
+  var sel=el.querySelector('.rt-cal-day.sel');
+  if(sel&&sel.scrollIntoView) sel.scrollIntoView({block:'nearest',inline:'center'});
+  var lbl=document.getElementById('rt-daylbl');
+  if(lbl) lbl.textContent=fmtDayLabel(selDate);
+}
 
 function newRoutine(){
   var n=prompt('Name the new routine:','Routine '+(routineNames().length+1));
@@ -2326,11 +2419,13 @@ async function deleteRoutine(){
 }
 
 function renderRoutine(){
+  if(!selDate) selDate=isoToday();
+  if(!activeRoutine) activeRoutine=routineForDate(selDate);
+  renderCalendar();
   renderRoutineSelector();
   var box=document.getElementById('rt-items'); if(!box) return;
   var items=itemsFor(activeRoutine);
-  var today=isoToday();
-  var done=doneFor(activeRoutine,today);
+  var done=doneFor(activeRoutine,selDate);
 
   if(!items.length){
     box.innerHTML='<div class="rt-empty">Nothing in <strong>'+escH(activeRoutine)+'</strong> yet.<br>Add your first time \u00b7 intention \u00b7 habit below.</div>';
@@ -2354,8 +2449,9 @@ function renderRoutine(){
   }).join('');
 
   var pct=Math.round(done.length/items.length*100);
+  var dayWord = selDate===isoToday() ? 'today' : fmtDayLabel(selDate).replace(/^Today \u00b7 /,'');
   document.getElementById('rt-progress').innerHTML=
-    '<div class="prog-meta"><span>'+escH(activeRoutine)+' today</span>'+
+    '<div class="prog-meta"><span>'+escH(activeRoutine)+' \u00b7 '+escH(dayWord)+'</span>'+
     '<span class="prog-ct">'+done.length+'/'+items.length+'</span></div>'+
     '<div class="prog-track"><div class="prog-fill" style="width:'+pct+'%"></div></div>';
 
@@ -2376,14 +2472,16 @@ function renderRoutineHistory(){
   }
   var ids=items.map(function(i){return i.sheetId;});
 
-  var days=[], sum=0, fullDays=0;
+  // Only days assigned to this routine count toward its stats
+  var days=[], sum=0, fullDays=0, counted=0;
   for(var i=13;i>=0;i--){
     var d=new Date(); d.setDate(d.getDate()-i);
     var iso=isoDate(d);
+    var mine=routineForDate(iso)===activeRoutine;
     var done=doneFor(activeRoutine,iso).filter(function(x){return ids.indexOf(x)>-1;});
-    var pct=Math.round(done.length/total*100);
-    days.push({iso:iso,label:String(d.getDate()),pct:pct});
-    sum+=pct; if(pct===100) fullDays++;
+    var pct=mine?Math.round(done.length/total*100):0;
+    days.push({iso:iso,label:String(d.getDate()),pct:pct,mine:mine});
+    if(mine){ sum+=pct; counted++; if(pct===100) fullDays++; }
   }
 
   // Streak of 100% days ending today (today incomplete doesn't break it)
@@ -2391,6 +2489,7 @@ function renderRoutineHistory(){
   for(var k=0;k<365;k++){
     var dd=new Date(); dd.setDate(dd.getDate()-k);
     var iso2=isoDate(dd);
+    if(routineForDate(iso2)!==activeRoutine){ if(k>0) continue; else continue; }
     var dn=doneFor(activeRoutine,iso2).filter(function(x){return ids.indexOf(x)>-1;});
     if(dn.length===total) streak++;
     else if(k>0) break;
@@ -2398,11 +2497,12 @@ function renderRoutineHistory(){
 
   statsEl.innerHTML=
     '<div class="rt-stat"><div class="rt-stat-n" style="color:var(--green)">'+streak+'</div><div class="rt-stat-l">\ud83d\udd25 Day streak</div></div>'+
-    '<div class="rt-stat"><div class="rt-stat-n">'+Math.round(sum/14)+'%</div><div class="rt-stat-l">14-day average</div></div>'+
+    '<div class="rt-stat"><div class="rt-stat-n">'+(counted?Math.round(sum/counted):0)+'%</div><div class="rt-stat-l">Average</div></div>'+
     '<div class="rt-stat"><div class="rt-stat-n" style="color:var(--teal)">'+fullDays+'</div><div class="rt-stat-l">Full days</div></div>';
 
   histEl.innerHTML=days.map(function(d){
-    return '<div class="rt-day" title="'+d.iso+' \u2014 '+d.pct+'%">'+
+    var t=d.mine ? d.iso+' \u2014 '+d.pct+'%' : d.iso+' \u2014 different routine';
+    return '<div class="rt-day" title="'+t+'" style="opacity:'+(d.mine?1:0.28)+'">'+
       '<div class="rt-bar"><div class="rt-bar-fill" style="height:'+d.pct+'%"></div></div>'+
       '<div class="rt-day-lbl">'+d.label+'</div></div>';
   }).join('');
@@ -2500,10 +2600,10 @@ function addRoutineItem(){
 }
 
 function toggleRoutineItem(id){
-  var today=isoToday();
-  if(!routineLog[today]) routineLog[today]={};
-  if(!routineLog[today][activeRoutine]) routineLog[today][activeRoutine]=[];
-  var arr=routineLog[today][activeRoutine];
+  var d=selDate||isoToday();
+  if(!routineLog[d]) routineLog[d]={};
+  if(!routineLog[d][activeRoutine]) routineLog[d][activeRoutine]=[];
+  var arr=routineLog[d][activeRoutine];
   var ix=arr.indexOf(id);
   if(ix>-1) arr.splice(ix,1); else arr.push(id);
   renderRoutine();
@@ -2511,18 +2611,20 @@ function toggleRoutineItem(id){
 }
 
 function saveRoutineLog(){
-  var now=new Date(), today=isoToday();
+  var d=selDate||isoToday();
+  var p=d.split('-'), dd=new Date(+p[0],+p[1]-1,+p[2]);
   rtSync(postToSheet({sheet:'RoutineLog',
-    date:now.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}),
-    dateISO:today, routine:activeRoutine,
-    done:doneFor(activeRoutine,today).join(',')}));
+    date:dd.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}),
+    dateISO:d, routine:activeRoutine,
+    done:doneFor(activeRoutine,d).join(',')}));
 }
 
 function untickRoutine(){
-  var today=isoToday();
-  if(!doneFor(activeRoutine,today).length) return;
-  if(!confirm('Untick every item in '+activeRoutine+' for today?')) return;
-  if(routineLog[today]) routineLog[today][activeRoutine]=[];
+  var d=selDate||isoToday();
+  if(!doneFor(activeRoutine,d).length) return;
+  var when = d===isoToday() ? 'today' : fmtDayLabel(d).replace(/^Today \u00b7 /,'');
+  if(!confirm('Untick every item in '+activeRoutine+' for '+when+'?')) return;
+  if(routineLog[d]) routineLog[d][activeRoutine]=[];
   renderRoutine(); saveRoutineLog();
 }
 
@@ -2567,6 +2669,14 @@ function replaceRoutinesFromSheet(rows){
       intention:r.intention||'',habit:r.habit||'',
       order:(r.order===null||r.order===undefined)?null:Number(r.order)};
   });
+  renderRoutine();
+}
+
+function replaceRoutineDayFromSheet(rows){
+  routineDay={};
+  rows.forEach(function(r){ if(r.dateISO&&r.routine) routineDay[r.dateISO]=r.routine; });
+  if(!selDate) selDate=isoToday();
+  activeRoutine=routineForDate(selDate);
   renderRoutine();
 }
 
