@@ -298,8 +298,8 @@ body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:
 .rt-pill.on{background:var(--gold-dim);border-color:rgba(201,168,76,0.45);color:var(--gold)}
 .rt-pill.add{border-style:dashed;color:var(--text-3)}
 .rt-pill.add:hover{border-style:solid;border-color:var(--gold);color:var(--gold)}
-.rt-head{display:grid;grid-template-columns:20px 68px 1fr 1fr 52px;gap:8px;padding:0 0 6px;font-family:var(--fm);font-size:9px;color:var(--text-3);letter-spacing:0.1em;text-transform:uppercase;border-bottom:1px solid var(--border)}
-.rt-row{display:grid;grid-template-columns:20px 68px 1fr 1fr 52px;gap:8px;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);background:var(--card);transition:background var(--tr),opacity var(--tr)}
+.rt-head{display:grid;grid-template-columns:20px 68px 1fr 52px;gap:8px;padding:0 0 6px;font-family:var(--fm);font-size:9px;color:var(--text-3);letter-spacing:0.1em;text-transform:uppercase;border-bottom:1px solid var(--border)}
+.rt-row{display:grid;grid-template-columns:20px 68px 1fr 52px;gap:8px;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);background:var(--card);transition:background var(--tr),opacity var(--tr)}
 .rt-grip{cursor:grab;color:var(--text-3);font-size:12px;line-height:1;touch-action:none;user-select:none;-webkit-user-select:none;transition:color var(--tr);text-align:center}
 .rt-grip:hover{color:var(--gold)}
 .rt-grip:active{cursor:grabbing}
@@ -307,7 +307,7 @@ body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:
 .rt-row.drag-over{box-shadow:inset 0 2px 0 var(--gold)}
 .rt-row.drag-over-below{box-shadow:inset 0 -2px 0 var(--gold)}
 .rt-row:last-child{border-bottom:none}
-.rt-row.done .rt-int,.rt-row.done .rt-hab{color:var(--text-3);text-decoration:line-through}
+.rt-row.done .rt-hab{color:var(--text-3);text-decoration:line-through}
 .rt-time{font-family:var(--fm);font-size:11px;color:var(--gold);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .rt-int{font-size:12px;color:var(--text-1);line-height:1.45;min-width:0;overflow-wrap:anywhere}
 .rt-hab{font-size:12px;color:var(--text-2);line-height:1.45;min-width:0;overflow-wrap:anywhere}
@@ -319,7 +319,7 @@ body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:
 .rt-mini{background:none;border:none;color:var(--text-3);cursor:pointer;font-size:11px;padding:0 2px;line-height:1;transition:color var(--tr)}
 .rt-mini:hover{color:var(--gold)}
 .rt-mini.del:hover{color:var(--rose)}
-.rt-add{display:grid;grid-template-columns:88px 1fr 1fr auto;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
+.rt-add{display:grid;grid-template-columns:88px 1fr auto;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
 .rt-in-time{font-family:var(--fm)}
 .rt-progress{margin-top:12px}
 .rt-empty{text-align:center;padding:1.75rem 1rem;color:var(--text-3);font-size:12px;line-height:1.7}
@@ -334,8 +334,7 @@ body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:
 .rt-bar-fill{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(180deg,var(--teal),var(--green));transition:height 0.3s ease}
 .rt-day-lbl{font-family:var(--fm);font-size:8px;color:var(--text-3)}
 @media(max-width:640px){
-  .rt-head,.rt-row{grid-template-columns:18px 56px 1fr 46px}
-  .rt-col-hab,.rt-hab{display:none}
+  .rt-head,.rt-row{grid-template-columns:18px 52px 1fr 44px}
   .rt-add{grid-template-columns:1fr;gap:6px}
 }
 .toast{position:fixed;bottom:5.5rem;right:1rem;background:#1E2333;border:1px solid var(--border-md);border-radius:var(--r);padding:10px 16px;font-size:12px;color:var(--text-1);box-shadow:0 6px 24px rgba(0,0,0,0.4);opacity:0;transform:translateY(6px);transition:all 0.22s ease;pointer-events:none;z-index:200;max-width:280px}
@@ -383,7 +382,6 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
     <div class="rt-head">
       <div></div>
       <div class="rt-col-time">Time</div>
-      <div class="rt-col-int">Intention</div>
       <div class="rt-col-hab">Habit</div>
       <div class="rt-col-act"></div>
     </div>
@@ -392,8 +390,7 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
 
     <div class="rt-add" id="rt-add-form">
       <input class="sin rt-in-time" id="rt-time" type="text" placeholder="6:30 AM">
-      <input class="sin" id="rt-intention" type="text" placeholder="Intention — why this matters">
-      <input class="sin" id="rt-habit" type="text" placeholder="Habit — what you actually do">
+      <input class="sin" id="rt-habit" type="text" placeholder="What you actually do">
       <button class="btn gold" onclick="addRoutineItem()" style="white-space:nowrap">+ Add</button>
     </div>
 
@@ -1191,8 +1188,8 @@ async function saveEditModal(){
   }else if(_editCtx.type==='routine'){
     var ri=routineItems.find(function(x){return x.sheetId===_editCtx.id;}); if(!ri){closeEditModal();return;}
     ri.time=document.getElementById('edit-rt-time').value.trim();
-    ri.intention=document.getElementById('edit-rt-intention').value.trim();
     ri.habit=document.getElementById('edit-rt-habit').value.trim();
+    ri.intention='';   // retired from the UI
     renderRoutine();
     var okrt=await postToSheet({sheet:'Routines',action:'edit_routine_item',sheetId:ri.sheetId,
       time:ri.time,intention:ri.intention,habit:ri.habit});
@@ -2347,8 +2344,7 @@ function renderRoutine(){
     return '<div class="rt-row'+(isDone?' done':'')+'" data-idx="'+idx+'">'+
       '<span class="rt-grip" onpointerdown="startRtDrag(event,'+idx+')" title="Drag to reorder">\u2630</span>'+
       '<div class="rt-time" title="'+escH(cleanTime(it.time))+'">'+escH(cleanTime(it.time)||'\u2014')+'</div>'+
-      '<div class="rt-int">'+escH(it.intention||'')+'</div>'+
-      '<div class="rt-hab">'+escH(it.habit||'')+'</div>'+
+      '<div class="rt-hab">'+escH(it.habit||it.intention||'')+'</div>'+
       '<div class="rt-acts">'+
         '<button class="rt-mini" onclick="editRoutineItem(\''+it.sheetId+'\')" title="Edit">\u270e</button>'+
         '<button class="rt-mini del" onclick="delRoutineItem(\''+it.sheetId+'\')" title="Remove">\u00d7</button>'+
@@ -2490,15 +2486,14 @@ function endRtDrag(){
 
 function addRoutineItem(){
   var t=document.getElementById('rt-time').value.trim();
-  var i=document.getElementById('rt-intention').value.trim();
   var h=document.getElementById('rt-habit').value.trim();
-  if(!i&&!h){ showToast('Add an intention or a habit.','error'); return; }
+  var i='';   // intention retired from the UI; column kept in the Sheet
+  if(!h){ showToast('Add a habit.','error'); return; }
   var id='r'+Date.now();
   var nextOrder=itemsFor(activeRoutine).length;
   routineItems.push({sheetId:id,routine:activeRoutine,time:t,intention:i,habit:h,order:nextOrder});
   extraRoutines=extraRoutines.filter(function(r){ return r!==activeRoutine; });
   document.getElementById('rt-time').value='';
-  document.getElementById('rt-intention').value='';
   document.getElementById('rt-habit').value='';
   renderRoutine();
   rtSync(postToSheet({sheet:'Routines',sheetId:id,routine:activeRoutine,time:t,intention:i,habit:h,order:nextOrder}));
@@ -2535,10 +2530,8 @@ function editRoutineItem(id){
   var it=routineItems.find(function(x){return x.sheetId===id;}); if(!it) return;
   var html='<div style="margin-bottom:10px"><label class="sfl">Time</label>'+
     '<input class="sin" id="edit-rt-time" type="text" value="'+escH(it.time||'')+'" placeholder="6:30 AM"></div>'+
-    '<div style="margin-bottom:10px"><label class="sfl">Intention</label>'+
-    '<textarea class="sin" id="edit-rt-intention" rows="2">'+escH(it.intention||'')+'</textarea></div>'+
     '<div><label class="sfl">Habit</label>'+
-    '<textarea class="sin" id="edit-rt-habit" rows="2">'+escH(it.habit||'')+'</textarea></div>';
+    '<textarea class="sin" id="edit-rt-habit" rows="3">'+escH(it.habit||it.intention||'')+'</textarea></div>';
   openEditModal('Edit routine item',html,{type:'routine',id:id});
 }
 
