@@ -291,19 +291,42 @@ body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:
 .kun-cat-pills{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px}
 .kcp{padding:3px 11px;font-size:11px;border-radius:20px;border:1px solid var(--border-md);color:var(--text-2);background:transparent;cursor:pointer;transition:all var(--tr);font-family:var(--fb)}
 .kcp:hover{background:var(--surface);color:var(--text-1)}
+/* COLLAPSIBLE SECTIONS */
+.sec-hd{font-family:var(--fm);font-size:9px;color:var(--text-3);letter-spacing:0.13em;text-transform:uppercase;margin:1.25rem 0 8px;display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;-webkit-user-select:none}
+.sec-hd:hover{color:var(--text-2)}
+.sec-hd .lbl-line{flex:1;height:1px;background:var(--border)}
+.sec-badge{font-family:var(--fm);font-size:10px;color:var(--text-2);background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:1px 8px;white-space:nowrap}
+.sec-badge.done{color:var(--green);border-color:rgba(107,191,142,0.3);background:rgba(107,191,142,0.08)}
+.sec-caret{font-size:10px;transition:transform var(--tr);display:inline-block;flex-shrink:0}
+.sec-caret.open{transform:rotate(180deg)}
+.sec-body{overflow:hidden}
+.sec-body.closed{display:none}
+
+/* TODAY AT A GLANCE */
+.glance{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:1rem}
+.gl-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:10px 8px;text-align:center;cursor:pointer;transition:all var(--tr)}
+.gl-card:hover{border-color:var(--border-md)}
+.gl-n{font-family:var(--fd);font-size:1.35rem;line-height:1;color:var(--text-1)}
+.gl-n.done{color:var(--green)}
+.gl-l{font-size:9px;color:var(--text-3);margin-top:3px;letter-spacing:0.06em;text-transform:uppercase;font-family:var(--fm)}
+.gl-bar{height:2px;background:rgba(255,255,255,0.06);border-radius:2px;margin-top:6px;overflow:hidden}
+.gl-fill{height:100%;background:linear-gradient(90deg,var(--teal),var(--green));border-radius:2px;transition:width 0.3s ease}
 /* ROUTINE DATE STRIP */
 .rt-cal{display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:10px;margin-bottom:12px;border-bottom:1px solid var(--border)}
 .rt-cal::-webkit-scrollbar{display:none}
-.rt-cal-day{flex:0 0 auto;width:46px;padding:7px 0 6px;border-radius:var(--r);border:1px solid var(--border);background:var(--surface);cursor:pointer;text-align:center;transition:all var(--tr);position:relative}
+.rt-cal-day{flex:0 0 auto;width:50px;padding:7px 0 6px;border-radius:var(--r);border:1px solid var(--border);background:var(--surface);cursor:pointer;text-align:center;transition:all var(--tr);position:relative}
 .rt-cal-day:hover{border-color:var(--border-md)}
 .rt-cal-day.sel{background:var(--gold-dim);border-color:var(--gold);}
 .rt-cal-day.today .rt-cal-num{color:var(--gold)}
 .rt-cal-dow{font-family:var(--fm);font-size:8px;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-3)}
 .rt-cal-num{font-family:var(--fd);font-size:1.05rem;line-height:1.15;color:var(--text-1)}
 .rt-cal-day.sel .rt-cal-num,.rt-cal-day.sel .rt-cal-dow{color:var(--gold)}
-.rt-cal-dot{width:5px;height:5px;border-radius:50%;margin:2px auto 0;background:transparent}
-.rt-cal-dot.part{background:var(--gold)}
-.rt-cal-dot.full{background:var(--green)}
+.rt-cal-ring{width:22px;height:22px;margin:3px auto 0;position:relative}
+.rt-cal-ring svg{transform:rotate(-90deg);display:block}
+.rt-cal-ring-bg{stroke:rgba(255,255,255,0.09)}
+.rt-cal-ring-fg{transition:stroke-dasharray 0.3s ease}
+.rt-cal-cnt{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--fm);font-size:7px;color:var(--text-2)}
+.rt-cal-day.sel .rt-cal-cnt{color:var(--gold)}
 .rt-cal-tag{font-family:var(--fm);font-size:7px;color:var(--text-3);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 2px}
 .rt-cal-day.sel .rt-cal-tag{color:var(--gold)}
 .rt-daylbl{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:6px}
@@ -392,10 +415,12 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
   <div class="hdr"><div class="hdr-l"><div class="eyebrow" id="time-now">--</div><h1 class="greeting" id="greeting">Good morning</h1><div class="dateline" id="date-line">Loading...</div></div><div class="hdr-r"><div class="daynum" id="day-num">--</div><div class="daynum-lbl">Day of year</div></div></div>
   <div class="mantra"><div class="mantra-q" id="mantra-text">"..."</div><div class="mantra-src" id="mantra-source"></div></div>
   <div id="sync-banner" style="display:none;font-size:11px;padding:8px 12px;border-radius:var(--rsm);margin-bottom:1rem;font-family:var(--fm)"></div>
+  <div class="glance" id="glance"></div>
   <hr class="d">
   <!-- TODAY'S ROUTINE -->
-  <div class="lbl">Today's routine <span class="lbl-line"></span></div>
-  <div class="q-wrap">
+  <div class="sec-hd" onclick="toggleSection('routine')">Today's routine <span class="lbl-line"></span><span class="sec-badge" id="badge-routine"></span><span class="sec-caret open" id="caret-routine">&#9662;</span></div>
+  <div class="sec-body" id="sec-routine">
+    <div class="q-wrap">
     <div class="rt-cal" id="rt-cal"></div>
     <div class="rt-daylbl">
       <span class="rt-daylbl-d" id="rt-daylbl"></span>
@@ -427,43 +452,55 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
     </div>
   </div>
 
-  <!-- Completion history -->
-  <div class="lbl">Routine completion <span class="lbl-line"></span></div>
-  <div class="q-wrap">
-    <div class="rt-stats" id="rt-stats"></div>
-    <div class="rt-hist-lbl">Last 14 days</div>
-    <div class="rt-hist" id="rt-hist"></div>
-  </div>
 
-  <!-- Today's habits — always visible -->
-  <hr class="d">
-  <div class="lbl">Habits I'm following <span class="lbl-line"></span></div>
-  <div class="q-wrap">
-    <div style="font-size:11px;color:var(--text-2);margin-bottom:10px">These stay on your list every day until you remove them. Tick them off as you go &#8212; the ticks reset each morning. Drag &#9776; to reorder.</div>
-    <div id="today-habits-list"></div>
-    <div id="habit-archive-box" style="display:none"></div>
-    <div style="display:flex;gap:8px;margin-top:10px">
-      <input class="sin" id="today-habit-input" type="text" placeholder="e.g. Pause for 3 breaths before reacting..." style="flex:1" onkeydown="if(event.key==='Enter'){addTodayHabit();event.preventDefault();}">
-      <button class="btn gold" onclick="addTodayHabit()" style="white-space:nowrap">+ Add</button>
+  </div><!-- /sec-routine -->
+
+  <!-- Completion history -->
+  <div class="sec-hd" onclick="toggleSection('rtstats')">Routine completion <span class="lbl-line"></span><span class="sec-badge" id="badge-rtstats"></span><span class="sec-caret open" id="caret-rtstats">&#9662;</span></div>
+  <div class="sec-body" id="sec-rtstats">
+    <div class="q-wrap">
+      <div class="rt-stats" id="rt-stats"></div>
+      <div class="rt-hist-lbl">Last 14 days</div>
+      <div class="rt-hist" id="rt-hist"></div>
     </div>
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;flex-wrap:wrap;gap:6px">
-      <span class="sync-txt" id="hab-day-sync"></span>
-      <button class="btn" onclick="clearTodayHabits()">Untick all</button>
+  </div><!-- /sec-rtstats -->
+
+  <hr class="d">
+  <div class="sec-hd" onclick="toggleSection('habits')">Habits I'm following <span class="lbl-line"></span><span class="sec-badge" id="badge-habits"></span><span class="sec-caret open" id="caret-habits">&#9662;</span></div>
+  <div class="sec-body" id="sec-habits">
+    <div class="q-wrap">
+      <div style="font-size:11px;color:var(--text-2);margin-bottom:10px">These stay on your list every day until you remove them. Tick them off as you go &#8212; the ticks reset each morning. Drag &#9776; to reorder.</div>
+      <div id="today-habits-list"></div>
+      <div id="habit-archive-box" style="display:none"></div>
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <input class="sin" id="today-habit-input" type="text" placeholder="e.g. Pause for 3 breaths before reacting..." style="flex:1" onkeydown="if(event.key==='Enter'){addTodayHabit();event.preventDefault();}">
+        <button class="btn gold" onclick="addTodayHabit()" style="white-space:nowrap">+ Add</button>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;flex-wrap:wrap;gap:6px">
+        <span class="sync-txt" id="hab-day-sync"></span>
+        <button class="btn" onclick="clearTodayHabits()">Untick all</button>
+      </div>
     </div>
-  </div>
+  </div><!-- /sec-habits -->
+
   <hr class="d">
-  <div class="lbl">Five pillars <span class="lbl-line"></span></div>
-  <div class="pillars-wrap"><div class="pillars-list"><button class="pillar" onclick="togglePillar(0)"><span class="pillar-e">&#129504;</span><div class="pillar-lbl">Mental strength</div><span class="pillar-arr">&#9654;</span></button><button class="pillar" onclick="togglePillar(1)"><span class="pillar-e">&#10084;&#65039;</span><div class="pillar-lbl">Emotional control</div><span class="pillar-arr">&#9654;</span></button><button class="pillar" onclick="togglePillar(2)"><span class="pillar-e">&#127919;</span><div class="pillar-lbl">Focus &amp; clarity</div><span class="pillar-arr">&#9654;</span></button><button class="pillar" onclick="togglePillar(3)"><span class="pillar-e">&#9889;</span><div class="pillar-lbl">Body &amp; energy</div><span class="pillar-arr">&#9654;</span></button><button class="pillar" onclick="togglePillar(4)"><span class="pillar-e">&#129306;</span><div class="pillar-lbl">Relationships</div><span class="pillar-arr">&#9654;</span></button></div><div class="pillar-detail" id="pillar-detail"></div><div class="pillar-empty" id="pillar-empty">Tap a pillar to explore its principles</div></div>
+  <div class="sec-hd" onclick="toggleSection('checklist')">Daily checklist <span class="lbl-line"></span><span class="sec-badge" id="badge-checklist"></span><span class="sec-caret" id="caret-checklist">&#9662;</span></div>
+  <div class="sec-body closed" id="sec-checklist">
+    <div class="cl-block" id="cl-block"><div id="cl-list"></div><div class="prog-wrap"><div class="prog-meta"><span>Practices</span><span class="prog-ct" id="prog-txt">0/8</span></div><div class="prog-track"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div></div></div>
+  </div><!-- /sec-checklist -->
+
   <hr class="d">
-  <div class="lbl" style="cursor:pointer" onclick="toggleChecklist()">
-    Daily checklist <span class="lbl-line"></span>
-    <span class="prog-ct" id="cl-mini" style="color:var(--text-2)">0/8</span>
-    <span id="cl-caret" style="transition:transform var(--tr);display:inline-block">&#9662;</span>
-  </div>
-  <div class="cl-block" id="cl-block" style="display:none"><div id="cl-list"></div><div class="prog-wrap"><div class="prog-meta"><span>Practices</span><span class="prog-ct" id="prog-txt">0/8</span></div><div class="prog-track"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div></div></div>
+  <div class="sec-hd" onclick="toggleSection('pillars')">Five pillars <span class="lbl-line"></span><span class="sec-badge" id="badge-pillars"></span><span class="sec-caret open" id="caret-pillars">&#9662;</span></div>
+  <div class="sec-body" id="sec-pillars">
+    <div class="pillars-wrap"><div class="pillars-list"><button class="pillar" onclick="togglePillar(0)"><span class="pillar-e">&#129504;</span><div class="pillar-lbl">Mental strength</div><span class="pillar-arr">&#9654;</span></button><button class="pillar" onclick="togglePillar(1)"><span class="pillar-e">&#10084;&#65039;</span><div class="pillar-lbl">Emotional control</div><span class="pillar-arr">&#9654;</span></button><button class="pillar" onclick="togglePillar(2)"><span class="pillar-e">&#127919;</span><div class="pillar-lbl">Focus &amp; clarity</div><span class="pillar-arr">&#9654;</span></button><button class="pillar" onclick="togglePillar(3)"><span class="pillar-e">&#9889;</span><div class="pillar-lbl">Body &amp; energy</div><span class="pillar-arr">&#9654;</span></button><button class="pillar" onclick="togglePillar(4)"><span class="pillar-e">&#129306;</span><div class="pillar-lbl">Relationships</div><span class="pillar-arr">&#9654;</span></button></div><div class="pillar-detail" id="pillar-detail"></div><div class="pillar-empty" id="pillar-empty">Tap a pillar to explore its principles</div></div>
+  </div><!-- /sec-pillars -->
+
   <hr class="d">
-  <div class="lbl">Anchor intentions <span class="lbl-line"></span></div>
-  <div class="int-row" style="margin-bottom:1rem"><div class="int-tile"><div class="int-e">&#9208;&#65039;</div><div class="int-t">Pause before reacting</div><div class="int-b">3 deep breaths before responding to anything charged.</div></div><div class="int-tile"><div class="int-e">&#127919;</div><div class="int-t">One task, full focus</div><div class="int-b">No tabs, no phone — one thing at a time during deep work.</div></div><div class="int-tile"><div class="int-e">&#127807;</div><div class="int-t">Hard thing first</div><div class="int-b">Most important work before email or meetings steal the morning.</div></div></div>
+  <div class="sec-hd" onclick="toggleSection('anchors')">Anchor intentions <span class="lbl-line"></span><span class="sec-badge" id="badge-anchors"></span><span class="sec-caret open" id="caret-anchors">&#9662;</span></div>
+  <div class="sec-body" id="sec-anchors">
+    <div class="int-row" style="margin-bottom:1rem"><div class="int-tile"><div class="int-e">&#9208;&#65039;</div><div class="int-t">Pause before reacting</div><div class="int-b">3 deep breaths before responding to anything charged.</div></div><div class="int-tile"><div class="int-e">&#127919;</div><div class="int-t">One task, full focus</div><div class="int-b">No tabs, no phone — one thing at a time during deep work.</div></div><div class="int-tile"><div class="int-e">&#127807;</div><div class="int-t">Hard thing first</div><div class="int-b">Most important work before email or meetings steal the morning.</div></div></div>
+  </div><!-- /sec-anchors -->
+
   <div class="foot"><span class="foot-note" id="streak-txt"></span><div class="foot-btns"><button class="btn" onclick="switchTab('situations')">&#128250; Situations</button><button class="btn" onclick="resetDay()">&#8635; Reset day</button></div></div>
 </div>
 
@@ -731,6 +768,7 @@ function init(){
     renderChecklist();updateStreak();
     renderTodayHabits();
     renderRoutine();
+    initSections();
   }catch(e){console.error('Local:',e);}
 
   // Wipe ALL Sheet-synced localStorage keys on every load
@@ -901,17 +939,12 @@ function toggleCheck(k){checked[k]=!checked[k];saveTodayLocal({checked:checked})
 function updateProg(){
   var done=CHECKLIST.filter(function(i){return checked[i.k];}).length;
   var t=document.getElementById('prog-txt'); if(t) t.textContent=done+'/'+CHECKLIST.length;
-  var m=document.getElementById('cl-mini');  if(m) m.textContent=done+'/'+CHECKLIST.length;
+
   var f=document.getElementById('prog-fill');if(f) f.style.width=Math.round(done/CHECKLIST.length*100)+'%';
+  if(window.updateSectionBadges) updateSectionBadges();
 }
 
-function toggleChecklist(){
-  var b=document.getElementById('cl-block'), c=document.getElementById('cl-caret');
-  if(!b)return;
-  var open=b.style.display!=='none';
-  b.style.display=open?'none':'block';
-  if(c) c.style.transform=open?'rotate(0deg)':'rotate(180deg)';
-}
+function toggleChecklist(){ toggleSection('checklist'); }   // kept for compatibility
 
 function todayKey(){var d=new Date();return 'morning_'+d.getFullYear()+'_'+(d.getMonth()+1)+'_'+d.getDate();}
 function getTodayStored(){try{var r=localStorage.getItem(todayKey());return r?JSON.parse(r):{};}catch(e){return{};}}
@@ -1159,6 +1192,7 @@ async function saveEditModal(){
     habitArchive=habitArchive.map(function(t){return t===oldText?newText:t;});
     renderTodayHabits();
     renderRoutine();
+    initSections();
 
     // Rewrite the label across every row in the Sheet
     var okR=await postToSheet({sheet:'TodayHabits',action:'rename_habit',oldText:oldText,newText:newText});
@@ -1844,6 +1878,7 @@ function renderTodayHabits(){
     '</div>';
   }).join('');
   renderHabitArchive();
+  if(window.updateSectionBadges) updateSectionBadges();
 }
 
 function renderHabitArchive(){
@@ -2345,6 +2380,99 @@ function selectDate(iso){
   renderRoutine();
 }
 
+/* ── Collapsible sections ─────────────────────────────────
+   Open/closed state is a display preference, so it lives in
+   localStorage — no dashboard data is stored there.
+──────────────────────────────────────────────────────── */
+var SEC_KEYS=['routine','rtstats','habits','checklist','pillars','anchors'];
+
+function secOpen(key){
+  var v=localStorage.getItem('sec_'+key);
+  if(v===null) return key!=='checklist' && key!=='anchors';   // sensible defaults
+  return v==='1';
+}
+
+function applySection(key){
+  var body=document.getElementById('sec-'+key);
+  var caret=document.getElementById('caret-'+key);
+  if(!body) return;
+  var open=secOpen(key);
+  body.classList.toggle('closed',!open);
+  if(caret) caret.classList.toggle('open',open);
+}
+
+function toggleSection(key){
+  localStorage.setItem('sec_'+key, secOpen(key)?'0':'1');
+  applySection(key);
+  updateSectionBadges();
+}
+
+function initSections(){ SEC_KEYS.forEach(applySection); updateSectionBadges(); }
+
+/* Badges keep a collapsed section informative */
+function updateSectionBadges(){
+  function set(key,txt,done){
+    var el=document.getElementById('badge-'+key); if(!el) return;
+    el.textContent=txt||'';
+    el.classList.toggle('done',!!done);
+    el.style.display=txt?'':'none';
+  }
+  var d=selDate||isoToday();
+
+  var items=itemsFor(activeRoutine);
+  var rdone=doneFor(activeRoutine,d).filter(function(x){
+    return items.some(function(i){return i.sheetId===x;}); }).length;
+  set('routine', items.length? rdone+'/'+items.length : '', items.length&&rdone===items.length);
+  set('rtstats','');
+
+  var hDone=(habitDone[isoToday()]||[]).length;
+  set('habits', habitList.length? hDone+'/'+habitList.length : '', habitList.length&&hDone===habitList.length);
+
+  var cDone=CHECKLIST.filter(function(i){return checked[i.k];}).length;
+  set('checklist', cDone+'/'+CHECKLIST.length, cDone===CHECKLIST.length);
+
+  set('pillars',''); set('anchors','');
+  renderGlance();
+}
+
+/* ── Today at a glance ────────────────────────────────────
+   One row showing where the day stands, so the state of
+   things is visible without opening anything.
+──────────────────────────────────────────────────────── */
+function renderGlance(){
+  var el=document.getElementById('glance'); if(!el) return;
+  var d=selDate||isoToday();
+
+  var items=itemsFor(activeRoutine);
+  var rdone=doneFor(activeRoutine,d).filter(function(x){
+    return items.some(function(i){return i.sheetId===x;}); }).length;
+
+  var hDone=(habitDone[isoToday()]||[]).length;
+  var cDone=CHECKLIST.filter(function(i){return checked[i.k];}).length;
+
+  function card(n,total,label,key){
+    var pct = total ? Math.round(n/total*100) : 0;
+    var full = total>0 && n===total;
+    return '<div class="gl-card" onclick="jumpToSection(\''+key+'\')">'+
+      '<div class="gl-n'+(full?' done':'')+'">'+n+'<span style="font-size:.7em;color:var(--text-3)">/'+total+'</span></div>'+
+      '<div class="gl-l">'+label+'</div>'+
+      '<div class="gl-bar"><div class="gl-fill" style="width:'+pct+'%"></div></div>'+
+    '</div>';
+  }
+
+  el.innerHTML =
+    card(rdone,items.length,'Routine','routine')+
+    card(hDone,habitList.length,'Habits','habits')+
+    card(cDone,CHECKLIST.length,'Checklist','checklist');
+}
+
+/* Tapping a glance card opens that section and scrolls to it */
+function jumpToSection(key){
+  if(!secOpen(key)){ localStorage.setItem('sec_'+key,'1'); applySection(key); }
+  var hd=document.querySelector('.sec-hd[onclick*="'+key+'"]');
+  if(hd) hd.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
 function renderCalendar(){
   var el=document.getElementById('rt-cal'); if(!el) return;
   var today=isoToday();
@@ -2356,13 +2484,24 @@ function renderCalendar(){
     var done=(routineLog[iso]&&routineLog[iso][rt])||[];
     var ids=items.map(function(i){return i.sheetId;});
     var hit=done.filter(function(x){return ids.indexOf(x)>-1;}).length;
-    var dot = items.length&&hit===items.length ? 'full' : (hit>0 ? 'part' : '');
+    var total=items.length;
+    var pct = total ? hit/total : 0;
+    var full = total>0 && hit===total;
+    var col = full ? 'var(--green)' : (hit>0 ? 'var(--gold)' : 'rgba(255,255,255,0.12)');
+    var R=9, CIRC=2*Math.PI*R;
+    var dash = (pct*CIRC).toFixed(1)+' '+CIRC.toFixed(1);
     var short=(rt||'').replace(/routine\s*/i,'R');
     return '<div class="rt-cal-day'+(iso===selDate?' sel':'')+(iso===today?' today':'')+'" onclick="selectDate(\''+iso+'\')">'+
       '<div class="rt-cal-dow">'+d.toLocaleDateString('en-IN',{weekday:'short'}).slice(0,3)+'</div>'+
       '<div class="rt-cal-num">'+d.getDate()+'</div>'+
       '<div class="rt-cal-tag">'+escH(short)+'</div>'+
-      '<div class="rt-cal-dot '+dot+'"></div>'+
+      '<div class="rt-cal-ring">'+
+        '<svg width="22" height="22" viewBox="0 0 22 22">'+
+          '<circle class="rt-cal-ring-bg" cx="11" cy="11" r="'+R+'" fill="none" stroke-width="2.5"/>'+
+          '<circle class="rt-cal-ring-fg" cx="11" cy="11" r="'+R+'" fill="none" stroke="'+col+'" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="'+dash+'"/>'+
+        '</svg>'+
+        '<div class="rt-cal-cnt">'+(total?hit+'/'+total:'\u2013')+'</div>'+
+      '</div>'+
     '</div>';
   }).join('');
   var sel=el.querySelector('.rt-cal-day.sel');
@@ -2456,6 +2595,7 @@ function renderRoutine(){
     '<div class="prog-track"><div class="prog-fill" style="width:'+pct+'%"></div></div>';
 
   renderRoutineHistory();
+  if(window.updateSectionBadges) updateSectionBadges();
 }
 
 /* Completion across the last 14 days, plus streak and average */
