@@ -2448,6 +2448,20 @@ function calDates(){
   return out;
 }
 
+/* Sheets may hand back a full Date string for a time cell.
+   Reduce anything like "Sat Dec 30 1899 06:00:00 GMT+0521" to "6:00 AM". */
+function cleanTime(t){
+  if(!t) return '';
+  var s=String(t).trim();
+  var m=s.match(/\b(\d{1,2}):(\d{2})(?::\d{2})?\b/);
+  if(s.length>12 && m){
+    var h=parseInt(m[1],10), mn=m[2];
+    var ap=h<12?'AM':'PM'; var h12=h%12; if(h12===0) h12=12;
+    return h12+':'+mn+' '+ap;
+  }
+  return s;
+}
+
 function masterById(id){ return habitMaster.find(function(h){ return h.sheetId===id; }); }
 
 function routineNames(){
