@@ -2618,7 +2618,7 @@ function renameRoutine(){
 async function deleteRoutine(){
   if(!activeRoutine) return;
   if(routineNames().length<=1){ showToast('Keep at least one routine.','error'); return; }
-  var gone=activeRoutine, today=isoToday();
+  var gone=activeRoutine, today=selDate||isoToday();
   var n=itemsOn(gone,today).length;
   if(!confirm('Delete "'+gone+'"'+(n?' and its '+n+' habit'+(n>1?'s':''):'')+'?\n\nCompletion history is kept.')) return;
   routineItems.filter(function(m){ return m.routine===gone && !m.removedOn; })
@@ -2716,31 +2716,49 @@ function renderMasterPicker(){
       (habitMaster.length?'Every habit in your library is already in this routine.':'Your master list is empty \u2014 add habits below.')+'</div>';
     return;
   }
-  el.innerHTML='<div class="rt-pick-lbl">Add from master list</div><div class="rt-pick-chips">'+
+  var from=selDate||isoToday();
+  var lbl = from===isoToday() ? 'Add from master list'
+          : 'Add from master list \u2014 starts '+fmtDayLabel(from).replace(/^Today \u00b7 /,'');
+  el.innerHTML='<div class="rt-pick-lbl">'+escH(lbl)+'</div><div class="rt-pick-chips">'+
     avail.map(function(h){
       return '<button class="rt-chip" onclick="addToRoutine(\''+h.sheetId+'\')">+ '+
         (h.time?'<span class="rt-chip-t">'+escH(cleanTime(h.time))+'</span> ':'')+escH(h.habit)+'</button>';
     }).join('')+'</div>';
 }
 
-/* Adding stamps today, so days before now keep their old denominator */
+/* Adding stamps the day you are VIEWING, not today. Add a habit
+   while looking at 7 Sep and it joins on the 7th — the 6th and
+   everything before it keep their original denominator. */
 function addToRoutine(habitId){
-  var today=isoToday(), id='ri'+Date.now();
+  var from=selDate||isoToday(), id='ri'+Date.now();
   var order=itemsFor(activeRoutine).length;
-  routineItems.push({sheetId:id,routine:activeRoutine,habitId:habitId,order:order,addedOn:today,removedOn:''});
+  routineItems.push({sheetId:id,routine:activeRoutine,habitId:habitId,order:order,addedOn:from,removedOn:''});
   renderRoutine();
+  var h=masterById(habitId)||{};
+  if(from!==isoToday()){
+    showToast('"'+(h.habit||'Habit')+'" added from '+fmtDayLabel(from).replace(/^Today \u00b7 /,'')+' onward.','success');
+  }
   rtSync(postToSheet({sheet:'RoutineItems',sheetId:id,routine:activeRoutine,
-    habitId:habitId,order:order,addedOn:today}));
+    habitId:habitId,order:order,addedOn:from}));
 }
 
 /* Removing stamps a leave date rather than deleting the link */
 function removeFromRoutine(memberId){
   var m=routineItems.find(function(x){ return x.sheetId===memberId; }); if(!m) return;
   var h=masterById(m.habitId)||{};
-  if(!confirm('Remove "'+(h.habit||'this habit')+'" from '+activeRoutine+' from today onward?\n\nPast days keep it in their record.')) return;
-  m.removedOn=isoToday();
+  var from=selDate||isoToday();
+  var when = from===isoToday() ? 'today' : fmtDayLabel(from).replace(/^Today \u00b7 /,'');
+  if(!confirm('Remove "'+(h.habit||'this habit')+'" from '+activeRoutine+' from '+when+' onward?\n\nEarlier days keep it in their record.')) return;
+  // If it never ran before this day, drop the link entirely
+  if(m.addedOn && m.addedOn>=from){
+    routineItems=routineItems.filter(function(x){ return x.sheetId!==memberId; });
+    renderRoutine();
+    rtSync(postToSheet({sheet:'RoutineItems',action:'remove_item',sheetId:memberId,removedOn:m.addedOn}));
+    return;
+  }
+  m.removedOn=from;
   renderRoutine();
-  rtSync(postToSheet({sheet:'RoutineItems',action:'remove_item',sheetId:memberId,removedOn:m.removedOn}));
+  rtSync(postToSheet({sheet:'RoutineItems',action:'remove_item',sheetId:memberId,removedOn:from}));
 }
 
 function toggleRoutineItem(habitId){
