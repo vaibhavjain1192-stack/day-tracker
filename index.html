@@ -2494,14 +2494,28 @@ function itemsOn(routine,iso){
 
 function itemsFor(name){ return itemsOn(name, selDate||isoToday()); }
 
+/* Minutes since midnight. Deliberately forgiving: the meridiem is
+   searched for anywhere in the string rather than required in
+   sequence, so "4:00 PM", "4.00pm", "4 PM" and a stray non-breaking
+   space all resolve the same. Blank or unparseable sorts last. */
 function timeToMin(t){
   if(!t) return 99999;
-  var s=cleanTime(t).toUpperCase();
-  var m=s.match(/^(\d{1,2})[:.]?(\d{2})?\s*(AM|PM)?/);
+  // Normalise every flavour of unicode space down to a plain one
+  var s=cleanTime(t).toUpperCase().replace(/[\s\u00a0\u202f\u2000-\u200a]+/g,' ').trim();
+  if(!s) return 99999;
+
+  var isPM=/\bP\.?M\.?\b|PM/.test(s);
+  var isAM=/\bA\.?M\.?\b|AM/.test(s);
+
+  var m=s.match(/(\d{1,2})\s*[:.\s]?\s*(\d{2})?/);
   if(!m) return 99999;
-  var h=parseInt(m[1],10), min=m[2]?parseInt(m[2],10):0;
-  if(m[3]==='PM'&&h<12) h+=12;
-  if(m[3]==='AM'&&h===12) h=0;
+
+  var h=parseInt(m[1],10);
+  var min=m[2]?parseInt(m[2],10):0;
+  if(isNaN(h)||h>23||min>59) return 99999;
+
+  if(isPM && h<12) h+=12;     // 4 PM  -> 16
+  if(isAM && h===12) h=0;     // 12 AM -> 00
   return h*60+min;
 }
 
@@ -2526,7 +2540,11 @@ function renderMaster(){
     el.innerHTML='<div class="rt-empty">No habits yet. Add one below, then pick from here when building a routine.</div>';
     return;
   }
-  var sorted=habitMaster.slice().sort(function(a,b){ return timeToMin(a.time)-timeToMin(b.time); });
+  var sorted=habitMaster.slice().sort(function(a,b){
+    var d=timeToMin(a.time)-timeToMin(b.time);
+    if(d!==0) return d;
+    return (a.habit||'').localeCompare(b.habit||'');   // same time -> alphabetical
+  });
   el.innerHTML=sorted.map(function(h){
     var used=routineItems.filter(function(m){ return m.habitId===h.sheetId && !m.removedOn; })
       .map(function(m){ return m.routine.replace(/routine\s*/i,'R'); });
@@ -2710,7 +2728,11 @@ function renderMasterPicker(){
   var el=document.getElementById('rt-picker'); if(!el) return;
   var inR=itemsFor(activeRoutine).map(function(i){ return i.habitId; });
   var avail=habitMaster.filter(function(h){ return inR.indexOf(h.sheetId)===-1; })
-    .sort(function(a,b){ return timeToMin(a.time)-timeToMin(b.time); });
+    .sort(function(a,b){
+      var d=timeToMin(a.time)-timeToMin(b.time);
+      if(d!==0) return d;
+      return (a.habit||'').localeCompare(b.habit||'');
+    });
   if(!avail.length){
     el.innerHTML='<div style="font-size:11px;color:var(--text-3);padding:4px 0">'+
       (habitMaster.length?'Every habit in your library is already in this routine.':'Your master list is empty \u2014 add habits below.')+'</div>';
