@@ -343,6 +343,23 @@ body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:
 .rt-daylbl{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:6px}
 .rt-daylbl-d{font-size:12px;color:var(--text-1);font-weight:500}
 .rt-daylbl-hint{font-size:10px;color:var(--text-3);font-family:var(--fm)}
+/* MASTER HABIT LIBRARY */
+.mstr-row{display:grid;grid-template-columns:92px 1fr auto 46px;gap:8px;align-items:center;padding:9px 0;border-bottom:1px solid var(--border)}
+.mstr-row:last-child{border-bottom:none}
+.mstr-time{font-family:var(--fm);font-size:11px;color:var(--gold);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mstr-name{font-size:12px;color:var(--text-1);line-height:1.45;min-width:0;overflow-wrap:anywhere}
+.mstr-in{font-family:var(--fm);font-size:9px;color:var(--teal);background:var(--teal-dim);border:1px solid rgba(78,205,196,0.25);border-radius:20px;padding:1px 7px;white-space:nowrap}
+.mstr-in.unused{color:var(--text-3);background:transparent;border-color:var(--border)}
+.mstr-acts{display:flex;gap:2px;justify-content:flex-end}
+.mstr-add{display:grid;grid-template-columns:110px 1fr auto;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
+/* PICK FROM MASTER */
+.rt-picker{margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
+.rt-pick-lbl{font-family:var(--fm);font-size:9px;color:var(--text-3);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:7px}
+.rt-pick-chips{display:flex;flex-wrap:wrap;gap:5px}
+.rt-chip{font-size:11px;font-family:var(--fb);color:var(--text-2);background:transparent;border:1px dashed var(--border-md);border-radius:20px;padding:4px 11px;cursor:pointer;transition:all var(--tr);text-align:left}
+.rt-chip:hover{background:var(--surface);color:var(--text-1);border-style:solid;border-color:var(--gold)}
+.rt-chip-t{font-family:var(--fm);font-size:9px;color:var(--gold)}
+@media(max-width:640px){.mstr-row{grid-template-columns:74px 1fr 44px}.mstr-in{display:none}.mstr-add{grid-template-columns:1fr;gap:6px}}
 /* TODAY'S ROUTINE */
 .rt-selector{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--border)}
 .rt-pill{padding:4px 13px;font-size:11px;font-weight:500;border-radius:20px;border:1px solid var(--border-md);color:var(--text-2);background:transparent;cursor:pointer;transition:all var(--tr);font-family:var(--fb)}
@@ -350,8 +367,8 @@ body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:
 .rt-pill.on{background:var(--gold-dim);border-color:rgba(201,168,76,0.45);color:var(--gold)}
 .rt-pill.add{border-style:dashed;color:var(--text-3)}
 .rt-pill.add:hover{border-style:solid;border-color:var(--gold);color:var(--gold)}
-.rt-head{display:grid;grid-template-columns:20px 68px 1fr 52px;gap:8px;padding:0 0 6px;font-family:var(--fm);font-size:9px;color:var(--text-3);letter-spacing:0.1em;text-transform:uppercase;border-bottom:1px solid var(--border)}
-.rt-row{display:grid;grid-template-columns:20px 68px 1fr 52px;gap:8px;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);background:var(--card);transition:background var(--tr),opacity var(--tr)}
+.rt-head{display:grid;grid-template-columns:20px 92px 1fr 52px;gap:8px;padding:0 0 6px;font-family:var(--fm);font-size:9px;color:var(--text-3);letter-spacing:0.1em;text-transform:uppercase;border-bottom:1px solid var(--border)}
+.rt-row{display:grid;grid-template-columns:20px 92px 1fr 52px;gap:8px;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);background:var(--card);transition:background var(--tr),opacity var(--tr)}
 .rt-grip{cursor:grab;color:var(--text-3);font-size:12px;line-height:1;touch-action:none;user-select:none;-webkit-user-select:none;transition:color var(--tr);text-align:center}
 .rt-grip:hover{color:var(--gold)}
 .rt-grip:active{cursor:grabbing}
@@ -386,7 +403,7 @@ body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:
 .rt-bar-fill{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(180deg,var(--teal),var(--green));transition:height 0.3s ease}
 .rt-day-lbl{font-family:var(--fm);font-size:8px;color:var(--text-3)}
 @media(max-width:640px){
-  .rt-head,.rt-row{grid-template-columns:18px 52px 1fr 44px}
+  .rt-head,.rt-row{grid-template-columns:18px 74px 1fr 44px}
   .rt-add{grid-template-columns:1fr;gap:6px}
 }
 .toast{position:fixed;bottom:5.5rem;right:1rem;background:#1E2333;border:1px solid var(--border-md);border-radius:var(--r);padding:10px 16px;font-size:12px;color:var(--text-1);box-shadow:0 6px 24px rgba(0,0,0,0.4);opacity:0;transform:translateY(6px);transition:all 0.22s ease;pointer-events:none;z-index:200;max-width:280px}
@@ -432,6 +449,17 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
   <div class="glance" id="glance"></div>
   <hr class="d">
   <!-- TODAY'S ROUTINE -->
+  <div class="sec-hd" id="hd-master" onclick="toggleSection('master')"><span class="sec-icon">&#128203;</span><span class="sec-title">Master habit list</span><span class="lbl-line"></span><span class="sec-badge" id="badge-master"></span><span class="sec-caret" id="caret-master">&#9662;</span></div>
+  <div class="sec-body closed" id="sec-master">
+    <div style="font-size:11px;color:var(--text-2);margin-bottom:10px">Every habit you might follow, with its time. Routines are built by picking from this list.</div>
+    <div id="mstr-list"></div>
+    <div class="mstr-add">
+      <input class="sin rt-in-time" id="mstr-time" type="text" placeholder="6:30 AM">
+      <input class="sin" id="mstr-habit" type="text" placeholder="e.g. 10 minutes of silence" onkeydown="if(event.key==='Enter'){addMaster();event.preventDefault();}">
+      <button class="btn gold" onclick="addMaster()" style="white-space:nowrap">+ Add</button>
+    </div>
+  </div><!-- /sec-master -->
+
   <div class="sec-hd" id="hd-routine" onclick="toggleSection('routine')"><span class="sec-icon">&#128197;</span><span class="sec-title">Today's routine</span><span class="lbl-line"></span><span class="sec-badge" id="badge-routine"></span><span class="sec-caret open" id="caret-routine">&#9662;</span></div>
   <div class="sec-body" id="sec-routine">
     <div class="q-wrap">
@@ -450,11 +478,7 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
     <div id="rt-items"></div>
     <div class="rt-progress" id="rt-progress"></div>
 
-    <div class="rt-add" id="rt-add-form">
-      <input class="sin rt-in-time" id="rt-time" type="text" placeholder="6:30 AM">
-      <input class="sin" id="rt-habit" type="text" placeholder="What you actually do">
-      <button class="btn gold" onclick="addRoutineItem()" style="white-space:nowrap">+ Add</button>
-    </div>
+    <div class="rt-picker" id="rt-picker"></div>
 
     <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;flex-wrap:wrap;gap:6px">
       <span class="sync-txt" id="rt-sync"></span>
@@ -779,6 +803,7 @@ function init(){
     renderChecklist();updateStreak();
     renderPillars();
     renderTodayHabits();
+    renderMaster();
     renderRoutine();
     initSections();
   }catch(e){console.error('Local:',e);}
@@ -793,7 +818,7 @@ function init(){
 
   // Clear all in-memory arrays — Sheet is always the source of truth
   situations=[]; thoughts=[]; posts=[]; habits=[]; motEntries=[]; gratEntries=[]; kunEntries=[];
-  routineItems=[]; routineLog={}; extraRoutines=[]; routineDay={}; selDate=isoToday();
+  habitMaster=[]; routineItems=[]; routineLog={}; extraRoutines=[]; routineDay={}; selDate=isoToday();
   updateBadge(); updateThBadge(); updatePostBadge();
 
   // Show shimmer/loading state on morning intentions
@@ -821,7 +846,8 @@ function init(){
       if(Array.isArray(d.gratitude))   replaceGratitudeFromSheet(d.gratitude);
       if(Array.isArray(d.todayHabits)) replaceHabitsFromSheet(d.todayHabits);
       if(Array.isArray(d.kundali))     replaceKundaliFromSheet(d.kundali);
-      if(Array.isArray(d.routines))    replaceRoutinesFromSheet(d.routines);
+      if(Array.isArray(d.habitMaster)) replaceHabitMasterFromSheet(d.habitMaster);
+      if(Array.isArray(d.routineItems))replaceRoutineItemsFromSheet(d.routineItems);
       if(Array.isArray(d.routineLog))  replaceRoutineLogFromSheet(d.routineLog);
       if(Array.isArray(d.routineDay))  replaceRoutineDayFromSheet(d.routineDay);
 
@@ -1229,6 +1255,7 @@ async function saveEditModal(){
     });
     habitArchive=habitArchive.map(function(t){return t===oldText?newText:t;});
     renderTodayHabits();
+    renderMaster();
     renderRoutine();
     initSections();
 
@@ -1281,6 +1308,16 @@ async function saveEditModal(){
       sheetId:e.sheetId||'',category:e.category,text:e.text,pinned:e.pinned?'yes':'no'});
     closeEditModal(); renderMotivation();
     showToast(okm?'Entry updated ✓':'Updated locally — Sheet sync pending.',okm?'success':'');
+  }else if(_editCtx.type==='master'){
+    var mh=masterById(_editCtx.id); if(!mh){closeEditModal();return;}
+    var nt=document.getElementById('edit-m-time').value.trim();
+    var nh=document.getElementById('edit-m-habit').value.trim();
+    if(!nh){showToast('Habit cannot be empty.','error');btn.textContent='Save changes \u2197';btn.disabled=false;return;}
+    mh.time=nt; mh.habit=nh;
+    renderMaster(); renderRoutine();
+    var okm2=await postToSheet({sheet:'HabitMaster',action:'edit_master',sheetId:mh.sheetId,time:nt,habit:nh});
+    closeEditModal();
+    showToast(okm2?'Habit updated \u2713':'Updated locally \u2014 sync failed.',okm2?'success':'error');
   }else if(_editCtx.type==='routine'){
     var ri=routineItems.find(function(x){return x.sheetId===_editCtx.id;}); if(!ri){closeEditModal();return;}
     ri.time=document.getElementById('edit-rt-time').value.trim();
@@ -2294,139 +2331,15 @@ function replaceKundaliFromSheet(s){
   renderKundali();
 }
 
-/* ═══════════════════════════════════════════════════
-   TODAY'S ROUTINE — Sheet-sourced
-
-   routineItems : [{sheetId, routine, time, intention, habit}]
-   routineLog   : {dateISO: {routineName: [sheetId, ...]}}
-
-   The item definitions and the daily completion record are
-   kept apart, so ticking today never edits the template and
-   past days keep their own history.
-═══════════════════════════════════════════════════ */
-var routineItems=[];
-var routineLog={};
-var activeRoutine='';
-var extraRoutines=[];   // created but still empty — no rows in the Sheet yet
-var routineDay={};      // {dateISO: routineName} which routine each day runs
-var selDate='';         // the day being viewed; defaults to today
-
-/* Days shown in the strip: a week back for review, three weeks ahead to plan */
-var CAL_BACK=7, CAL_FWD=21;
-
-function calDates(){
-  var out=[], d=new Date(); d.setDate(d.getDate()-CAL_BACK);
-  for(var i=0;i<CAL_BACK+1+CAL_FWD;i++){ out.push(isoDate(d)); d.setDate(d.getDate()+1); }
-  return out;
-}
-
-/* Routine assigned to a date. Falls back to the most recent
-   earlier assignment, so setting Monday carries forward until changed. */
-function routineForDate(iso){
-  if(routineDay[iso]) return routineDay[iso];
-  var prior=Object.keys(routineDay).filter(function(k){ return k<iso; }).sort();
-  if(prior.length) return routineDay[prior[prior.length-1]];
-  return routineNames()[0];
-}
-
-function fmtDayLabel(iso){
-  var p=iso.split('-'), d=new Date(+p[0],+p[1]-1,+p[2]);
-  var today=isoToday();
-  var prefix = iso===today ? 'Today \u00b7 ' : '';
-  return prefix+d.toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long'});
-}
-
-function routineNames(){
-  var names=[];
-  routineItems.forEach(function(it){ if(it.routine && names.indexOf(it.routine)===-1) names.push(it.routine); });
-  Object.keys(routineLog).forEach(function(d){
-    Object.keys(routineLog[d]).forEach(function(r){ if(names.indexOf(r)===-1) names.push(r); });
-  });
-  // Routines created this session that have no items yet
-  extraRoutines.forEach(function(r){ if(r && names.indexOf(r)===-1) names.push(r); });
-  // Never drop the routine currently being viewed
-  if(activeRoutine && names.indexOf(activeRoutine)===-1) names.push(activeRoutine);
-  if(!names.length) names=['Routine 1'];
-  return names.sort();
-}
-
-/* Manual order wins. Items with no order yet (legacy rows)
-   fall in behind, ordered by time so they aren't scrambled. */
-function itemsFor(name){
-  var list=routineItems.filter(function(it){ return it.routine===name; });
-  var hasOrder=list.filter(function(i){ return i.order!==null && i.order!==undefined; });
-  var noOrder =list.filter(function(i){ return i.order===null || i.order===undefined; });
-  hasOrder.sort(function(a,b){ return a.order-b.order; });
-  noOrder.sort(function(a,b){ return timeToMin(a.time)-timeToMin(b.time); });
-  return hasOrder.concat(noOrder);
-}
-
-/* Sheets may hand back a full Date string for a time cell.
-   Reduce anything like "Sat Dec 30 1899 06:00:00 GMT+0521" to "6:00 AM". */
-function cleanTime(t){
-  if(!t) return '';
-  var s=String(t).trim();
-  var m=s.match(/\b(\d{1,2}):(\d{2})(?::\d{2})?\b/);
-  if(s.length>12 && m){
-    var h=parseInt(m[1],10), mn=m[2];
-    var ap=h<12?'AM':'PM'; var h12=h%12; if(h12===0) h12=12;
-    return h12+':'+mn+' '+ap;
-  }
-  return s;
-}
-
-/* "6:30 AM" / "18:45" / "" → minutes since midnight, blanks last */
-function timeToMin(t){
-  if(!t) return 99999;
-  var s=cleanTime(t).toUpperCase();
-  var m=s.match(/^(\d{1,2})[:.]?(\d{2})?\s*(AM|PM)?/);
-  if(!m) return 99999;
-  var h=parseInt(m[1],10), min=m[2]?parseInt(m[2],10):0;
-  if(m[3]==='PM'&&h<12) h+=12;
-  if(m[3]==='AM'&&h===12) h=0;
-  return h*60+min;
-}
-
-function doneFor(name,iso){
-  return (routineLog[iso]&&routineLog[iso][name])||[];
-}
-
-function renderRoutineSelector(){
-  var el=document.getElementById('rt-selector'); if(!el) return;
-  var names=routineNames();
-  if(!activeRoutine||names.indexOf(activeRoutine)===-1) activeRoutine=names[0];
-  el.innerHTML=names.map(function(n){
-    return '<button class="rt-pill'+(n===activeRoutine?' on':'')+'" onclick="selectRoutine(\''+escH(n).replace(/'/g,"\\'")+'\')">'+escH(n)+'</button>';
-  }).join('')+'<button class="rt-pill add" onclick="newRoutine()">+ New routine</button>';
-}
-
-/* Choosing a routine assigns it to the day being viewed */
-function selectRoutine(name){
-  activeRoutine=name;
-  if(!selDate) selDate=isoToday();
-  routineDay[selDate]=name;
-  renderRoutine();
-  var p=selDate.split('-'), dd=new Date(+p[0],+p[1]-1,+p[2]);
-  rtSync(postToSheet({sheet:'RoutineDay',
-    date:dd.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}),
-    dateISO:selDate, routine:name}));
-}
-
-function selectDate(iso){
-  selDate=iso;
-  activeRoutine=routineForDate(iso);
-  renderRoutine();
-}
-
 /* ── Collapsible sections ─────────────────────────────────
    Open/closed state is a display preference, so it lives in
    localStorage — no dashboard data is stored there.
 ──────────────────────────────────────────────────────── */
-var SEC_KEYS=['routine','rtstats','habits','checklist','pillars','anchors'];
+var SEC_KEYS=['master','routine','rtstats','habits','checklist','pillars','anchors'];
 
 function secOpen(key){
   var v=localStorage.getItem('sec_'+key);
-  if(v===null) return key!=='checklist' && key!=='anchors';   // sensible defaults
+  if(v===null) return ['checklist','anchors','master'].indexOf(key)===-1;
   return v==='1';
 }
 
@@ -2458,12 +2371,12 @@ function updateSectionBadges(){
     el.style.display=txt?'':'none';
   }
   var d=selDate||isoToday();
-
   var items=itemsFor(activeRoutine);
-  var rdone=doneFor(activeRoutine,d).filter(function(x){
-    return items.some(function(i){return i.sheetId===x;}); }).length;
+  var ids=items.map(function(i){ return i.habitId; });
+  var rdone=doneFor(activeRoutine,d).filter(function(x){ return ids.indexOf(x)>-1; }).length;
   set('routine', items.length? rdone+'/'+items.length : '', items.length&&rdone===items.length);
   set('rtstats','');
+  set('master', habitMaster.length? String(habitMaster.length) : '');
 
   var hDone=(habitDone[isoToday()]||[]).length;
   set('habits', habitList.length? hDone+'/'+habitList.length : '', habitList.length&&hDone===habitList.length);
@@ -2475,90 +2388,200 @@ function updateSectionBadges(){
   renderGlance();
 }
 
-/* ── Today at a glance ────────────────────────────────────
-   One row showing where the day stands, so the state of
-   things is visible without opening anything.
-──────────────────────────────────────────────────────── */
+/* ── Today at a glance ─────────────────────────────────── */
 function renderGlance(){
   var el=document.getElementById('glance'); if(!el) return;
   var d=selDate||isoToday();
-
   var items=itemsFor(activeRoutine);
-  var rdone=doneFor(activeRoutine,d).filter(function(x){
-    return items.some(function(i){return i.sheetId===x;}); }).length;
-
+  var ids=items.map(function(i){ return i.habitId; });
+  var rdone=doneFor(activeRoutine,d).filter(function(x){ return ids.indexOf(x)>-1; }).length;
   var hDone=(habitDone[isoToday()]||[]).length;
   var cDone=CHECKLIST.filter(function(i){return checked[i.k];}).length;
 
   function card(n,total,label,key){
-    var pct = total ? Math.round(n/total*100) : 0;
-    var full = total>0 && n===total;
+    var pct=total?Math.round(n/total*100):0;
+    var full=total>0&&n===total;
     return '<div class="gl-card" onclick="jumpToSection(\''+key+'\')">'+
       '<div class="gl-n'+(full?' done':'')+'">'+n+'<span style="font-size:.7em;color:var(--text-3)">/'+total+'</span></div>'+
       '<div class="gl-l">'+label+'</div>'+
-      '<div class="gl-bar"><div class="gl-fill" style="width:'+pct+'%"></div></div>'+
-    '</div>';
+      '<div class="gl-bar"><div class="gl-fill" style="width:'+pct+'%"></div></div></div>';
   }
-
-  el.innerHTML =
-    card(rdone,items.length,'Routine','routine')+
+  el.innerHTML=card(rdone,items.length,'Routine','routine')+
     card(hDone,habitList.length,'Habits','habits')+
     card(cDone,CHECKLIST.length,'Checklist','checklist');
 }
 
-/* Tapping a glance card opens that section and scrolls to it */
 function jumpToSection(key){
   if(!secOpen(key)){ localStorage.setItem('sec_'+key,'1'); applySection(key); }
-  var hd=document.querySelector('.sec-hd[onclick*="'+key+'"]');
+  var hd=document.getElementById('hd-'+key);
   if(hd) hd.scrollIntoView({behavior:'smooth',block:'start'});
 }
 
-function renderCalendar(){
-  var el=document.getElementById('rt-cal'); if(!el) return;
-  var today=isoToday();
-  if(!selDate) selDate=today;
-  el.innerHTML=calDates().map(function(iso){
-    var p=iso.split('-'), d=new Date(+p[0],+p[1]-1,+p[2]);
-    var rt=routineForDate(iso);
-    var items=itemsFor(rt);
-    var done=(routineLog[iso]&&routineLog[iso][rt])||[];
-    var ids=items.map(function(i){return i.sheetId;});
-    var hit=done.filter(function(x){return ids.indexOf(x)>-1;}).length;
-    var total=items.length;
-    var pct = total ? hit/total : 0;
-    var full = total>0 && hit===total;
-    var col = full ? 'var(--green)' : (hit>0 ? 'var(--gold)' : 'rgba(255,255,255,0.12)');
-    var R=9, CIRC=2*Math.PI*R;
-    var dash = (pct*CIRC).toFixed(1)+' '+CIRC.toFixed(1);
-    var short=(rt||'').replace(/routine\s*/i,'R');
-    return '<div class="rt-cal-day'+(iso===selDate?' sel':'')+(iso===today?' today':'')+'" onclick="selectDate(\''+iso+'\')">'+
-      '<div class="rt-cal-dow">'+d.toLocaleDateString('en-IN',{weekday:'short'}).slice(0,3)+'</div>'+
-      '<div class="rt-cal-num">'+d.getDate()+'</div>'+
-      '<div class="rt-cal-tag">'+escH(short)+'</div>'+
-      '<div class="rt-cal-ring">'+
-        '<svg width="22" height="22" viewBox="0 0 22 22">'+
-          '<circle class="rt-cal-ring-bg" cx="11" cy="11" r="'+R+'" fill="none" stroke-width="2.5"/>'+
-          '<circle class="rt-cal-ring-fg" cx="11" cy="11" r="'+R+'" fill="none" stroke="'+col+'" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="'+dash+'"/>'+
-        '</svg>'+
-        '<div class="rt-cal-cnt">'+(total?hit+'/'+total:'\u2013')+'</div>'+
-      '</div>'+
-    '</div>';
-  }).join('');
-  var sel=el.querySelector('.rt-cal-day.sel');
-  if(sel&&sel.scrollIntoView) sel.scrollIntoView({block:'nearest',inline:'center'});
-  var lbl=document.getElementById('rt-daylbl');
-  if(lbl) lbl.textContent=fmtDayLabel(selDate);
+function toggleChecklist(){ toggleSection('checklist'); }
+
+/* ═══════════════════════════════════════════════════
+   ROUTINES — master library + dated membership
+
+   habitMaster  : [{sheetId, time, habit}]         the library
+   routineItems : [{sheetId, routine, habitId,     membership,
+                    order, addedOn, removedOn}]    date-ranged
+   routineDay   : {dateISO: routineName}           which ran that day
+   routineLog   : {dateISO: {routine: [habitId]}}  what got done
+
+   Membership carries addedOn/removedOn, so a habit added today is
+   never counted against last month. Every figure resolves the
+   routine's contents AS OF the day being measured.
+═══════════════════════════════════════════════════ */
+var habitMaster=[];
+var routineItems=[];
+var routineLog={};
+var routineDay={};
+var extraRoutines=[];
+var activeRoutine='';
+var selDate='';
+
+var CAL_BACK=7, CAL_FWD=21;
+
+function calDates(){
+  var out=[], d=new Date(); d.setDate(d.getDate()-CAL_BACK);
+  for(var i=0;i<CAL_BACK+1+CAL_FWD;i++){ out.push(isoDate(d)); d.setDate(d.getDate()+1); }
+  return out;
 }
+
+function masterById(id){ return habitMaster.find(function(h){ return h.sheetId===id; }); }
+
+function routineNames(){
+  var names=[];
+  routineItems.forEach(function(m){ if(m.routine && names.indexOf(m.routine)===-1) names.push(m.routine); });
+  Object.keys(routineDay).forEach(function(d){
+    var r=routineDay[d]; if(r && names.indexOf(r)===-1) names.push(r);
+  });
+  extraRoutines.forEach(function(r){ if(r && names.indexOf(r)===-1) names.push(r); });
+  if(activeRoutine && names.indexOf(activeRoutine)===-1) names.push(activeRoutine);
+  if(!names.length) names=['Routine 1'];
+  return names.sort();
+}
+
+/* THE KEY FUNCTION — which habits were in this routine on this date:
+   added on or before it, and not yet removed as of it. */
+function itemsOn(routine,iso){
+  return routineItems.filter(function(m){
+    if(m.routine!==routine) return false;
+    if(m.addedOn && m.addedOn>iso) return false;
+    if(m.removedOn && m.removedOn<=iso) return false;
+    return true;
+  }).sort(function(a,b){ return a.order-b.order; })
+    .map(function(m){
+      var h=masterById(m.habitId)||{};
+      return {memberId:m.sheetId,habitId:m.habitId,time:h.time||'',
+        habit:h.habit||'(not in library)',order:m.order};
+    });
+}
+
+function itemsFor(name){ return itemsOn(name, selDate||isoToday()); }
+
+function timeToMin(t){
+  if(!t) return 99999;
+  var s=cleanTime(t).toUpperCase();
+  var m=s.match(/^(\d{1,2})[:.]?(\d{2})?\s*(AM|PM)?/);
+  if(!m) return 99999;
+  var h=parseInt(m[1],10), min=m[2]?parseInt(m[2],10):0;
+  if(m[3]==='PM'&&h<12) h+=12;
+  if(m[3]==='AM'&&h===12) h=0;
+  return h*60+min;
+}
+
+function doneFor(name,iso){ return (routineLog[iso]&&routineLog[iso][name])||[]; }
+
+function routineForDate(iso){
+  if(routineDay[iso]) return routineDay[iso];
+  var prior=Object.keys(routineDay).filter(function(k){ return k<iso; }).sort();
+  if(prior.length) return routineDay[prior[prior.length-1]];
+  return routineNames()[0];
+}
+
+function fmtDayLabel(iso){
+  var p=iso.split('-'), d=new Date(+p[0],+p[1]-1,+p[2]);
+  return (iso===isoToday()?'Today \u00b7 ':'')+d.toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long'});
+}
+
+/* ── Master library ─────────────────────────────────────── */
+function renderMaster(){
+  var el=document.getElementById('mstr-list'); if(!el) return;
+  if(!habitMaster.length){
+    el.innerHTML='<div class="rt-empty">No habits yet. Add one below, then pick from here when building a routine.</div>';
+    return;
+  }
+  var sorted=habitMaster.slice().sort(function(a,b){ return timeToMin(a.time)-timeToMin(b.time); });
+  el.innerHTML=sorted.map(function(h){
+    var used=routineItems.filter(function(m){ return m.habitId===h.sheetId && !m.removedOn; })
+      .map(function(m){ return m.routine.replace(/routine\s*/i,'R'); });
+    var tag=used.length?'<span class="mstr-in">'+escH(used.join(' \u00b7 '))+'</span>'
+                       :'<span class="mstr-in unused">unused</span>';
+    return '<div class="mstr-row">'+
+      '<div class="mstr-time">'+escH(cleanTime(h.time)||'\u2014')+'</div>'+
+      '<div class="mstr-name">'+escH(h.habit)+'</div>'+tag+
+      '<div class="mstr-acts">'+
+        '<button class="rt-mini" onclick="editMaster(\''+h.sheetId+'\')" title="Edit">\u270e</button>'+
+        '<button class="rt-mini del" onclick="delMaster(\''+h.sheetId+'\')" title="Delete">\u00d7</button>'+
+      '</div></div>';
+  }).join('');
+}
+
+function addMaster(){
+  var t=document.getElementById('mstr-time').value.trim();
+  var h=document.getElementById('mstr-habit').value.trim();
+  if(!h){ showToast('Name the habit first.','error'); return; }
+  var id='m'+Date.now();
+  habitMaster.push({sheetId:id,time:t,habit:h});
+  document.getElementById('mstr-time').value='';
+  document.getElementById('mstr-habit').value='';
+  renderMaster(); renderRoutine();
+  rtSync(postToSheet({sheet:'HabitMaster',sheetId:id,time:t,habit:h}));
+}
+
+function editMaster(id){
+  var h=masterById(id); if(!h) return;
+  var html='<div style="margin-bottom:10px"><label class="sfl">Time</label>'+
+    '<input class="sin" id="edit-m-time" type="text" value="'+escH(h.time||'')+'" placeholder="6:30 AM"></div>'+
+    '<div><label class="sfl">Habit</label>'+
+    '<textarea class="sin" id="edit-m-habit" rows="3">'+escH(h.habit||'')+'</textarea></div>'+
+    '<div style="font-size:11px;color:var(--text-3);margin-top:8px;line-height:1.6">Editing here updates this habit in every routine that uses it.</div>';
+  openEditModal('Edit habit',html,{type:'master',id:id});
+}
+
+async function delMaster(id){
+  var h=masterById(id); if(!h) return;
+  var inUse=routineItems.filter(function(m){ return m.habitId===id && !m.removedOn; });
+  var warn=inUse.length?'\n\nIt is in '+inUse.length+' routine'+(inUse.length>1?'s':'')+'. Past history is kept.':'';
+  if(!confirm('Delete "'+h.habit+'" from the master list?'+warn)) return;
+  habitMaster=habitMaster.filter(function(x){ return x.sheetId!==id; });
+  renderMaster(); renderRoutine();
+  await postToSheet({sheet:'HabitMaster',action:'delete_master',sheetId:id});
+  showToast('Deleted from library.','');
+}
+
+/* ── Routine + calendar ─────────────────────────────────── */
+function selectRoutine(name){
+  activeRoutine=name;
+  if(!selDate) selDate=isoToday();
+  routineDay[selDate]=name;
+  renderRoutine();
+  var p=selDate.split('-'), dd=new Date(+p[0],+p[1]-1,+p[2]);
+  rtSync(postToSheet({sheet:'RoutineDay',
+    date:dd.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}),
+    dateISO:selDate,routine:name}));
+}
+
+function selectDate(iso){ selDate=iso; activeRoutine=routineForDate(iso); renderRoutine(); }
 
 function newRoutine(){
   var n=prompt('Name the new routine:','Routine '+(routineNames().length+1));
   if(!n||!n.trim()) return;
   n=n.trim();
   if(routineNames().indexOf(n)>-1){ showToast('That routine already exists.','error'); return; }
-  extraRoutines.push(n);
-  activeRoutine=n;
-  renderRoutine();
-  showToast('Add your first item to '+n+'.','');
+  extraRoutines.push(n); activeRoutine=n; renderRoutine();
+  showToast('Now add habits from your master list.','');
 }
 
 function renameRoutine(){
@@ -2569,109 +2592,198 @@ function renameRoutine(){
   if(routineNames().indexOf(n)>-1){ showToast('That name is already used.','error'); return; }
   var oldName=activeRoutine;
   extraRoutines=extraRoutines.map(function(r){ return r===oldName?n:r; });
-  routineItems.forEach(function(it){ if(it.routine===oldName) it.routine=n; });
+  routineItems.forEach(function(m){ if(m.routine===oldName) m.routine=n; });
+  Object.keys(routineDay).forEach(function(d){ if(routineDay[d]===oldName) routineDay[d]=n; });
   Object.keys(routineLog).forEach(function(d){
     if(routineLog[d][oldName]){ routineLog[d][n]=routineLog[d][oldName]; delete routineLog[d][oldName]; }
   });
   activeRoutine=n; renderRoutine();
-  postToSheet({sheet:'Routines',action:'rename_routine',oldName:oldName,newName:n})
-    .then(function(ok){ showToast(ok?'Renamed \u2713':'Renamed locally \u2014 sync failed.',ok?'success':'error'); });
+  rtSync(postToSheet({sheet:'RoutineItems',action:'rename_routine_items',oldName:oldName,newName:n}));
 }
 
 async function deleteRoutine(){
   if(!activeRoutine) return;
-  var names=routineNames();
-  if(names.length<=1){ showToast('Keep at least one routine.','error'); return; }
-  var count=itemsFor(activeRoutine).length;
-  if(!confirm('Delete "'+activeRoutine+'"'+(count?' and its '+count+' item'+(count>1?'s':''):'')+'?\n\nCompletion history for it is kept in the Sheet.')) return;
-  var gone=activeRoutine;
-  routineItems=routineItems.filter(function(it){ return it.routine!==gone; });
+  if(routineNames().length<=1){ showToast('Keep at least one routine.','error'); return; }
+  var gone=activeRoutine, today=isoToday();
+  var n=itemsOn(gone,today).length;
+  if(!confirm('Delete "'+gone+'"'+(n?' and its '+n+' habit'+(n>1?'s':''):'')+'?\n\nCompletion history is kept.')) return;
+  routineItems.filter(function(m){ return m.routine===gone && !m.removedOn; })
+    .forEach(function(m){ m.removedOn=today;
+      postToSheet({sheet:'RoutineItems',action:'remove_item',sheetId:m.sheetId,removedOn:today}); });
   extraRoutines=extraRoutines.filter(function(r){ return r!==gone; });
-  activeRoutine='';
-  renderRoutine();
-  if(count){
-    var ok=await postToSheet({sheet:'Routines',action:'delete_routine',routine:gone});
-    if(ok) await fetchAllRoutines();
-  }
-  renderRoutine();
+  activeRoutine=''; renderRoutine();
   showToast('Deleted "'+gone+'".','');
+}
+
+function renderCalendar(){
+  var el=document.getElementById('rt-cal'); if(!el) return;
+  var today=isoToday();
+  if(!selDate) selDate=today;
+  el.innerHTML=calDates().map(function(iso){
+    var p=iso.split('-'), d=new Date(+p[0],+p[1]-1,+p[2]);
+    var rt=routineForDate(iso);
+    var items=itemsOn(rt,iso);
+    var ids=items.map(function(i){ return i.habitId; });
+    var hit=doneFor(rt,iso).filter(function(x){ return ids.indexOf(x)>-1; }).length;
+    var total=items.length, pct=total?hit/total:0;
+    var col=(total&&hit===total)?'var(--green)':(hit>0?'var(--gold)':'rgba(255,255,255,0.12)');
+    var R=9, CIRC=2*Math.PI*R, dash=(pct*CIRC).toFixed(1)+' '+CIRC.toFixed(1);
+    return '<div class="rt-cal-day'+(iso===selDate?' sel':'')+(iso===today?' today':'')+'" onclick="selectDate(\''+iso+'\')">'+
+      '<div class="rt-cal-dow">'+d.toLocaleDateString('en-IN',{weekday:'short'}).slice(0,3)+'</div>'+
+      '<div class="rt-cal-num">'+d.getDate()+'</div>'+
+      '<div class="rt-cal-tag">'+escH((rt||'').replace(/routine\s*/i,'R'))+'</div>'+
+      '<div class="rt-cal-ring"><svg width="22" height="22" viewBox="0 0 22 22">'+
+        '<circle class="rt-cal-ring-bg" cx="11" cy="11" r="'+R+'" fill="none" stroke-width="2.5"/>'+
+        '<circle class="rt-cal-ring-fg" cx="11" cy="11" r="'+R+'" fill="none" stroke="'+col+'" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="'+dash+'"/>'+
+      '</svg><div class="rt-cal-cnt">'+(total?hit+'/'+total:'\u2013')+'</div></div></div>';
+  }).join('');
+  var sel=el.querySelector('.rt-cal-day.sel');
+  if(sel&&sel.scrollIntoView) sel.scrollIntoView({block:'nearest',inline:'center'});
+  var lbl=document.getElementById('rt-daylbl');
+  if(lbl) lbl.textContent=fmtDayLabel(selDate);
+}
+
+function renderRoutineSelector(){
+  var el=document.getElementById('rt-selector'); if(!el) return;
+  var names=routineNames();
+  if(!activeRoutine||names.indexOf(activeRoutine)===-1) activeRoutine=names[0];
+  el.innerHTML=names.map(function(n){
+    return '<button class="rt-pill'+(n===activeRoutine?' on':'')+'" onclick="selectRoutine(\''+escH(n).replace(/'/g,"\\'")+'\')">'+escH(n)+'</button>';
+  }).join('')+'<button class="rt-pill add" onclick="newRoutine()">+ New routine</button>';
 }
 
 function renderRoutine(){
   if(!selDate) selDate=isoToday();
   if(!activeRoutine) activeRoutine=routineForDate(selDate);
-  renderCalendar();
-  renderRoutineSelector();
+  renderCalendar(); renderRoutineSelector(); renderMasterPicker();
   var box=document.getElementById('rt-items'); if(!box) return;
   var items=itemsFor(activeRoutine);
   var done=doneFor(activeRoutine,selDate);
 
   if(!items.length){
-    box.innerHTML='<div class="rt-empty">Nothing in <strong>'+escH(activeRoutine)+'</strong> yet.<br>Add your first time \u00b7 intention \u00b7 habit below.</div>';
-    document.getElementById('rt-progress').innerHTML='';
+    box.innerHTML='<div class="rt-empty">No habits in <strong>'+escH(activeRoutine)+'</strong> for this day.<br>Add some from your master list below.</div>';
+    var pr=document.getElementById('rt-progress'); if(pr) pr.innerHTML='';
     renderRoutineHistory();
+    if(window.updateSectionBadges) updateSectionBadges();
     return;
   }
 
   box.innerHTML=items.map(function(it,idx){
-    var isDone=done.indexOf(it.sheetId)>-1;
+    var isDone=done.indexOf(it.habitId)>-1;
     return '<div class="rt-row'+(isDone?' done':'')+'" data-idx="'+idx+'">'+
       '<span class="rt-grip" onpointerdown="startRtDrag(event,'+idx+')" title="Drag to reorder">\u2630</span>'+
-      '<div class="rt-time" title="'+escH(cleanTime(it.time))+'">'+escH(cleanTime(it.time)||'\u2014')+'</div>'+
-      '<div class="rt-hab">'+escH(it.habit||it.intention||'')+'</div>'+
+      '<div class="rt-time">'+escH(cleanTime(it.time)||'\u2014')+'</div>'+
+      '<div class="rt-hab">'+escH(it.habit)+'</div>'+
       '<div class="rt-acts">'+
-        '<button class="rt-mini" onclick="editRoutineItem(\''+it.sheetId+'\')" title="Edit">\u270e</button>'+
-        '<button class="rt-mini del" onclick="delRoutineItem(\''+it.sheetId+'\')" title="Remove">\u00d7</button>'+
-        '<div class="rt-cb'+(isDone?' done':'')+'" onclick="toggleRoutineItem(\''+it.sheetId+'\')"><span class="rt-tick">\u2713</span></div>'+
-      '</div>'+
-    '</div>';
+        '<button class="rt-mini del" onclick="removeFromRoutine(\''+it.memberId+'\')" title="Remove from this routine">\u00d7</button>'+
+        '<div class="rt-cb'+(isDone?' done':'')+'" onclick="toggleRoutineItem(\''+it.habitId+'\')"><span class="rt-tick">\u2713</span></div>'+
+      '</div></div>';
   }).join('');
 
-  var pct=Math.round(done.length/items.length*100);
-  var dayWord = selDate===isoToday() ? 'today' : fmtDayLabel(selDate).replace(/^Today \u00b7 /,'');
+  var hit=done.filter(function(x){ return items.some(function(i){ return i.habitId===x; }); }).length;
+  var pct=Math.round(hit/items.length*100);
+  var dayWord=selDate===isoToday()?'today':fmtDayLabel(selDate).replace(/^Today \u00b7 /,'');
   document.getElementById('rt-progress').innerHTML=
     '<div class="prog-meta"><span>'+escH(activeRoutine)+' \u00b7 '+escH(dayWord)+'</span>'+
-    '<span class="prog-ct">'+done.length+'/'+items.length+'</span></div>'+
+    '<span class="prog-ct">'+hit+'/'+items.length+'</span></div>'+
     '<div class="prog-track"><div class="prog-fill" style="width:'+pct+'%"></div></div>';
 
   renderRoutineHistory();
   if(window.updateSectionBadges) updateSectionBadges();
 }
 
-/* Completion across the last 14 days, plus streak and average */
-function renderRoutineHistory(){
-  var statsEl=document.getElementById('rt-stats');
-  var histEl=document.getElementById('rt-hist');
-  if(!statsEl||!histEl) return;
-
-  var items=itemsFor(activeRoutine);
-  var total=items.length;
-  if(!total){
-    statsEl.innerHTML=''; histEl.innerHTML='<div class="rt-empty" style="padding:1rem">No items to track yet.</div>';
+function renderMasterPicker(){
+  var el=document.getElementById('rt-picker'); if(!el) return;
+  var inR=itemsFor(activeRoutine).map(function(i){ return i.habitId; });
+  var avail=habitMaster.filter(function(h){ return inR.indexOf(h.sheetId)===-1; })
+    .sort(function(a,b){ return timeToMin(a.time)-timeToMin(b.time); });
+  if(!avail.length){
+    el.innerHTML='<div style="font-size:11px;color:var(--text-3);padding:4px 0">'+
+      (habitMaster.length?'Every habit in your library is already in this routine.':'Your master list is empty \u2014 add habits below.')+'</div>';
     return;
   }
-  var ids=items.map(function(i){return i.sheetId;});
+  el.innerHTML='<div class="rt-pick-lbl">Add from master list</div><div class="rt-pick-chips">'+
+    avail.map(function(h){
+      return '<button class="rt-chip" onclick="addToRoutine(\''+h.sheetId+'\')">+ '+
+        (h.time?'<span class="rt-chip-t">'+escH(cleanTime(h.time))+'</span> ':'')+escH(h.habit)+'</button>';
+    }).join('')+'</div>';
+}
 
-  // Only days assigned to this routine count toward its stats
+/* Adding stamps today, so days before now keep their old denominator */
+function addToRoutine(habitId){
+  var today=isoToday(), id='ri'+Date.now();
+  var order=itemsFor(activeRoutine).length;
+  routineItems.push({sheetId:id,routine:activeRoutine,habitId:habitId,order:order,addedOn:today,removedOn:''});
+  renderRoutine();
+  rtSync(postToSheet({sheet:'RoutineItems',sheetId:id,routine:activeRoutine,
+    habitId:habitId,order:order,addedOn:today}));
+}
+
+/* Removing stamps a leave date rather than deleting the link */
+function removeFromRoutine(memberId){
+  var m=routineItems.find(function(x){ return x.sheetId===memberId; }); if(!m) return;
+  var h=masterById(m.habitId)||{};
+  if(!confirm('Remove "'+(h.habit||'this habit')+'" from '+activeRoutine+' from today onward?\n\nPast days keep it in their record.')) return;
+  m.removedOn=isoToday();
+  renderRoutine();
+  rtSync(postToSheet({sheet:'RoutineItems',action:'remove_item',sheetId:memberId,removedOn:m.removedOn}));
+}
+
+function toggleRoutineItem(habitId){
+  var d=selDate||isoToday();
+  if(!routineLog[d]) routineLog[d]={};
+  if(!routineLog[d][activeRoutine]) routineLog[d][activeRoutine]=[];
+  var arr=routineLog[d][activeRoutine], ix=arr.indexOf(habitId);
+  if(ix>-1) arr.splice(ix,1); else arr.push(habitId);
+  renderRoutine(); saveRoutineLog();
+}
+
+function saveRoutineLog(){
+  var d=selDate||isoToday();
+  var p=d.split('-'), dd=new Date(+p[0],+p[1]-1,+p[2]);
+  rtSync(postToSheet({sheet:'RoutineLog',
+    date:dd.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}),
+    dateISO:d,routine:activeRoutine,done:doneFor(activeRoutine,d).join(',')}));
+}
+
+function untickRoutine(){
+  var d=selDate||isoToday();
+  if(!doneFor(activeRoutine,d).length) return;
+  var when=d===isoToday()?'today':fmtDayLabel(d).replace(/^Today \u00b7 /,'');
+  if(!confirm('Untick every habit in '+activeRoutine+' for '+when+'?')) return;
+  if(routineLog[d]) routineLog[d][activeRoutine]=[];
+  renderRoutine(); saveRoutineLog();
+}
+
+/* Each day scored against the habits present ON THAT DAY */
+function renderRoutineHistory(){
+  var statsEl=document.getElementById('rt-stats'), histEl=document.getElementById('rt-hist');
+  if(!statsEl||!histEl) return;
+
   var days=[], sum=0, fullDays=0, counted=0;
   for(var i=13;i>=0;i--){
-    var d=new Date(); d.setDate(d.getDate()-i);
-    var iso=isoDate(d);
+    var dd=new Date(); dd.setDate(dd.getDate()-i);
+    var iso=isoDate(dd);
     var mine=routineForDate(iso)===activeRoutine;
-    var done=doneFor(activeRoutine,iso).filter(function(x){return ids.indexOf(x)>-1;});
-    var pct=mine?Math.round(done.length/total*100):0;
-    days.push({iso:iso,label:String(d.getDate()),pct:pct,mine:mine});
-    if(mine){ sum+=pct; counted++; if(pct===100) fullDays++; }
+    var items=itemsOn(activeRoutine,iso);
+    var ids=items.map(function(x){ return x.habitId; });
+    var hit=doneFor(activeRoutine,iso).filter(function(x){ return ids.indexOf(x)>-1; }).length;
+    var live=mine&&items.length>0;
+    var pct=live?Math.round(hit/items.length*100):0;
+    days.push({iso:iso,label:String(dd.getDate()),pct:pct,mine:live,n:hit,t:items.length});
+    if(live){ sum+=pct; counted++; if(hit===items.length) fullDays++; }
   }
 
-  // Streak of 100% days ending today (today incomplete doesn't break it)
   var streak=0;
   for(var k=0;k<365;k++){
-    var dd=new Date(); dd.setDate(dd.getDate()-k);
-    var iso2=isoDate(dd);
-    if(routineForDate(iso2)!==activeRoutine){ if(k>0) continue; else continue; }
-    var dn=doneFor(activeRoutine,iso2).filter(function(x){return ids.indexOf(x)>-1;});
-    if(dn.length===total) streak++;
+    var d2=new Date(); d2.setDate(d2.getDate()-k);
+    var iso2=isoDate(d2);
+    if(routineForDate(iso2)!==activeRoutine) continue;
+    var it2=itemsOn(activeRoutine,iso2);
+    if(!it2.length) continue;
+    var ids2=it2.map(function(x){ return x.habitId; });
+    var dn=doneFor(activeRoutine,iso2).filter(function(x){ return ids2.indexOf(x)>-1; });
+    if(dn.length===it2.length) streak++;
     else if(k>0) break;
   }
 
@@ -2681,23 +2793,19 @@ function renderRoutineHistory(){
     '<div class="rt-stat"><div class="rt-stat-n" style="color:var(--teal)">'+fullDays+'</div><div class="rt-stat-l">Full days</div></div>';
 
   histEl.innerHTML=days.map(function(d){
-    var t=d.mine ? d.iso+' \u2014 '+d.pct+'%' : d.iso+' \u2014 different routine';
+    var t=d.mine?d.iso+' \u2014 '+d.n+'/'+d.t:d.iso+' \u2014 not tracked';
     return '<div class="rt-day" title="'+t+'" style="opacity:'+(d.mine?1:0.28)+'">'+
       '<div class="rt-bar"><div class="rt-bar-fill" style="height:'+d.pct+'%"></div></div>'+
       '<div class="rt-day-lbl">'+d.label+'</div></div>';
   }).join('');
 }
 
-/* ── Drag-to-reorder for routine items ────────────────────
-   The Order column in the Sheet holds the sequence, so a
-   drop just rewrites those numbers for the active routine.
-──────────────────────────────────────────────────────── */
+/* ── Drag to reorder ────────────────────────────────────── */
 var _rtDrag=null;
 
 function startRtDrag(ev,idx){
   ev.preventDefault();
-  var row=ev.target.closest('.rt-row');
-  if(!row) return;
+  var row=ev.target.closest('.rt-row'); if(!row) return;
   _rtDrag={from:idx,to:idx,moved:false};
   row.classList.add('dragging');
   try{ ev.target.setPointerCapture(ev.pointerId); }catch(e){}
@@ -2708,31 +2816,22 @@ function startRtDrag(ev,idx){
 
 function onRtDragMove(ev){
   if(!_rtDrag) return;
-  var box=document.getElementById('rt-items');
-  if(!box) return;
+  var box=document.getElementById('rt-items'); if(!box) return;
   var rows=Array.prototype.slice.call(box.querySelectorAll('.rt-row'));
   rows.forEach(function(r){ r.classList.remove('drag-over','drag-over-below'); });
-
   var target=null, below=false;
   for(var i=0;i<rows.length;i++){
     var b=rows[i].getBoundingClientRect();
-    if(ev.clientY>=b.top && ev.clientY<=b.bottom){
-      target=i; below=ev.clientY > b.top + b.height/2; break;
-    }
-    if(i===rows.length-1 && ev.clientY>b.bottom){ target=i; below=true; }
-    if(i===0 && ev.clientY<b.top){ target=0; below=false; }
+    if(ev.clientY>=b.top&&ev.clientY<=b.bottom){ target=i; below=ev.clientY>b.top+b.height/2; break; }
+    if(i===rows.length-1&&ev.clientY>b.bottom){ target=i; below=true; }
+    if(i===0&&ev.clientY<b.top){ target=0; below=false; }
   }
   if(target===null) return;
-
   var dest=below?target+1:target;
   if(dest>_rtDrag.from) dest--;
-  var max=itemsFor(activeRoutine).length-1;
-  dest=Math.max(0,Math.min(max,dest));
+  dest=Math.max(0,Math.min(itemsFor(activeRoutine).length-1,dest));
   _rtDrag.to=dest; _rtDrag.moved=true;
-
-  if(rows[target] && target!==_rtDrag.from){
-    rows[target].classList.add(below?'drag-over-below':'drag-over');
-  }
+  if(rows[target]&&target!==_rtDrag.from) rows[target].classList.add(below?'drag-over-below':'drag-over');
 }
 
 function endRtDrag(){
@@ -2741,113 +2840,46 @@ function endRtDrag(){
   document.removeEventListener('pointercancel',endRtDrag);
   if(!_rtDrag) return;
   var d=_rtDrag; _rtDrag=null;
-
   var box=document.getElementById('rt-items');
   if(box) box.querySelectorAll('.rt-row').forEach(function(r){
-    r.classList.remove('dragging','drag-over','drag-over-below');
-  });
-
-  if(!d.moved || d.to===d.from){ renderRoutine(); return; }
-
-  // Reorder within this routine, then stamp fresh order numbers
+    r.classList.remove('dragging','drag-over','drag-over-below'); });
+  if(!d.moved||d.to===d.from){ renderRoutine(); return; }
   var list=itemsFor(activeRoutine);
   var moved=list.splice(d.from,1)[0];
   list.splice(d.to,0,moved);
   list.forEach(function(it,i){
-    var ref=routineItems.find(function(x){ return x.sheetId===it.sheetId; });
-    if(ref) ref.order=i;
+    var m=routineItems.find(function(x){ return x.sheetId===it.memberId; });
+    if(m) m.order=i;
   });
   renderRoutine();
-
-  rtSync(postToSheet({sheet:'Routines',action:'reorder_routine',
-    order:list.map(function(i){return i.sheetId;}).join(',')}))
+  rtSync(postToSheet({sheet:'RoutineItems',action:'reorder',
+    order:list.map(function(i){ return i.memberId; }).join(',')}))
     .then(function(ok){ if(ok) showToast('Order updated \u2713','success'); });
-}
-
-function addRoutineItem(){
-  var t=document.getElementById('rt-time').value.trim();
-  var h=document.getElementById('rt-habit').value.trim();
-  var i='';   // intention retired from the UI; column kept in the Sheet
-  if(!h){ showToast('Add a habit.','error'); return; }
-  var id='r'+Date.now();
-  var nextOrder=itemsFor(activeRoutine).length;
-  routineItems.push({sheetId:id,routine:activeRoutine,time:t,intention:i,habit:h,order:nextOrder});
-  extraRoutines=extraRoutines.filter(function(r){ return r!==activeRoutine; });
-  document.getElementById('rt-time').value='';
-  document.getElementById('rt-habit').value='';
-  renderRoutine();
-  rtSync(postToSheet({sheet:'Routines',sheetId:id,routine:activeRoutine,time:t,intention:i,habit:h,order:nextOrder}));
-}
-
-function toggleRoutineItem(id){
-  var d=selDate||isoToday();
-  if(!routineLog[d]) routineLog[d]={};
-  if(!routineLog[d][activeRoutine]) routineLog[d][activeRoutine]=[];
-  var arr=routineLog[d][activeRoutine];
-  var ix=arr.indexOf(id);
-  if(ix>-1) arr.splice(ix,1); else arr.push(id);
-  renderRoutine();
-  saveRoutineLog();
-}
-
-function saveRoutineLog(){
-  var d=selDate||isoToday();
-  var p=d.split('-'), dd=new Date(+p[0],+p[1]-1,+p[2]);
-  rtSync(postToSheet({sheet:'RoutineLog',
-    date:dd.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}),
-    dateISO:d, routine:activeRoutine,
-    done:doneFor(activeRoutine,d).join(',')}));
-}
-
-function untickRoutine(){
-  var d=selDate||isoToday();
-  if(!doneFor(activeRoutine,d).length) return;
-  var when = d===isoToday() ? 'today' : fmtDayLabel(d).replace(/^Today \u00b7 /,'');
-  if(!confirm('Untick every item in '+activeRoutine+' for '+when+'?')) return;
-  if(routineLog[d]) routineLog[d][activeRoutine]=[];
-  renderRoutine(); saveRoutineLog();
-}
-
-function editRoutineItem(id){
-  var it=routineItems.find(function(x){return x.sheetId===id;}); if(!it) return;
-  var html='<div style="margin-bottom:10px"><label class="sfl">Time</label>'+
-    '<input class="sin" id="edit-rt-time" type="text" value="'+escH(it.time||'')+'" placeholder="6:30 AM"></div>'+
-    '<div><label class="sfl">Habit</label>'+
-    '<textarea class="sin" id="edit-rt-habit" rows="3">'+escH(it.habit||it.intention||'')+'</textarea></div>';
-  openEditModal('Edit routine item',html,{type:'routine',id:id});
-}
-
-async function delRoutineItem(id){
-  var it=routineItems.find(function(x){return x.sheetId===id;}); if(!it) return;
-  if(!confirm('Remove this item from '+activeRoutine+'?')) return;
-  routineItems=routineItems.filter(function(x){return x.sheetId!==id;});
-  renderRoutine();
-  var ok=await postToSheet({sheet:'Routines',action:'delete_routine_item',sheetId:id});
-  if(ok) await fetchAllRoutines();
-  renderRoutine();
-  showToast('Removed.','');
 }
 
 function rtSync(promise){
   var el=document.getElementById('rt-sync');
   if(el){ el.textContent='Syncing\u2026'; el.className='sync-txt syncing'; }
   return promise.then(function(ok){
-    DIAG.rtSync = ok ? 'OK' : 'FAILED';
+    DIAG.rtSync=ok?'OK':'FAILED';
     if(el){ el.textContent=ok?'Saved to Sheet \u2713':'Sheet sync failed'; el.className='sync-txt '+(ok?'ok':'err'); }
     return ok;
   });
 }
 
-async function fetchAllRoutines(){
-  var d=await sheetFetch(WORKER_URL+'?action=getAllRoutines');
-  if(d&&d.status==='ok'&&Array.isArray(d.routines)) replaceRoutinesFromSheet(d.routines);
+/* ── Sheet loaders ──────────────────────────────────────── */
+function replaceHabitMasterFromSheet(rows){
+  habitMaster=rows.map(function(r){
+    return {sheetId:r.sheetId||'',time:cleanTime(r.time||''),habit:r.habit||''};
+  });
+  renderMaster(); renderRoutine();
 }
 
-function replaceRoutinesFromSheet(rows){
+function replaceRoutineItemsFromSheet(rows){
   routineItems=rows.map(function(r){
-    return {sheetId:r.sheetId||'',routine:r.routine||'',time:cleanTime(r.time||''),
-      intention:r.intention||'',habit:r.habit||'',
-      order:(r.order===null||r.order===undefined)?null:Number(r.order)};
+    return {sheetId:r.sheetId||'',routine:r.routine||'',habitId:r.habitId||'',
+      order:(r.order===null||r.order===undefined)?9999:Number(r.order),
+      addedOn:r.addedOn||'',removedOn:r.removedOn||''};
   });
   renderRoutine();
 }
@@ -2865,9 +2897,14 @@ function replaceRoutineLogFromSheet(rows){
   rows.forEach(function(r){
     if(!r.dateISO||!r.routine) return;
     if(!routineLog[r.dateISO]) routineLog[r.dateISO]={};
-    routineLog[r.dateISO][r.routine]=String(r.done||'').split(',').map(function(s){return s.trim();}).filter(Boolean);
+    routineLog[r.dateISO][r.routine]=String(r.done||'').split(',').map(function(s){ return s.trim(); }).filter(Boolean);
   });
   renderRoutine();
+}
+
+async function fetchAllRoutines(){
+  var d=await sheetFetch(WORKER_URL+'?action=getAllRoutineItems');
+  if(d&&d.status==='ok'&&Array.isArray(d.routineItems)) replaceRoutineItemsFromSheet(d.routineItems);
 }
 
 /* START */
