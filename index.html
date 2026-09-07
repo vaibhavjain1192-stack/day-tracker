@@ -376,8 +376,8 @@ body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:
 .rt-pill.on{background:var(--gold-dim);border-color:rgba(201,168,76,0.45);color:var(--gold)}
 .rt-pill.add{border-style:dashed;color:var(--text-3)}
 .rt-pill.add:hover{border-style:solid;border-color:var(--gold);color:var(--gold)}
-.rt-head{display:grid;grid-template-columns:20px 92px 1fr 52px;gap:8px;padding:0 0 6px;font-family:var(--fm);font-size:9px;color:var(--text-3);letter-spacing:0.1em;text-transform:uppercase;border-bottom:1px solid var(--border)}
-.rt-row{display:grid;grid-template-columns:20px 92px 1fr 52px;gap:8px;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);background:var(--card);transition:background var(--tr),opacity var(--tr)}
+.rt-head{display:grid;grid-template-columns:20px 92px 1fr 74px;gap:8px;padding:0 0 6px;font-family:var(--fm);font-size:9px;color:var(--text-3);letter-spacing:0.1em;text-transform:uppercase;border-bottom:1px solid var(--border)}
+.rt-row{display:grid;grid-template-columns:20px 92px 1fr 74px;gap:8px;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);background:var(--card);transition:background var(--tr),opacity var(--tr)}
 .rt-grip{cursor:grab;color:var(--text-3);font-size:12px;line-height:1;touch-action:none;user-select:none;-webkit-user-select:none;transition:color var(--tr);text-align:center}
 .rt-grip:hover{color:var(--gold)}
 .rt-grip:active{cursor:grabbing}
@@ -389,12 +389,13 @@ body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:
 .rt-time{font-family:var(--fm);font-size:11px;color:var(--gold);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .rt-int{font-size:12px;color:var(--text-1);line-height:1.45;min-width:0;overflow-wrap:anywhere}
 .rt-hab{font-size:12px;color:var(--text-2);line-height:1.45;min-width:0;overflow-wrap:anywhere}
-.rt-acts{display:flex;gap:2px;align-items:center;justify-content:flex-end}
+.rt-acts{display:flex;gap:14px;align-items:center;justify-content:flex-end;padding-left:4px}
 .rt-cb{width:18px;height:18px;border-radius:5px;border:1.5px solid var(--border-md);flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all var(--tr);background:var(--surface)}
 .rt-cb.done{background:var(--green);border-color:var(--green)}
 .rt-tick{color:#0F1117;font-size:11px;font-weight:700;display:none}
 .rt-cb.done .rt-tick{display:block}
-.rt-mini{background:none;border:none;color:var(--text-3);cursor:pointer;font-size:11px;padding:0 2px;line-height:1;transition:color var(--tr)}
+.rt-mini{background:none;border:none;color:var(--text-3);cursor:pointer;font-size:13px;padding:4px 2px;line-height:1;transition:color var(--tr);opacity:.55}
+.rt-mini:hover{opacity:1}
 .rt-mini:hover{color:var(--gold)}
 .rt-mini.del:hover{color:var(--rose)}
 .rt-add{display:grid;grid-template-columns:88px 1fr auto;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
@@ -406,13 +407,32 @@ body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:
 .rt-stat-n{font-family:var(--fd);font-size:1.5rem;line-height:1;color:var(--gold)}
 .rt-stat-l{font-size:10px;color:var(--text-3);margin-top:3px}
 .rt-hist-lbl{font-family:var(--fm);font-size:9px;color:var(--text-3);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px}
-.rt-hist{display:flex;gap:4px;align-items:flex-end;flex-wrap:wrap}
-.rt-day{flex:1;min-width:16px;display:flex;flex-direction:column;align-items:center;gap:4px}
-.rt-bar{width:100%;height:44px;background:var(--surface);border-radius:3px;position:relative;overflow:hidden;border:1px solid var(--border)}
-.rt-bar-fill{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(180deg,var(--teal),var(--green));transition:height 0.3s ease}
-.rt-day-lbl{font-family:var(--fm);font-size:8px;color:var(--text-3)}
+.rt-hist{display:flex;gap:5px;align-items:flex-end}
+.rt-day{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;border-radius:var(--rsm);padding:4px 1px;transition:background var(--tr)}
+.rt-day:hover{background:var(--surface)}
+.rt-day.sel{background:var(--gold-dim)}
+.rt-pct{font-family:var(--fm);font-size:8.5px;color:var(--text-2);line-height:1}
+.rt-day.sel .rt-pct{color:var(--gold)}
+.rt-bar{width:100%;height:62px;background:rgba(255,255,255,0.04);border-radius:3px;position:relative;overflow:hidden;border:1px solid var(--border)}
+.rt-bar-fill{position:absolute;bottom:0;left:0;right:0;border-radius:0 0 2px 2px;transition:height 0.3s ease}
+.rt-day-lbl{font-family:var(--fm);font-size:8.5px;color:var(--text-3);line-height:1}
+.rt-day.today .rt-day-lbl{color:var(--gold);font-weight:600}
+/* Day breakdown */
+.rt-detail{margin-top:14px;padding-top:12px;border-top:1px solid var(--border);display:none}
+.rt-detail.on{display:block}
+.rt-detail-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px;flex-wrap:wrap;gap:6px}
+.rt-detail-d{font-size:12px;font-weight:600;color:var(--text-1)}
+.rt-detail-s{font-family:var(--fm);font-size:11px;color:var(--text-2)}
+.rt-det-row{display:flex;align-items:flex-start;gap:9px;padding:6px 0;border-bottom:1px solid var(--border)}
+.rt-det-row:last-child{border-bottom:none}
+.rt-det-ic{flex-shrink:0;width:15px;height:15px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;margin-top:1px}
+.rt-det-ic.yes{background:var(--green);color:#0F1117}
+.rt-det-ic.no{background:transparent;border:1.5px solid rgba(224,123,123,0.5);color:var(--rose)}
+.rt-det-t{font-family:var(--fm);font-size:10px;color:var(--gold);flex-shrink:0;width:66px}
+.rt-det-h{font-size:12px;color:var(--text-1);line-height:1.4;min-width:0;overflow-wrap:anywhere}
+.rt-det-row.miss .rt-det-h{color:var(--text-3)}
 @media(max-width:640px){
-  .rt-head,.rt-row{grid-template-columns:18px 74px 1fr 44px}
+  .rt-head,.rt-row{grid-template-columns:18px 74px 1fr 66px}
   .rt-add{grid-template-columns:1fr;gap:6px}
 }
 .toast{position:fixed;bottom:5.5rem;right:1rem;background:#1E2333;border:1px solid var(--border-md);border-radius:var(--r);padding:10px 16px;font-size:12px;color:var(--text-1);box-shadow:0 6px 24px rgba(0,0,0,0.4);opacity:0;transform:translateY(6px);transition:all 0.22s ease;pointer-events:none;z-index:200;max-width:280px}
@@ -518,8 +538,9 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
   <div class="sec-body" id="sec-rtstats">
     <div class="q-wrap">
       <div class="rt-stats" id="rt-stats"></div>
-      <div class="rt-hist-lbl">Last 14 days</div>
+      <div class="rt-hist-lbl">Last 14 days <span style="text-transform:none;letter-spacing:0;color:var(--text-3)">· tap a bar for that day's detail</span></div>
       <div class="rt-hist" id="rt-hist"></div>
+      <div class="rt-detail" id="rt-detail"></div>
     </div>
   </div><!-- /sec-rtstats -->
 
@@ -2830,6 +2851,53 @@ function untickRoutine(){
 }
 
 /* Each day scored against the habits present ON THAT DAY */
+/* Tap any bar to see exactly what was done and what was missed
+   that day — resolved against the habits present ON that date. */
+var rtDetailDate='';
+
+function showDayDetail(iso,keep){
+  if(!keep && rtDetailDate===iso){ rtDetailDate=''; renderRoutineHistory(); return; }
+  rtDetailDate=iso;
+  var el=document.getElementById('rt-detail'); if(!el) return;
+
+  var rt=routineForDate(iso);
+  var items=itemsOn(rt,iso);
+  var done=doneFor(rt,iso);
+
+  if(!items.length){
+    el.className='rt-detail on';
+    el.innerHTML='<div class="rt-detail-hd"><span class="rt-detail-d">'+
+      escH(fmtDayLabel(iso))+'</span></div>'+
+      '<div style="font-size:12px;color:var(--text-3)">No habits were in '+escH(rt)+' on this day.</div>';
+    if(!keep) renderRoutineHistory();
+    return;
+  }
+
+  var hit=items.filter(function(i){ return done.indexOf(i.habitId)>-1; });
+  var miss=items.filter(function(i){ return done.indexOf(i.habitId)===-1; });
+  var pct=Math.round(hit.length/items.length*100);
+
+  function row(i,ok){
+    return '<div class="rt-det-row'+(ok?'':' miss')+'">'+
+      '<div class="rt-det-ic '+(ok?'yes':'no')+'">'+(ok?'\u2713':'\u00d7')+'</div>'+
+      '<div class="rt-det-t">'+escH(cleanTime(i.time)||'\u2014')+'</div>'+
+      '<div class="rt-det-h">'+escH(i.habit)+'</div>'+
+    '</div>';
+  }
+
+  el.className='rt-detail on';
+  el.innerHTML=
+    '<div class="rt-detail-hd">'+
+      '<span class="rt-detail-d">'+escH(fmtDayLabel(iso))+'</span>'+
+      '<span class="rt-detail-s">'+escH(rt)+' \u00b7 '+hit.length+'/'+items.length+' \u00b7 '+pct+'%</span>'+
+    '</div>'+
+    (hit.length? hit.map(function(i){ return row(i,true); }).join('') : '')+
+    (miss.length? miss.map(function(i){ return row(i,false); }).join('') : '')+
+    (miss.length===0 ? '<div style="font-size:11px;color:var(--green);margin-top:8px">Everything done that day.</div>' : '');
+
+  if(!keep) renderRoutineHistory();
+}
+
 function renderRoutineHistory(){
   var statsEl=document.getElementById('rt-stats'), histEl=document.getElementById('rt-hist');
   if(!statsEl||!histEl) return;
@@ -2867,11 +2935,23 @@ function renderRoutineHistory(){
     '<div class="rt-stat"><div class="rt-stat-n" style="color:var(--teal)">'+fullDays+'</div><div class="rt-stat-l">Full days</div></div>';
 
   histEl.innerHTML=days.map(function(d){
-    var t=d.mine?d.iso+' \u2014 '+d.n+'/'+d.t:d.iso+' \u2014 not tracked';
-    return '<div class="rt-day" title="'+t+'" style="opacity:'+(d.mine?1:0.28)+'">'+
-      '<div class="rt-bar"><div class="rt-bar-fill" style="height:'+d.pct+'%"></div></div>'+
-      '<div class="rt-day-lbl">'+d.label+'</div></div>';
+    // Colour by how complete the day was, so the trend reads at a glance
+    var col = !d.mine ? 'rgba(255,255,255,0.07)'
+            : d.pct===100 ? 'var(--green)'
+            : d.pct>=60  ? 'var(--teal)'
+            : d.pct>0    ? 'var(--gold)'
+            : 'rgba(224,123,123,0.35)';
+    var lbl = d.mine ? d.pct+'%' : '\u2013';
+    var isToday = d.iso===isoToday();
+    return '<div class="rt-day'+(d.iso===rtDetailDate?' sel':'')+(isToday?' today':'')+'" '+
+        'onclick="showDayDetail(\''+d.iso+'\')" title="'+d.iso+'">'+
+      '<div class="rt-pct">'+lbl+'</div>'+
+      '<div class="rt-bar"><div class="rt-bar-fill" style="height:'+(d.mine?Math.max(d.pct,2):0)+'%;background:'+col+'"></div></div>'+
+      '<div class="rt-day-lbl">'+d.label+'</div>'+
+    '</div>';
   }).join('');
+
+  if(rtDetailDate) showDayDetail(rtDetailDate,true);
 }
 
 /* ── Drag to reorder ────────────────────────────────────── */
