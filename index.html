@@ -2456,7 +2456,7 @@ function renderGlance(){
 function jumpToSection(key){
   if(!secOpen(key)){ localStorage.setItem('sec_'+key,'1'); applySection(key); }
   var hd=document.getElementById('hd-'+key);
-  if(hd) hd.scrollIntoView({behavior:'smooth',block:'start'});
+  if(hd) hd.scrollIntoView({behavior:'smooth',block:'start'});   // deliberate: user tapped a glance card
 }
 
 function toggleChecklist(){ toggleSection('checklist'); }
@@ -2483,6 +2483,7 @@ var activeRoutine='';
 var selDate='';
 
 var CAL_BACK=7, CAL_FWD=21;
+var _calNeedsScroll=true;   // recentre the strip only on load / date change
 
 function calDates(){
   var out=[], d=new Date(); d.setDate(d.getDate()-CAL_BACK);
@@ -2647,7 +2648,7 @@ function selectRoutine(name){
     dateISO:selDate,routine:name}));
 }
 
-function selectDate(iso){ selDate=iso; activeRoutine=routineForDate(iso); renderRoutine(); }
+function selectDate(iso){ selDate=iso; activeRoutine=routineForDate(iso); _calNeedsScroll=true; renderRoutine(); }
 
 function newRoutine(){
   var n=prompt('Name the new routine:','Routine '+(routineNames().length+1));
@@ -2711,8 +2712,17 @@ function renderCalendar(){
         '<circle class="rt-cal-ring-fg" cx="11" cy="11" r="'+R+'" fill="none" stroke="'+col+'" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="'+dash+'"/>'+
       '</svg><div class="rt-cal-cnt">'+(total?hit+'/'+total:'\u2013')+'</div></div></div>';
   }).join('');
-  var sel=el.querySelector('.rt-cal-day.sel');
-  if(sel&&sel.scrollIntoView) sel.scrollIntoView({block:'nearest',inline:'center'});
+  /* Centre the selected day by moving the strip's own scrollLeft.
+     scrollIntoView() would scroll the PAGE too, which yanked the
+     view to the top every time a habit was ticked. */
+  if(_calNeedsScroll){
+    var sel=el.querySelector('.rt-cal-day.sel');
+    if(sel){
+      var target=sel.offsetLeft-(el.clientWidth/2)+(sel.offsetWidth/2);
+      el.scrollLeft=Math.max(0,target);
+    }
+    _calNeedsScroll=false;
+  }
   var lbl=document.getElementById('rt-daylbl');
   if(lbl) lbl.textContent=fmtDayLabel(selDate);
 }
@@ -2825,13 +2835,51 @@ function removeFromRoutine(memberId){
   rtSync(postToSheet({sheet:'RoutineItems',action:'remove_item',sheetId:memberId,removedOn:from}));
 }
 
+/* Ticking updates only what changed. A full renderRoutine() here
+   rebuilt every row and re-rendered the calendar, which made the
+   page jump — the list is left in place instead. */
 function toggleRoutineItem(habitId){
   var d=selDate||isoToday();
   if(!routineLog[d]) routineLog[d]={};
   if(!routineLog[d][activeRoutine]) routineLog[d][activeRoutine]=[];
   var arr=routineLog[d][activeRoutine], ix=arr.indexOf(habitId);
+  var nowDone = ix===-1;
   if(ix>-1) arr.splice(ix,1); else arr.push(habitId);
-  renderRoutine(); saveRoutineLog();
+
+  // Flip just this row's tick and strike-through
+  var box=document.getElementById('rt-items');
+  if(box){
+    var cb=box.querySelector('.rt-cb[onclick*="'+habitId+'"]');
+    var row=cb&&cb.closest('.rt-row');
+    if(row){
+      cb.classList.toggle('done',nowDone);
+      row.classList.toggle('done',nowDone);
+    }
+  }
+
+  refreshRoutineCounts();   // progress bar, calendar ring, badges
+  saveRoutineLog();
+}
+
+/* Update the numbers around the list without rebuilding the list */
+function refreshRoutineCounts(){
+  var d=selDate||isoToday();
+  var items=itemsFor(activeRoutine);
+  var done=doneFor(activeRoutine,d);
+  var hit=done.filter(function(x){ return items.some(function(i){ return i.habitId===x; }); }).length;
+
+  var pr=document.getElementById('rt-progress');
+  if(pr && items.length){
+    var pct=Math.round(hit/items.length*100);
+    var dayWord=d===isoToday()?'today':fmtDayLabel(d).replace(/^Today \u00b7 /,'');
+    pr.innerHTML='<div class="prog-meta"><span>'+escH(activeRoutine)+' \u00b7 '+escH(dayWord)+'</span>'+
+      '<span class="prog-ct">'+hit+'/'+items.length+'</span></div>'+
+      '<div class="prog-track"><div class="prog-fill" style="width:'+pct+'%"></div></div>';
+  }
+
+  renderCalendar();          // rings only; scroll is gated by the flag
+  renderRoutineHistory();
+  if(window.updateSectionBadges) updateSectionBadges();
 }
 
 function saveRoutineLog(){
@@ -3044,6 +3092,7 @@ function replaceRoutineDayFromSheet(rows){
   rows.forEach(function(r){ if(r.dateISO&&r.routine) routineDay[r.dateISO]=r.routine; });
   if(!selDate) selDate=isoToday();
   activeRoutine=routineForDate(selDate);
+  _calNeedsScroll=true;
   renderRoutine();
 }
 
