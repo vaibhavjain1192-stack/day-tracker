@@ -2659,21 +2659,45 @@ function newRoutine(){
   showToast('Now add habits from your master list.','');
 }
 
-function renameRoutine(){
+/* Renaming rewrites the name in all three routine sheets, so every
+   past day, its completion record and every future assignment follow
+   the new name. Nothing is orphaned under the old one. */
+async function renameRoutine(){
   if(!activeRoutine) return;
-  var n=prompt('Rename this routine:',activeRoutine);
+  var n=prompt('Rename this routine:\n\nApplies to every past and future day.',activeRoutine);
   if(!n||!n.trim()||n.trim()===activeRoutine) return;
   n=n.trim();
   if(routineNames().indexOf(n)>-1){ showToast('That name is already used.','error'); return; }
   var oldName=activeRoutine;
+
+  // Count what will move, so the toast can be specific
+  var dayCount=Object.keys(routineDay).filter(function(d){ return routineDay[d]===oldName; }).length;
+  var logCount=Object.keys(routineLog).filter(function(d){ return routineLog[d][oldName]; }).length;
+
+  // Local state first, so the UI responds immediately
   extraRoutines=extraRoutines.map(function(r){ return r===oldName?n:r; });
   routineItems.forEach(function(m){ if(m.routine===oldName) m.routine=n; });
   Object.keys(routineDay).forEach(function(d){ if(routineDay[d]===oldName) routineDay[d]=n; });
   Object.keys(routineLog).forEach(function(d){
     if(routineLog[d][oldName]){ routineLog[d][n]=routineLog[d][oldName]; delete routineLog[d][oldName]; }
   });
-  activeRoutine=n; renderRoutine();
-  rtSync(postToSheet({sheet:'RoutineItems',action:'rename_routine_items',oldName:oldName,newName:n}));
+  activeRoutine=n;
+  _calNeedsScroll=false;
+  renderRoutine();
+
+  // Then all three sheets
+  var el=document.getElementById('rt-sync');
+  if(el){ el.textContent='Renaming everywhere\u2026'; el.className='sync-txt syncing'; }
+  var r1=await postToSheet({sheet:'RoutineItems',action:'rename_routine_items',oldName:oldName,newName:n});
+  var r2=await postToSheet({sheet:'RoutineDay', action:'rename_routine_days', oldName:oldName,newName:n});
+  var r3=await postToSheet({sheet:'RoutineLog', action:'rename_routine_log',  oldName:oldName,newName:n});
+  var ok=r1&&r2&&r3;
+
+  if(el){ el.textContent=ok?'Renamed everywhere \u2713':'Renamed locally \u2014 sync incomplete';
+          el.className='sync-txt '+(ok?'ok':'err'); }
+  showToast(ok
+    ? 'Renamed to "'+n+'" \u00b7 '+dayCount+' day'+(dayCount!==1?'s':'')+', '+logCount+' logged'
+    : 'Renamed locally \u2014 Sheet sync failed.', ok?'success':'error');
 }
 
 async function deleteRoutine(){
