@@ -343,6 +343,25 @@ body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:
 .rt-daylbl{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:6px}
 .rt-daylbl-d{font-size:12px;color:var(--text-1);font-weight:500}
 .rt-daylbl-hint{font-size:10px;color:var(--text-3);font-family:var(--fm)}
+/* PER-HABIT PERFORMANCE */
+.hp-hd{display:grid;grid-template-columns:1fr 62px 62px;gap:8px;padding-bottom:7px;border-bottom:1px solid var(--border);font-family:var(--fm);font-size:9px;color:var(--text-3);letter-spacing:0.08em;text-transform:uppercase}
+.hp-hd span:not(:first-child){text-align:right}
+.hp-row{display:grid;grid-template-columns:1fr 62px 62px;gap:8px;align-items:center;padding:9px 0;border-bottom:1px solid var(--border)}
+.hp-row:last-child{border-bottom:none}
+.hp-name{min-width:0}
+.hp-t{font-family:var(--fm);font-size:9px;color:var(--gold);margin-bottom:2px}
+.hp-h{font-size:12px;color:var(--text-1);line-height:1.35;overflow-wrap:anywhere}
+.hp-bar{height:3px;background:rgba(255,255,255,0.06);border-radius:2px;margin-top:5px;overflow:hidden}
+.hp-fill{height:100%;border-radius:2px;transition:width .3s ease}
+.hp-cell{text-align:right}
+.hp-pct{font-family:var(--fm);font-size:13px;font-weight:600;line-height:1.1}
+.hp-frac{font-family:var(--fm);font-size:9px;color:var(--text-3);margin-top:2px}
+.hp-none{font-family:var(--fm);font-size:11px;color:var(--text-3)}
+.hp-note{font-size:11px;color:var(--text-3);margin-top:10px;line-height:1.55}
+@media(max-width:640px){
+  .hp-hd,.hp-row{grid-template-columns:1fr 54px 54px;gap:6px}
+  .hp-pct{font-size:12px}
+}
 /* QUICK LINKS */
 .qlinks{display:grid;grid-template-columns:repeat(auto-fit,minmax(126px,1fr));gap:8px}
 .qlink{display:flex;align-items:center;gap:9px;padding:11px 12px;background:var(--card);border:1px solid var(--border);border-radius:var(--r);text-decoration:none;transition:all var(--tr);position:relative;overflow:hidden}
@@ -545,6 +564,14 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
       <div class="rt-detail" id="rt-detail"></div>
     </div>
   </div><!-- /sec-rtstats -->
+
+  <div class="sec-hd" id="hd-habitperf" onclick="toggleSection('habitperf')"><span class="sec-icon">&#128202;</span><span class="sec-title">Habit performance</span><span class="lbl-line"></span><span class="sec-badge" id="badge-habitperf"></span><span class="sec-caret open" id="caret-habitperf">&#9662;</span></div>
+  <div class="sec-body" id="sec-habitperf">
+    <div style="font-size:11px;color:var(--text-2);margin-bottom:10px">How often each habit in <span id="hp-routine" style="color:var(--gold)"></span> actually gets done, out of the days it was scheduled.</div>
+    <div class="hp-hd"><span>Habit</span><span>7 days</span><span>All time</span></div>
+    <div id="hp-list"></div>
+    <div class="hp-note" id="hp-note"></div>
+  </div><!-- /sec-habitperf -->
 
   <div class="sec-hd" id="hd-habits" onclick="toggleSection('habits')"><span class="sec-icon">&#127775;</span><span class="sec-title">Habits I'm following</span><span class="lbl-line"></span><span class="sec-badge" id="badge-habits"></span><span class="sec-caret open" id="caret-habits">&#9662;</span></div>
   <div class="sec-body" id="sec-habits">
@@ -2378,7 +2405,7 @@ function replaceKundaliFromSheet(s){
    Open/closed state is a display preference, so it lives in
    localStorage — no dashboard data is stored there.
 ──────────────────────────────────────────────────────── */
-var SEC_KEYS=['links','master','routine','rtstats','habits','checklist','pillars','anchors'];
+var SEC_KEYS=['links','master','routine','rtstats','habitperf','habits','checklist','pillars','anchors'];
 
 function secOpen(key){
   var v=localStorage.getItem('sec_'+key);
@@ -2428,6 +2455,7 @@ function updateSectionBadges(){
   set('checklist', cDone+'/'+CHECKLIST.length, cDone===CHECKLIST.length);
 
   set('links',''); set('pillars',''); set('anchors','');
+  set('habitperf','');
   renderGlance();
 }
 
@@ -2798,6 +2826,7 @@ function renderRoutine(){
     '<div class="prog-track"><div class="prog-fill" style="width:'+pct+'%"></div></div>';
 
   renderRoutineHistory();
+  renderHabitPerf();
   if(window.updateSectionBadges) updateSectionBadges();
 }
 
@@ -2904,6 +2933,8 @@ function refreshRoutineCounts(){
 
   renderCalendar();          // rings only; scroll is gated by the flag
   renderRoutineHistory();
+  renderHabitPerf();
+  renderHabitPerf();
   if(window.updateSectionBadges) updateSectionBadges();
 }
 
@@ -2970,6 +3001,99 @@ function showDayDetail(iso,keep){
     (miss.length===0 ? '<div style="font-size:11px;color:var(--green);margin-top:8px">Everything done that day.</div>' : '');
 
   if(!keep) renderRoutineHistory();
+}
+
+/* ── Per-habit completion ────────────────────────────────
+   For each habit currently in the routine, count the days it
+   was actually SCHEDULED — i.e. the day ran this routine, the
+   habit had joined by then and had not yet left — and how many
+   of those it was done on. Days before a habit joined are never
+   part of its denominator, so a habit added yesterday shows 0/1
+   rather than being punished for the whole month.
+   Future days are excluded; only up to today counts.
+──────────────────────────────────────────────────────── */
+function habitStats(habitId, windowDays){
+  var today=isoToday(), sched=0, done=0, first='';
+  // Look back far enough to cover all time, or just the window
+  var span = windowDays || 400;
+  for(var i=0;i<span;i++){
+    var d=new Date(); d.setDate(d.getDate()-i);
+    var iso=isoDate(d);
+    if(iso>today) continue;
+    if(routineForDate(iso)!==activeRoutine) continue;
+    var inRoutine=itemsOn(activeRoutine,iso).some(function(x){ return x.habitId===habitId; });
+    if(!inRoutine) continue;
+    sched++;
+    if(!first||iso<first) first=iso;
+    if(doneFor(activeRoutine,iso).indexOf(habitId)>-1) done++;
+  }
+  return {sched:sched, done:done, pct: sched?Math.round(done/sched*100):null, since:first};
+}
+
+function hpColor(pct){
+  if(pct===null) return 'var(--text-3)';
+  if(pct>=80) return 'var(--green)';
+  if(pct>=50) return 'var(--teal)';
+  if(pct>=25) return 'var(--gold)';
+  return 'var(--rose)';
+}
+
+function renderHabitPerf(){
+  var el=document.getElementById('hp-list'); if(!el) return;
+  var rn=document.getElementById('hp-routine');
+  if(rn) rn.textContent=activeRoutine||'';
+
+  var items=itemsOn(activeRoutine,isoToday());
+  var noteEl=document.getElementById('hp-note');
+
+  if(!items.length){
+    el.innerHTML='<div class="rt-empty">No habits in '+escH(activeRoutine||'this routine')+' today.</div>';
+    if(noteEl) noteEl.textContent='';
+    return;
+  }
+
+  var rows=items.map(function(it){
+    return {it:it, w:habitStats(it.habitId,7), a:habitStats(it.habitId)};
+  });
+  // Weakest first over 7 days — the ones needing attention surface at the top
+  rows.sort(function(x,y){
+    var a=x.w.pct===null?101:x.w.pct, b=y.w.pct===null?101:y.w.pct;
+    if(a!==b) return a-b;
+    return timeToMin(x.it.time)-timeToMin(y.it.time);
+  });
+
+  function cell(s){
+    if(s.pct===null) return '<div class="hp-cell"><div class="hp-none">\u2013</div></div>';
+    return '<div class="hp-cell">'+
+      '<div class="hp-pct" style="color:'+hpColor(s.pct)+'">'+s.pct+'%</div>'+
+      '<div class="hp-frac">'+s.done+'/'+s.sched+'</div></div>';
+  }
+
+  el.innerHTML=rows.map(function(r){
+    var pct=r.a.pct===null?0:r.a.pct;
+    return '<div class="hp-row">'+
+      '<div class="hp-name">'+
+        (r.it.time?'<div class="hp-t">'+escH(cleanTime(r.it.time))+'</div>':'')+
+        '<div class="hp-h">'+escH(r.it.habit)+'</div>'+
+        '<div class="hp-bar"><div class="hp-fill" style="width:'+pct+'%;background:'+hpColor(r.a.pct)+'"></div></div>'+
+      '</div>'+
+      cell(r.w)+cell(r.a)+
+    '</div>';
+  }).join('');
+
+  // One line of context: overall rate and the weakest habit
+  var totD=0, totS=0;
+  rows.forEach(function(r){ totD+=r.a.done; totS+=r.a.sched; });
+  var worst=rows.filter(function(r){ return r.a.pct!==null; })[0];
+  if(noteEl){
+    noteEl.innerHTML = totS
+      ? 'Across all habits: <strong style="color:var(--text-1)">'+Math.round(totD/totS*100)+'%</strong> ('+totD+'/'+totS+' scheduled). '+
+        (worst&&worst.a.pct<60 ? 'Weakest right now: <strong style="color:var(--text-1)">'+escH(worst.it.habit)+'</strong>.' : '')
+      : 'Nothing scheduled yet \u2014 stats appear once this routine has run for a day.';
+  }
+
+  var badge=document.getElementById('badge-habitperf');
+  if(badge && totS){ badge.textContent=Math.round(totD/totS*100)+'%'; badge.style.display=''; }
 }
 
 function renderRoutineHistory(){
