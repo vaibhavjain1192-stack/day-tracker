@@ -3044,16 +3044,56 @@ function refreshRoutineCounts(){
   if(window.updateSectionBadges) updateSectionBadges();
 }
 
+/* ── Routine log writes ──────────────────────────────────
+   Each answer used to fire its own request carrying the whole
+   day. Those complete out of order, so an earlier write could
+   land after a later one and overwrite it — which is how a
+   "Yes" or a reason went missing on refresh.
+
+   Writes are now coalesced: rapid taps collapse into a single
+   request holding the final state, and only one request per
+   (date, routine) is ever in flight. If more answers arrive
+   while one is flying, another write follows it rather than
+   racing it.
+──────────────────────────────────────────────────────── */
+var _rlTimer=null, _rlInFlight=false, _rlAgain=false;
+
 function saveRoutineLog(){
-  var d=selDate||isoToday();
-  var p=d.split('-'), dd=new Date(+p[0],+p[1]-1,+p[2]);
-  var mm=missFor(activeRoutine,d);
-  var missStr=Object.keys(mm).map(function(k){ return k+'~~'+(mm[k]||''); }).join('||');
-  rtSync(postToSheet({sheet:'RoutineLog',
-    date:dd.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}),
-    dateISO:d,routine:activeRoutine,
-    done:doneFor(activeRoutine,d).join(','), missed:missStr}));
+  clearTimeout(_rlTimer);
+  var el=document.getElementById('rt-sync');
+  if(el){ el.textContent='Saving\u2026'; el.className='sync-txt syncing'; }
+  _rlTimer=setTimeout(flushRoutineLog,450);
 }
+
+async function flushRoutineLog(){
+  if(_rlInFlight){ _rlAgain=true; return; }   // queue, never race
+  _rlInFlight=true;
+
+  var d=selDate||isoToday();
+  var rt=activeRoutine;
+  var p=d.split('-'), dd=new Date(+p[0],+p[1]-1,+p[2]);
+  var mm=missFor(rt,d);
+  var missStr=Object.keys(mm).map(function(k){ return k+'~~'+(mm[k]||''); }).join('||');
+
+  var ok=await postToSheet({sheet:'RoutineLog',
+    date:dd.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}),
+    dateISO:d, routine:rt,
+    done:doneFor(rt,d).join(','), missed:missStr});
+
+  _rlInFlight=false;
+  DIAG.rtSync = ok?'OK':'FAILED';
+
+  var el=document.getElementById('rt-sync');
+  if(el){ el.textContent=ok?'Saved to Sheet \u2713':'Sheet sync failed \u2014 tap a habit to retry';
+          el.className='sync-txt '+(ok?'ok':'err'); }
+
+  if(_rlAgain){ _rlAgain=false; flushRoutineLog(); }   // newer state pending
+}
+
+/* Don't let a pending write die with the page */
+window.addEventListener('beforeunload',function(){
+  if(_rlTimer){ clearTimeout(_rlTimer); flushRoutineLog(); }
+});
 
 function untickRoutine(){
   var d=selDate||isoToday();
