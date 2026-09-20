@@ -558,6 +558,7 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
     <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;flex-wrap:wrap;gap:6px">
       <span class="sync-txt" id="rt-sync"></span>
       <div style="display:flex;gap:6px">
+        <button class="btn" onclick="verifyRoutineLog()">&#128269; Verify</button>
         <button class="btn" onclick="renameRoutine()">&#9998; Rename</button>
         <button class="btn" onclick="deleteRoutine()">&#128465; Delete</button>
         <button class="btn" onclick="untickRoutine()">Untick all</button>
@@ -935,6 +936,13 @@ function init(){
       if(Array.isArray(d.routineItems))replaceRoutineItemsFromSheet(d.routineItems);
       if(Array.isArray(d.routineLog))  replaceRoutineLogFromSheet(d.routineLog);
       if(Array.isArray(d.routineDay))  replaceRoutineDayFromSheet(d.routineDay);
+      // Everything is in memory now — draw once, with the correct routine
+      if(!selDate) selDate=isoToday();
+      activeRoutine=routineForDate(selDate);
+      _calNeedsScroll=true;
+      renderMaster(); renderRoutine();
+      DIAG.logRows=(d.routineLog||[]).length+' log rows, '+
+        (d.routineLog||[]).filter(function(r){return r.missed;}).length+' with reasons';
 
       DIAG.gratRaw='ok / '+(d.gratitude||[]).length+' rows';
       DIAG.motRaw ='ok / '+(d.motivation||[]).length+' rows';
@@ -990,6 +998,7 @@ function showDiagnostics(){
     'In memory: '+situations.length+' situations, '+thoughts.length+' thoughts, '+
       posts.length+' posts, '+motEntries.length+' motivation, '+gratEntries.length+' gratitude',
     '',
+    'Routine log: '+(DIAG.logRows||'not loaded'),
     'Kundali fetch: '+(DIAG.kunRaw||'not run'),
     'Habits fetch: '+(DIAG.habRaw||'not run'),
     'Habits loaded: '+(DIAG.habLoaded||'none'),
@@ -2706,6 +2715,78 @@ function newRoutine(){
 /* Renaming rewrites the name in all three routine sheets, so every
    past day, its completion record and every future assignment follow
    the new name. Nothing is orphaned under the old one. */
+/* Read today's row straight back from the Sheet and compare it to
+   what the page is showing. Settles "did it save?" against "did it
+   load?" without guesswork. */
+async function verifyRoutineLog(){
+  var d=selDate||isoToday();
+  var el=document.getElementById('rt-sync');
+  if(el){ el.textContent='Checking the Sheet\u2026'; el.className='sync-txt syncing'; }
+
+  // Force any pending write out first
+  if(_rlTimer){ clearTimeout(_rlTimer); await flushRoutineLog(); }
+
+  var res=await sheetFetch(WORKER_URL+'?action=getAllRoutineLogs');
+  if(!res||res.status!=='ok'||!Array.isArray(res.routineLog)){
+    if(el){ el.textContent='Could not read the Sheet'; el.className='sync-txt err'; }
+    showToast('Sheet unreachable \u2014 nothing was verified.','error');
+    return;
+  }
+
+  var row=res.routineLog.filter(function(r){
+    return r.dateISO===d && r.routine===activeRoutine; })[0];
+
+  var items=itemsOn(activeRoutine,d);
+  var byId={}; items.forEach(function(i){ byId[i.habitId]=i.habit; });
+
+  var sheetYes=row?String(row.done||'').split(',').map(function(s){return s.trim();}).filter(Boolean):[];
+  var sheetMiss={};
+  if(row) String(row.missed||'').split('||').forEach(function(p){
+    if(!p.trim())return; var b=p.split('~~');
+    if(b[0]&&b[0].trim()) sheetMiss[b[0].trim()]=(b[1]||'').trim();
+  });
+
+  var pageYes=doneFor(activeRoutine,d);
+  var pageMiss=missFor(activeRoutine,d);
+
+  var lines=[
+    'Day: '+d+'   Routine: '+activeRoutine,
+    row ? 'Row found in RoutineLog \u2713' : 'NO ROW in RoutineLog for this day \u2717',
+    '',
+    'In the Sheet   \u2014 yes: '+sheetYes.length+', no: '+Object.keys(sheetMiss).length,
+    'On this page   \u2014 yes: '+pageYes.length+', no: '+Object.keys(pageMiss).length,
+    ''
+  ];
+
+  items.forEach(function(i){
+    var sState = sheetYes.indexOf(i.habitId)>-1 ? 'YES'
+               : (Object.prototype.hasOwnProperty.call(sheetMiss,i.habitId) ? 'NO' : '\u2013');
+    var pState = pageYes.indexOf(i.habitId)>-1 ? 'YES'
+               : (Object.prototype.hasOwnProperty.call(pageMiss,i.habitId) ? 'NO' : '\u2013');
+    var why = sheetMiss[i.habitId] ? '  ("'+sheetMiss[i.habitId]+'")' : '';
+    var flag = sState===pState ? '' : '   <-- MISMATCH';
+    lines.push('  sheet '+sState.padEnd(4)+' | page '+pState.padEnd(4)+'  '+i.habit+why+flag);
+  });
+
+  var mismatch = items.some(function(i){
+    var s = sheetYes.indexOf(i.habitId)>-1?'YES':(Object.prototype.hasOwnProperty.call(sheetMiss,i.habitId)?'NO':'-');
+    var p = pageYes.indexOf(i.habitId)>-1?'YES':(Object.prototype.hasOwnProperty.call(pageMiss,i.habitId)?'NO':'-');
+    return s!==p;
+  });
+
+  lines.push('');
+  lines.push(mismatch
+    ? 'Sheet and page disagree \u2014 the load path is dropping data.'
+    : 'Sheet matches the page \u2014 saving is working. If it vanishes after refresh, the load path is at fault.');
+
+  openEditModal('Sheet check',
+    '<pre style="font-family:var(--fm);font-size:11px;color:var(--text-2);white-space:pre-wrap;line-height:1.7;margin:0">'+
+    escH(lines.join('\n'))+'</pre>', {type:'diag'});
+
+  if(el){ el.textContent=mismatch?'Mismatch \u2014 see the report':'Sheet matches \u2713';
+          el.className='sync-txt '+(mismatch?'err':'ok'); }
+}
+
 async function renameRoutine(){
   if(!activeRoutine) return;
   var n=prompt('Rename this routine:\n\nApplies to every past and future day.',activeRoutine);
