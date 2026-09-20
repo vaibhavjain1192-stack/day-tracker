@@ -440,34 +440,13 @@ body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:
 .rt-stat-n{font-family:var(--fd);font-size:1.5rem;line-height:1;color:var(--gold)}
 .rt-stat-l{font-size:10px;color:var(--text-3);margin-top:3px}
 .rt-hist-lbl{font-family:var(--fm);font-size:9px;color:var(--text-3);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px}
-.rt-hist{display:flex;gap:5px;align-items:flex-end}
-.rt-day{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;border-radius:var(--rsm);padding:4px 1px;transition:background var(--tr)}
-.rt-day:hover{background:var(--surface)}
-.rt-day.sel{background:var(--gold-dim)}
-.rt-pct{font-family:var(--fm);font-size:8.5px;color:var(--text-2);line-height:1}
-.rt-day.sel .rt-pct{color:var(--gold)}
-.rt-bar{width:100%;height:62px;background:rgba(255,255,255,0.04);border-radius:3px;position:relative;overflow:hidden;border:1px solid var(--border)}
-.rt-bar-fill{position:absolute;bottom:0;left:0;right:0;border-radius:0 0 2px 2px;transition:height 0.3s ease}
-.rt-day-lbl{font-family:var(--fm);font-size:8.5px;color:var(--text-3);line-height:1}
-.rt-day.today .rt-day-lbl{color:var(--gold);font-weight:600}
-/* Day breakdown */
-.rt-detail{margin-top:14px;padding-top:12px;border-top:1px solid var(--border);display:none}
-.rt-detail.on{display:block}
-.rt-detail-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px;flex-wrap:wrap;gap:6px}
-.rt-detail-d{font-size:12px;font-weight:600;color:var(--text-1)}
-.rt-detail-s{font-family:var(--fm);font-size:11px;color:var(--text-2)}
-.rt-det-row{display:flex;align-items:flex-start;gap:9px;padding:6px 0;border-bottom:1px solid var(--border)}
-.rt-det-row:last-child{border-bottom:none}
-.rt-det-ic{flex-shrink:0;width:15px;height:15px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;margin-top:1px}
-.rt-det-ic.yes{background:var(--green);color:#0F1117}
-.rt-det-ic.no{background:transparent;border:1.5px solid rgba(224,123,123,0.5);color:var(--rose)}
-.rt-det-t{font-family:var(--fm);font-size:10px;color:var(--gold);flex-shrink:0;width:66px}
-.rt-det-h{font-size:12px;color:var(--text-1);line-height:1.4;min-width:0;overflow-wrap:anywhere}
-.rt-det-row.miss .rt-det-h{color:var(--text-3)}
-@media(max-width:640px){
+.rt-day.sel .rt-day.today .rt-det-row.miss @media(max-width:640px){
   .rt-head,.rt-row{grid-template-columns:18px 74px 1fr 66px}
   .rt-add{grid-template-columns:1fr;gap:6px}
 }
+#totop{position:fixed;right:1rem;bottom:5.5rem;z-index:90;width:34px;height:34px;border-radius:50%;background:var(--card);border:1px solid var(--border-md);color:var(--text-2);font-size:11px;cursor:pointer;display:none;align-items:center;justify-content:center;transition:all var(--tr);box-shadow:0 4px 14px rgba(0,0,0,.35)}
+#totop:hover{color:var(--gold);border-color:rgba(201,168,76,.4)}
+#totop.on{display:flex}
 .toast{position:fixed;bottom:5.5rem;right:1rem;background:#1E2333;border:1px solid var(--border-md);border-radius:var(--r);padding:10px 16px;font-size:12px;color:var(--text-1);box-shadow:0 6px 24px rgba(0,0,0,0.4);opacity:0;transform:translateY(6px);transition:all 0.22s ease;pointer-events:none;z-index:200;max-width:280px}
 .toast.show{opacity:1;transform:translateY(0)}
 .toast.success{border-color:rgba(107,191,142,0.32)}.toast.error{border-color:rgba(224,123,123,0.32)}
@@ -491,9 +470,11 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
 </head>
 <body>
 <div class="toast" id="toast"></div>
+<button id="totop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#9650;</button>
 <nav class="nav">
   <div class="nav-inner">
     <button class="tab on" onclick="switchTab('morning')"><span class="tab-icon">&#9728;&#65039;</span><span class="tab-label">Morning</span></button>
+    <button class="tab" onclick="switchTab('routine')"><span class="tab-icon">&#128197;</span><span class="tab-label">Routine</span></button>
     <button class="tab" onclick="switchTab('situations')"><span class="tab-icon">&#128250;<span class="badge" id="sit-badge">0</span></span><span class="tab-label">Situations</span></button>
     <button class="tab" onclick="switchTab('thoughts')"><span class="tab-icon">&#128161;<span class="badge" id="th-badge">0</span></span><span class="tab-label">Thoughts</span></button>
     <button class="tab" onclick="switchTab('posts')"><span class="tab-icon">&#128204;<span class="badge" id="post-badge">0</span></span><span class="tab-label">Posts</span></button>
@@ -524,6 +505,48 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
     </div>
   </div><!-- /sec-links -->
 
+  <div class="sec-hd" id="hd-habits" onclick="toggleSection('habits')"><span class="sec-icon">&#127775;</span><span class="sec-title">Habits I'm following</span><span class="lbl-line"></span><span class="sec-badge" id="badge-habits"></span><span class="sec-caret open" id="caret-habits">&#9662;</span></div>
+  <div class="sec-body" id="sec-habits">
+    <div class="q-wrap">
+      <div style="font-size:11px;color:var(--text-2);margin-bottom:10px">These stay on your list every day until you remove them. Tick them off as you go &#8212; the ticks reset each morning. Drag &#9776; to reorder.</div>
+      <div id="today-habits-list"></div>
+      <div id="habit-archive-box" style="display:none"></div>
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <input class="sin" id="today-habit-input" type="text" placeholder="e.g. Pause for 3 breaths before reacting..." style="flex:1" onkeydown="if(event.key==='Enter'){addTodayHabit();event.preventDefault();}">
+        <button class="btn gold" onclick="addTodayHabit()" style="white-space:nowrap">+ Add</button>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;flex-wrap:wrap;gap:6px">
+        <span class="sync-txt" id="hab-day-sync"></span>
+        <button class="btn" onclick="clearTodayHabits()">Untick all</button>
+      </div>
+    </div>
+  </div><!-- /sec-habits -->
+
+  <div class="sec-hd" id="hd-checklist" onclick="toggleSection('checklist')"><span class="sec-icon">&#9989;</span><span class="sec-title">Daily checklist</span><span class="lbl-line"></span><span class="sec-badge" id="badge-checklist"></span><span class="sec-caret" id="caret-checklist">&#9662;</span></div>
+  <div class="sec-body closed" id="sec-checklist">
+    <div class="cl-block" id="cl-block"><div id="cl-list"></div><div class="prog-wrap"><div class="prog-meta"><span>Practices</span><span class="prog-ct" id="prog-txt">0/8</span></div><div class="prog-track"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div></div></div>
+  </div><!-- /sec-checklist -->
+
+  <div class="sec-hd" id="hd-pillars" onclick="toggleSection('pillars')"><span class="sec-icon">&#127963;</span><span class="sec-title">Five pillars</span><span class="lbl-line"></span><span class="sec-badge" id="badge-pillars"></span><span class="sec-caret" id="caret-pillars">&#9662;</span></div>
+  <div class="sec-body closed" id="sec-pillars">
+    <div class="pillars-wrap" id="pillars-wrap"></div>
+    </div><!-- /sec-pillars -->
+
+  <div class="sec-hd" id="hd-anchors" onclick="toggleSection('anchors')"><span class="sec-icon">&#9875;</span><span class="sec-title">Anchor intentions</span><span class="lbl-line"></span><span class="sec-badge" id="badge-anchors"></span><span class="sec-caret" id="caret-anchors">&#9662;</span></div>
+  <div class="sec-body closed" id="sec-anchors">
+    <div class="int-row" style="margin-bottom:1rem"><div class="int-tile"><div class="int-e">&#9208;&#65039;</div><div class="int-t">Pause before reacting</div><div class="int-b">3 deep breaths before responding to anything charged.</div></div><div class="int-tile"><div class="int-e">&#127919;</div><div class="int-t">One task, full focus</div><div class="int-b">No tabs, no phone — one thing at a time during deep work.</div></div><div class="int-tile"><div class="int-e">&#127807;</div><div class="int-t">Hard thing first</div><div class="int-b">Most important work before email or meetings steal the morning.</div></div></div>
+  </div><!-- /sec-anchors -->
+
+  <div class="foot"><span class="foot-note" id="streak-txt"></span><div class="foot-btns"><button class="btn" onclick="switchTab('situations')">&#128250; Situations</button><button class="btn" onclick="resetDay()">&#8635; Reset day</button></div></div>
+</div>
+
+<!-- TAB 2: ROUTINE -->
+<div class="pg" id="pg-routine">
+  <div class="past-hdr">
+    <div class="past-title">Routine</div>
+    <div class="past-sub">Your habit library, today's schedule and how it's tracking.</div>
+  </div>
+
   <div class="sec-hd" id="hd-master" onclick="toggleSection('master')"><span class="sec-icon">&#128203;</span><span class="sec-title">Master habit list</span><span class="lbl-line"></span><span class="sec-badge" id="badge-master"></span><span class="sec-caret" id="caret-master">&#9662;</span></div>
   <div class="sec-body closed" id="sec-master">
     <div style="font-size:11px;color:var(--text-2);margin-bottom:10px">Every habit you might follow, with its time. Routines are built by picking from this list.</div>
@@ -541,7 +564,7 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
     <div class="rt-cal" id="rt-cal"></div>
     <div class="rt-daylbl">
       <span class="rt-daylbl-d" id="rt-daylbl"></span>
-      <span class="rt-daylbl-hint">Pick a routine for this day</span>
+      <button class="btn" id="rt-today-btn" style="display:none;font-size:10px;padding:3px 10px" onclick="selectDate(isoToday())">&#8617; Today</button>
     </div>
     <div class="rt-selector" id="rt-selector"></div>
     <div class="rt-head">
@@ -574,56 +597,21 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
   <div class="sec-body" id="sec-rtstats">
     <div class="q-wrap">
       <div class="rt-stats" id="rt-stats"></div>
-      <div class="rt-hist-lbl">Last 14 days <span style="text-transform:none;letter-spacing:0;color:var(--text-3)">· tap a bar for that day's detail</span></div>
-      <div class="rt-hist" id="rt-hist"></div>
-      <div class="rt-detail" id="rt-detail"></div>
+      <div class="rt-hist-lbl">Tap any date above to see and edit that day</div>
     </div>
   </div><!-- /sec-rtstats -->
 
-  <div class="sec-hd" id="hd-habitperf" onclick="toggleSection('habitperf')"><span class="sec-icon">&#128202;</span><span class="sec-title">Habit performance</span><span class="lbl-line"></span><span class="sec-badge" id="badge-habitperf"></span><span class="sec-caret open" id="caret-habitperf">&#9662;</span></div>
-  <div class="sec-body" id="sec-habitperf">
+  <div class="sec-hd" id="hd-habitperf" onclick="toggleSection('habitperf')"><span class="sec-icon">&#128202;</span><span class="sec-title">Habit performance</span><span class="lbl-line"></span><span class="sec-badge" id="badge-habitperf"></span><span class="sec-caret" id="caret-habitperf">&#9662;</span></div>
+  <div class="sec-body closed" id="sec-habitperf">
     <div style="font-size:11px;color:var(--text-2);margin-bottom:10px">How often each habit in <span id="hp-routine" style="color:var(--gold)"></span> actually gets done, out of the days it was scheduled.</div>
     <div class="hp-hd"><span>Habit</span><span>7 days</span><span>All time</span></div>
     <div id="hp-list"></div>
     <div class="hp-note" id="hp-note"></div>
   </div><!-- /sec-habitperf -->
 
-  <div class="sec-hd" id="hd-habits" onclick="toggleSection('habits')"><span class="sec-icon">&#127775;</span><span class="sec-title">Habits I'm following</span><span class="lbl-line"></span><span class="sec-badge" id="badge-habits"></span><span class="sec-caret open" id="caret-habits">&#9662;</span></div>
-  <div class="sec-body" id="sec-habits">
-    <div class="q-wrap">
-      <div style="font-size:11px;color:var(--text-2);margin-bottom:10px">These stay on your list every day until you remove them. Tick them off as you go &#8212; the ticks reset each morning. Drag &#9776; to reorder.</div>
-      <div id="today-habits-list"></div>
-      <div id="habit-archive-box" style="display:none"></div>
-      <div style="display:flex;gap:8px;margin-top:10px">
-        <input class="sin" id="today-habit-input" type="text" placeholder="e.g. Pause for 3 breaths before reacting..." style="flex:1" onkeydown="if(event.key==='Enter'){addTodayHabit();event.preventDefault();}">
-        <button class="btn gold" onclick="addTodayHabit()" style="white-space:nowrap">+ Add</button>
-      </div>
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;flex-wrap:wrap;gap:6px">
-        <span class="sync-txt" id="hab-day-sync"></span>
-        <button class="btn" onclick="clearTodayHabits()">Untick all</button>
-      </div>
-    </div>
-  </div><!-- /sec-habits -->
+</div><!-- /pg-routine -->
 
-  <div class="sec-hd" id="hd-checklist" onclick="toggleSection('checklist')"><span class="sec-icon">&#9989;</span><span class="sec-title">Daily checklist</span><span class="lbl-line"></span><span class="sec-badge" id="badge-checklist"></span><span class="sec-caret" id="caret-checklist">&#9662;</span></div>
-  <div class="sec-body closed" id="sec-checklist">
-    <div class="cl-block" id="cl-block"><div id="cl-list"></div><div class="prog-wrap"><div class="prog-meta"><span>Practices</span><span class="prog-ct" id="prog-txt">0/8</span></div><div class="prog-track"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div></div></div>
-  </div><!-- /sec-checklist -->
-
-  <div class="sec-hd" id="hd-pillars" onclick="toggleSection('pillars')"><span class="sec-icon">&#127963;</span><span class="sec-title">Five pillars</span><span class="lbl-line"></span><span class="sec-badge" id="badge-pillars"></span><span class="sec-caret open" id="caret-pillars">&#9662;</span></div>
-  <div class="sec-body" id="sec-pillars">
-    <div class="pillars-wrap" id="pillars-wrap"></div>
-    </div><!-- /sec-pillars -->
-
-  <div class="sec-hd" id="hd-anchors" onclick="toggleSection('anchors')"><span class="sec-icon">&#9875;</span><span class="sec-title">Anchor intentions</span><span class="lbl-line"></span><span class="sec-badge" id="badge-anchors"></span><span class="sec-caret open" id="caret-anchors">&#9662;</span></div>
-  <div class="sec-body" id="sec-anchors">
-    <div class="int-row" style="margin-bottom:1rem"><div class="int-tile"><div class="int-e">&#9208;&#65039;</div><div class="int-t">Pause before reacting</div><div class="int-b">3 deep breaths before responding to anything charged.</div></div><div class="int-tile"><div class="int-e">&#127919;</div><div class="int-t">One task, full focus</div><div class="int-b">No tabs, no phone — one thing at a time during deep work.</div></div><div class="int-tile"><div class="int-e">&#127807;</div><div class="int-t">Hard thing first</div><div class="int-b">Most important work before email or meetings steal the morning.</div></div></div>
-  </div><!-- /sec-anchors -->
-
-  <div class="foot"><span class="foot-note" id="streak-txt"></span><div class="foot-btns"><button class="btn" onclick="switchTab('situations')">&#128250; Situations</button><button class="btn" onclick="resetDay()">&#8635; Reset day</button></div></div>
-</div>
-
-<!-- TAB 2: SITUATIONS -->
+<!-- TAB 3: SITUATIONS -->
 <div class="pg" id="pg-situations">
   <div class="past-hdr"><div class="past-title">Past Situations</div><div class="past-sub">Your full log — filter by date, emotion, or keyword.</div></div>
   <div class="past-stats"><div class="stat"><div class="stat-n" id="st-total">0</div><div class="stat-l">Total logged</div></div><div class="stat teal"><div class="stat-n" id="st-strat">0</div><div class="stat-l">Have strategies</div></div><div class="stat rose"><div class="stat-n" id="st-pend">0</div><div class="stat-l">Needs reflection</div></div><div class="stat"><div class="stat-n" id="st-emo" style="font-size:1.1rem">--</div><div class="stat-l">Top emotion</div></div></div>
@@ -858,8 +846,9 @@ function switchTab(tab){
   document.querySelectorAll('.pg').forEach(function(p){p.classList.remove('on');});
   document.querySelectorAll('.tab').forEach(function(b){b.classList.remove('on');});
   document.getElementById('pg-'+tab).classList.add('on');
-  var idx=tab==='morning'?0:tab==='situations'?1:tab==='thoughts'?2:tab==='posts'?3:tab==='motivation'?4:tab==='gratitude'?5:6;
+  var idx=tab==='morning'?0:tab==='routine'?1:tab==='situations'?2:tab==='thoughts'?3:tab==='posts'?4:tab==='motivation'?5:tab==='gratitude'?6:7;
   document.querySelectorAll('.tab')[idx].classList.add('on');
+  if(tab==='routine'){_calNeedsScroll=true;renderMaster();renderRoutine();}
   if(tab==='situations'){renderStats();renderPast();}
   if(tab==='thoughts')renderThoughts();
   if(tab==='posts')renderPosts();
@@ -976,6 +965,9 @@ function showSyncBanner(ok,msg){
     el.style.background='rgba(107,191,142,0.08)';
     el.style.border='1px solid rgba(107,191,142,0.25)';
     el.style.color='var(--green)';
+    // A successful load needs no permanent real estate; failures stay put
+    clearTimeout(el._t);
+    el._t=setTimeout(function(){ el.style.display='none'; },5000);
   }else{
     el.style.background='rgba(224,123,123,0.08)';
     el.style.border='1px solid rgba(224,123,123,0.3)';
@@ -2433,7 +2425,9 @@ var SEC_KEYS=['links','master','routine','rtstats','habitperf','habits','checkli
 
 function secOpen(key){
   var v=localStorage.getItem('sec_'+key);
-  if(v===null) return ['checklist','anchors','master'].indexOf(key)===-1;   // links open by default
+  // Reference material starts closed; the things you act on daily
+  // start open. Badges on the headers mean nothing is truly hidden.
+  if(v===null) return ['checklist','anchors','master','pillars','habitperf'].indexOf(key)===-1;
   return v==='1';
 }
 
@@ -2479,7 +2473,7 @@ function updateSectionBadges(){
   set('checklist', cDone+'/'+CHECKLIST.length, cDone===CHECKLIST.length);
 
   set('links',''); set('pillars',''); set('anchors','');
-  set('habitperf','');
+
   renderGlance();
 }
 
@@ -2506,10 +2500,20 @@ function renderGlance(){
     card(cDone,CHECKLIST.length,'Checklist','checklist');
 }
 
+/* Sections now live on two tabs, so a glance card may need to
+   switch tab before scrolling to its section. */
+var ROUTINE_TAB_SECTIONS=['master','routine','rtstats','habitperf'];
+
 function jumpToSection(key){
   if(!secOpen(key)){ localStorage.setItem('sec_'+key,'1'); applySection(key); }
-  var hd=document.getElementById('hd-'+key);
-  if(hd) hd.scrollIntoView({behavior:'smooth',block:'start'});   // deliberate: user tapped a glance card
+  var needsRoutineTab = ROUTINE_TAB_SECTIONS.indexOf(key)>-1;
+  var onRoutineTab = document.getElementById('pg-routine').classList.contains('on');
+  if(needsRoutineTab && !onRoutineTab){ switchTab('routine'); }
+  else if(!needsRoutineTab && onRoutineTab){ switchTab('morning'); }
+  setTimeout(function(){
+    var hd=document.getElementById('hd-'+key);
+    if(hd) hd.scrollIntoView({behavior:'smooth',block:'start'});
+  },60);
 }
 
 function toggleChecklist(){ toggleSection('checklist'); }
@@ -2874,6 +2878,9 @@ function renderCalendar(){
   }
   var lbl=document.getElementById('rt-daylbl');
   if(lbl) lbl.textContent=fmtDayLabel(selDate);
+  // Offer a way back when looking at another day
+  var tb=document.getElementById('rt-today-btn');
+  if(tb) tb.style.display = (selDate===today) ? 'none' : '';
 }
 
 function renderRoutineSelector(){
@@ -3186,164 +3193,23 @@ function untickRoutine(){
 }
 
 /* Each day scored against the habits present ON THAT DAY */
-/* Tap any bar to see exactly what was done and what was missed
-   that day — resolved against the habits present ON that date. */
-var rtDetailDate='';
-
-function showDayDetail(iso,keep){
-  if(!keep && rtDetailDate===iso){ rtDetailDate=''; renderRoutineHistory(); return; }
-  rtDetailDate=iso;
-  var el=document.getElementById('rt-detail'); if(!el) return;
-
-  var rt=routineForDate(iso);
-  var items=itemsOn(rt,iso);
-  var done=doneFor(rt,iso);
-
-  if(!items.length){
-    el.className='rt-detail on';
-    el.innerHTML='<div class="rt-detail-hd"><span class="rt-detail-d">'+
-      escH(fmtDayLabel(iso))+'</span></div>'+
-      '<div style="font-size:12px;color:var(--text-3)">No habits were in '+escH(rt)+' on this day.</div>';
-    if(!keep) renderRoutineHistory();
-    return;
-  }
-
-  var hit=items.filter(function(i){ return done.indexOf(i.habitId)>-1; });
-  var miss=items.filter(function(i){ return done.indexOf(i.habitId)===-1; });
-  var pct=Math.round(hit.length/items.length*100);
-
-  var missMap=(routineMiss[iso]&&routineMiss[iso][rt])||{};
-  function row(i,ok){
-    var why=(!ok&&missMap[i.habitId])?'<div class="rsn-txt">\u2014 '+escH(missMap[i.habitId])+'</div>':'';
-    return '<div class="rt-det-row'+(ok?'':' miss')+'">'+
-      '<div class="rt-det-ic '+(ok?'yes':'no')+'">'+(ok?'\u2713':'\u00d7')+'</div>'+
-      '<div class="rt-det-t">'+escH(cleanTime(i.time)||'\u2014')+'</div>'+
-      '<div class="rt-det-h">'+escH(i.habit)+why+'</div>'+
-    '</div>';
-  }
-
-  el.className='rt-detail on';
-  el.innerHTML=
-    '<div class="rt-detail-hd">'+
-      '<span class="rt-detail-d">'+escH(fmtDayLabel(iso))+'</span>'+
-      '<span class="rt-detail-s">'+escH(rt)+' \u00b7 '+hit.length+'/'+items.length+' \u00b7 '+pct+'%</span>'+
-    '</div>'+
-    (hit.length? hit.map(function(i){ return row(i,true); }).join('') : '')+
-    (miss.length? miss.map(function(i){ return row(i,false); }).join('') : '')+
-    (miss.length===0 ? '<div style="font-size:11px;color:var(--green);margin-top:8px">Everything done that day.</div>' : '');
-
-  if(!keep) renderRoutineHistory();
-}
-
-/* ── Per-habit completion ────────────────────────────────
-   For each habit currently in the routine, count the days it
-   was actually SCHEDULED — i.e. the day ran this routine, the
-   habit had joined by then and had not yet left — and how many
-   of those it was done on. Days before a habit joined are never
-   part of its denominator, so a habit added yesterday shows 0/1
-   rather than being punished for the whole month.
-   Future days are excluded; only up to today counts.
-──────────────────────────────────────────────────────── */
-function habitStats(habitId, windowDays){
-  var today=isoToday(), sched=0, done=0, first='';
-  // Look back far enough to cover all time, or just the window
-  var span = windowDays || 400;
-  for(var i=0;i<span;i++){
-    var d=new Date(); d.setDate(d.getDate()-i);
-    var iso=isoDate(d);
-    if(iso>today) continue;
-    if(routineForDate(iso)!==activeRoutine) continue;
-    var inRoutine=itemsOn(activeRoutine,iso).some(function(x){ return x.habitId===habitId; });
-    if(!inRoutine) continue;
-    sched++;
-    if(!first||iso<first) first=iso;
-    if(doneFor(activeRoutine,iso).indexOf(habitId)>-1) done++;
-  }
-  return {sched:sched, done:done, pct: sched?Math.round(done/sched*100):null, since:first};
-}
-
-function hpColor(pct){
-  if(pct===null) return 'var(--text-3)';
-  if(pct>=80) return 'var(--green)';
-  if(pct>=50) return 'var(--teal)';
-  if(pct>=25) return 'var(--gold)';
-  return 'var(--rose)';
-}
-
-function renderHabitPerf(){
-  var el=document.getElementById('hp-list'); if(!el) return;
-  var rn=document.getElementById('hp-routine');
-  if(rn) rn.textContent=activeRoutine||'';
-
-  var items=itemsOn(activeRoutine,isoToday());
-  var noteEl=document.getElementById('hp-note');
-
-  if(!items.length){
-    el.innerHTML='<div class="rt-empty">No habits in '+escH(activeRoutine||'this routine')+' today.</div>';
-    if(noteEl) noteEl.textContent='';
-    return;
-  }
-
-  var rows=items.map(function(it){
-    return {it:it, w:habitStats(it.habitId,7), a:habitStats(it.habitId)};
-  });
-  // Weakest first over 7 days — the ones needing attention surface at the top
-  rows.sort(function(x,y){
-    var a=x.w.pct===null?101:x.w.pct, b=y.w.pct===null?101:y.w.pct;
-    if(a!==b) return a-b;
-    return timeToMin(x.it.time)-timeToMin(y.it.time);
-  });
-
-  function cell(s){
-    if(s.pct===null) return '<div class="hp-cell"><div class="hp-none">\u2013</div></div>';
-    return '<div class="hp-cell">'+
-      '<div class="hp-pct" style="color:'+hpColor(s.pct)+'">'+s.pct+'%</div>'+
-      '<div class="hp-frac">'+s.done+'/'+s.sched+'</div></div>';
-  }
-
-  el.innerHTML=rows.map(function(r){
-    var pct=r.a.pct===null?0:r.a.pct;
-    return '<div class="hp-row">'+
-      '<div class="hp-name">'+
-        (r.it.time?'<div class="hp-t">'+escH(cleanTime(r.it.time))+'</div>':'')+
-        '<div class="hp-h">'+escH(r.it.habit)+'</div>'+
-        '<div class="hp-bar"><div class="hp-fill" style="width:'+pct+'%;background:'+hpColor(r.a.pct)+'"></div></div>'+
-      '</div>'+
-      cell(r.w)+cell(r.a)+
-    '</div>';
-  }).join('');
-
-  // One line of context: overall rate and the weakest habit
-  var totD=0, totS=0;
-  rows.forEach(function(r){ totD+=r.a.done; totS+=r.a.sched; });
-  var worst=rows.filter(function(r){ return r.a.pct!==null; })[0];
-  if(noteEl){
-    noteEl.innerHTML = totS
-      ? 'Across all habits: <strong style="color:var(--text-1)">'+Math.round(totD/totS*100)+'%</strong> ('+totD+'/'+totS+' scheduled). '+
-        (worst&&worst.a.pct<60 ? 'Weakest right now: <strong style="color:var(--text-1)">'+escH(worst.it.habit)+'</strong>.' : '')
-      : 'Nothing scheduled yet \u2014 stats appear once this routine has run for a day.';
-  }
-
-  var badge=document.getElementById('badge-habitperf');
-  if(badge && totS){ badge.textContent=Math.round(totD/totS*100)+'%'; badge.style.display=''; }
-}
-
 function renderRoutineHistory(){
-  var statsEl=document.getElementById('rt-stats'), histEl=document.getElementById('rt-hist');
-  if(!statsEl||!histEl) return;
+  var statsEl=document.getElementById('rt-stats');
+  if(!statsEl) return;
 
-  var days=[], sum=0, fullDays=0, counted=0;
+  // 14-day rolling figures, each day scored against the habits
+  // that were actually in the routine on that day
+  var sum=0, fullDays=0, counted=0;
   for(var i=13;i>=0;i--){
     var dd=new Date(); dd.setDate(dd.getDate()-i);
     var iso=isoDate(dd);
-    var mine=routineForDate(iso)===activeRoutine;
+    if(routineForDate(iso)!==activeRoutine) continue;
     var items=itemsOn(activeRoutine,iso);
+    if(!items.length) continue;
     var ids=items.map(function(x){ return x.habitId; });
     var hit=doneFor(activeRoutine,iso).filter(function(x){ return ids.indexOf(x)>-1; }).length;
-    var live=mine&&items.length>0;
-    var pct=live?Math.round(hit/items.length*100):0;
-    days.push({iso:iso,label:String(dd.getDate()),pct:pct,mine:live,n:hit,t:items.length});
-    if(live){ sum+=pct; counted++; if(hit===items.length) fullDays++; }
+    sum+=Math.round(hit/items.length*100); counted++;
+    if(hit===items.length) fullDays++;
   }
 
   var streak=0;
@@ -3361,27 +3227,8 @@ function renderRoutineHistory(){
 
   statsEl.innerHTML=
     '<div class="rt-stat"><div class="rt-stat-n" style="color:var(--green)">'+streak+'</div><div class="rt-stat-l">\ud83d\udd25 Day streak</div></div>'+
-    '<div class="rt-stat"><div class="rt-stat-n">'+(counted?Math.round(sum/counted):0)+'%</div><div class="rt-stat-l">Average</div></div>'+
+    '<div class="rt-stat"><div class="rt-stat-n">'+(counted?Math.round(sum/counted):0)+'%</div><div class="rt-stat-l">14-day average</div></div>'+
     '<div class="rt-stat"><div class="rt-stat-n" style="color:var(--teal)">'+fullDays+'</div><div class="rt-stat-l">Full days</div></div>';
-
-  histEl.innerHTML=days.map(function(d){
-    // Colour by how complete the day was, so the trend reads at a glance
-    var col = !d.mine ? 'rgba(255,255,255,0.07)'
-            : d.pct===100 ? 'var(--green)'
-            : d.pct>=60  ? 'var(--teal)'
-            : d.pct>0    ? 'var(--gold)'
-            : 'rgba(224,123,123,0.35)';
-    var lbl = d.mine ? d.pct+'%' : '\u2013';
-    var isToday = d.iso===isoToday();
-    return '<div class="rt-day'+(d.iso===rtDetailDate?' sel':'')+(isToday?' today':'')+'" '+
-        'onclick="showDayDetail(\''+d.iso+'\')" title="'+d.iso+'">'+
-      '<div class="rt-pct">'+lbl+'</div>'+
-      '<div class="rt-bar"><div class="rt-bar-fill" style="height:'+(d.mine?Math.max(d.pct,2):0)+'%;background:'+col+'"></div></div>'+
-      '<div class="rt-day-lbl">'+d.label+'</div>'+
-    '</div>';
-  }).join('');
-
-  if(rtDetailDate) showDayDetail(rtDetailDate,true);
 }
 
 /* ── Drag to reorder ────────────────────────────────────── */
@@ -3521,6 +3368,12 @@ async function fetchAllRoutines(){
   var d=await sheetFetch(WORKER_URL+'?action=getAllRoutineItems');
   if(d&&d.status==='ok'&&Array.isArray(d.routineItems)) replaceRoutineItemsFromSheet(d.routineItems);
 }
+
+/* Show the back-to-top control once the page is genuinely long */
+window.addEventListener('scroll',function(){
+  var b=document.getElementById('totop');
+  if(b) b.classList.toggle('on', window.scrollY>600);
+},{passive:true});
 
 /* START */
 init();
