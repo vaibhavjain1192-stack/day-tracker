@@ -3193,6 +3193,94 @@ function untickRoutine(){
 }
 
 /* Each day scored against the habits present ON THAT DAY */
+/* ── Per-habit completion ────────────────────────────────
+   Counts the days a habit was actually SCHEDULED — the day ran
+   this routine, the habit had joined by then and had not yet
+   left — and how many of those it was marked Yes on. Days before
+   a habit joined never enter its denominator.
+──────────────────────────────────────────────────────── */
+function habitStats(habitId, windowDays){
+  var today=isoToday(), sched=0, done=0, first='';
+  var span = windowDays || 400;
+  for(var i=0;i<span;i++){
+    var d=new Date(); d.setDate(d.getDate()-i);
+    var iso=isoDate(d);
+    if(iso>today) continue;
+    if(routineForDate(iso)!==activeRoutine) continue;
+    var inRoutine=itemsOn(activeRoutine,iso).some(function(x){ return x.habitId===habitId; });
+    if(!inRoutine) continue;
+    sched++;
+    if(!first||iso<first) first=iso;
+    if(doneFor(activeRoutine,iso).indexOf(habitId)>-1) done++;
+  }
+  return {sched:sched, done:done, pct: sched?Math.round(done/sched*100):null, since:first};
+}
+
+function hpColor(pct){
+  if(pct===null) return 'var(--text-3)';
+  if(pct>=80) return 'var(--green)';
+  if(pct>=50) return 'var(--teal)';
+  if(pct>=25) return 'var(--gold)';
+  return 'var(--rose)';
+}
+
+function renderHabitPerf(){
+  var el=document.getElementById('hp-list'); if(!el) return;
+  var rn=document.getElementById('hp-routine');
+  if(rn) rn.textContent=activeRoutine||'';
+
+  var items=itemsOn(activeRoutine,isoToday());
+  var noteEl=document.getElementById('hp-note');
+
+  if(!items.length){
+    el.innerHTML='<div class="rt-empty">No habits in '+escH(activeRoutine||'this routine')+' today.</div>';
+    if(noteEl) noteEl.textContent='';
+    return;
+  }
+
+  var rows=items.map(function(it){
+    return {it:it, w:habitStats(it.habitId,7), a:habitStats(it.habitId)};
+  });
+  // Weakest over 7 days first — what needs attention surfaces at the top
+  rows.sort(function(x,y){
+    var a=x.w.pct===null?101:x.w.pct, b=y.w.pct===null?101:y.w.pct;
+    if(a!==b) return a-b;
+    return timeToMin(x.it.time)-timeToMin(y.it.time);
+  });
+
+  function cell(s){
+    if(s.pct===null) return '<div class="hp-cell"><div class="hp-none">\u2013</div></div>';
+    return '<div class="hp-cell">'+
+      '<div class="hp-pct" style="color:'+hpColor(s.pct)+'">'+s.pct+'%</div>'+
+      '<div class="hp-frac">'+s.done+'/'+s.sched+'</div></div>';
+  }
+
+  el.innerHTML=rows.map(function(r){
+    var pct=r.a.pct===null?0:r.a.pct;
+    return '<div class="hp-row">'+
+      '<div class="hp-name">'+
+        (r.it.time?'<div class="hp-t">'+escH(cleanTime(r.it.time))+'</div>':'')+
+        '<div class="hp-h">'+escH(r.it.habit)+'</div>'+
+        '<div class="hp-bar"><div class="hp-fill" style="width:'+pct+'%;background:'+hpColor(r.a.pct)+'"></div></div>'+
+      '</div>'+
+      cell(r.w)+cell(r.a)+
+    '</div>';
+  }).join('');
+
+  var totD=0, totS=0;
+  rows.forEach(function(r){ totD+=r.a.done; totS+=r.a.sched; });
+  var worst=rows.filter(function(r){ return r.a.pct!==null; })[0];
+  if(noteEl){
+    noteEl.innerHTML = totS
+      ? 'Across all habits: <strong style="color:var(--text-1)">'+Math.round(totD/totS*100)+'%</strong> ('+totD+'/'+totS+' scheduled). '+
+        (worst&&worst.a.pct<60 ? 'Weakest right now: <strong style="color:var(--text-1)">'+escH(worst.it.habit)+'</strong>.' : '')
+      : 'Nothing scheduled yet \u2014 stats appear once this routine has run for a day.';
+  }
+
+  var badge=document.getElementById('badge-habitperf');
+  if(badge && totS){ badge.textContent=Math.round(totD/totS*100)+'%'; badge.style.display=''; }
+}
+
 function renderRoutineHistory(){
   var statsEl=document.getElementById('rt-stats');
   if(!statsEl) return;
