@@ -343,6 +343,20 @@ body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:
 .rt-daylbl{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:6px}
 .rt-daylbl-d{font-size:12px;color:var(--text-1);font-weight:500}
 .rt-daylbl-hint{font-size:10px;color:var(--text-3);font-family:var(--fm)}
+/* YES / NO CONTROLS */
+.yn{display:flex;gap:5px;align-items:center;justify-content:flex-end}
+.yn-b{border:1px solid var(--border-md);background:transparent;color:var(--text-3);font-family:var(--fb);font-size:10px;font-weight:600;border-radius:20px;padding:3px 9px;cursor:pointer;transition:all var(--tr);line-height:1.2}
+.yn-b:hover{color:var(--text-1);border-color:var(--text-3)}
+.yn-b.yes.on{background:var(--green);border-color:var(--green);color:#0F1117}
+.yn-b.no.on{background:var(--rose);border-color:var(--rose);color:#0F1117}
+.rt-row.missed .rt-hab{color:var(--text-3)}
+.rt-row.missed .rt-time{opacity:.5}
+/* reason line under a missed habit */
+.rsn{grid-column:1/-1;display:flex;align-items:center;gap:7px;padding:7px 0 2px 28px;flex-wrap:wrap}
+.rsn-lbl{font-family:var(--fm);font-size:9px;color:var(--rose);letter-spacing:0.06em;text-transform:uppercase;flex-shrink:0}
+.rsn-sel{background:var(--surface);border:1px solid rgba(224,123,123,0.3);border-radius:var(--rsm);padding:4px 8px;font-size:11px;color:var(--text-1);font-family:var(--fb);outline:none;cursor:pointer;max-width:100%;flex:1;min-width:130px}
+.rsn-sel:focus{border-color:var(--rose)}
+.rsn-txt{font-size:11px;color:var(--text-2);font-style:italic}
 /* PER-HABIT PERFORMANCE */
 .hp-hd{display:grid;grid-template-columns:1fr 62px 62px;gap:8px;padding-bottom:7px;border-bottom:1px solid var(--border);font-family:var(--fm);font-size:9px;color:var(--text-3);letter-spacing:0.08em;text-transform:uppercase}
 .hp-hd span:not(:first-child){text-align:right}
@@ -888,7 +902,7 @@ function init(){
 
   // Clear all in-memory arrays — Sheet is always the source of truth
   situations=[]; thoughts=[]; posts=[]; habits=[]; motEntries=[]; gratEntries=[]; kunEntries=[];
-  habitMaster=[]; routineItems=[]; routineLog={}; extraRoutines=[]; routineDay={}; selDate=isoToday();
+  habitMaster=[]; habitReasons=[]; routineItems=[]; routineLog={}; routineMiss={}; extraRoutines=[]; routineDay={}; selDate=isoToday();
   updateBadge(); updateThBadge(); updatePostBadge();
 
   // Show shimmer/loading state on morning intentions
@@ -917,6 +931,7 @@ function init(){
       if(Array.isArray(d.todayHabits)) replaceHabitsFromSheet(d.todayHabits);
       if(Array.isArray(d.kundali))     replaceKundaliFromSheet(d.kundali);
       if(Array.isArray(d.habitMaster)) replaceHabitMasterFromSheet(d.habitMaster);
+      if(Array.isArray(d.habitReasons))replaceHabitReasonsFromSheet(d.habitReasons);
       if(Array.isArray(d.routineItems))replaceRoutineItemsFromSheet(d.routineItems);
       if(Array.isArray(d.routineLog))  replaceRoutineLogFromSheet(d.routineLog);
       if(Array.isArray(d.routineDay))  replaceRoutineDayFromSheet(d.routineDay);
@@ -2806,15 +2821,20 @@ function renderRoutine(){
   }
 
   box.innerHTML=items.map(function(it,idx){
-    var isDone=done.indexOf(it.habitId)>-1;
-    return '<div class="rt-row'+(isDone?' done':'')+'" data-idx="'+idx+'">'+
+    var state=habitState(it.habitId,selDate);
+    return '<div class="rt-row'+(state==='yes'?' done':'')+(state==='no'?' missed':'')+'" data-idx="'+idx+'">'+
       '<span class="rt-grip" onpointerdown="startRtDrag(event,'+idx+')" title="Drag to reorder">\u2630</span>'+
       '<div class="rt-time">'+escH(cleanTime(it.time)||'\u2014')+'</div>'+
       '<div class="rt-hab">'+escH(it.habit)+'</div>'+
       '<div class="rt-acts">'+
         '<button class="rt-mini del" onclick="removeFromRoutine(\''+it.memberId+'\')" title="Remove from this routine">\u00d7</button>'+
-        '<div class="rt-cb'+(isDone?' done':'')+'" onclick="toggleRoutineItem(\''+it.habitId+'\')"><span class="rt-tick">\u2713</span></div>'+
-      '</div></div>';
+        '<div class="yn">'+
+          '<button class="yn-b yes'+(state==='yes'?' on':'')+'" onclick="setHabitState(\''+it.habitId+'\',\'yes\')">Yes</button>'+
+          '<button class="yn-b no'+(state==='no'?' on':'')+'" onclick="setHabitState(\''+it.habitId+'\',\'no\')">No</button>'+
+        '</div>'+
+      '</div>'+
+      (state==='no' ? reasonRowHTML(it.habitId) : '')+
+    '</div>';
   }).join('');
 
   var hit=done.filter(function(x){ return items.some(function(i){ return i.habitId===x; }); }).length;
@@ -2889,30 +2909,116 @@ function removeFromRoutine(memberId){
   rtSync(postToSheet({sheet:'RoutineItems',action:'remove_item',sheetId:memberId,removedOn:from}));
 }
 
-/* Ticking updates only what changed. A full renderRoutine() here
-   rebuilt every row and re-rendered the calendar, which made the
-   page jump — the list is left in place instead. */
-function toggleRoutineItem(habitId){
+/* ── Yes / No / untouched ────────────────────────────────
+   Three states, not two. "No" is an explicit miss with a
+   reason attached; untouched simply hasn't been answered.
+   Only "yes" counts toward completion.
+
+   routineLog  [iso][routine] = [habitId...]        answered yes
+   routineMiss [iso][routine] = {habitId: reason}   answered no
+──────────────────────────────────────────────────────── */
+var routineMiss={};
+var habitReasons=[];   // [{sheetId, habitId, reason}]
+
+function missFor(routine,iso){ return (routineMiss[iso]&&routineMiss[iso][routine])||{}; }
+
+function habitState(habitId,iso){
+  var d=iso||selDate||isoToday();
+  if(doneFor(activeRoutine,d).indexOf(habitId)>-1) return 'yes';
+  if(Object.prototype.hasOwnProperty.call(missFor(activeRoutine,d),habitId)) return 'no';
+  return '';
+}
+
+function reasonsFor(habitId){
+  return habitReasons.filter(function(r){ return r.habitId===habitId; })
+    .map(function(r){ return r.reason; });
+}
+
+/* The reason line shown beneath a habit answered "No" */
+function reasonRowHTML(habitId){
+  var d=selDate||isoToday();
+  var cur=missFor(activeRoutine,d)[habitId]||'';
+  var opts=reasonsFor(habitId);
+  if(opts.indexOf(cur)===-1 && cur) opts=[cur].concat(opts);
+  var sel='<select class="rsn-sel" onchange="pickReason(\''+habitId+'\',this)">'+
+    '<option value=""'+(cur?'':' selected')+'>Why not?</option>'+
+    opts.map(function(o){
+      return '<option value="'+escH(o)+'"'+(o===cur?' selected':'')+'>'+escH(o)+'</option>';
+    }).join('')+
+    '<option value="__new">+ Add a new reason\u2026</option></select>';
+  return '<div class="rsn"><span class="rsn-lbl">Reason</span>'+sel+'</div>';
+}
+
+function setHabitState(habitId,want){
   var d=selDate||isoToday();
   if(!routineLog[d]) routineLog[d]={};
   if(!routineLog[d][activeRoutine]) routineLog[d][activeRoutine]=[];
-  var arr=routineLog[d][activeRoutine], ix=arr.indexOf(habitId);
-  var nowDone = ix===-1;
-  if(ix>-1) arr.splice(ix,1); else arr.push(habitId);
+  if(!routineMiss[d]) routineMiss[d]={};
+  if(!routineMiss[d][activeRoutine]) routineMiss[d][activeRoutine]={};
 
-  // Flip just this row's tick and strike-through
-  var box=document.getElementById('rt-items');
-  if(box){
-    var cb=box.querySelector('.rt-cb[onclick*="'+habitId+'"]');
-    var row=cb&&cb.closest('.rt-row');
-    if(row){
-      cb.classList.toggle('done',nowDone);
-      row.classList.toggle('done',nowDone);
+  var yesArr=routineLog[d][activeRoutine];
+  var missMap=routineMiss[d][activeRoutine];
+  var cur=habitState(habitId,d);
+
+  // Tapping the active answer clears it back to unanswered
+  var next = (cur===want) ? '' : want;
+
+  var ix=yesArr.indexOf(habitId);
+  if(ix>-1) yesArr.splice(ix,1);
+  delete missMap[habitId];
+
+  if(next==='yes') yesArr.push(habitId);
+  if(next==='no')  missMap[habitId]='';
+
+  renderRoutineRows();
+  saveRoutineLog();
+}
+
+function pickReason(habitId,sel){
+  var d=selDate||isoToday();
+  var val=sel.value;
+
+  if(val==='__new'){
+    var r=prompt('New reason for this habit:');
+    if(!r||!r.trim()){ renderRoutineRows(); return; }
+    r=r.trim();
+    if(reasonsFor(habitId).indexOf(r)===-1){
+      var id='rs'+Date.now();
+      habitReasons.push({sheetId:id,habitId:habitId,reason:r});
+      postToSheet({sheet:'HabitReasons',sheetId:id,habitId:habitId,reason:r});
     }
+    val=r;
   }
 
-  refreshRoutineCounts();   // progress bar, calendar ring, badges
+  if(!routineMiss[d]) routineMiss[d]={};
+  if(!routineMiss[d][activeRoutine]) routineMiss[d][activeRoutine]={};
+  routineMiss[d][activeRoutine][habitId]=val;
+  renderRoutineRows();
   saveRoutineLog();
+}
+
+/* Redraw only the habit rows, leaving scroll position alone */
+function renderRoutineRows(){
+  var box=document.getElementById('rt-items'); if(!box) return;
+  var items=itemsFor(activeRoutine);
+  if(!items.length){ renderRoutine(); return; }
+  box.innerHTML=items.map(function(it,idx){
+    var state=habitState(it.habitId,selDate);
+    return '<div class="rt-row'+(state==='yes'?' done':'')+(state==='no'?' missed':'')+'" data-idx="'+idx+'">'+
+      '<span class="rt-grip" onpointerdown="startRtDrag(event,'+idx+')" title="Drag to reorder">\u2630</span>'+
+      '<div class="rt-time">'+escH(cleanTime(it.time)||'\u2014')+'</div>'+
+      '<div class="rt-hab">'+escH(it.habit)+'</div>'+
+      '<div class="rt-acts">'+
+        '<button class="rt-mini del" onclick="removeFromRoutine(\''+it.memberId+'\')" title="Remove from this routine">\u00d7</button>'+
+        '<div class="yn">'+
+          '<button class="yn-b yes'+(state==='yes'?' on':'')+'" onclick="setHabitState(\''+it.habitId+'\',\'yes\')">Yes</button>'+
+          '<button class="yn-b no'+(state==='no'?' on':'')+'" onclick="setHabitState(\''+it.habitId+'\',\'no\')">No</button>'+
+        '</div>'+
+      '</div>'+
+      (state==='no' ? reasonRowHTML(it.habitId) : '')+
+    '</div>';
+  }).join('');
+  refreshRoutineCounts();
 }
 
 /* Update the numbers around the list without rebuilding the list */
@@ -2941,9 +3047,12 @@ function refreshRoutineCounts(){
 function saveRoutineLog(){
   var d=selDate||isoToday();
   var p=d.split('-'), dd=new Date(+p[0],+p[1]-1,+p[2]);
+  var mm=missFor(activeRoutine,d);
+  var missStr=Object.keys(mm).map(function(k){ return k+'~~'+(mm[k]||''); }).join('||');
   rtSync(postToSheet({sheet:'RoutineLog',
     date:dd.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}),
-    dateISO:d,routine:activeRoutine,done:doneFor(activeRoutine,d).join(',')}));
+    dateISO:d,routine:activeRoutine,
+    done:doneFor(activeRoutine,d).join(','), missed:missStr}));
 }
 
 function untickRoutine(){
@@ -2982,11 +3091,13 @@ function showDayDetail(iso,keep){
   var miss=items.filter(function(i){ return done.indexOf(i.habitId)===-1; });
   var pct=Math.round(hit.length/items.length*100);
 
+  var missMap=(routineMiss[iso]&&routineMiss[iso][rt])||{};
   function row(i,ok){
+    var why=(!ok&&missMap[i.habitId])?'<div class="rsn-txt">\u2014 '+escH(missMap[i.habitId])+'</div>':'';
     return '<div class="rt-det-row'+(ok?'':' miss')+'">'+
       '<div class="rt-det-ic '+(ok?'yes':'no')+'">'+(ok?'\u2713':'\u00d7')+'</div>'+
       '<div class="rt-det-t">'+escH(cleanTime(i.time)||'\u2014')+'</div>'+
-      '<div class="rt-det-h">'+escH(i.habit)+'</div>'+
+      '<div class="rt-det-h">'+escH(i.habit)+why+'</div>'+
     '</div>';
   }
 
@@ -3246,13 +3357,28 @@ function replaceRoutineDayFromSheet(rows){
 }
 
 function replaceRoutineLogFromSheet(rows){
-  routineLog={};
+  routineLog={}; routineMiss={};
   rows.forEach(function(r){
     if(!r.dateISO||!r.routine) return;
     if(!routineLog[r.dateISO]) routineLog[r.dateISO]={};
     routineLog[r.dateISO][r.routine]=String(r.done||'').split(',').map(function(s){ return s.trim(); }).filter(Boolean);
+    if(!routineMiss[r.dateISO]) routineMiss[r.dateISO]={};
+    var m={};
+    String(r.missed||'').split('||').forEach(function(pair){
+      if(!pair.trim()) return;
+      var bits=pair.split('~~');
+      if(bits[0]&&bits[0].trim()) m[bits[0].trim()]=(bits[1]||'').trim();
+    });
+    routineMiss[r.dateISO][r.routine]=m;
   });
   renderRoutine();
+}
+
+function replaceHabitReasonsFromSheet(rows){
+  habitReasons=rows.map(function(r){
+    return {sheetId:r.sheetId||'',habitId:r.habitId||'',reason:r.reason||''};
+  });
+  renderRoutineRows();
 }
 
 async function fetchAllRoutines(){
