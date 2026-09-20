@@ -3481,18 +3481,33 @@ function replaceRoutineLogFromSheet(rows){
   routineLog={}; routineMiss={};
   rows.forEach(function(r){
     if(!r.dateISO||!r.routine) return;
-    if(!routineLog[r.dateISO]) routineLog[r.dateISO]={};
-    routineLog[r.dateISO][r.routine]=String(r.done||'').split(',').map(function(s){ return s.trim(); }).filter(Boolean);
-    if(!routineMiss[r.dateISO]) routineMiss[r.dateISO]={};
+
+    var yes=String(r.done||'').split(',').map(function(s){ return s.trim(); }).filter(Boolean);
     var m={};
     String(r.missed||'').split('||').forEach(function(pair){
       if(!pair.trim()) return;
       var bits=pair.split('~~');
       if(bits[0]&&bits[0].trim()) m[bits[0].trim()]=(bits[1]||'').trim();
     });
+
+    if(!routineLog[r.dateISO])  routineLog[r.dateISO]={};
+    if(!routineMiss[r.dateISO]) routineMiss[r.dateISO]={};
+
+    /* If the sheet holds more than one row for this day+routine
+       (older versions could create duplicates), take the richer
+       one rather than letting the last row blindly win — that is
+       how answered habits disappeared on reload. */
+    var prevYes=routineLog[r.dateISO][r.routine];
+    var prevMiss=routineMiss[r.dateISO][r.routine];
+    if(prevYes || prevMiss){
+      var prevCount=(prevYes?prevYes.length:0)+(prevMiss?Object.keys(prevMiss).length:0);
+      var newCount=yes.length+Object.keys(m).length;
+      if(newCount<prevCount) return;   // keep the fuller record
+    }
+
+    routineLog[r.dateISO][r.routine]=yes;
     routineMiss[r.dateISO][r.routine]=m;
   });
-  renderRoutine();
 }
 
 function replaceHabitReasonsFromSheet(rows){
