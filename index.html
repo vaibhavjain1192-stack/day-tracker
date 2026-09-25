@@ -343,6 +343,40 @@ body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:
 .rt-daylbl{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:6px}
 .rt-daylbl-d{font-size:12px;color:var(--text-1);font-weight:500}
 .rt-daylbl-hint{font-size:10px;color:var(--text-3);font-family:var(--fm)}
+/* IMAGE UPLOAD */
+.up-zone{border:1px dashed var(--border-md);border-radius:var(--r);padding:14px;text-align:center;cursor:pointer;transition:all var(--tr);background:var(--surface)}
+.up-zone:hover,.up-zone.drag{border-color:var(--gold);background:var(--gold-glow);border-style:solid}
+.up-zone-t{font-size:12px;color:var(--text-2)}
+.up-zone-s{font-size:10px;color:var(--text-3);margin-top:3px}
+.up-prog{font-family:var(--fm);font-size:11px;color:var(--gold);margin-top:7px}
+.up-bar{height:4px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden;margin-top:6px;display:none}
+.up-bar.on{display:block}
+.up-bar-fill{height:100%;width:0;background:linear-gradient(90deg,var(--teal),var(--green));border-radius:3px;transition:width .25s}
+.up-prog.ok{color:var(--green)}
+.up-prog.err{color:var(--rose)}
+.up-thumbs{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}
+.up-thumb{position:relative;width:64px;height:64px}
+.up-thumb img{width:100%;height:100%;object-fit:cover;border-radius:var(--rsm);border:1px solid var(--border)}
+.up-thumb-x{position:absolute;top:-6px;right:-6px;width:19px;height:19px;border-radius:50%;background:var(--rose);color:#0F1117;border:2px solid var(--bg);font-size:11px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0}
+/* DAILY FOCUS */
+.focus-box{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--card);border:1px solid var(--border);border-left:2px solid var(--teal);border-radius:0 var(--r) var(--r) 0;padding:11px 14px;margin-bottom:1rem}
+.focus-lbl{font-family:var(--fm);font-size:9px;color:var(--teal);letter-spacing:.1em;text-transform:uppercase;flex-shrink:0}
+.focus-in{flex:1;min-width:160px;background:transparent;border:none;border-bottom:1px dashed var(--border-md);padding:3px 2px;font-size:13px;color:var(--text-1);font-family:var(--fb);outline:none;transition:border-color var(--tr)}
+.focus-in:focus{border-bottom-color:var(--teal)}
+.focus-in::placeholder{color:var(--text-3)}
+.focus-sync{font-size:10px;color:var(--text-3);font-family:var(--fm);flex-shrink:0}
+.focus-sync.ok{color:var(--green)}
+.focus-sync.err{color:var(--rose)}
+/* POST IMAGES */
+.pst-imgs{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0 2px}
+.pst-img{width:82px;height:82px;border-radius:var(--rsm);object-fit:cover;border:1px solid var(--border);cursor:zoom-in;background:var(--surface);transition:border-color var(--tr)}
+.pst-img:hover{border-color:var(--gold)}
+.pst-img-help{font-size:10px;color:var(--text-3);margin-top:5px;line-height:1.6}
+.pst-img-help a{color:var(--gold);text-decoration:none}
+.pst-img-help a:hover{text-decoration:underline}
+#lightbox{position:fixed;inset:0;z-index:400;background:rgba(0,0,0,.9);display:none;align-items:center;justify-content:center;padding:1.5rem;cursor:zoom-out}
+#lightbox.on{display:flex}
+#lightbox img{max-width:100%;max-height:100%;border-radius:var(--r)}
 /* POSTS: Pinned / All + emotion */
 .pst-tabs{display:flex;gap:6px;margin-bottom:12px;border-bottom:1px solid var(--border)}
 .pst-tab{padding:8px 14px 9px;font-size:12px;font-weight:600;font-family:var(--fb);color:var(--text-3);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;transition:all var(--tr);margin-bottom:-1px;display:flex;align-items:center;gap:6px}
@@ -488,6 +522,7 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
 </head>
 <body>
 <div class="toast" id="toast"></div>
+<div id="lightbox" onclick="this.classList.remove('on')"><img id="lightbox-img" alt=""></div>
 <button id="totop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#9650;</button>
 <nav class="nav">
   <div class="nav-inner">
@@ -506,6 +541,13 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
 <div class="pg on" id="pg-morning">
   <div class="hdr"><div class="hdr-l"><div class="eyebrow" id="time-now">--</div><h1 class="greeting" id="greeting">Good morning</h1><div class="dateline" id="date-line">Loading...</div></div><div class="hdr-r"><div class="daynum" id="day-num">--</div><div class="daynum-lbl">Day of year</div></div></div>
   <div class="mantra"><div class="mantra-q" id="mantra-text">"..."</div><div class="mantra-src" id="mantra-source"></div></div>
+  <div class="focus-box">
+    <div class="focus-lbl">&#127919; One habit to follow today</div>
+    <input class="focus-in" id="focus-input" type="text" placeholder="The one thing you commit to today..."
+           onkeydown="if(event.key==='Enter'){saveDailyFocus();this.blur();event.preventDefault();}"
+           onblur="saveDailyFocus()">
+    <span class="focus-sync" id="focus-sync"></span>
+  </div>
   <div id="sync-banner" style="display:none;font-size:11px;padding:8px 12px;border-radius:var(--rsm);margin-bottom:1rem;font-family:var(--fm)"></div>
   <div class="glance" id="glance"></div>
   <hr class="d">
@@ -678,6 +720,16 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
     <div style="margin-bottom:8px"><label class="sfl">Source</label><div class="src-pills"><button class="src-pill" id="src-li" onclick="selPostSrc('linkedin')">&#128188; LinkedIn</button><button class="src-pill" id="src-ig" onclick="selPostSrc('instagram')">&#128248; Instagram</button><button class="src-pill" id="src-ot" onclick="selPostSrc('other')">&#127760; Other</button></div></div>
     <div style="margin-bottom:8px"><label class="sfl">URL <span style="color:var(--text-3);font-weight:400">(optional)</span></label><input class="sin" id="post-url" type="text" placeholder="https://..."></div>
     <div style="margin-bottom:8px"><label class="sfl">Emotion</label><select class="sin pst-emo-sel" id="post-emo-new" onchange="newPostEmoPick(this)"></select></div>
+    <div style="margin-bottom:8px"><label class="sfl">Screenshots <span style="color:var(--text-3);font-weight:400">(optional)</span></label>
+      <div class="up-zone" id="up-zone-new" onclick="document.getElementById('up-file-new').click()">
+        <div class="up-zone-t">&#128247; Tap to choose images, or drag them here</div>
+        <div class="up-zone-s">You can also paste a screenshot with Ctrl+V</div>
+      </div>
+      <input type="file" id="up-file-new" accept="image/*" multiple style="display:none" onchange="handleUpload(this.files,'post-imgs','up-prog-new','up-thumbs-new')">
+      <div class="up-prog" id="up-prog-new"></div><div class="up-bar" id="up-bar-new"><div class="up-bar-fill" id="up-bar-fill-new"></div></div>
+      <div class="up-thumbs" id="up-thumbs-new"></div>
+      <textarea class="sin" id="post-imgs" rows="2" style="display:none"></textarea>
+    </div>
     <label class="pst-pin-chk"><input type="checkbox" id="post-pin-new"> &#128204; Pin this post</label>
     <div class="sit-foot"><span class="sync-txt" id="post-sync">Ready to save</span><button class="btn gold" onclick="addPost()">Save post &#8599;</button></div>
   </div>
@@ -956,6 +1008,7 @@ function init(){
       if(Array.isArray(d.kundali))     replaceKundaliFromSheet(d.kundali);
       if(Array.isArray(d.habitMaster)) replaceHabitMasterFromSheet(d.habitMaster);
       if(Array.isArray(d.habitReasons))replaceHabitReasonsFromSheet(d.habitReasons);
+      if(Array.isArray(d.dailyFocus))  replaceDailyFocusFromSheet(d.dailyFocus);
       if(Array.isArray(d.routineItems))replaceRoutineItemsFromSheet(d.routineItems);
       if(Array.isArray(d.routineLog))  replaceRoutineLogFromSheet(d.routineLog);
       if(Array.isArray(d.routineDay))  replaceRoutineDayFromSheet(d.routineDay);
@@ -1354,11 +1407,13 @@ async function addPost(){
   var post={id:Date.now(),timestamp:Date.now(),sheetId:pid,dateISO:isoDate(now),
     date:now.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}),
     heading:heading,desc:desc,source:selPostSource,url:document.getElementById('post-url').value.trim(),
-    emotion:emotion,pinned:pinned};
+    emotion:emotion,pinned:pinned,images:document.getElementById('post-imgs').value.trim()};
   posts.unshift(post);updatePostBadge();
 
   document.getElementById('post-heading').value='';document.getElementById('post-desc').value='';
-  document.getElementById('post-url').value='';document.getElementById('post-pin-new').checked=false;
+  document.getElementById('post-url').value='';document.getElementById('post-imgs').value='';document.getElementById('post-pin-new').checked=false;
+  renderUploadThumbs('post-imgs','up-thumbs-new');
+  var upp=document.getElementById('up-prog-new'); if(upp){upp.textContent='';upp.className='up-prog';}
   selPostSource='';
   ['li','ig','ot'].forEach(function(s){var el=document.getElementById('src-'+s);if(el)el.className='src-pill';});
   refreshNewPostEmo(); if(emoSel) emoSel.value='';
@@ -1366,9 +1421,27 @@ async function addPost(){
 
   var syncEl=document.getElementById('post-sync');syncEl.textContent='Syncing...';syncEl.className='sync-txt syncing';
   var ok=await postToSheet({sheet:'Posts',sheetId:pid,date:post.date,dateISO:post.dateISO,heading:post.heading,
-    desc:post.desc,source:post.source,url:post.url,emotion:post.emotion,pinned:pinned?'yes':'no'});
+    desc:post.desc,source:post.source,url:post.url,emotion:post.emotion,pinned:pinned?'yes':'no',images:post.images});
   syncEl.textContent=ok?'Synced to Sheet \u2713':'Sheet sync failed';syncEl.className='sync-txt '+(ok?'ok':'err');
   showToast(ok?'Post saved \u2713':'Sync failed \u2014 post not saved to Sheet.',ok?'success':'error');
+}
+
+/* Stored one image per line as "fullUrl|thumbUrl". Rows saved
+   before thumbs existed are plain URLs, so the thumb falls back
+   to the full URL. Only http(s) links are accepted. */
+function parseImgs(s){
+  return String(s||'').split(/\n/).map(function(line){
+    var parts=line.split('|').map(function(x){ return x.trim(); });
+    var url=parts[0]||'', thumb=parts[1]||parts[0]||'';
+    if(!/^https?:\/\//i.test(url)) return null;
+    return {url:url, thumb:/^https?:\/\//i.test(thumb)?thumb:url};
+  }).filter(Boolean);
+}
+
+function openLightbox(url){
+  var lb=document.getElementById('lightbox');
+  document.getElementById('lightbox-img').src=url;
+  lb.classList.add('on');
 }
 
 function postCardHTML(p){
@@ -1382,6 +1455,15 @@ function postCardHTML(p){
       '<button class="pst-pin'+(p.pinned?' on':'')+'" onclick="togglePostPin('+p.id+')" title="'+(p.pinned?'Unpin':'Pin')+'">&#128204;</button>'+
     '</div>'+
     (bodyHtml?'<div style="margin-bottom:.5rem">'+bodyHtml+'</div>':'')+
+    (function(){
+      var imgs=parseImgs(p.images);
+      if(!imgs.length) return '';
+      return '<div class="pst-imgs">'+imgs.map(function(im){
+        return '<img class="pst-img" src="'+escH(im.thumb)+'" alt="" loading="lazy" '+
+               'onclick="openLightbox(\''+escH(im.url).replace(/'/g,"\\'")+'\')" '+
+               'onerror="this.style.display=\'none\'">';
+      }).join('')+'</div>';
+    })()+
     '<div class="post-card-meta">'+srcBadge+'<span class="post-date">'+p.date+'</span></div>'+
     (urlHtml?urlHtml:'')+
     '<div class="pst-emo-row"><span class="pst-emo-lbl">Emotion</span>'+
@@ -1401,6 +1483,7 @@ function renderPosts(){
 
   renderPostEmoFilter();
   refreshNewPostEmo();
+  wireDropZone('up-zone-new','post-imgs','up-prog-new','up-thumbs-new');
 
   var list=posts.slice();
   if(postView==='pinned') list=list.filter(function(p){return p.pinned;});
@@ -1466,7 +1549,7 @@ function replacePostsFromSheet(s){
       timestamp:x.dateISO?new Date(x.dateISO).getTime():Date.now(),
       dateISO:x.dateISO||'',date:x.date||'',heading:x.heading||'',desc:x.desc||'',
       source:x.source||'',url:x.url||'',emotion:x.emotion||'',sheetId:x.sheetId||'',
-      pinned:String(x.pinned||'').toLowerCase()==='yes'};
+      pinned:String(x.pinned||'').toLowerCase()==='yes',images:x.images||''};
   });
   posts.sort(function(a,b){return b.timestamp-a.timestamp;});
   updatePostBadge();
@@ -1516,8 +1599,20 @@ function editPost(id){
     '<div style="margin-bottom:10px"><label class="sfl">Source</label><div class="src-pills" id="edit-src-pills">'+srcPills+'</div></div>'+
     '<div style="margin-bottom:10px"><label class="sfl">URL</label><input class="sin" id="edit-post-url" type="text" value="'+escH(p.url||'')+'"></div>'+
     '<div style="margin-bottom:10px"><label class="sfl">Emotion</label><select class="sin pst-emo-sel" id="edit-post-emo" onchange="editPostEmoPick(this)">'+emoOptionsHTML(p.emotion,'No emotion')+'</select></div>'+
+    '<div style="margin-bottom:10px"><label class="sfl">Screenshots</label>'+
+    '<div class="up-zone" id="up-zone-edit" onclick="document.getElementById(\'up-file-edit\').click()">'+
+      '<div class="up-zone-t">&#128247; Tap to add images, or drag them here</div>'+
+      '<div class="up-zone-s">Ctrl+V works too</div></div>'+
+    '<input type="file" id="up-file-edit" accept="image/*" multiple style="display:none" '+
+      'onchange="handleUpload(this.files,\'edit-post-imgs\',\'up-prog-edit\',\'up-thumbs-edit\')">'+
+    '<div class="up-prog" id="up-prog-edit"></div><div class="up-bar" id="up-bar-edit"><div class="up-bar-fill" id="up-bar-fill-edit"></div></div>'+
+    '<div class="up-thumbs" id="up-thumbs-edit"></div>'+
+    '<textarea class="sin" id="edit-post-imgs" rows="2" style="display:none">'+escH(p.images||'')+'</textarea>'+
+    '</div>'+
     '<label class="pst-pin-chk"><input type="checkbox" id="edit-post-pin"'+(p.pinned?' checked':'')+'> &#128204; Pinned</label>';
   openEditModal('Edit post',html,{type:'post',id:id});
+  wireDropZone('up-zone-edit','edit-post-imgs','up-prog-edit','up-thumbs-edit');
+  renderUploadThumbs('edit-post-imgs','up-thumbs-edit');
 }
 
 function editPostEmoPick(sel){
@@ -1586,11 +1681,12 @@ async function saveEditModal(){
     p.source=selSrcEl?selSrcEl.dataset.src:p.source;
     var es=document.getElementById('edit-post-emo');
     p.emotion=(es&&es.value!=='__new')?es.value:p.emotion;
+    p.images=document.getElementById('edit-post-imgs').value.trim();
     var wasPinned=p.pinned;
     p.pinned=document.getElementById('edit-post-pin').checked;
     renderPosts();
     var ok3=await postToSheet({sheet:'Posts',action:'edit_post',sheetId:p.sheetId||'',dateISO:p.dateISO,
-      heading:p.heading,desc:p.desc,source:p.source,url:p.url,emotion:p.emotion});
+      heading:p.heading,desc:p.desc,source:p.source,url:p.url,emotion:p.emotion,images:p.images});
     // edit_post leaves column J alone, so pin state is written separately
     if(ok3 && wasPinned!==p.pinned){
       ok3=await postToSheet({sheet:'Posts',action:'pin_post',sheetId:p.sheetId||'',pinned:p.pinned?'yes':'no'});
@@ -2636,6 +2732,160 @@ function replaceKundaliFromSheet(s){
   });
   kunEntries.sort(function(a,b){return b.timestamp-a.timestamp;});
   renderKundali();
+}
+
+/* ═══════════════════════════════════════════════════
+   IMAGE UPLOAD — ImgBB, same setup as Inner Compass
+
+   Base64 + FormData is what that page uses and it works, so
+   this mirrors it rather than inventing a second approach.
+   Each upload stores "fullUrl|thumbUrl" so cards can render
+   the light thumbnail and the lightbox the full image.
+═══════════════════════════════════════════════════ */
+var IMGBB_KEY='eb426f1db804774ed1a4a3926acf2a2d';
+
+/* Upload one file, resolve to {url, thumb} */
+function uploadToImgbb(file){
+  return new Promise(function(resolve,reject){
+    var reader=new FileReader();
+    reader.onerror=function(){ reject(new Error('Could not read the file')); };
+    reader.onload=function(ev){
+      var base64=String(ev.target.result).split(',')[1];
+      var fd=new FormData();
+      fd.append('key',IMGBB_KEY);
+      fd.append('image',base64);
+      fetch('https://api.imgbb.com/1/upload',{method:'POST',body:fd})
+        .then(function(r){ return r.json(); })
+        .then(function(d){
+          if(d&&d.success&&d.data&&d.data.url){
+            resolve({url:d.data.url, thumb:(d.data.thumb&&d.data.thumb.url)||d.data.url});
+          }else{
+            reject(new Error((d&&d.error&&(d.error.message||d.error))||'Upload rejected'));
+          }
+        })
+        .catch(reject);
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+/* Upload a batch, appending each result to the hidden field */
+async function handleUpload(files,taId,progId,thumbId){
+  if(!files||!files.length) return;
+  var ta=document.getElementById(taId);
+  var prog=document.getElementById(progId);
+  var list=Array.prototype.slice.call(files).filter(function(f){ return /^image\//.test(f.type); });
+  if(!list.length){ if(prog){prog.textContent='Those files are not images.';prog.className='up-prog err';} return; }
+
+  var sfx=progId.replace('up-prog-','');
+  var bar=document.getElementById('up-bar-'+sfx), fill=document.getElementById('up-bar-fill-'+sfx);
+  if(bar) bar.classList.add('on');
+
+  var done=0, failed=0, lastErr='';
+  for(var i=0;i<list.length;i++){
+    if(prog){ prog.textContent='Uploading '+(i+1)+' of '+list.length+'\u2026'; prog.className='up-prog'; }
+    if(fill) fill.style.width=Math.round(i/list.length*100)+'%';
+    try{
+      var r=await uploadToImgbb(list[i]);
+      ta.value=(ta.value.trim()?ta.value.trim()+'\n':'')+r.url+'|'+r.thumb;
+      done++;
+      renderUploadThumbs(taId,thumbId);
+    }catch(err){
+      failed++; lastErr=err.message||String(err);
+      console.warn('[imgbb]',lastErr);
+    }
+  }
+  if(fill) fill.style.width='100%';
+  if(prog){
+    prog.textContent = failed ? done+' uploaded, '+failed+' failed \u2014 '+lastErr
+                              : done+' image'+(done!==1?'s':'')+' uploaded \u2713';
+    prog.className='up-prog '+(failed?'err':'ok');
+  }
+  setTimeout(function(){ if(bar) bar.classList.remove('on'); if(fill) fill.style.width='0'; },1800);
+}
+
+/* Thumbnails of what's attached, each removable */
+function renderUploadThumbs(taId,thumbId){
+  var ta=document.getElementById(taId), box=document.getElementById(thumbId);
+  if(!ta||!box) return;
+  var imgs=parseImgs(ta.value);
+  box.innerHTML=imgs.map(function(im,i){
+    return '<div class="up-thumb"><img src="'+escH(im.thumb)+'" alt="" onerror="this.style.opacity=.25">'+
+      '<button class="up-thumb-x" onclick="removeUploadImg(\''+taId+'\',\''+thumbId+'\','+i+')" title="Remove">\u00d7</button></div>';
+  }).join('');
+}
+
+function removeUploadImg(taId,thumbId,idx){
+  var ta=document.getElementById(taId); if(!ta) return;
+  var lines=String(ta.value||'').split(/\n/).map(function(x){return x.trim();}).filter(Boolean);
+  lines.splice(idx,1);
+  ta.value=lines.join('\n');
+  renderUploadThumbs(taId,thumbId);
+}
+
+function wireDropZone(zoneId,taId,progId,thumbId){
+  var z=document.getElementById(zoneId); if(!z||z._wired) return;
+  z._wired=true;
+  ['dragenter','dragover'].forEach(function(ev){
+    z.addEventListener(ev,function(e){ e.preventDefault(); z.classList.add('drag'); });
+  });
+  ['dragleave','drop'].forEach(function(ev){
+    z.addEventListener(ev,function(e){ e.preventDefault(); z.classList.remove('drag'); });
+  });
+  z.addEventListener('drop',function(e){
+    if(e.dataTransfer&&e.dataTransfer.files) handleUpload(e.dataTransfer.files,taId,progId,thumbId);
+  });
+}
+
+/* Paste a screenshot straight in */
+document.addEventListener('paste',function(e){
+  if(!e.clipboardData||!e.clipboardData.files||!e.clipboardData.files.length) return;
+  var modalOpen=document.getElementById('edit-modal').style.display==='block';
+  if(modalOpen && document.getElementById('edit-post-imgs')){
+    handleUpload(e.clipboardData.files,'edit-post-imgs','up-prog-edit','up-thumbs-edit');
+  }else if(document.getElementById('pg-posts').classList.contains('on')){
+    handleUpload(e.clipboardData.files,'post-imgs','up-prog-new','up-thumbs-new');
+  }
+});
+
+/* ── One habit to follow today ────────────────────────────
+   Sits under the quote. Saved per day to the DailyFocus sheet,
+   debounced so typing doesn't fire a write per keystroke.
+──────────────────────────────────────────────────────── */
+var dailyFocus={};          // {dateISO: text}
+var _dfTimer=null, _dfLast='';
+
+function renderDailyFocus(){
+  var el=document.getElementById('focus-input'); if(!el) return;
+  if(document.activeElement===el) return;      // don't fight the user
+  var v=dailyFocus[isoToday()]||'';
+  el.value=v; _dfLast=v;
+  var s=document.getElementById('focus-sync');
+  if(s){ s.textContent=v?'Saved \u2713':''; s.className='focus-sync'+(v?' ok':''); }
+}
+
+function saveDailyFocus(){
+  var el=document.getElementById('focus-input'); if(!el) return;
+  var v=el.value.trim();
+  if(v===_dfLast) return;                       // nothing changed
+  _dfLast=v;
+  dailyFocus[isoToday()]=v;
+  var s=document.getElementById('focus-sync');
+  if(s){ s.textContent='Saving\u2026'; s.className='focus-sync'; }
+  clearTimeout(_dfTimer);
+  _dfTimer=setTimeout(async function(){
+    var now=new Date();
+    var ok=await postToSheet({sheet:'DailyFocus',
+      date:now.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}),
+      dateISO:isoToday(), focus:v});
+    if(s){ s.textContent=ok?'Saved \u2713':'Sync failed'; s.className='focus-sync '+(ok?'ok':'err'); }
+  },500);
+}
+
+function replaceDailyFocusFromSheet(rows){
+  dailyFocus={};
+  rows.forEach(function(r){ if(r.dateISO) dailyFocus[r.dateISO]=r.focus||''; });
+  renderDailyFocus();
 }
 
 /* ── Collapsible sections ─────────────────────────────────
