@@ -847,6 +847,12 @@ const WORKER_URL='https://muddy-shadow-1aa7.vaibhavjain-1192.workers.dev';
 const FETCH_TIMEOUT=45000;
 var DIAG={};  // diagnostics collected during fetch
 
+/* Apps Script returns an HTML page (sign-in / error) rather than
+   JSON when the deployment is stale or needs re-authorising. That
+   shows up as "Unexpected token '<'", which says nothing useful —
+   so detect it and report something actionable instead. */
+var LAST_SHEET_ERROR='';
+
 async function sheetFetch(url,opts){
   var ctrl=new AbortController();
   var tid=setTimeout(function(){ctrl.abort();},FETCH_TIMEOUT);
@@ -854,8 +860,36 @@ async function sheetFetch(url,opts){
     var resp=await fetch(url,Object.assign({signal:ctrl.signal},opts||{}));
     clearTimeout(tid);
     if(!resp.ok) throw new Error('HTTP '+resp.status);
-    return await resp.json();
-  }catch(e){ clearTimeout(tid); console.warn('[sheetFetch]',url,e.message||e); return null; }
+
+    var text=await resp.text();
+    var head=text.slice(0,300).trim();
+
+    if(head.charAt(0)==='<'){
+      LAST_SHEET_ERROR = /sign ?in|accounts\.google/i.test(head)
+        ? 'Apps Script is asking for sign-in \u2014 open the script and re-authorise, then Deploy > New version.'
+        : 'Apps Script returned an error page \u2014 redeploy it (Deploy > Manage deployments > New version).';
+      throw new Error(LAST_SHEET_ERROR);
+    }
+
+    try{
+      var json=JSON.parse(text);
+      if(json&&json.status==='error'){
+        LAST_SHEET_ERROR='Script error: '+(json.message||'unknown');
+        console.warn('[sheetFetch] script reported:',json.message);
+      }else{
+        LAST_SHEET_ERROR='';
+      }
+      return json;
+    }catch(pe){
+      LAST_SHEET_ERROR='Unreadable response from Apps Script.';
+      throw new Error(LAST_SHEET_ERROR);
+    }
+  }catch(e){
+    clearTimeout(tid);
+    if(!LAST_SHEET_ERROR) LAST_SHEET_ERROR=e.message||String(e);
+    console.warn('[sheetFetch]',url,LAST_SHEET_ERROR);
+    return null;
+  }
 }
 
 /* POST to Sheet */
@@ -1067,6 +1101,7 @@ function showDiagnostics(){
     'Today (browser): '+isoToday(),
     '',
     'Bulk load: '+(DIAG.everything||'not run'),
+    'Last error: '+(LAST_SHEET_ERROR||'none'),
     '',
     'Gratitude fetch: '+(DIAG.gratRaw||'not run'),
     'Today match: '+(DIAG.gratToday||'not checked'),
@@ -2878,7 +2913,11 @@ function saveDailyFocus(){
     var ok=await postToSheet({sheet:'DailyFocus',
       date:now.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}),
       dateISO:isoToday(), focus:v});
-    if(s){ s.textContent=ok?'Saved \u2713':'Sync failed'; s.className='focus-sync '+(ok?'ok':'err'); }
+    if(s){
+      s.textContent=ok?'Saved \u2713':'Not saved';
+      s.className='focus-sync '+(ok?'ok':'err');
+      if(!ok&&LAST_SHEET_ERROR){ s.title=LAST_SHEET_ERROR; showToast(LAST_SHEET_ERROR,'error'); }
+    }
   },500);
 }
 
