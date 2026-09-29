@@ -744,8 +744,8 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
 
   <!-- Pinned / All -->
   <div class="pst-tabs">
-    <button class="pst-tab" id="pst-tab-pinned" onclick="setPostView('pinned')">&#128204; Pinned <span class="pst-ct" id="pst-ct-pinned">0</span></button>
-    <button class="pst-tab on" id="pst-tab-all" onclick="setPostView('all')">All posts <span class="pst-ct" id="pst-ct-all">0</span></button>
+    <button class="pst-tab on" id="pst-tab-pinned" onclick="setPostView('pinned')">&#128204; Pinned <span class="pst-ct" id="pst-ct-pinned">0</span></button>
+    <button class="pst-tab" id="pst-tab-all" onclick="setPostView('all')">All posts <span class="pst-ct" id="pst-ct-all">0</span></button>
   </div>
 
   <div class="post-src-filter-bar"><button class="pef on" data-ps="all" onclick="setPostSrcFilter(this)">All sources</button><button class="pef" data-ps="linkedin" onclick="setPostSrcFilter(this)">&#128188; LinkedIn</button><button class="pef" data-ps="instagram" onclick="setPostSrcFilter(this)">&#128248; Instagram</button><button class="pef" data-ps="other" onclick="setPostSrcFilter(this)">&#127760; Other</button></div>
@@ -783,8 +783,8 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
   <div class="past-hdr"><div class="past-title">Morning Motivation</div><div class="past-sub">Your personal reading list — habits, practices and principles to live by.</div></div>
   <div class="mot-filter-bar" id="mot-cat-filter"><button class="mf on" data-mc="all" onclick="setMotCatFilter(this)">All</button><button class="mf" data-mc="habit" onclick="setMotCatFilter(this)">&#127775; Habit</button><button class="mf" data-mc="practice" onclick="setMotCatFilter(this)">&#129490; Practice</button><button class="mf" data-mc="principle" onclick="setMotCatFilter(this)">&#128214; Principle</button><button class="mf" data-mc="mantra" onclick="setMotCatFilter(this)">&#128591; Mantra</button><button class="mf" data-mc="reminder" onclick="setMotCatFilter(this)">&#128276; Reminder</button></div>
   <div class="pst-tabs">
-    <button class="pst-tab" id="mot-tab-pinned" onclick="setMotView('pinned')">&#128204; Pinned <span class="pst-ct" id="mot-ct-pinned">0</span></button>
-    <button class="pst-tab on" id="mot-tab-all" onclick="setMotView('all')">All entries <span class="pst-ct" id="mot-ct-all">0</span></button>
+    <button class="pst-tab on" id="mot-tab-pinned" onclick="setMotView('pinned')">&#128204; Pinned <span class="pst-ct" id="mot-ct-pinned">0</span></button>
+    <button class="pst-tab" id="mot-tab-all" onclick="setMotView('all')">All entries <span class="pst-ct" id="mot-ct-all">0</span></button>
   </div>
   <div class="th-filter-bar" style="margin-bottom:1rem"><input class="psearch" id="mot-search" type="text" placeholder="Search..." oninput="renderMotivation()" style="flex:1"><button class="btn" onclick="exportMotCSV()">Export CSV</button></div>
   <div class="pmeta" id="mot-meta"></div>
@@ -814,8 +814,8 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
   </div>
 
   <div class="pst-tabs">
-    <button class="pst-tab" id="kun-tab-pinned" onclick="setKunView('pinned')">&#128204; Pinned <span class="pst-ct" id="kun-ct-pinned">0</span></button>
-    <button class="pst-tab on" id="kun-tab-all" onclick="setKunView('all')">All learnings <span class="pst-ct" id="kun-ct-all">0</span></button>
+    <button class="pst-tab on" id="kun-tab-pinned" onclick="setKunView('pinned')">&#128204; Pinned <span class="pst-ct" id="kun-ct-pinned">0</span></button>
+    <button class="pst-tab" id="kun-tab-all" onclick="setKunView('all')">All learnings <span class="pst-ct" id="kun-ct-all">0</span></button>
   </div>
   <div class="ef-bar" id="kun-cat-filter">
     <button class="ef on" data-kc="all" onclick="setKunCatFilter(this)">All</button>
@@ -1429,7 +1429,7 @@ function replaceThoughtsFromSheet(s){
    A new emotion becomes available to every post the moment it
    is saved on one — no separate list to maintain.
 ═══════════════════════════════════════════════════ */
-var postView='all';                 // 'all' | 'pinned'
+var postView='pinned';                 // 'all' | 'pinned'
 var POST_EMO_STARTERS=['inspired','motivated','calm','grateful','reflective','challenged','joyful'];
 
 function loadPosts(){ posts=[]; }    // Sheet is the source of truth
@@ -1973,7 +1973,7 @@ function replaceHabitsFromSheet(s){
 
 /* MOTIVATION */
 var motEntries = [];
-var motView='all';      // 'all' | 'pinned' — which tab is showing
+var motView='pinned';   // 'all' | 'pinned' — Pinned opens first
 var selMotCategory = '';
 var motCatFilter = 'all';
 
@@ -2694,7 +2694,7 @@ async function saveMorningGratitude(){
 var kunEntries=[];
 var selKunCategory='';
 var kunCatFilter='all';
-var kunView='all';     // 'all' | 'pinned'
+var kunView='pinned';  // 'all' | 'pinned' — Pinned opens first
 
 var KUN_CAT_COLORS={health:'#6BBF8E',career:'#C9A84C',finances:'#4ECDC4',relationships:'#E07B7B',
   family:'#d98cb3',property:'#8b9dc3',education:'#b0a0d6',spiritual:'#e0c068',timing:'#9A97A0',general:'#7fb3d5'};
