@@ -286,6 +286,7 @@ body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:
 /* KUNDALI */
 .kun-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:1rem;transition:border-color var(--tr)}
 .kun-card:hover{border-color:var(--border-md)}
+.kun-card.pinned{border-color:rgba(201,168,76,.35);background:var(--gold-glow)}
 .kun-card-head{display:flex;align-items:center;gap:8px;margin-bottom:.6rem;flex-wrap:wrap}
 .kun-cat{font-size:10px;font-family:var(--fm);text-transform:uppercase;letter-spacing:0.1em;padding:2px 10px;border-radius:20px;white-space:nowrap}
 .kun-date{font-size:10px;color:var(--text-3);font-family:var(--fm);margin-left:auto}
@@ -781,7 +782,11 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
 <div class="pg" id="pg-motivation">
   <div class="past-hdr"><div class="past-title">Morning Motivation</div><div class="past-sub">Your personal reading list — habits, practices and principles to live by.</div></div>
   <div class="mot-filter-bar" id="mot-cat-filter"><button class="mf on" data-mc="all" onclick="setMotCatFilter(this)">All</button><button class="mf" data-mc="habit" onclick="setMotCatFilter(this)">&#127775; Habit</button><button class="mf" data-mc="practice" onclick="setMotCatFilter(this)">&#129490; Practice</button><button class="mf" data-mc="principle" onclick="setMotCatFilter(this)">&#128214; Principle</button><button class="mf" data-mc="mantra" onclick="setMotCatFilter(this)">&#128591; Mantra</button><button class="mf" data-mc="reminder" onclick="setMotCatFilter(this)">&#128276; Reminder</button></div>
-  <div class="th-filter-bar" style="margin-bottom:1rem"><input class="psearch" id="mot-search" type="text" placeholder="Search..." oninput="renderMotivation()" style="flex:1"><label style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-2);cursor:pointer"><input type="checkbox" id="mot-pinned-only" onchange="renderMotivation()">&#128204; Pinned only</label><button class="btn" onclick="exportMotCSV()">Export CSV</button></div>
+  <div class="pst-tabs">
+    <button class="pst-tab" id="mot-tab-pinned" onclick="setMotView('pinned')">&#128204; Pinned <span class="pst-ct" id="mot-ct-pinned">0</span></button>
+    <button class="pst-tab on" id="mot-tab-all" onclick="setMotView('all')">All entries <span class="pst-ct" id="mot-ct-all">0</span></button>
+  </div>
+  <div class="th-filter-bar" style="margin-bottom:1rem"><input class="psearch" id="mot-search" type="text" placeholder="Search..." oninput="renderMotivation()" style="flex:1"><button class="btn" onclick="exportMotCSV()">Export CSV</button></div>
   <div class="pmeta" id="mot-meta"></div>
   <div class="mot-log" id="mot-log"></div>
   <div class="lbl" style="margin-top:1.5rem">Add an entry <span class="lbl-line"></span></div>
@@ -808,6 +813,10 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
     <div class="past-sub">What your chart says, and the reasoning behind each reading.</div>
   </div>
 
+  <div class="pst-tabs">
+    <button class="pst-tab" id="kun-tab-pinned" onclick="setKunView('pinned')">&#128204; Pinned <span class="pst-ct" id="kun-ct-pinned">0</span></button>
+    <button class="pst-tab on" id="kun-tab-all" onclick="setKunView('all')">All learnings <span class="pst-ct" id="kun-ct-all">0</span></button>
+  </div>
   <div class="ef-bar" id="kun-cat-filter">
     <button class="ef on" data-kc="all" onclick="setKunCatFilter(this)">All</button>
     <button class="ef" data-kc="health" onclick="setKunCatFilter(this)">&#127807; Health</button>
@@ -1953,6 +1962,13 @@ function selMotCat(el){
   }
 }
 
+function setMotView(v){
+  motView=v;
+  document.getElementById('mot-tab-pinned').classList.toggle('on',v==='pinned');
+  document.getElementById('mot-tab-all').classList.toggle('on',v==='all');
+  renderMotivation();
+}
+
 function setMotCatFilter(el){
   document.querySelectorAll('#mot-cat-filter .mf').forEach(function(p){p.classList.remove('on');});
   el.classList.add('on'); motCatFilter=el.dataset.mc; renderMotivation();
@@ -2006,21 +2022,27 @@ function motCardHTML(e){
 
 function renderMotivation(){
   var search=(document.getElementById('mot-search').value||'').toLowerCase().trim();
-  var pinnedOnly=document.getElementById('mot-pinned-only').checked;
+  var pinnedCount=motEntries.filter(function(e){return e.pinned;}).length;
+  var cp=document.getElementById('mot-ct-pinned'); if(cp) cp.textContent=pinnedCount;
+  var ca=document.getElementById('mot-ct-all');    if(ca) ca.textContent=motEntries.length;
+
   var list=motEntries.slice();
+  if(motView==='pinned') list=list.filter(function(e){return e.pinned;});
   if(motCatFilter!=='all') list=list.filter(function(e){return e.category===motCatFilter;});
-  if(pinnedOnly) list=list.filter(function(e){return e.pinned;});
   if(search) list=list.filter(function(e){return(e.text+e.category).toLowerCase().includes(search);});
   // Pinned always float to top
   list.sort(function(a,b){
     if(a.pinned&&!b.pinned)return -1; if(!a.pinned&&b.pinned)return 1;
     return b.timestamp-a.timestamp;
   });
-  document.getElementById('mot-meta').textContent=list.length+' of '+motEntries.length+' entr'+(motEntries.length!==1?'ies':'y');
+  var motBase = motView==='pinned' ? pinnedCount : motEntries.length;
+  document.getElementById('mot-meta').textContent=list.length+' of '+motBase+(motView==='pinned'?' pinned':'')+' entr'+(motBase!==1?'ies':'y');
   var log=document.getElementById('mot-log');
   if(!list.length){
     log.innerHTML='<div class="sit-empty" style="grid-column:1/-1"><div style="font-size:28px;margin-bottom:10px">&#128293;</div>'+
-      (motEntries.length===0?'Nothing here yet.<br>Add the first habit or principle you want to read every morning.':'No matches for the current filter.')+'</div>';
+      (motView==='pinned'
+        ? (pinnedCount===0?'Nothing pinned yet.<br>Tap &#128204; on any entry to pin it here.':'No pinned entries match this filter.')
+        : (motEntries.length===0?'Nothing here yet.<br>Add the first habit or principle you want to read every morning.':'No matches for the current filter.'))+'</div>';
     return;
   }
   log.innerHTML=list.map(motCardHTML).join('');
@@ -2639,6 +2661,7 @@ async function saveMorningGratitude(){
 var kunEntries=[];
 var selKunCategory='';
 var kunCatFilter='all';
+var kunView='all';     // 'all' | 'pinned'
 
 var KUN_CAT_COLORS={health:'#6BBF8E',career:'#C9A84C',finances:'#4ECDC4',relationships:'#E07B7B',
   family:'#d98cb3',property:'#8b9dc3',education:'#b0a0d6',spiritual:'#e0c068',timing:'#9A97A0',general:'#7fb3d5'};
@@ -2657,6 +2680,21 @@ function selKunCat(el){
   }
 }
 
+function setKunView(v){
+  kunView=v;
+  document.getElementById('kun-tab-pinned').classList.toggle('on',v==='pinned');
+  document.getElementById('kun-tab-all').classList.toggle('on',v==='all');
+  renderKundali();
+}
+
+async function toggleKunPin(id){
+  var e=kunEntries.find(function(x){return x.id===id;}); if(!e) return;
+  e.pinned=!e.pinned;
+  renderKundali();
+  var ok=await postToSheet({sheet:'Kundali',action:'pin_kundali',sheetId:e.sheetId||'',pinned:e.pinned?'yes':'no'});
+  showToast(ok?(e.pinned?'Pinned \u2713':'Unpinned'):'Sync failed \u2014 pin not saved.',ok?'success':'error');
+}
+
 function setKunCatFilter(el){
   document.querySelectorAll('#kun-cat-filter .ef').forEach(function(p){p.classList.remove('on');});
   el.classList.add('on'); kunCatFilter=el.dataset.kc; renderKundali();
@@ -2670,7 +2708,7 @@ async function addKundali(){
   var now=new Date(), kid=String(Date.now());
   var e={id:Date.now(),timestamp:Date.now(),sheetId:kid,
     dateISO:isoDate(now),date:now.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}),
-    category:selKunCategory,learning:learning,logic:logic};
+    category:selKunCategory,learning:learning,logic:logic,pinned:false};
   kunEntries.unshift(e);
 
   document.getElementById('kun-learning').value='';
@@ -2693,10 +2731,11 @@ function kunCardHTML(e){
   var col=KUN_CAT_COLORS[e.category]||'#9A97A0';
   var icon=KUN_CAT_ICONS[e.category]||'';
   var label=e.category?e.category.charAt(0).toUpperCase()+e.category.slice(1):'';
-  return '<div class="kun-card">'+
+  return '<div class="kun-card'+(e.pinned?' pinned':'')+'">'+
     '<div class="kun-card-head">'+
       '<span class="kun-cat" style="background:'+col+'1f;border:1px solid '+col+'55;color:'+col+'">'+icon+' '+label+'</span>'+
       '<span class="kun-date">'+e.date+'</span>'+
+      '<button class="pst-pin'+(e.pinned?' on':'')+'" onclick="toggleKunPin('+e.id+')" title="'+(e.pinned?'Unpin':'Pin')+'">&#128204;</button>'+
     '</div>'+
     '<div class="kun-learning">'+escH(e.learning)+'</div>'+
     (e.logic?'<div class="kun-logic-lbl">Logic</div><div class="kun-logic">'+escH(e.logic)+'</div>':'')+
@@ -2712,7 +2751,12 @@ function renderKundali(){
   if(!searchEl) return;
   var search=(searchEl.value||'').toLowerCase().trim();
   var sort=document.getElementById('kun-sort').value;
+  var kunPinned=kunEntries.filter(function(e){return e.pinned;}).length;
+  var kcp=document.getElementById('kun-ct-pinned'); if(kcp) kcp.textContent=kunPinned;
+  var kca=document.getElementById('kun-ct-all');    if(kca) kca.textContent=kunEntries.length;
+
   var list=kunEntries.slice();
+  if(kunView==='pinned') list=list.filter(function(e){return e.pinned;});
   if(kunCatFilter!=='all') list=list.filter(function(e){return e.category===kunCatFilter;});
   if(search) list=list.filter(function(e){
     return ((e.learning||'')+(e.logic||'')+(e.category||'')).toLowerCase().includes(search);
@@ -2721,11 +2765,14 @@ function renderKundali(){
   else if(sort==='category') list.sort(function(a,b){return (a.category||'').localeCompare(b.category||'');});
   else list.sort(function(a,b){return b.timestamp-a.timestamp;});
 
-  document.getElementById('kun-meta').textContent=list.length+' of '+kunEntries.length+' learning'+(kunEntries.length!==1?'s':'');
+  var kunBase = kunView==='pinned' ? kunPinned : kunEntries.length;
+  document.getElementById('kun-meta').textContent=list.length+' of '+kunBase+(kunView==='pinned'?' pinned':'')+' learning'+(kunBase!==1?'s':'');
   var log=document.getElementById('kun-log');
   if(!list.length){
     log.innerHTML='<div class="sit-empty"><div style="font-size:28px;margin-bottom:10px">&#128337;</div>'+
-      (kunEntries.length===0?'Nothing recorded yet.<br>Add your first Kundali learning below.':'No matches for this filter.')+'</div>';
+      (kunView==='pinned'
+        ? (kunPinned===0?'Nothing pinned yet.<br>Tap &#128204; on any learning to pin it here.':'No pinned learnings match this filter.')
+        : (kunEntries.length===0?'Nothing recorded yet.<br>Add your first Kundali learning below.':'No matches for this filter.'))+'</div>';
     return;
   }
   log.innerHTML=list.map(kunCardHTML).join('');
@@ -2803,6 +2850,7 @@ function replaceKundaliFromSheet(s){
       category: x.category || '',
       learning: x.learning || '',
       logic:    x.logic    || '',
+      pinned:   String(x.pinned||'').toLowerCase()==='yes',
     };
   });
   kunEntries.sort(function(a,b){return b.timestamp-a.timestamp;});
