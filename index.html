@@ -893,7 +893,7 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
 <script>
 'use strict';
 const WORKER_URL='https://muddy-shadow-1aa7.vaibhavjain-1192.workers.dev';
-const FETCH_TIMEOUT=45000;
+const FETCH_TIMEOUT=90000;   // one bulk request does a lot of work
 var DIAG={};  // diagnostics collected during fetch
 
 /* Apps Script returns an HTML page (sign-in / error) rather than
@@ -1067,59 +1067,91 @@ function init(){
   // Show shimmer/loading state on morning intentions
   setIntentionsState('loading');
 
-  // ONE request for everything. Eight parallel requests made
-  // Apps Script queue internally and time out.
+  // ONE request for everything, with a per-collection fallback.
   (async function(){
-    try{
-      var d=await sheetFetch(WORKER_URL+'?action=getEverything&date='+isoToday());
-      DIAG.everything = d ? d.status : 'NULL response';
-
-      if(!d||d.status!=='ok'){
-        DIAG.everything='FAILED \u2014 '+(d?JSON.stringify(d).slice(0,120):'no response');
-        setIntentionsState('form');
-        showSyncBanner(false,'\u26a0 Could not load from Sheet \u2014 tap for details');
-        return;
-      }
-
-      // Distribute the single payload to each collection
+    function distribute(d){
       if(Array.isArray(d.situations))  replaceSituationsFromSheet(d.situations);
       if(Array.isArray(d.thoughts))    replaceThoughtsFromSheet(d.thoughts);
       if(Array.isArray(d.posts))       replacePostsFromSheet(d.posts);
       if(Array.isArray(d.motivation))  replaceMotivationFromSheet(d.motivation);
       if(Array.isArray(d.gratitude))   replaceGratitudeFromSheet(d.gratitude);
-      if(Array.isArray(d.todayHabits)) replaceHabitsFromSheet(d.todayHabits);
       if(Array.isArray(d.kundali))     replaceKundaliFromSheet(d.kundali);
       if(Array.isArray(d.habitMaster)) replaceHabitMasterFromSheet(d.habitMaster);
       if(Array.isArray(d.habitReasons))replaceHabitReasonsFromSheet(d.habitReasons);
       if(Array.isArray(d.dailyFocus))  replaceDailyFocusFromSheet(d.dailyFocus);
       if(Array.isArray(d.routineItems))replaceRoutineItemsFromSheet(d.routineItems);
+      if(Array.isArray(d.todayHabits)) replaceHabitsFromSheet(d.todayHabits);
       if(Array.isArray(d.routineLog))  replaceRoutineLogFromSheet(d.routineLog);
       if(Array.isArray(d.routineDay))  replaceRoutineDayFromSheet(d.routineDay);
-      // Everything is in memory now — draw once, with the correct routine
+    }
+
+    function finish(d){
       if(!selDate) selDate=isoToday();
       activeRoutine=routineForDate(selDate);
       _calNeedsScroll=true;
-      renderMaster(); renderRoutine();
-      DIAG.logRows=(d.routineLog||[]).length+' log rows, '+
-        (d.routineLog||[]).filter(function(r){return r.missed;}).length+' with reasons';
-
-      DIAG.gratRaw='ok / '+(d.gratitude||[]).length+' rows';
-      DIAG.motRaw ='ok / '+(d.motivation||[]).length+' rows';
-      DIAG.habRaw ='ok / '+(d.todayHabits||[]).length+' rows';
-      DIAG.kunRaw ='ok / '+(d.kundali||[]).length+' rows';
-
-      if(d.morning&&(d.morning.priority||d.morning.emotional_intention)){
-        showReadView(d.morning.priority||'',d.morning.emotional_intention||'');
-      }else{setIntentionsState('form');}
-
+      renderMaster(); renderRoutine(); renderDailyFocus();
+      DIAG.gratRaw='ok / '+((d&&d.gratitude)||[]).length+' rows';
+      DIAG.motRaw ='ok / '+((d&&d.motivation)||[]).length+' rows';
+      DIAG.kunRaw ='ok / '+((d&&d.kundali)||[]).length+' rows';
+      DIAG.logRows=((d&&d.routineLog)||[]).length+' log rows';
       showSyncBanner(true,'Sheet \u2713 '+situations.length+' sit \u00b7 '+thoughts.length+
         ' th \u00b7 '+posts.length+' posts \u00b7 '+motEntries.length+' mot \u00b7 '+
-        gratEntries.length+' grat \u00b7 '+routineItems.length+' routine   (tap for details)');
+        gratEntries.length+' grat \u00b7 '+kunEntries.length+' kun   (tap for details)');
+    }
+
+    /* If the single bulk call times out, pull each collection on its
+       own. Slower overall, but each request is small enough to land,
+       so the page fills instead of sitting empty. */
+    async function fallback(){
+      showSyncBanner(true,'Bulk load timed out \u2014 fetching section by section\u2026');
+      DIAG.everything='TIMED OUT \u2014 used per-collection fallback';
+      var jobs=[
+        ['situations',  'getAllSituations',  'situations',  replaceSituationsFromSheet],
+        ['routineItems','getAllRoutineItems','routineItems',replaceRoutineItemsFromSheet],
+        ['routineLog',  'getAllRoutineLogs', 'routineLog',  replaceRoutineLogFromSheet],
+        ['routineDay',  'getAllRoutineDays', 'routineDay',  replaceRoutineDayFromSheet],
+        ['habitMaster', 'getAllHabitMaster', 'habitMaster', replaceHabitMasterFromSheet],
+        ['dailyFocus',  'getAllDailyFocus',  'dailyFocus',  replaceDailyFocusFromSheet],
+        ['thoughts',    'getAllThoughts',    'thoughts',    replaceThoughtsFromSheet],
+        ['posts',       'getAllPosts',       'posts',       replacePostsFromSheet],
+        ['motivation',  'getAllMotivation',  'motivation',  replaceMotivationFromSheet],
+        ['gratitude',   'getAllGratitude',   'gratitude',   replaceGratitudeFromSheet],
+        ['kundali',     'getAllKundali',     'kundali',     replaceKundaliFromSheet],
+        ['todayHabits', 'getAllTodayHabits', 'todayHabits', replaceHabitsFromSheet],
+        ['reasons',     'getAllHabitReasons','habitReasons',replaceHabitReasonsFromSheet]
+      ];
+      var got=0;
+      for(var i=0;i<jobs.length;i++){
+        var j=jobs[i];
+        var r=await sheetFetch(WORKER_URL+'?action='+j[1]);
+        if(r&&r.status==='ok'&&Array.isArray(r[j[2]])){ j[3](r[j[2]]); got++; }
+      }
+      var t=await sheetFetch(WORKER_URL+'?action=getToday&date='+isoToday());
+      finish({});
+      if(got<jobs.length) showSyncBanner(false,'Loaded '+got+' of '+jobs.length+' sections \u2014 tap for details');
+    }
+
+    try{
+      var d=await sheetFetch(WORKER_URL+'?action=getEverything&date='+isoToday());
+      DIAG.everything = d ? d.status : 'NULL response';
+
+      if(!d||d.status!=='ok'){
+        setIntentionsState('form');
+        await fallback();
+        return;
+      }
+
+      distribute(d);
+      if(d.morning&&(d.morning.priority||d.morning.emotional_intention)){
+        showReadView(d.morning.priority||'',d.morning.emotional_intention||'');
+      }else{ setIntentionsState('form'); }
+      finish(d);
     }catch(e){
       console.error('[init fetch error]',e);
       DIAG.everything='EXCEPTION \u2014 '+(e.message||e);
       setIntentionsState('form');
-      showSyncBanner(false,'\u26a0 Could not reach Google Sheet \u2014 tap for details');
+      try{ await fallback(); }
+      catch(e2){ showSyncBanner(false,'\u26a0 Could not reach Google Sheet \u2014 tap for details'); }
     }
   })();
 }
