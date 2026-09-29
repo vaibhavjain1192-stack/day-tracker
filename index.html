@@ -359,12 +359,31 @@ body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:
 .up-thumb img{width:100%;height:100%;object-fit:cover;border-radius:var(--rsm);border:1px solid var(--border)}
 .up-thumb-x{position:absolute;top:-6px;right:-6px;width:19px;height:19px;border-radius:50%;background:var(--rose);color:#0F1117;border:2px solid var(--bg);font-size:11px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0}
 /* DAILY FOCUS */
-.focus-box{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--card);border:1px solid var(--border);border-left:2px solid var(--teal);border-radius:0 var(--r) var(--r) 0;padding:11px 14px;margin-bottom:1rem}
-.focus-lbl{font-family:var(--fm);font-size:9px;color:var(--teal);letter-spacing:.1em;text-transform:uppercase;flex-shrink:0}
-.focus-in{flex:1;min-width:160px;background:transparent;border:none;border-bottom:1px dashed var(--border-md);padding:3px 2px;font-size:13px;color:var(--text-1);font-family:var(--fb);outline:none;transition:border-color var(--tr)}
+.focus-box{background:var(--card);border:1px solid var(--border);border-left:2px solid var(--teal);border-radius:0 var(--r) var(--r) 0;padding:11px 14px;margin-bottom:1rem}
+.focus-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:5px}
+.focus-lbl{font-family:var(--fm);font-size:9px;color:var(--teal);letter-spacing:.1em;text-transform:uppercase}
+.focus-in{display:block;width:100%;background:transparent;border:none;border-bottom:1px dashed var(--border-md);padding:3px 2px;font-size:13px;line-height:1.55;color:var(--text-1);font-family:var(--fb);outline:none;resize:none;overflow:hidden;transition:border-color var(--tr)}
 .focus-in:focus{border-bottom-color:var(--teal)}
 .focus-in::placeholder{color:var(--text-3)}
-.focus-sync{font-size:10px;color:var(--text-3);font-family:var(--fm);flex-shrink:0}
+.focus-sync{font-size:10px;color:var(--text-3);font-family:var(--fm);flex-shrink:0;white-space:nowrap}
+.focus-box.vid{border-left-color:var(--rose)}
+.focus-lbl.vid{color:var(--rose)}
+.focus-box.vid .focus-in:focus{border-bottom-color:var(--rose)}
+.focus-carry{font-family:var(--fm);font-size:9px;color:var(--text-3);margin-top:6px}
+.vid-prev{display:flex;gap:10px;align-items:flex-start;margin-bottom:9px}
+.vid-thumb{width:112px;height:63px;border-radius:var(--rsm);object-fit:cover;border:1px solid var(--border);background:var(--surface);flex-shrink:0}
+.vid-thumb-ph{width:112px;height:63px;border-radius:var(--rsm);border:1px solid var(--border);background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.vid-watch{display:inline-block;font-family:var(--fm);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--rose);border:1px solid rgba(224,123,123,.35);background:var(--rose-dim);border-radius:20px;padding:3px 11px;text-decoration:none;transition:all var(--tr)}
+.vid-watch:hover{background:var(--rose);color:#0F1117}
+.focus-box.vid{border-left-color:var(--rose)}
+.focus-lbl.vid{color:var(--rose)}
+.focus-carry{font-family:var(--fm);font-size:9px;color:var(--text-3);margin-top:6px}
+.vid-card{display:flex;gap:10px;align-items:flex-start;margin-bottom:9px;padding:8px;background:var(--surface);border:1px solid var(--border);border-radius:var(--rsm)}
+.vid-thumb{width:92px;height:52px;border-radius:3px;object-fit:cover;flex-shrink:0;background:var(--card);border:1px solid var(--border)}
+.vid-thumb-ph{width:92px;height:52px;border-radius:3px;flex-shrink:0;background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:18px}
+.vid-meta{min-width:0;flex:1}
+.vid-open{display:inline-block;font-family:var(--fm);font-size:10px;color:var(--rose);border:1px solid rgba(224,123,123,.3);background:rgba(224,123,123,.08);border-radius:20px;padding:2px 10px;text-decoration:none;transition:all var(--tr)}
+.vid-open:hover{background:var(--rose);color:#0F1117}
 .focus-sync.ok{color:var(--green)}
 .focus-sync.err{color:var(--rose)}
 /* POST IMAGES */
@@ -542,11 +561,32 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
   <div class="hdr"><div class="hdr-l"><div class="eyebrow" id="time-now">--</div><h1 class="greeting" id="greeting">Good morning</h1><div class="dateline" id="date-line">Loading...</div></div><div class="hdr-r"><div class="daynum" id="day-num">--</div><div class="daynum-lbl">Day of year</div></div></div>
   <div class="mantra"><div class="mantra-q" id="mantra-text">"..."</div><div class="mantra-src" id="mantra-source"></div></div>
   <div class="focus-box">
-    <div class="focus-lbl">&#127919; One habit to follow today</div>
-    <input class="focus-in" id="focus-input" type="text" placeholder="The one thing you commit to today..."
-           onkeydown="if(event.key==='Enter'){saveDailyFocus();this.blur();event.preventDefault();}"
-           onblur="saveDailyFocus()">
-    <span class="focus-sync" id="focus-sync"></span>
+    <div class="focus-top">
+      <div class="focus-lbl">&#127919; One habit to follow today</div>
+      <span class="focus-sync" id="focus-sync"></span>
+    </div>
+    <textarea class="focus-in" id="focus-input" rows="1" placeholder="The one thing you commit to today..."
+              oninput="autoGrowFocus(this)"
+              onkeydown="if(event.key==='Enter'&&!event.shiftKey){saveDailyFocus();this.blur();event.preventDefault();}"
+              onblur="saveDailyFocus()"></textarea>
+    <div class="focus-carry" id="focus-carry"></div>
+  </div>
+
+  <div class="focus-box vid">
+    <div class="focus-top">
+      <div class="focus-lbl vid">&#127909; Video to watch</div>
+      <span class="focus-sync" id="vid-sync"></span>
+    </div>
+    <div id="vid-preview"></div>
+    <input class="focus-in" id="vid-url" type="text" placeholder="Paste a YouTube or Instagram link..."
+           onblur="saveDailyVideo()"
+           onkeydown="if(event.key==='Enter'){saveDailyVideo();this.blur();event.preventDefault();}">
+    <textarea class="focus-in" id="vid-note" rows="1" placeholder="Why this one? What to take from it..."
+              style="margin-top:6px"
+              oninput="autoGrowFocus(this)"
+              onkeydown="if(event.key==='Enter'&&!event.shiftKey){saveDailyVideo();this.blur();event.preventDefault();}"
+              onblur="saveDailyVideo()"></textarea>
+    <div class="focus-carry" id="vid-carry"></div>
   </div>
   <div id="sync-banner" style="display:none;font-size:11px;padding:8px 12px;border-radius:var(--rsm);margin-bottom:1rem;font-family:var(--fm)"></div>
   <div class="glance" id="glance"></div>
@@ -2883,47 +2923,177 @@ document.addEventListener('paste',function(e){
   }
 });
 
-/* ── One habit to follow today ────────────────────────────
-   Sits under the quote. Saved per day to the DailyFocus sheet,
-   debounced so typing doesn't fire a write per keystroke.
+/* ── One habit + one video ───────────────────────────────
+   Both CARRY FORWARD: whatever you last set stays on screen
+   every day until you change it. Each field carries forward
+   independently, so changing the video doesn't disturb the
+   habit. Changing either stamps today's row, and that becomes
+   the value carried into the days after.
 ──────────────────────────────────────────────────────── */
-var dailyFocus={};          // {dateISO: text}
+var dailyFocus={};          // {dateISO: {focus, videoUrl, videoNote}}
 var _dfTimer=null, _dfLast='';
+var _dvTimer=null, _dvLast='';
+
+/* Most recent non-empty value for a field, at or before a date */
+function carriedValue(field,iso){
+  var keys=Object.keys(dailyFocus).filter(function(k){ return k<=iso; }).sort();
+  for(var i=keys.length-1;i>=0;i--){
+    var v=(dailyFocus[keys[i]]||{})[field];
+    if(v&&String(v).trim()) return {value:String(v).trim(), since:keys[i]};
+  }
+  return {value:'', since:''};
+}
+
+function carryNote(since,iso){
+  if(!since||since===iso) return '';
+  var p=since.split('-'), d=new Date(+p[0],+p[1]-1,+p[2]);
+  var days=Math.round((new Date(iso)-d)/86400000);
+  return 'Set '+d.toLocaleDateString('en-IN',{day:'numeric',month:'short'})+
+         ' \u00b7 carried '+days+' day'+(days!==1?'s':'');
+}
+
+function autoGrowFocus(el){
+  if(!el) return;
+  el.style.height='auto';
+  el.style.height=(el.scrollHeight)+'px';
+}
+
+/* YouTube thumbnail, where we can derive one */
+function ytThumb(url){
+  var m=String(url||'').match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([A-Za-z0-9_-]{11})/);
+  return m?'https://img.youtube.com/vi/'+m[1]+'/mqdefault.jpg':'';
+}
+
+/* The value in force on a date: that date's own entry if it has a
+   non-empty one, otherwise the most recent earlier entry. This is
+   what makes a habit persist across days until it is changed.
+   Each field carries independently, so setting a video does not
+   disturb the habit and vice versa. */
+function carriedValue(field,iso){
+  if(dailyFocus[iso] && String(dailyFocus[iso][field]||'').trim()){
+    return {value:dailyFocus[iso][field], since:iso};
+  }
+  var prior=Object.keys(dailyFocus).filter(function(k){ return k<iso; }).sort();
+  for(var i=prior.length-1;i>=0;i--){
+    var v=dailyFocus[prior[i]] && dailyFocus[prior[i]][field];
+    if(v && String(v).trim()) return {value:v, since:prior[i]};
+  }
+  return {value:'', since:''};
+}
+
+/* "Set on 22 Sep" when the value was carried over from an earlier day */
+function carryNote(since,iso){
+  if(!since || since===iso) return '';
+  var p=since.split('-'), d=new Date(+p[0],+p[1]-1,+p[2]);
+  return 'Set on '+d.toLocaleDateString('en-IN',{day:'numeric',month:'short'})+' \u00b7 still showing';
+}
+
+/* YouTube exposes a free thumbnail by video id; other hosts don't,
+   so they fall back to a plain tile. */
+function ytThumb(url){
+  var m=String(url||'').match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/|live\/)|youtu\.be\/)([\w-]{6,})/i);
+  return m ? 'https://img.youtube.com/vi/'+m[1]+'/mqdefault.jpg' : '';
+}
 
 function renderDailyFocus(){
-  var el=document.getElementById('focus-input'); if(!el) return;
-  if(document.activeElement===el) return;      // don't fight the user
-  var v=dailyFocus[isoToday()]||'';
-  el.value=v; _dfLast=v;
-  var s=document.getElementById('focus-sync');
-  if(s){ s.textContent=v?'Saved \u2713':''; s.className='focus-sync'+(v?' ok':''); }
+  var iso=isoToday();
+
+  // Habit
+  var el=document.getElementById('focus-input');
+  if(el && document.activeElement!==el){
+    var f=carriedValue('focus',iso);
+    el.value=f.value; _dfLast=f.value;
+    autoGrowFocus(el);
+    var s=document.getElementById('focus-sync');
+    if(s){ s.textContent=f.value?'Saved \u2713':''; s.className='focus-sync'+(f.value?' ok':''); }
+    var cn=document.getElementById('focus-carry');
+    if(cn) cn.textContent=carryNote(f.since,iso);
+  }
+
+  // Video
+  var u=document.getElementById('vid-url'), n=document.getElementById('vid-note');
+  if(u && n && document.activeElement!==u && document.activeElement!==n){
+    var vu=carriedValue('videoUrl',iso), vn=carriedValue('videoNote',iso);
+    u.value=vu.value; n.value=vn.value; _dvLast=vu.value+'\u241F'+vn.value;
+    autoGrowFocus(n);
+    var vs=document.getElementById('vid-sync');
+    if(vs){ vs.textContent=vu.value?'Saved \u2713':''; vs.className='focus-sync'+(vu.value?' ok':''); }
+    var vc=document.getElementById('vid-carry');
+    if(vc) vc.textContent=carryNote(vu.since,iso);
+    renderVideoPreview(vu.value);
+  }
+}
+
+function renderVideoPreview(url){
+  var box=document.getElementById('vid-preview'); if(!box) return;
+  if(!url){ box.innerHTML=''; return; }
+  var t=ytThumb(url);
+  var isInsta=/instagram\.com/i.test(url);
+  var thumb = t ? '<img class="vid-thumb" src="'+escH(t)+'" alt="" onerror="this.outerHTML=\'<div class=\\\'vid-thumb-ph\\\'>\u25b6</div>\'">'
+                : '<div class="vid-thumb-ph">'+(isInsta?'\ud83d\udcf8':'\u25b6')+'</div>';
+  box.innerHTML='<div class="vid-card">'+thumb+
+    '<div class="vid-meta"><a class="vid-open" href="'+escH(url)+'" target="_blank" rel="noopener">Watch \u2197</a></div></div>';
+}
+
+/* Writes both fields together, so today's row always holds the
+   full current state rather than a partial one */
+function pushDailyFocus(){
+  var iso=isoToday(), now=new Date();
+  var focus=(document.getElementById('focus-input')||{}).value||'';
+  var vurl =(document.getElementById('vid-url')||{}).value||'';
+  var vnote=(document.getElementById('vid-note')||{}).value||'';
+  dailyFocus[iso]={focus:focus.trim(),videoUrl:vurl.trim(),videoNote:vnote.trim()};
+  return postToSheet({sheet:'DailyFocus',
+    date:now.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}),
+    dateISO:iso, focus:focus.trim(), videoUrl:vurl.trim(), videoNote:vnote.trim()});
 }
 
 function saveDailyFocus(){
   var el=document.getElementById('focus-input'); if(!el) return;
   var v=el.value.trim();
-  if(v===_dfLast) return;                       // nothing changed
+  if(v===_dfLast) return;
   _dfLast=v;
-  dailyFocus[isoToday()]=v;
   var s=document.getElementById('focus-sync');
   if(s){ s.textContent='Saving\u2026'; s.className='focus-sync'; }
   clearTimeout(_dfTimer);
   _dfTimer=setTimeout(async function(){
-    var now=new Date();
-    var ok=await postToSheet({sheet:'DailyFocus',
-      date:now.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}),
-      dateISO:isoToday(), focus:v});
+    var ok=await pushDailyFocus();
     if(s){
       s.textContent=ok?'Saved \u2713':'Not saved';
       s.className='focus-sync '+(ok?'ok':'err');
       if(!ok&&LAST_SHEET_ERROR){ s.title=LAST_SHEET_ERROR; showToast(LAST_SHEET_ERROR,'error'); }
     }
+    var cn=document.getElementById('focus-carry'); if(cn) cn.textContent='';
+  },500);
+}
+
+function saveDailyVideo(){
+  var u=document.getElementById('vid-url'), n=document.getElementById('vid-note');
+  if(!u||!n) return;
+  var key=u.value.trim()+'\u241F'+n.value.trim();
+  if(key===_dvLast) return;
+  _dvLast=key;
+  renderVideoPreview(u.value.trim());
+  var s=document.getElementById('vid-sync');
+  if(s){ s.textContent='Saving\u2026'; s.className='focus-sync'; }
+  clearTimeout(_dvTimer);
+  _dvTimer=setTimeout(async function(){
+    var ok=await pushDailyFocus();
+    if(s){
+      s.textContent=ok?'Saved \u2713':'Not saved';
+      s.className='focus-sync '+(ok?'ok':'err');
+      if(!ok&&LAST_SHEET_ERROR){ s.title=LAST_SHEET_ERROR; showToast(LAST_SHEET_ERROR,'error'); }
+    }
+    var vc=document.getElementById('vid-carry'); if(vc) vc.textContent='';
   },500);
 }
 
 function replaceDailyFocusFromSheet(rows){
   dailyFocus={};
-  rows.forEach(function(r){ if(r.dateISO) dailyFocus[r.dateISO]=r.focus||''; });
+  rows.forEach(function(r){
+    if(!r.dateISO) return;
+    dailyFocus[r.dateISO]={focus:r.focus||'',videoUrl:r.videoUrl||'',videoNote:r.videoNote||''};
+  });
   renderDailyFocus();
 }
 
