@@ -1194,15 +1194,13 @@ function init(){
   // Show shimmer/loading state on morning intentions
   setIntentionsState('loading');
 
-  // ONE request for everything, with a per-collection fallback.
+  /* Two-stage load. The core request carries only what Home and
+     Routine render, so the page is usable in a fraction of the time;
+     the archives that fill the other tabs arrive straight after,
+     in the background. A timeout on either falls back to fetching
+     collections one at a time. */
   (async function(){
-    function distribute(d){
-      if(Array.isArray(d.situations))  replaceSituationsFromSheet(d.situations);
-      if(Array.isArray(d.thoughts))    replaceThoughtsFromSheet(d.thoughts);
-      if(Array.isArray(d.posts))       replacePostsFromSheet(d.posts);
-      if(Array.isArray(d.motivation))  replaceMotivationFromSheet(d.motivation);
-      if(Array.isArray(d.gratitude))   replaceGratitudeFromSheet(d.gratitude);
-      if(Array.isArray(d.kundali))     replaceKundaliFromSheet(d.kundali);
+    function applyCore(d){
       if(Array.isArray(d.habitMaster)) replaceHabitMasterFromSheet(d.habitMaster);
       if(Array.isArray(d.habitReasons))replaceHabitReasonsFromSheet(d.habitReasons);
       if(Array.isArray(d.dailyFocus))  replaceDailyFocusFromSheet(d.dailyFocus);
@@ -1212,74 +1210,80 @@ function init(){
       if(Array.isArray(d.todayHabits)) replaceHabitsFromSheet(d.todayHabits);
       if(Array.isArray(d.routineLog))  replaceRoutineLogFromSheet(d.routineLog);
       if(Array.isArray(d.routineDay))  replaceRoutineDayFromSheet(d.routineDay);
-    }
-
-    function finish(d){
       if(!selDate) selDate=isoToday();
       activeRoutine=routineForDate(selDate);
       _calNeedsScroll=true;
       renderMaster(); renderRoutine(); renderDailyFocus(); renderPlanLibrary();
-      DIAG.gratRaw='ok / '+((d&&d.gratitude)||[]).length+' rows';
-      DIAG.motRaw ='ok / '+((d&&d.motivation)||[]).length+' rows';
-      DIAG.kunRaw ='ok / '+((d&&d.kundali)||[]).length+' rows';
-      DIAG.logRows=((d&&d.routineLog)||[]).length+' log rows';
+    }
+
+    function applyArchives(d){
+      if(Array.isArray(d.situations)) replaceSituationsFromSheet(d.situations);
+      if(Array.isArray(d.thoughts))   replaceThoughtsFromSheet(d.thoughts);
+      if(Array.isArray(d.posts))      replacePostsFromSheet(d.posts);
+      if(Array.isArray(d.motivation)) replaceMotivationFromSheet(d.motivation);
+      if(Array.isArray(d.gratitude))  replaceGratitudeFromSheet(d.gratitude);
+      if(Array.isArray(d.kundali))    replaceKundaliFromSheet(d.kundali);
+      banner();
+    }
+
+    function banner(){
       showSyncBanner(true,'Sheet \u2713 '+situations.length+' sit \u00b7 '+thoughts.length+
         ' th \u00b7 '+posts.length+' posts \u00b7 '+motEntries.length+' mot \u00b7 '+
         gratEntries.length+' grat \u00b7 '+kunEntries.length+' kun   (tap for details)');
     }
 
-    /* If the single bulk call times out, pull each collection on its
-       own. Slower overall, but each request is small enough to land,
-       so the page fills instead of sitting empty. */
     async function fallback(){
-      showSyncBanner(true,'Bulk load timed out \u2014 fetching section by section\u2026');
-      DIAG.everything='TIMED OUT \u2014 used per-collection fallback';
+      DIAG.everything='FELL BACK \u2014 fetched section by section';
       var jobs=[
-        ['situations',  'getAllSituations',  'situations',  replaceSituationsFromSheet],
-        ['routineItems','getAllRoutineItems','routineItems',replaceRoutineItemsFromSheet],
-        ['routineLog',  'getAllRoutineLogs', 'routineLog',  replaceRoutineLogFromSheet],
-        ['routineDay',  'getAllRoutineDays', 'routineDay',  replaceRoutineDayFromSheet],
-        ['habitMaster', 'getAllHabitMaster', 'habitMaster', replaceHabitMasterFromSheet],
-        ['dailyFocus',  'getAllDailyFocus',  'dailyFocus',  replaceDailyFocusFromSheet],
-        ['sitPlans',    'getAllSitPlans',    'sitPlans',    replaceSitPlansFromSheet],
-        ['sitLog',      'getAllSitLog',      'sitLog',      replaceSitLogFromSheet],
-        ['thoughts',    'getAllThoughts',    'thoughts',    replaceThoughtsFromSheet],
-        ['posts',       'getAllPosts',       'posts',       replacePostsFromSheet],
-        ['motivation',  'getAllMotivation',  'motivation',  replaceMotivationFromSheet],
-        ['gratitude',   'getAllGratitude',   'gratitude',   replaceGratitudeFromSheet],
-        ['kundali',     'getAllKundali',     'kundali',     replaceKundaliFromSheet],
-        ['todayHabits', 'getAllTodayHabits', 'todayHabits', replaceHabitsFromSheet],
-        ['reasons',     'getAllHabitReasons','habitReasons',replaceHabitReasonsFromSheet]
+        ['getAllSitPlans','sitPlans',replaceSitPlansFromSheet],
+        ['getAllSitLog','sitLog',replaceSitLogFromSheet],
+        ['getAllDailyFocus','dailyFocus',replaceDailyFocusFromSheet],
+        ['getAllHabitMaster','habitMaster',replaceHabitMasterFromSheet],
+        ['getAllRoutineItems','routineItems',replaceRoutineItemsFromSheet],
+        ['getAllRoutineLogs','routineLog',replaceRoutineLogFromSheet],
+        ['getAllRoutineDays','routineDay',replaceRoutineDayFromSheet],
+        ['getAllTodayHabits','todayHabits',replaceHabitsFromSheet],
+        ['getAllSituations','situations',replaceSituationsFromSheet],
+        ['getAllThoughts','thoughts',replaceThoughtsFromSheet],
+        ['getAllPosts','posts',replacePostsFromSheet],
+        ['getAllMotivation','motivation',replaceMotivationFromSheet],
+        ['getAllGratitude','gratitude',replaceGratitudeFromSheet],
+        ['getAllKundali','kundali',replaceKundaliFromSheet],
+        ['getAllHabitReasons','habitReasons',replaceHabitReasonsFromSheet]
       ];
       var got=0;
       for(var i=0;i<jobs.length;i++){
-        var j=jobs[i];
-        var r=await sheetFetch(WORKER_URL+'?action='+j[1]);
-        if(r&&r.status==='ok'&&Array.isArray(r[j[2]])){ j[3](r[j[2]]); got++; }
+        var r=await sheetFetch(WORKER_URL+'?action='+jobs[i][0]);
+        if(r&&r.status==='ok'&&Array.isArray(r[jobs[i][1]])){ jobs[i][2](r[jobs[i][1]]); got++; }
       }
-      var t=await sheetFetch(WORKER_URL+'?action=getToday&date='+isoToday());
-      finish({});
+      if(!selDate) selDate=isoToday();
+      activeRoutine=routineForDate(selDate);
+      renderMaster(); renderRoutine(); renderDailyFocus(); renderPlanLibrary();
       if(got<jobs.length) showSyncBanner(false,'Loaded '+got+' of '+jobs.length+' sections \u2014 tap for details');
+      else banner();
     }
 
+    var t0=Date.now();
     try{
-      var d=await sheetFetch(WORKER_URL+'?action=getEverything&date='+isoToday());
-      DIAG.everything = d ? d.status : 'NULL response';
+      var core=await sheetFetch(WORKER_URL+'?action=getCore&date='+isoToday());
+      DIAG.everything = core ? core.status : 'NULL response';
+      if(!core||core.status!=='ok'){ setIntentionsState('form'); await fallback(); return; }
 
-      if(!d||d.status!=='ok'){
-        setIntentionsState('form');
-        await fallback();
-        return;
-      }
-
-      distribute(d);
-      if(d.morning&&(d.morning.priority||d.morning.emotional_intention)){
-        showReadView(d.morning.priority||'',d.morning.emotional_intention||'');
+      applyCore(core);
+      DIAG.coreMs = (Date.now()-t0)+'ms';
+      if(core.morning&&(core.morning.priority||core.morning.emotional_intention)){
+        showReadView(core.morning.priority||'',core.morning.emotional_intention||'');
       }else{ setIntentionsState('form'); }
-      finish(d);
-    }catch(e){
-      console.error('[init fetch error]',e);
-      DIAG.everything='EXCEPTION \u2014 '+(e.message||e);
+      showSyncBanner(true,'Loaded \u2713 fetching the rest\u2026');
+
+      // Archives fill the other tabs; the page is already usable
+      var t1=Date.now();
+      var arc=await sheetFetch(WORKER_URL+'?action=getArchives');
+      if(arc&&arc.status==='ok'){ applyArchives(arc); DIAG.archiveMs=(Date.now()-t1)+'ms'; }
+      else { showSyncBanner(false,'Main sections loaded; archives failed \u2014 tap for details'); }
+    }catch(err){
+      console.error('[init fetch error]',err);
+      DIAG.everything='EXCEPTION \u2014 '+(err.message||err);
       setIntentionsState('form');
       try{ await fallback(); }
       catch(e2){ showSyncBanner(false,'\u26a0 Could not reach Google Sheet \u2014 tap for details'); }
@@ -1313,6 +1317,7 @@ function showDiagnostics(){
     'Today (browser): '+isoToday(),
     '',
     'Bulk load: '+(DIAG.everything||'not run'),
+    'Core fetch: '+(DIAG.coreMs||'–')+'   Archives: '+(DIAG.archiveMs||'–'),
     'Last error: '+(LAST_SHEET_ERROR||'none'),
     '',
     'Gratitude fetch: '+(DIAG.gratRaw||'not run'),
@@ -2094,15 +2099,6 @@ function exportHabitsCSV(){
   a.download='habits-'+isoToday()+'.csv';a.click();showToast('CSV exported ✓','success');
 }
 
-function fetchAllHabits(){
-  return new Promise(function(resolve){
-    try{
-      fetch(WORKER_URL+'?action=getAllHabits').then(function(r){return r.ok?r.json():null;})
-        .then(function(d){if(d&&d.status==='ok'&&Array.isArray(d.habits))replaceHabitsFromSheet(d.habits);resolve();})
-        .catch(function(){resolve();});
-    }catch(e){resolve();}
-  });
-}
 /* MOTIVATION */
 var motEntries = [];
 var motView='pinned';   // 'all' | 'pinned' — Pinned opens first
