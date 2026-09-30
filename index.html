@@ -367,6 +367,55 @@ body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:
 .focus-in:focus{border-bottom-color:var(--teal)}
 .focus-in::placeholder{color:var(--text-3)}
 .focus-sync{font-size:10px;color:var(--text-3);font-family:var(--fm);flex-shrink:0;white-space:nowrap}
+.focus-box.sit-pairs{border-left-color:var(--gold)}
+.sp-foot{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px;padding-top:9px;border-top:1px solid var(--border)}
+/* Home row: plan + two outcome toggles */
+.sp-item{padding:9px 0;border-bottom:1px solid var(--border)}
+.sp-item:last-child{border-bottom:none}
+.sp-when{font-size:12.5px;color:var(--text-1);line-height:1.5}
+.sp-when b{color:var(--gold);font-weight:600}
+.sp-then{font-size:12px;color:var(--text-2);line-height:1.5;margin-top:2px;padding-left:12px;border-left:2px solid rgba(107,191,142,.35)}
+.sp-marks{display:flex;gap:6px;align-items:center;margin-top:7px;flex-wrap:wrap}
+.sp-mk{font-family:var(--fb);font-size:10px;font-weight:600;border:1px solid var(--border-md);background:transparent;color:var(--text-3);border-radius:20px;padding:3px 10px;cursor:pointer;transition:all var(--tr)}
+.sp-mk:hover{color:var(--text-1)}
+.sp-mk.came.on{background:var(--gold);border-color:var(--gold);color:#0F1117}
+.sp-mk.did.on{background:var(--green);border-color:var(--green);color:#0F1117}
+.sp-mk.miss.on{background:var(--rose);border-color:var(--rose);color:#0F1117}
+.sp-rate{font-family:var(--fm);font-size:9px;color:var(--text-3);margin-left:auto}
+.sp-empty{font-size:12px;color:var(--text-3);padding:8px 0;line-height:1.6}
+/* Library */
+.spl-tabs{display:flex;gap:6px;margin-bottom:10px;border-bottom:1px solid var(--border)}
+.spl-row{display:grid;grid-template-columns:20px 1fr auto;gap:9px;align-items:start;padding:10px 0;border-bottom:1px solid var(--border);background:var(--card)}
+.spl-row:last-child{border-bottom:none}
+.spl-row.dragging{opacity:.4}
+.spl-row.drag-over{box-shadow:inset 0 2px 0 var(--gold)}
+.spl-grip{cursor:grab;color:var(--text-3);font-size:12px;text-align:center;padding-top:2px;touch-action:none;user-select:none}
+.spl-grip:hover{color:var(--gold)}
+.spl-body{min-width:0}
+.spl-when{font-size:12.5px;color:var(--text-1);line-height:1.45}
+.spl-then{font-size:11.5px;color:var(--text-2);line-height:1.45;margin-top:2px}
+.spl-stat{font-family:var(--fm);font-size:9.5px;color:var(--text-3);margin-top:5px}
+.spl-stat b{color:var(--text-2);font-weight:600}
+.spl-acts{display:flex;gap:2px;align-items:center}
+.spl-onhome{font-family:var(--fm);font-size:8.5px;color:var(--gold);background:var(--gold-dim);border:1px solid rgba(201,168,76,.3);border-radius:20px;padding:1px 7px;margin-left:6px;white-space:nowrap}
+.spl-tip{font-size:10.5px;color:var(--text-3);margin-top:6px;line-height:1.6;padding-left:9px;border-left:2px solid var(--border)}
+.spl-tip.warn{color:var(--gold);border-left-color:var(--gold)}
+@media(max-width:640px){.spl-row{grid-template-columns:18px 1fr auto;gap:7px}}
+.sp-hint{font-size:11px;color:var(--text-3);margin-bottom:10px;line-height:1.5}
+.sp-hint em{color:var(--text-2);font-style:normal}
+.sp-row{display:grid;grid-template-columns:20px 1fr 1fr;gap:8px;align-items:start;padding:7px 0;border-bottom:1px solid var(--border)}
+.sp-row:last-child{border-bottom:none}
+.sp-n{font-family:var(--fm);font-size:9px;color:var(--text-3);padding-top:7px;text-align:center}
+.sp-row.filled .sp-n{color:var(--gold)}
+.sp-in{width:100%;background:transparent;border:none;border-bottom:1px dashed var(--border);padding:4px 2px;font-size:12.5px;line-height:1.5;color:var(--text-1);font-family:var(--fb);outline:none;resize:none;overflow:hidden;transition:border-color var(--tr)}
+.sp-in::placeholder{color:var(--text-3)}
+.sp-in.sit:focus{border-bottom-color:var(--rose)}
+.sp-in.app:focus{border-bottom-color:var(--green)}
+.sp-row.filled .sp-in.app{color:var(--green)}
+@media(max-width:640px){
+  .sp-row{grid-template-columns:16px 1fr;gap:6px;padding:9px 0}
+  .sp-in.app{grid-column:2}
+}
 .focus-box.vid{border-left-color:var(--rose)}
 .focus-lbl.vid{color:var(--rose)}
 .focus-box.vid .focus-in:focus{border-bottom-color:var(--rose)}
@@ -376,6 +425,55 @@ body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:
 .vid-thumb-ph{width:112px;height:63px;border-radius:var(--rsm);border:1px solid var(--border);background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
 .vid-watch{display:inline-block;font-family:var(--fm);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--rose);border:1px solid rgba(224,123,123,.35);background:var(--rose-dim);border-radius:20px;padding:3px 11px;text-decoration:none;transition:all var(--tr)}
 .vid-watch:hover{background:var(--rose);color:#0F1117}
+.focus-box.sit-pairs{border-left-color:var(--gold)}
+.sp-foot{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px;padding-top:9px;border-top:1px solid var(--border)}
+/* Home row: plan + two outcome toggles */
+.sp-item{padding:9px 0;border-bottom:1px solid var(--border)}
+.sp-item:last-child{border-bottom:none}
+.sp-when{font-size:12.5px;color:var(--text-1);line-height:1.5}
+.sp-when b{color:var(--gold);font-weight:600}
+.sp-then{font-size:12px;color:var(--text-2);line-height:1.5;margin-top:2px;padding-left:12px;border-left:2px solid rgba(107,191,142,.35)}
+.sp-marks{display:flex;gap:6px;align-items:center;margin-top:7px;flex-wrap:wrap}
+.sp-mk{font-family:var(--fb);font-size:10px;font-weight:600;border:1px solid var(--border-md);background:transparent;color:var(--text-3);border-radius:20px;padding:3px 10px;cursor:pointer;transition:all var(--tr)}
+.sp-mk:hover{color:var(--text-1)}
+.sp-mk.came.on{background:var(--gold);border-color:var(--gold);color:#0F1117}
+.sp-mk.did.on{background:var(--green);border-color:var(--green);color:#0F1117}
+.sp-mk.miss.on{background:var(--rose);border-color:var(--rose);color:#0F1117}
+.sp-rate{font-family:var(--fm);font-size:9px;color:var(--text-3);margin-left:auto}
+.sp-empty{font-size:12px;color:var(--text-3);padding:8px 0;line-height:1.6}
+/* Library */
+.spl-tabs{display:flex;gap:6px;margin-bottom:10px;border-bottom:1px solid var(--border)}
+.spl-row{display:grid;grid-template-columns:20px 1fr auto;gap:9px;align-items:start;padding:10px 0;border-bottom:1px solid var(--border);background:var(--card)}
+.spl-row:last-child{border-bottom:none}
+.spl-row.dragging{opacity:.4}
+.spl-row.drag-over{box-shadow:inset 0 2px 0 var(--gold)}
+.spl-grip{cursor:grab;color:var(--text-3);font-size:12px;text-align:center;padding-top:2px;touch-action:none;user-select:none}
+.spl-grip:hover{color:var(--gold)}
+.spl-body{min-width:0}
+.spl-when{font-size:12.5px;color:var(--text-1);line-height:1.45}
+.spl-then{font-size:11.5px;color:var(--text-2);line-height:1.45;margin-top:2px}
+.spl-stat{font-family:var(--fm);font-size:9.5px;color:var(--text-3);margin-top:5px}
+.spl-stat b{color:var(--text-2);font-weight:600}
+.spl-acts{display:flex;gap:2px;align-items:center}
+.spl-onhome{font-family:var(--fm);font-size:8.5px;color:var(--gold);background:var(--gold-dim);border:1px solid rgba(201,168,76,.3);border-radius:20px;padding:1px 7px;margin-left:6px;white-space:nowrap}
+.spl-tip{font-size:10.5px;color:var(--text-3);margin-top:6px;line-height:1.6;padding-left:9px;border-left:2px solid var(--border)}
+.spl-tip.warn{color:var(--gold);border-left-color:var(--gold)}
+@media(max-width:640px){.spl-row{grid-template-columns:18px 1fr auto;gap:7px}}
+.sp-hint{font-size:11px;color:var(--text-3);margin-bottom:10px;line-height:1.5}
+.sp-hint em{color:var(--text-2);font-style:normal}
+.sp-row{display:grid;grid-template-columns:20px 1fr 1fr;gap:8px;align-items:start;padding:7px 0;border-bottom:1px solid var(--border)}
+.sp-row:last-child{border-bottom:none}
+.sp-n{font-family:var(--fm);font-size:9px;color:var(--text-3);padding-top:7px;text-align:center}
+.sp-row.filled .sp-n{color:var(--gold)}
+.sp-in{width:100%;background:transparent;border:none;border-bottom:1px dashed var(--border);padding:4px 2px;font-size:12.5px;line-height:1.5;color:var(--text-1);font-family:var(--fb);outline:none;resize:none;overflow:hidden;transition:border-color var(--tr)}
+.sp-in::placeholder{color:var(--text-3)}
+.sp-in.sit:focus{border-bottom-color:var(--rose)}
+.sp-in.app:focus{border-bottom-color:var(--green)}
+.sp-row.filled .sp-in.app{color:var(--green)}
+@media(max-width:640px){
+  .sp-row{grid-template-columns:16px 1fr;gap:6px;padding:9px 0}
+  .sp-in.app{grid-column:2}
+}
 .focus-box.vid{border-left-color:var(--rose)}
 .focus-lbl.vid{color:var(--rose)}
 .focus-carry{font-family:var(--fm);font-size:9px;color:var(--text-3);margin-top:6px}
@@ -561,16 +659,17 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
 <div class="pg on" id="pg-morning">
   <div class="hdr"><div class="hdr-l"><div class="eyebrow" id="time-now">--</div><h1 class="greeting" id="greeting">Good morning</h1><div class="dateline" id="date-line">Loading...</div></div><div class="hdr-r"><div class="daynum" id="day-num">--</div><div class="daynum-lbl">Day of year</div></div></div>
   <div class="mantra"><div class="mantra-q" id="mantra-text">"..."</div><div class="mantra-src" id="mantra-source"></div></div>
-  <div class="focus-box">
+  <div class="focus-box sit-pairs">
     <div class="focus-top">
-      <div class="focus-lbl">&#127919; One habit to follow today</div>
-      <span class="focus-sync" id="focus-sync"></span>
+      <div class="focus-lbl">&#129504; Situations &amp; how I'll handle them</div>
+      <span class="focus-sync" id="sit-sync"></span>
     </div>
-    <textarea class="focus-in" id="focus-input" rows="1" placeholder="The one thing you commit to today..."
-              oninput="autoGrowFocus(this)"
-              onkeydown="if(event.key==='Enter'&&!event.shiftKey){saveDailyFocus();this.blur();event.preventDefault();}"
-              onblur="saveDailyFocus()"></textarea>
-    <div class="focus-carry" id="focus-carry"></div>
+    <div class="sp-hint">When <em>this</em> happens, I will do <em>that</em>. Mark each one at day's end.</div>
+    <div id="sit-rows"></div>
+    <div class="sp-foot">
+      <span class="focus-carry" id="sit-carry"></span>
+      <button class="btn" onclick="jumpToSection('sitlib')">&#9881; Manage plans</button>
+    </div>
   </div>
 
   <div class="focus-box vid">
@@ -647,6 +746,33 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
     <div class="past-title">Routine</div>
     <div class="past-sub">Your habit library, today's schedule and how it's tracking.</div>
   </div>
+
+  <div class="sec-hd" id="hd-sitlib" onclick="toggleSection('sitlib')"><span class="sec-icon">&#129504;</span><span class="sec-title">Situation plans</span><span class="lbl-line"></span><span class="sec-badge" id="badge-sitlib"></span><span class="sec-caret" id="caret-sitlib">&#9662;</span></div>
+  <div class="sec-body closed" id="sec-sitlib">
+    <div class="spl-tabs">
+      <button class="pst-tab on" id="spl-tab-active" onclick="setPlanView('active')">Active <span class="pst-ct" id="spl-ct-active">0</span></button>
+      <button class="pst-tab" id="spl-tab-retired" onclick="setPlanView('retired')">Retired <span class="pst-ct" id="spl-ct-retired">0</span></button>
+    </div>
+    <div style="font-size:11px;color:var(--text-2);margin-bottom:10px">The first <strong>5 active</strong> plans show on your home page. Drag &#9776; to choose which. Retiring keeps the history.</div>
+    <div id="spl-list"></div>
+
+    <div class="lbl" style="margin-top:1.25rem">Add a plan <span class="lbl-line"></span></div>
+    <div class="sit-block">
+      <div style="margin-bottom:8px">
+        <label class="sfl">When this happens <span style="color:var(--text-3);font-weight:400">(the trigger)</span></label>
+        <textarea class="sin" id="spl-sit" rows="2" placeholder="e.g. When I open my laptop before 9am" oninput="checkTrigger(this)"></textarea>
+        <div class="spl-tip" id="spl-tip">A trigger works best when you could <strong>see it from outside</strong> &#8212; a time, a place, or an action. &ldquo;When I feel rushed&rdquo; rarely fires; &ldquo;when I sit down at my desk&rdquo; does.</div>
+      </div>
+      <div style="margin-bottom:8px">
+        <label class="sfl">I will do this <span style="color:var(--text-3);font-weight:400">(the response)</span></label>
+        <textarea class="sin" id="spl-app" rows="2" placeholder="e.g. Write the one next action before opening email"></textarea>
+      </div>
+      <div class="sit-foot">
+        <span class="sync-txt" id="spl-sync">Ready</span>
+        <button class="btn gold" onclick="addSitPlan()">Add plan &#8599;</button>
+      </div>
+    </div>
+  </div><!-- /sec-sitlib -->
 
   <div class="sec-hd" id="hd-master" onclick="toggleSection('master')"><span class="sec-icon">&#128203;</span><span class="sec-title">Master habit list</span><span class="lbl-line"></span><span class="sec-badge" id="badge-master"></span><span class="sec-caret" id="caret-master">&#9662;</span></div>
   <div class="sec-body closed" id="sec-master">
@@ -1061,6 +1187,7 @@ function init(){
 
   // Clear all in-memory arrays — Sheet is always the source of truth
   situations=[]; thoughts=[]; posts=[]; habits=[]; motEntries=[]; gratEntries=[]; kunEntries=[];
+  sitPlans=[]; sitLog={};
   habitMaster=[]; habitReasons=[]; routineItems=[]; routineLog={}; routineMiss={}; extraRoutines=[]; routineDay={}; selDate=isoToday();
   updateBadge(); updateThBadge(); updatePostBadge();
 
@@ -1079,6 +1206,8 @@ function init(){
       if(Array.isArray(d.habitMaster)) replaceHabitMasterFromSheet(d.habitMaster);
       if(Array.isArray(d.habitReasons))replaceHabitReasonsFromSheet(d.habitReasons);
       if(Array.isArray(d.dailyFocus))  replaceDailyFocusFromSheet(d.dailyFocus);
+      if(Array.isArray(d.sitPlans))    replaceSitPlansFromSheet(d.sitPlans);
+      if(Array.isArray(d.sitLog))      replaceSitLogFromSheet(d.sitLog);
       if(Array.isArray(d.routineItems))replaceRoutineItemsFromSheet(d.routineItems);
       if(Array.isArray(d.todayHabits)) replaceHabitsFromSheet(d.todayHabits);
       if(Array.isArray(d.routineLog))  replaceRoutineLogFromSheet(d.routineLog);
@@ -1089,7 +1218,7 @@ function init(){
       if(!selDate) selDate=isoToday();
       activeRoutine=routineForDate(selDate);
       _calNeedsScroll=true;
-      renderMaster(); renderRoutine(); renderDailyFocus();
+      renderMaster(); renderRoutine(); renderDailyFocus(); renderPlanLibrary();
       DIAG.gratRaw='ok / '+((d&&d.gratitude)||[]).length+' rows';
       DIAG.motRaw ='ok / '+((d&&d.motivation)||[]).length+' rows';
       DIAG.kunRaw ='ok / '+((d&&d.kundali)||[]).length+' rows';
@@ -1112,6 +1241,8 @@ function init(){
         ['routineDay',  'getAllRoutineDays', 'routineDay',  replaceRoutineDayFromSheet],
         ['habitMaster', 'getAllHabitMaster', 'habitMaster', replaceHabitMasterFromSheet],
         ['dailyFocus',  'getAllDailyFocus',  'dailyFocus',  replaceDailyFocusFromSheet],
+        ['sitPlans',    'getAllSitPlans',    'sitPlans',    replaceSitPlansFromSheet],
+        ['sitLog',      'getAllSitLog',      'sitLog',      replaceSitLogFromSheet],
         ['thoughts',    'getAllThoughts',    'thoughts',    replaceThoughtsFromSheet],
         ['posts',       'getAllPosts',       'posts',       replacePostsFromSheet],
         ['motivation',  'getAllMotivation',  'motivation',  replaceMotivationFromSheet],
@@ -1837,6 +1968,16 @@ async function saveEditModal(){
     var okm2=await postToSheet({sheet:'HabitMaster',action:'edit_master',sheetId:mh.sheetId,time:nt,habit:nh});
     closeEditModal();
     showToast(okm2?'Habit updated \u2713':'Updated locally \u2014 sync failed.',okm2?'success':'error');
+  }else if(_editCtx.type==='sitplan'){
+    var sp=planById(_editCtx.id); if(!sp){closeEditModal();return;}
+    var ns=document.getElementById('edit-spl-sit').value.trim();
+    var na=document.getElementById('edit-spl-app').value.trim();
+    if(!ns||!na){showToast('Both halves are needed.','error');btn.textContent='Save changes \u2197';btn.disabled=false;return;}
+    sp.situation=ns; sp.approach=na;
+    renderPlanLibrary(); renderSitRows();
+    var oksp=await postToSheet({sheet:'SituationPlans',action:'edit_plan',sheetId:sp.sheetId,situation:ns,approach:na});
+    closeEditModal();
+    showToast(oksp?'Plan updated \u2713':'Sync failed.',oksp?'success':'error');
   }else if(_editCtx.type==='routine'){
     var ri=routineItems.find(function(x){return x.sheetId===_editCtx.id;}); if(!ri){closeEditModal();return;}
     ri.time=document.getElementById('edit-rt-time').value.trim();
@@ -3076,76 +3217,320 @@ function ytThumb(url){
   return m ? 'https://img.youtube.com/vi/'+m[1]+'/mqdefault.jpg' : '';
 }
 
-function renderDailyFocus(){
+/* ═══════════════════════════════════════════════════
+   SITUATION PLANS — "when X, I will do Y"
+
+   sitPlans : library of plans, active or retired. Retiring keeps
+              a plan's outcome history rather than discarding it.
+   sitLog   : {dateISO: {planId: {c:1, f:1}}}
+              c = the situation came up   f = I followed the plan
+
+   The home page shows the first 5 ACTIVE plans in order. Marking
+   outcomes turns a reminder into feedback: follow-through rate is
+   what tells you whether an approach is wrong or merely hard.
+═══════════════════════════════════════════════════ */
+var sitPlans=[];
+var sitLog={};
+var planView='active';
+var HOME_PLAN_SLOTS=5;
+
+function activePlans(){
+  return sitPlans.filter(function(p){ return p.status==='active'; })
+                 .sort(function(a,b){ return a.order-b.order; });
+}
+function homePlans(){ return activePlans().slice(0,HOME_PLAN_SLOTS); }
+function planById(id){ return sitPlans.find(function(p){ return p.sheetId===id; }); }
+
+function marksFor(iso){ return sitLog[iso]||{}; }
+function markOf(iso,id){ return (sitLog[iso]&&sitLog[iso][id])||{}; }
+
+/* Follow-through over a window: of the days it came up, how many
+   did you follow the plan? Days it never came up are not failures,
+   so they are excluded from the denominator. */
+function planStats(id,windowDays){
+  var came=0, did=0, today=isoToday();
+  var span=windowDays||400;
+  for(var i=0;i<span;i++){
+    var d=new Date(); d.setDate(d.getDate()-i);
+    var iso=isoDate(d);
+    if(iso>today) continue;
+    var m=markOf(iso,id);
+    if(m.c){ came++; if(m.f) did++; }
+  }
+  return {came:came, did:did, pct: came?Math.round(did/came*100):null};
+}
+
+/* ── Home rows ─────────────────────────────────────────── */
+function renderSitRows(){
+  var box=document.getElementById('sit-rows'); if(!box) return;
+  var plans=homePlans();
   var iso=isoToday();
 
-  // Habit
-  var el=document.getElementById('focus-input');
-  if(el && document.activeElement!==el){
-    var f=carriedValue('focus',iso);
-    el.value=f.value; _dfLast=f.value;
-    autoGrowFocus(el);
-    var s=document.getElementById('focus-sync');
-    if(s){ s.textContent=f.value?'Saved \u2713':''; s.className='focus-sync'+(f.value?' ok':''); }
-    var cn=document.getElementById('focus-carry');
-    if(cn) cn.textContent=carryNote(f.since,iso);
+  if(!plans.length){
+    box.innerHTML='<div class="sp-empty">No plans yet. Add a few in <strong>Situation plans</strong> below &#8212; the first five show here.</div>';
+    var sy0=document.getElementById('sit-sync'); if(sy0) sy0.textContent='';
+    var cy0=document.getElementById('sit-carry'); if(cy0) cy0.textContent='';
+    return;
   }
 
-  // Video
-  var u=document.getElementById('vid-url'), n=document.getElementById('vid-note');
-  if(u && n && document.activeElement!==u && document.activeElement!==n){
-    var vu=carriedValue('videoUrl',iso), vn=carriedValue('videoNote',iso);
-    u.value=vu.value; n.value=vn.value; _dvLast=vu.value+'\u241F'+vn.value;
-    autoGrowFocus(n);
-    var vs=document.getElementById('vid-sync');
-    if(vs){ vs.textContent=vu.value?'Saved \u2713':''; vs.className='focus-sync'+(vu.value?' ok':''); }
-    var vc=document.getElementById('vid-carry');
-    if(vc) vc.textContent=carryNote(vu.since,iso);
-    renderVideoPreview(vu.value);
+  box.innerHTML=plans.map(function(p,i){
+    var m=markOf(iso,p.sheetId);
+    var st=planStats(p.sheetId,14);
+    var rate = st.pct===null ? '' : '<span class="sp-rate">'+st.did+'/'+st.came+' followed \u00b7 14d</span>';
+    return '<div class="sp-item">'+
+      '<div class="sp-when"><b>'+(i+1)+'.</b> '+escH(p.situation)+'</div>'+
+      '<div class="sp-then">'+escH(p.approach)+'</div>'+
+      '<div class="sp-marks">'+
+        '<button class="sp-mk came'+(m.c?' on':'')+'" onclick="markPlan(\''+p.sheetId+'\',\'c\')">'+
+          (m.c?'\u2713 Came up':'Came up?')+'</button>'+
+        (m.c
+          ? '<button class="sp-mk did'+(m.f===1?' on':'')+'" onclick="markPlan(\''+p.sheetId+'\',\'f1\')">\u2713 Followed</button>'+
+            '<button class="sp-mk miss'+(m.f===0?' on':'')+'" onclick="markPlan(\''+p.sheetId+'\',\'f0\')">\u2715 Didn\'t</button>'
+          : '')+
+        rate+
+      '</div>'+
+    '</div>';
+  }).join('');
+
+  var marked=plans.filter(function(p){ return markOf(iso,p.sheetId).c!==undefined; }).length;
+  var sy=document.getElementById('sit-sync');
+  if(sy){ sy.textContent=marked?marked+' of '+plans.length+' marked':''; sy.className='focus-sync'+(marked===plans.length?' ok':''); }
+  var cy=document.getElementById('sit-carry');
+  if(cy) cy.textContent=plans.length+' active plan'+(plans.length!==1?'s':'');
+}
+
+/* Came up toggles; followed/didn't set the outcome */
+function markPlan(id,what){
+  var iso=isoToday();
+  if(!sitLog[iso]) sitLog[iso]={};
+  var cur=sitLog[iso][id]||{};
+
+  if(what==='c'){
+    if(cur.c){ delete sitLog[iso][id]; }      // tap again to clear
+    else { sitLog[iso][id]={c:1}; }
+  }else if(what==='f1'){
+    sitLog[iso][id]={c:1,f:(cur.f===1?undefined:1)};
+    if(sitLog[iso][id].f===undefined) sitLog[iso][id]={c:1};
+  }else if(what==='f0'){
+    sitLog[iso][id]={c:1,f:(cur.f===0?undefined:0)};
+    if(sitLog[iso][id].f===undefined) sitLog[iso][id]={c:1};
   }
+  renderSitRows(); renderPlanLibrary();
+  saveSitLog();
 }
 
-function renderVideoPreview(url){
-  var box=document.getElementById('vid-preview'); if(!box) return;
-  if(!url){ box.innerHTML=''; return; }
-  var t=ytThumb(url);
-  var isInsta=/instagram\.com/i.test(url);
-  var thumb = t ? '<img class="vid-thumb" src="'+escH(t)+'" alt="" onerror="this.outerHTML=\'<div class=\\\'vid-thumb-ph\\\'>\u25b6</div>\'">'
-                : '<div class="vid-thumb-ph">'+(isInsta?'\ud83d\udcf8':'\u25b6')+'</div>';
-  box.innerHTML='<div class="vid-card">'+thumb+
-    '<div class="vid-meta"><a class="vid-open" href="'+escH(url)+'" target="_blank" rel="noopener">Watch \u2197</a></div></div>';
-}
-
-/* Writes both fields together, so today's row always holds the
-   full current state rather than a partial one */
-function pushDailyFocus(){
-  var iso=isoToday(), now=new Date();
-  var focus=(document.getElementById('focus-input')||{}).value||'';
-  var vurl =(document.getElementById('vid-url')||{}).value||'';
-  var vnote=(document.getElementById('vid-note')||{}).value||'';
-  dailyFocus[iso]={focus:focus.trim(),videoUrl:vurl.trim(),videoNote:vnote.trim()};
-  return postToSheet({sheet:'DailyFocus',
-    date:now.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}),
-    dateISO:iso, focus:focus.trim(), videoUrl:vurl.trim(), videoNote:vnote.trim()});
-}
-
-function saveDailyFocus(){
-  var el=document.getElementById('focus-input'); if(!el) return;
-  var v=el.value.trim();
-  if(v===_dfLast) return;
-  _dfLast=v;
-  var s=document.getElementById('focus-sync');
-  if(s){ s.textContent='Saving\u2026'; s.className='focus-sync'; }
-  clearTimeout(_dfTimer);
-  _dfTimer=setTimeout(async function(){
-    var ok=await pushDailyFocus();
-    if(s){
-      s.textContent=ok?'Saved \u2713':'Not saved';
-      s.className='focus-sync '+(ok?'ok':'err');
-      if(!ok&&LAST_SHEET_ERROR){ s.title=LAST_SHEET_ERROR; showToast(LAST_SHEET_ERROR,'error'); }
-    }
-    var cn=document.getElementById('focus-carry'); if(cn) cn.textContent='';
+var _slTimer=null;
+function saveSitLog(){
+  clearTimeout(_slTimer);
+  _slTimer=setTimeout(async function(){
+    var iso=isoToday(), now=new Date();
+    var ok=await postToSheet({sheet:'SituationLog',
+      date:now.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}),
+      dateISO:iso, data:JSON.stringify(sitLog[iso]||{})});
+    var sy=document.getElementById('sit-sync');
+    if(sy&&!ok){ sy.textContent='Not saved'; sy.className='focus-sync err'; }
   },500);
+}
+
+/* ── Library ───────────────────────────────────────────── */
+function setPlanView(v){
+  planView=v;
+  document.getElementById('spl-tab-active').classList.toggle('on',v==='active');
+  document.getElementById('spl-tab-retired').classList.toggle('on',v==='retired');
+  renderPlanLibrary();
+}
+
+function renderPlanLibrary(){
+  var box=document.getElementById('spl-list'); if(!box) return;
+  var act=sitPlans.filter(function(p){return p.status==='active';}).length;
+  var ret=sitPlans.filter(function(p){return p.status==='retired';}).length;
+  var ca=document.getElementById('spl-ct-active');  if(ca) ca.textContent=act;
+  var cr=document.getElementById('spl-ct-retired'); if(cr) cr.textContent=ret;
+
+  var list=sitPlans.filter(function(p){ return p.status===planView; })
+                   .sort(function(a,b){ return a.order-b.order; });
+
+  if(!list.length){
+    box.innerHTML='<div class="sp-empty">'+(planView==='active'
+      ? 'No active plans. Add one below.'
+      : 'Nothing retired. Retire a plan when it stops needing attention \u2014 its history is kept.')+'</div>';
+    return;
+  }
+
+  var homeIds=homePlans().map(function(p){return p.sheetId;});
+  box.innerHTML=list.map(function(p,idx){
+    var s14=planStats(p.sheetId,14), sAll=planStats(p.sheetId);
+    var stat = sAll.came
+      ? 'Came up <b>'+sAll.came+'</b>\u00d7 \u00b7 followed <b>'+(sAll.pct)+'%</b>'+
+        (s14.came?' \u00b7 last 14d <b>'+(s14.pct===null?'\u2013':s14.pct+'%')+'</b>':'')
+      : 'Not yet marked on any day';
+    var onHome = homeIds.indexOf(p.sheetId)>-1 ? '<span class="spl-onhome">on home</span>' : '';
+    return '<div class="spl-row" data-idx="'+idx+'">'+
+      (planView==='active'
+        ? '<span class="spl-grip" onpointerdown="startPlanDrag(event,'+idx+')" title="Drag to reorder">\u2630</span>'
+        : '<span></span>')+
+      '<div class="spl-body">'+
+        '<div class="spl-when">'+escH(p.situation)+onHome+'</div>'+
+        '<div class="spl-then">\u2192 '+escH(p.approach)+'</div>'+
+        '<div class="spl-stat">'+stat+'</div>'+
+      '</div>'+
+      '<div class="spl-acts">'+
+        '<button class="rt-mini" onclick="editSitPlan(\''+p.sheetId+'\')" title="Edit">\u270e</button>'+
+        '<button class="rt-mini" onclick="togglePlanStatus(\''+p.sheetId+'\')" title="'+
+          (planView==='active'?'Retire':'Reactivate')+'">'+(planView==='active'?'\u23f8':'\u21ba')+'</button>'+
+        '<button class="rt-mini del" onclick="deleteSitPlan(\''+p.sheetId+'\')" title="Delete">\u00d7</button>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+}
+
+/* A trigger you cannot observe from outside rarely fires. This is a
+   nudge, not a gate — vague triggers are still allowed. */
+var VAGUE=['feel','feeling','am sad','am angry','get angry','upset','anxious','stressed','bored','tempted','remember','think about'];
+function checkTrigger(el){
+  var tip=document.getElementById('spl-tip'); if(!tip) return;
+  var t=(el.value||'').toLowerCase().trim();
+  var vague = t.length>3 && VAGUE.some(function(w){ return t.indexOf(w)>-1; });
+  tip.className='spl-tip'+(vague?' warn':'');
+  tip.innerHTML = vague
+    ? '&#9888; That trigger is a <strong>feeling</strong>, which you may not notice in the moment. If you can, anchor it to something observable \u2014 a time, a place, or an action that goes with it.'
+    : 'A trigger works best when you could <strong>see it from outside</strong> &#8212; a time, a place, or an action. &ldquo;When I feel rushed&rdquo; rarely fires; &ldquo;when I sit down at my desk&rdquo; does.';
+}
+
+async function addSitPlan(){
+  var s=document.getElementById('spl-sit').value.trim();
+  var a=document.getElementById('spl-app').value.trim();
+  if(!s||!a){ showToast('Both the trigger and the response are needed.','error'); return; }
+  var id='p'+Date.now();
+  var order=activePlans().length;
+  sitPlans.push({sheetId:id,situation:s,approach:a,status:'active',order:order});
+  document.getElementById('spl-sit').value='';
+  document.getElementById('spl-app').value='';
+  checkTrigger({value:''});
+  renderPlanLibrary(); renderSitRows();
+  var sy=document.getElementById('spl-sync'); if(sy){sy.textContent='Syncing\u2026';sy.className='sync-txt syncing';}
+  var ok=await postToSheet({sheet:'SituationPlans',sheetId:id,situation:s,approach:a,status:'active',order:order});
+  if(sy){ sy.textContent=ok?'Saved to Sheet \u2713':'Sheet sync failed'; sy.className='sync-txt '+(ok?'ok':'err'); }
+  if(activePlans().length>HOME_PLAN_SLOTS) showToast('Added \u2014 beyond the first 5, so not on home yet.','');
+}
+
+function editSitPlan(id){
+  var p=planById(id); if(!p) return;
+  var html='<div style="margin-bottom:10px"><label class="sfl">When this happens</label>'+
+    '<textarea class="sin" id="edit-spl-sit" rows="2">'+escH(p.situation)+'</textarea></div>'+
+    '<div><label class="sfl">I will do this</label>'+
+    '<textarea class="sin" id="edit-spl-app" rows="2">'+escH(p.approach)+'</textarea></div>'+
+    '<div style="font-size:11px;color:var(--text-3);margin-top:8px;line-height:1.6">Outcome history stays attached to this plan.</div>';
+  openEditModal('Edit plan',html,{type:'sitplan',id:id});
+}
+
+async function togglePlanStatus(id){
+  var p=planById(id); if(!p) return;
+  var next = p.status==='active' ? 'retired' : 'active';
+  if(next==='retired' && !confirm('Retire "'+p.situation+'"?\n\nIt leaves your home page but its history is kept, and you can bring it back.')) return;
+  p.status=next;
+  if(next==='active') p.order=activePlans().length;
+  renderPlanLibrary(); renderSitRows();
+  var ok=await postToSheet({sheet:'SituationPlans',action:'set_status',sheetId:id,status:next});
+  showToast(ok?(next==='retired'?'Retired.':'Active again \u2713'):'Sync failed.',ok?'':'error');
+}
+
+async function deleteSitPlan(id){
+  var p=planById(id); if(!p) return;
+  if(!confirm('Delete "'+p.situation+'" permanently?\n\nRetiring is usually better \u2014 it keeps the history.')) return;
+  sitPlans=sitPlans.filter(function(x){ return x.sheetId!==id; });
+  renderPlanLibrary(); renderSitRows();
+  await postToSheet({sheet:'SituationPlans',action:'delete_plan',sheetId:id});
+  showToast('Deleted.','');
+}
+
+/* Drag to reorder — the first five actives are what show on home */
+var _plDrag=null;
+function startPlanDrag(ev,idx){
+  ev.preventDefault();
+  var row=ev.target.closest('.spl-row'); if(!row) return;
+  _plDrag={from:idx,to:idx,moved:false};
+  row.classList.add('dragging');
+  try{ ev.target.setPointerCapture(ev.pointerId); }catch(e){}
+  document.addEventListener('pointermove',onPlanDragMove);
+  document.addEventListener('pointerup',endPlanDrag);
+  document.addEventListener('pointercancel',endPlanDrag);
+}
+function onPlanDragMove(ev){
+  if(!_plDrag) return;
+  var box=document.getElementById('spl-list'); if(!box) return;
+  var rows=Array.prototype.slice.call(box.querySelectorAll('.spl-row'));
+  rows.forEach(function(r){ r.classList.remove('drag-over'); });
+  for(var i=0;i<rows.length;i++){
+    var b=rows[i].getBoundingClientRect();
+    if(ev.clientY>=b.top&&ev.clientY<=b.bottom){
+      _plDrag.to=i; _plDrag.moved=true;
+      if(i!==_plDrag.from) rows[i].classList.add('drag-over');
+      break;
+    }
+  }
+}
+function endPlanDrag(){
+  document.removeEventListener('pointermove',onPlanDragMove);
+  document.removeEventListener('pointerup',endPlanDrag);
+  document.removeEventListener('pointercancel',endPlanDrag);
+  if(!_plDrag) return;
+  var d=_plDrag; _plDrag=null;
+  var box=document.getElementById('spl-list');
+  if(box) box.querySelectorAll('.spl-row').forEach(function(r){ r.classList.remove('dragging','drag-over'); });
+  if(!d.moved||d.to===d.from){ renderPlanLibrary(); return; }
+  var list=activePlans();
+  var moved=list.splice(d.from,1)[0];
+  list.splice(d.to,0,moved);
+  list.forEach(function(p,i){ var ref=planById(p.sheetId); if(ref) ref.order=i; });
+  renderPlanLibrary(); renderSitRows();
+  postToSheet({sheet:'SituationPlans',action:'reorder',
+    order:list.map(function(p){return p.sheetId;}).join(',')})
+    .then(function(ok){ if(ok) showToast('Order updated \u2713','success'); });
+}
+
+/* ── Sheet loaders ─────────────────────────────────────── */
+function replaceSitPlansFromSheet(rows){
+  sitPlans=rows.map(function(r){
+    return {sheetId:r.sheetId||'',situation:r.situation||'',approach:r.approach||'',
+      status:r.status==='retired'?'retired':'active',
+      order:(r.order===null||r.order===undefined)?9999:Number(r.order)};
+  });
+  renderPlanLibrary(); renderSitRows();
+}
+
+function replaceSitLogFromSheet(rows){
+  sitLog={};
+  rows.forEach(function(r){
+    if(!r.dateISO) return;
+    try{ sitLog[r.dateISO]=JSON.parse(r.data||'{}'); }catch(e){ sitLog[r.dateISO]={}; }
+  });
+  renderSitRows(); renderPlanLibrary();
+}
+
+function carriedRecord(iso){
+  return {
+    focus:      carriedValue('focus',iso).value,
+    videoUrl:   carriedValue('videoUrl',iso).value,
+    videoNote:  carriedValue('videoNote',iso).value,
+    situations: carriedValue('situations',iso).value
+  };
+}
+
+function renderDailyFocus(){
+  renderSitRows();
+
+  var vcur=carriedValue('videoUrl',isoToday());
+  var ncur=carriedValue('videoNote',isoToday());
+  var u=document.getElementById('vid-url'), n=document.getElementById('vid-note');
+  if(u && document.activeElement!==u) u.value=vcur.value||'';
+  if(n && document.activeElement!==n){ n.value=ncur.value||''; autoGrowFocus(n); }
+  _dvLast=(vcur.value||'')+'\u0000'+(ncur.value||'');
+  var vs=document.getElementById('vid-sync');
+  if(vs){ vs.textContent=vcur.value?'Saved \u2713':''; vs.className='focus-sync'+(vcur.value?' ok':''); }
+  var vc=document.getElementById('vid-carry');
+  if(vc) vc.textContent=vcur.value?carryNote(vcur.since,isoToday()):'';
+  renderVideoPreview(vcur.value||'');
 }
 
 function saveDailyVideo(){
@@ -3173,7 +3558,7 @@ function replaceDailyFocusFromSheet(rows){
   dailyFocus={};
   rows.forEach(function(r){
     if(!r.dateISO) return;
-    dailyFocus[r.dateISO]={focus:r.focus||'',videoUrl:r.videoUrl||'',videoNote:r.videoNote||''};
+    dailyFocus[r.dateISO]={focus:r.focus||'',videoUrl:r.videoUrl||'',videoNote:r.videoNote||'',situations:r.situations||''};
   });
   renderDailyFocus();
 }
@@ -3182,13 +3567,13 @@ function replaceDailyFocusFromSheet(rows){
    Open/closed state is a display preference, so it lives in
    localStorage — no dashboard data is stored there.
 ──────────────────────────────────────────────────────── */
-var SEC_KEYS=['links','master','routine','rtstats','habitperf','habits','checklist','pillars','anchors'];
+var SEC_KEYS=['links','sitlib','master','routine','rtstats','habitperf','habits','checklist','pillars','anchors'];
 
 function secOpen(key){
   var v=localStorage.getItem('sec_'+key);
   // Reference material starts closed; the things you act on daily
   // start open. Badges on the headers mean nothing is truly hidden.
-  if(v===null) return ['checklist','anchors','master','pillars','habitperf'].indexOf(key)===-1;
+  if(v===null) return ['checklist','anchors','master','pillars','habitperf','sitlib'].indexOf(key)===-1;
   return v==='1';
 }
 
@@ -3234,6 +3619,7 @@ function updateSectionBadges(){
   set('checklist', cDone+'/'+CHECKLIST.length, cDone===CHECKLIST.length);
 
   set('links',''); set('pillars',''); set('anchors','');
+  set('sitlib', sitPlans.filter(function(p){return p.status==='active';}).length||'');
 
   renderGlance();
 }
