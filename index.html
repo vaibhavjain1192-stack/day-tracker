@@ -668,7 +668,7 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
     <div id="sit-rows"></div>
     <div class="sp-foot">
       <span class="focus-carry" id="sit-carry"></span>
-      <button class="btn" onclick="jumpToSection('sitlib')">&#9881; Manage plans</button>
+      <button class="btn" onclick="openPlanLibrary()">&#9881; Manage plans</button>
     </div>
   </div>
 
@@ -704,6 +704,33 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
       <a class="qlink" style="--qc:#6BBF8E" href="https://docs.google.com/spreadsheets/d/1gfhfVwVJ0Tp9c7FalkAhfeiKj9NXDa0ZRYZloZaMXCI/edit?gid=192984588#gid=192984588" target="_blank" rel="noopener"><span class="qlink-e">&#128200;</span><span class="qlink-t">Portfolio Tracker</span><span class="qlink-a">&#8599;</span></a>
     </div>
   </div><!-- /sec-links -->
+
+  <div class="sec-hd" id="hd-sitlib" onclick="toggleSection('sitlib')"><span class="sec-icon">&#129504;</span><span class="sec-title">Situation plans</span><span class="lbl-line"></span><span class="sec-badge" id="badge-sitlib"></span><span class="sec-caret" id="caret-sitlib">&#9662;</span></div>
+  <div class="sec-body closed" id="sec-sitlib">
+    <div class="spl-tabs">
+      <button class="pst-tab on" id="spl-tab-active" onclick="setPlanView('active')">Active <span class="pst-ct" id="spl-ct-active">0</span></button>
+      <button class="pst-tab" id="spl-tab-retired" onclick="setPlanView('retired')">Retired <span class="pst-ct" id="spl-ct-retired">0</span></button>
+    </div>
+    <div style="font-size:11px;color:var(--text-2);margin-bottom:10px">The first <strong>5 active</strong> plans show on your home page. Drag &#9776; to choose which. Retiring keeps the history.</div>
+    <div id="spl-list"></div>
+
+    <div class="lbl" style="margin-top:1.25rem">Add a plan <span class="lbl-line"></span></div>
+    <div class="sit-block">
+      <div style="margin-bottom:8px">
+        <label class="sfl">When this happens <span style="color:var(--text-3);font-weight:400">(the trigger)</span></label>
+        <textarea class="sin" id="spl-sit" rows="2" placeholder="e.g. When I open my laptop before 9am" oninput="checkTrigger(this)"></textarea>
+        <div class="spl-tip" id="spl-tip">A trigger works best when you could <strong>see it from outside</strong> &#8212; a time, a place, or an action. &ldquo;When I feel rushed&rdquo; rarely fires; &ldquo;when I sit down at my desk&rdquo; does.</div>
+      </div>
+      <div style="margin-bottom:8px">
+        <label class="sfl">I will do this <span style="color:var(--text-3);font-weight:400">(the response)</span></label>
+        <textarea class="sin" id="spl-app" rows="2" placeholder="e.g. Write the one next action before opening email"></textarea>
+      </div>
+      <div class="sit-foot">
+        <span class="sync-txt" id="spl-sync">Ready</span>
+        <button class="btn gold" onclick="addSitPlan()">Add plan &#8599;</button>
+      </div>
+    </div>
+  </div><!-- /sec-sitlib -->
 
   <div class="sec-hd" id="hd-habits" onclick="toggleSection('habits')"><span class="sec-icon">&#127775;</span><span class="sec-title">Habits I'm following</span><span class="lbl-line"></span><span class="sec-badge" id="badge-habits"></span><span class="sec-caret open" id="caret-habits">&#9662;</span></div>
   <div class="sec-body" id="sec-habits">
@@ -746,33 +773,6 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
     <div class="past-title">Routine</div>
     <div class="past-sub">Your habit library, today's schedule and how it's tracking.</div>
   </div>
-
-  <div class="sec-hd" id="hd-sitlib" onclick="toggleSection('sitlib')"><span class="sec-icon">&#129504;</span><span class="sec-title">Situation plans</span><span class="lbl-line"></span><span class="sec-badge" id="badge-sitlib"></span><span class="sec-caret" id="caret-sitlib">&#9662;</span></div>
-  <div class="sec-body closed" id="sec-sitlib">
-    <div class="spl-tabs">
-      <button class="pst-tab on" id="spl-tab-active" onclick="setPlanView('active')">Active <span class="pst-ct" id="spl-ct-active">0</span></button>
-      <button class="pst-tab" id="spl-tab-retired" onclick="setPlanView('retired')">Retired <span class="pst-ct" id="spl-ct-retired">0</span></button>
-    </div>
-    <div style="font-size:11px;color:var(--text-2);margin-bottom:10px">The first <strong>5 active</strong> plans show on your home page. Drag &#9776; to choose which. Retiring keeps the history.</div>
-    <div id="spl-list"></div>
-
-    <div class="lbl" style="margin-top:1.25rem">Add a plan <span class="lbl-line"></span></div>
-    <div class="sit-block">
-      <div style="margin-bottom:8px">
-        <label class="sfl">When this happens <span style="color:var(--text-3);font-weight:400">(the trigger)</span></label>
-        <textarea class="sin" id="spl-sit" rows="2" placeholder="e.g. When I open my laptop before 9am" oninput="checkTrigger(this)"></textarea>
-        <div class="spl-tip" id="spl-tip">A trigger works best when you could <strong>see it from outside</strong> &#8212; a time, a place, or an action. &ldquo;When I feel rushed&rdquo; rarely fires; &ldquo;when I sit down at my desk&rdquo; does.</div>
-      </div>
-      <div style="margin-bottom:8px">
-        <label class="sfl">I will do this <span style="color:var(--text-3);font-weight:400">(the response)</span></label>
-        <textarea class="sin" id="spl-app" rows="2" placeholder="e.g. Write the one next action before opening email"></textarea>
-      </div>
-      <div class="sit-foot">
-        <span class="sync-txt" id="spl-sync">Ready</span>
-        <button class="btn gold" onclick="addSitPlan()">Add plan &#8599;</button>
-      </div>
-    </div>
-  </div><!-- /sec-sitlib -->
 
   <div class="sec-hd" id="hd-master" onclick="toggleSection('master')"><span class="sec-icon">&#128203;</span><span class="sec-title">Master habit list</span><span class="lbl-line"></span><span class="sec-badge" id="badge-master"></span><span class="sec-caret" id="caret-master">&#9662;</span></div>
   <div class="sec-body closed" id="sec-master">
@@ -3235,6 +3235,18 @@ function saveSitLog(){
 }
 
 /* ── Library ───────────────────────────────────────────── */
+/* Open the library, expand it if collapsed, and scroll to it */
+function openPlanLibrary(){
+  if(!document.getElementById('pg-morning').classList.contains('on')) switchTab('morning');
+  localStorage.setItem('sec_sitlib','1');
+  applySection('sitlib');
+  renderPlanLibrary();
+  setTimeout(function(){
+    var hd=document.getElementById('hd-sitlib');
+    if(hd) hd.scrollIntoView({behavior:'smooth',block:'start'});
+  },60);
+}
+
 function setPlanView(v){
   planView=v;
   document.getElementById('spl-tab-active').classList.toggle('on',v==='active');
@@ -3564,7 +3576,7 @@ function renderGlance(){
 
 /* Sections now live on two tabs, so a glance card may need to
    switch tab before scrolling to its section. */
-var ROUTINE_TAB_SECTIONS=['master','routine','rtstats','habitperf'];
+var ROUTINE_TAB_SECTIONS=['master','routine','rtstats','habitperf'];   // sitlib lives on Home
 
 function jumpToSection(key){
   if(!secOpen(key)){ localStorage.setItem('sec_'+key,'1'); applySection(key); }
