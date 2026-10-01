@@ -495,6 +495,38 @@ body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:
 #lightbox{position:fixed;inset:0;z-index:400;background:rgba(0,0,0,.9);display:none;align-items:center;justify-content:center;padding:1.5rem;cursor:zoom-out}
 #lightbox.on{display:flex}
 #lightbox img{max-width:100%;max-height:100%;border-radius:var(--r)}
+/* SITUATION GUIDE */
+.gd-today{background:var(--gold-glow);border:1px solid rgba(201,168,76,.18);border-left:2px solid var(--gold);border-radius:0 var(--r) var(--r) 0;padding:10px 13px;margin-bottom:12px}
+.gd-today-l{font-family:var(--fm);font-size:8.5px;color:var(--gold);letter-spacing:.12em;text-transform:uppercase;margin-bottom:5px}
+.gd-today-s{font-size:12px;color:var(--text-1);line-height:1.45;font-weight:500}
+.gd-today-a{font-size:11.5px;color:var(--text-2);line-height:1.5;margin-top:3px}
+.gd-chips{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px}
+.gd-chip{padding:3px 10px;font-size:10.5px;border-radius:20px;border:1px solid var(--border);color:var(--text-3);background:transparent;cursor:pointer;font-family:var(--fb);transition:all var(--tr);white-space:nowrap}
+.gd-chip:hover{color:var(--text-1);border-color:var(--border-md)}
+.gd-chip.on{background:var(--gold-dim);border-color:rgba(201,168,76,.4);color:var(--gold)}
+.gd-grp{margin-bottom:14px}
+.gd-grp-h{font-family:var(--fm);font-size:8.5px;color:var(--text-3);letter-spacing:.12em;text-transform:uppercase;margin:0 0 6px;display:flex;align-items:center;gap:7px}
+.gd-grp-h::after{content:'';flex:1;height:1px;background:var(--border)}
+.gd-item{border-bottom:1px solid var(--border)}
+.gd-item:last-child{border-bottom:none}
+.gd-row{display:flex;align-items:flex-start;gap:9px;padding:8px 0;cursor:pointer;width:100%;background:none;border:none;text-align:left;font-family:var(--fb)}
+.gd-row:hover .gd-s{color:var(--gold)}
+.gd-glyph{width:19px;height:19px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;margin-top:1px}
+.gd-txt{flex:1;min-width:0}
+.gd-s{font-size:12px;color:var(--text-1);line-height:1.45;transition:color var(--tr)}
+.gd-a{font-size:11.5px;color:var(--text-2);line-height:1.5;margin-top:2px}
+.gd-star{background:none;border:none;color:var(--text-3);cursor:pointer;font-size:12px;padding:2px 3px;flex-shrink:0;transition:color var(--tr)}
+.gd-star.on{color:var(--gold)}
+.gd-chev{color:var(--text-3);font-size:9px;flex-shrink:0;margin-top:4px;transition:transform var(--tr)}
+.gd-item.open .gd-chev{transform:rotate(180deg)}
+.gd-detail{display:none;padding:0 0 10px 28px}
+.gd-item.open .gd-detail{display:block}
+.gd-d-l{font-family:var(--fm);font-size:8px;color:var(--text-3);letter-spacing:.11em;text-transform:uppercase;margin-bottom:3px}
+.gd-d-t{font-size:11.5px;color:var(--text-2);line-height:1.6;margin-bottom:8px}
+.gd-d-t:last-child{margin-bottom:0}
+.gd-d-astro{font-size:11.5px;color:var(--text-2);line-height:1.6;padding-left:9px;border-left:2px solid var(--border-md)}
+.gd-acts{display:flex;gap:4px;margin-top:9px}
+.gd-count{font-family:var(--fm);font-size:10px;color:var(--text-3);margin-bottom:8px}
 /* POSTS: Pinned / All + emotion */
 .pst-tabs{display:flex;gap:6px;margin-bottom:12px;border-bottom:1px solid var(--border)}
 .pst-tab{padding:8px 14px 9px;font-size:12px;font-weight:600;font-family:var(--fb);color:var(--text-3);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;transition:all var(--tr);margin-bottom:-1px;display:flex;align-items:center;gap:6px}
@@ -652,6 +684,7 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
     <button class="tab" onclick="switchTab('motivation')"><span class="tab-icon">&#128293;</span><span class="tab-label">Motivation</span></button>
     <button class="tab" onclick="switchTab('gratitude')"><span class="tab-icon">&#128591;</span><span class="tab-label">Gratitude</span></button>
     <button class="tab" onclick="switchTab('kundali')"><span class="tab-icon">&#128337;</span><span class="tab-label">Kundali</span></button>
+    <button class="tab" onclick="switchTab('guide')"><span class="tab-icon">&#10024;</span><span class="tab-label">Guide</span></button>
   </div>
 </nav>
 
@@ -713,6 +746,10 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
     </div>
     <div style="font-size:11px;color:var(--text-2);margin-bottom:10px">The first <strong>5 active</strong> plans show on your home page. Drag &#9776; to choose which. Retiring keeps the history.</div>
     <div id="spl-list"></div>
+    <div id="spl-import" style="display:none;margin-top:10px">
+      <button class="btn" onclick="importStarterPlans()">&#8681; Import 10 plans from my habit list</button>
+      <div style="font-size:10.5px;color:var(--text-3);margin-top:6px;line-height:1.6">Splits your existing anger and reaction habits into one plan per situation, so each can be tracked separately.</div>
+    </div>
 
     <div class="lbl" style="margin-top:1.25rem">Add a plan <span class="lbl-line"></span></div>
     <div class="sit-block">
@@ -1007,6 +1044,46 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
   </div>
 </div><!-- /pg-kundali -->
 
+<!-- TAB 9: GUIDE -->
+<div class="pg" id="pg-guide">
+  <div class="past-hdr">
+    <div class="past-title">When this happens…</div>
+    <div class="past-sub">What to do, why it works, and the reading behind it.</div>
+  </div>
+
+  <div class="gd-today" id="gd-today"></div>
+
+  <div class="th-filter-bar" style="margin-bottom:10px">
+    <input class="psearch" id="gd-search" type="text" placeholder="Search situations..." oninput="renderGuide()" style="flex:1">
+    <button class="btn" onclick="exportGuideCSV()">CSV</button>
+  </div>
+  <div class="gd-chips" id="gd-chips"></div>
+  <div class="gd-count" id="gd-count"></div>
+  <div id="gd-list"></div>
+
+  <div id="gd-import" style="display:none;margin-top:12px">
+    <button class="btn gold" onclick="importGuide()">&#8681; Import the 66 situations</button>
+    <div style="font-size:10.5px;color:var(--text-3);margin-top:6px;line-height:1.6">Loads the full guide into your Sheet once. After that everything is read from there.</div>
+  </div>
+
+  <div class="lbl" style="margin-top:1.5rem">Add a situation <span class="lbl-line"></span></div>
+  <div class="sit-block">
+    <div class="th-add-grid">
+      <div><label class="sfl">Category</label><input class="sin" id="gd-cat" type="text" list="gd-cats" placeholder="e.g. Anger"><datalist id="gd-cats"></datalist></div>
+      <div><label class="sfl">Planet</label><select class="sin" id="gd-planet">
+        <option value="">—</option><option>Sun</option><option>Moon</option><option>Mars</option><option>Mercury</option>
+        <option>Jupiter</option><option>Venus</option><option>Saturn</option><option>Rahu</option><option>Ketu</option></select></div>
+      <div class="th-field-full"><label class="sfl">When this happens</label><input class="sin" id="gd-sit" type="text" placeholder="The situation"></div>
+      <div class="th-field-full"><label class="sfl">Do this</label><textarea class="sin" id="gd-act" rows="2" placeholder="The action to take"></textarea></div>
+      <div class="th-field-full"><label class="sfl">Why it works</label><textarea class="sin" id="gd-why" rows="2" placeholder="The reasoning"></textarea></div>
+      <div class="th-field-full"><label class="sfl">The reading <span style="color:var(--text-3);font-weight:400">(optional)</span></label><textarea class="sin" id="gd-astro" rows="2" placeholder="Astrological context"></textarea></div>
+    </div>
+    <div class="sit-foot"><span class="sync-txt" id="gd-sync">Ready</span><button class="btn gold" onclick="addGuide()">Add &#8599;</button></div>
+  </div>
+
+  <div class="foot" style="margin-top:1.5rem"><span class="foot-note">Synced to Google Sheets</span><button class="btn" onclick="switchTab('morning')">&#8592; Morning</button></div>
+</div><!-- /pg-guide -->
+
 <!-- EDIT MODAL -->
 <div id="edit-modal" style="display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);overflow-y:auto;padding:2rem 1rem">
   <div style="max-width:620px;margin:0 auto;background:var(--card);border:1px solid var(--border-md);border-radius:var(--rlg);overflow:hidden">
@@ -1141,7 +1218,7 @@ function switchTab(tab){
   document.querySelectorAll('.pg').forEach(function(p){p.classList.remove('on');});
   document.querySelectorAll('.tab').forEach(function(b){b.classList.remove('on');});
   document.getElementById('pg-'+tab).classList.add('on');
-  var idx=tab==='morning'?0:tab==='routine'?1:tab==='situations'?2:tab==='thoughts'?3:tab==='posts'?4:tab==='motivation'?5:tab==='gratitude'?6:7;
+  var idx=tab==='morning'?0:tab==='routine'?1:tab==='situations'?2:tab==='thoughts'?3:tab==='posts'?4:tab==='motivation'?5:tab==='gratitude'?6:tab==='kundali'?7:8;
   document.querySelectorAll('.tab')[idx].classList.add('on');
   if(tab==='routine'){_calNeedsScroll=true;renderMaster();renderRoutine();}
   if(tab==='situations'){renderStats();renderPast();}
@@ -1150,6 +1227,7 @@ function switchTab(tab){
   if(tab==='motivation')renderMotivation();
   if(tab==='gratitude'){renderGratitude();updateGratStats();}
   if(tab==='kundali')renderKundali();
+  if(tab==='guide')renderGuide();
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
@@ -1187,7 +1265,7 @@ function init(){
 
   // Clear all in-memory arrays — Sheet is always the source of truth
   situations=[]; thoughts=[]; posts=[]; habits=[]; motEntries=[]; gratEntries=[]; kunEntries=[];
-  sitPlans=[]; sitLog={};
+  guide=[]; sitPlans=[]; sitLog={};
   habitMaster=[]; habitReasons=[]; routineItems=[]; routineLog={}; routineMiss={}; extraRoutines=[]; routineDay={}; selDate=isoToday();
   updateBadge(); updateThBadge(); updatePostBadge();
 
@@ -1223,6 +1301,7 @@ function init(){
       if(Array.isArray(d.motivation)) replaceMotivationFromSheet(d.motivation);
       if(Array.isArray(d.gratitude))  replaceGratitudeFromSheet(d.gratitude);
       if(Array.isArray(d.kundali))    replaceKundaliFromSheet(d.kundali);
+      if(Array.isArray(d.guide))      replaceGuideFromSheet(d.guide);
       banner();
     }
 
@@ -1249,6 +1328,7 @@ function init(){
         ['getAllMotivation','motivation',replaceMotivationFromSheet],
         ['getAllGratitude','gratitude',replaceGratitudeFromSheet],
         ['getAllKundali','kundali',replaceKundaliFromSheet],
+        ['getAllGuide','guide',replaceGuideFromSheet],
         ['getAllHabitReasons','habitReasons',replaceHabitReasonsFromSheet]
       ];
       var got=0;
@@ -1973,6 +2053,21 @@ async function saveEditModal(){
     var okm2=await postToSheet({sheet:'HabitMaster',action:'edit_master',sheetId:mh.sheetId,time:nt,habit:nh});
     closeEditModal();
     showToast(okm2?'Habit updated \u2713':'Updated locally \u2014 sync failed.',okm2?'success':'error');
+  }else if(_editCtx.type==='guide'){
+    var gg=guide.find(function(x){return x.sheetId===_editCtx.id;}); if(!gg){closeEditModal();return;}
+    gg.category=document.getElementById('eg-cat').value.trim()||'Other';
+    var pv=document.getElementById('eg-planet').value.trim();
+    gg.planet=(pv==='\u2014')?'':pv;
+    gg.situation=document.getElementById('eg-sit').value.trim();
+    gg.action=document.getElementById('eg-act').value.trim();
+    gg.why=document.getElementById('eg-why').value.trim();
+    gg.astro=document.getElementById('eg-astro').value.trim();
+    renderGuide();
+    var okg=await postToSheet({sheet:'Guide',action:'edit_guide',sheetId:gg.sheetId,
+      category:gg.category,planet:gg.planet,situation:gg.situation,
+      action_text:gg.action,why:gg.why,astro:gg.astro});
+    closeEditModal();
+    showToast(okg?'Updated \u2713':'Sync failed.',okg?'success':'error');
   }else if(_editCtx.type==='sitplan'){
     var sp=planById(_editCtx.id); if(!sp){closeEditModal();return;}
     var ns=document.getElementById('edit-spl-sit').value.trim();
@@ -3243,6 +3338,51 @@ function openPlanLibrary(){
   },60);
 }
 
+/* Starter plans drawn from the habits already on this dashboard.
+   Each long paragraph was split into its own trigger, because one
+   plan per situation is what makes the outcome marks meaningful —
+   a single "pause before reacting" entry cannot tell you whether
+   it is calls, mail or conversations you actually struggle with. */
+var STARTER_PLANS=[
+  {s:"A call comes in and the name itself makes me angry", a:"Don't pick up. Let it ring, call back after 5 minutes."},
+  {s:"I read a mail and feel anger rising", a:"Don't reply now. Draft it if needed, send only after 5 minutes."},
+  {s:"Anger rises in the middle of a conversation", a:"Stay silent. Move away for 5 minutes before saying anything."},
+  {s:"I notice I'm angry or in a bad mood", a:"Change surroundings for 5 minutes \u2014 deep breaths, a song, distance from the person."},
+  {s:"Before explaining something important to someone", a:"Practise saying it out loud for 5 minutes first."},
+  {s:"Someone complains to me about another person", a:"Don't react instantly. Ask whether this actually needs me to intervene."},
+  {s:"I catch myself replaying something I did badly", a:"Note it once, then move on. Be as kind to myself as I would be to someone else."},
+  {s:"I feel the urge to assert dominance in a discussion", a:"Stay calm. Ask whether the situation really calls for that response."},
+  {s:"Someone adds me to a mail trail", a:"Decide deliberately \u2014 mine to do, delegate, or leave. Don't absorb it by default."},
+  {s:"An argument turns heated", a:"Stop talking. Go quiet and alone, put attention on something else \u2014 winning isn't the point."}
+];
+
+async function importStarterPlans(){
+  var existing=sitPlans.map(function(p){ return p.situation.toLowerCase().trim(); });
+  var fresh=STARTER_PLANS.filter(function(p){ return existing.indexOf(p.s.toLowerCase().trim())===-1; });
+  if(!fresh.length){ showToast('Those plans are already in your library.',''); return; }
+  if(!confirm('Add '+fresh.length+' plan'+(fresh.length!==1?'s':'')+' from your habit list?\n\nThe first five will show on your home page; the rest stay in the library until you promote them.')) return;
+
+  var base=activePlans().length;
+  var btn=document.getElementById('spl-sync');
+  if(btn){ btn.textContent='Adding\u2026'; btn.className='sync-txt syncing'; }
+
+  var added=0;
+  for(var i=0;i<fresh.length;i++){
+    var id='p'+(Date.now()+i);
+    var order=base+i;
+    sitPlans.push({sheetId:id,situation:fresh[i].s,approach:fresh[i].a,status:'active',order:order});
+    renderPlanLibrary();
+    var ok=await postToSheet({sheet:'SituationPlans',sheetId:id,
+      situation:fresh[i].s,approach:fresh[i].a,status:'active',order:order});
+    if(ok) added++;
+    if(btn) btn.textContent='Adding '+(i+1)+' of '+fresh.length+'\u2026';
+  }
+  renderPlanLibrary(); renderSitRows();
+  if(btn){ btn.textContent=added===fresh.length?'Added '+added+' \u2713':'Added '+added+' of '+fresh.length;
+           btn.className='sync-txt '+(added===fresh.length?'ok':'err'); }
+  showToast(added+' plan'+(added!==1?'s':'')+' added \u2713','success');
+}
+
 function setPlanView(v){
   planView=v;
   document.getElementById('spl-tab-active').classList.toggle('on',v==='active');
@@ -3256,6 +3396,9 @@ function renderPlanLibrary(){
   var ret=sitPlans.filter(function(p){return p.status==='retired';}).length;
   var ca=document.getElementById('spl-ct-active');  if(ca) ca.textContent=act;
   var cr=document.getElementById('spl-ct-retired'); if(cr) cr.textContent=ret;
+
+  var imp=document.getElementById('spl-import');
+  if(imp) imp.style.display = sitPlans.length ? 'none' : 'block';
 
   var list=sitPlans.filter(function(p){ return p.status===planView; })
                    .sort(function(a,b){ return a.order-b.order; });
@@ -3484,6 +3627,298 @@ function replaceDailyFocusFromSheet(rows){
     dailyFocus[r.dateISO]={focus:r.focus||'',videoUrl:r.videoUrl||'',videoNote:r.videoNote||'',situations:r.situations||''};
   });
   renderDailyFocus();
+}
+
+/* ═══════════════════════════════════════════════════
+   SITUATION GUIDE — read from the Sheet
+
+   Rows are [category, planet, situation, action, why, astro].
+   Stars are a per-device preference and stay in localStorage;
+   everything else comes from the Guide sheet.
+═══════════════════════════════════════════════════ */
+var guide=[];
+var gdCat='All', gdOpen=null;
+var gdStars=new Set();
+try{ var _gs=localStorage.getItem('guide_stars'); if(_gs) gdStars=new Set(JSON.parse(_gs)); }catch(e){}
+
+var GD_PLANETS={
+  Sun:['\u2609','#D9701A'], Moon:['\u263D','#5B7FA6'], Mars:['\u2642','#C8413B'],
+  Mercury:['\u263F','#2F8A52'], Jupiter:['\u2643','#B8890F'], Venus:['\u2640','#C0507F'],
+  Saturn:['\u2644','#34507F'], Rahu:['\u260A','#5E6670'], Ketu:['\u260B','#8A6A4F']
+};
+
+function gdGlyph(p){
+  var g=GD_PLANETS[p]||['\u2726','#5C5A64'];
+  return '<span class="gd-glyph" style="background:'+g[1]+'" title="'+escH(p||'')+'">'+g[0]+'\uFE0E</span>';
+}
+function saveGdStars(){ try{ localStorage.setItem('guide_stars',JSON.stringify([...gdStars])); }catch(e){} }
+
+function gdCats(){
+  var seen=[];
+  guide.forEach(function(g){ if(g.category && seen.indexOf(g.category)===-1) seen.push(g.category); });
+  return ['All','Starred'].concat(seen);
+}
+
+function renderGuide(){
+  var listEl=document.getElementById('gd-list'); if(!listEl) return;
+  var imp=document.getElementById('gd-import');
+  if(imp) imp.style.display = guide.length ? 'none' : 'block';
+
+  // category chips
+  var chipsEl=document.getElementById('gd-chips');
+  if(chipsEl){
+    chipsEl.innerHTML=gdCats().map(function(k){
+      var label = k==='Starred' ? '\u2605 Starred' : escH(k);
+      return '<button class="gd-chip'+(k===gdCat?' on':'')+'" onclick="setGdCat(\''+escH(k).replace(/'/g,"\\'")+'\')">'+label+'</button>';
+    }).join('');
+  }
+  // the datalist of existing categories, for the add form
+  var dl=document.getElementById('gd-cats');
+  if(dl) dl.innerHTML=gdCats().slice(2).map(function(k){ return '<option value="'+escH(k)+'">'; }).join('');
+
+  var q=(document.getElementById('gd-search').value||'').toLowerCase().trim();
+  var items=guide.filter(function(g){
+    if(gdCat==='Starred'){ if(!gdStars.has(g.sheetId)) return false; }
+    else if(gdCat!=='All' && g.category!==gdCat) return false;
+    if(q && ((g.situation||'')+(g.action||'')+(g.why||'')+(g.astro||'')+(g.category||'')).toLowerCase().indexOf(q)===-1) return false;
+    return true;
+  });
+
+  var cnt=document.getElementById('gd-count');
+  if(cnt) cnt.textContent=items.length+' of '+guide.length+' situation'+(guide.length!==1?'s':'');
+
+  if(!items.length){
+    listEl.innerHTML='<div class="sit-empty" style="font-size:12px">'+
+      (guide.length?'Nothing matches that.':'Nothing here yet \u2014 import the guide or add your first situation below.')+'</div>';
+    renderGdToday();
+    return;
+  }
+
+  // group by category, preserving order
+  var groups={}, order=[];
+  items.forEach(function(g){
+    var k=g.category||'Other';
+    if(!groups[k]){ groups[k]=[]; order.push(k); }
+    groups[k].push(g);
+  });
+
+  listEl.innerHTML=order.map(function(k){
+    return '<div class="gd-grp"><h3 class="gd-grp-h">'+escH(k)+'</h3>'+
+      groups[k].map(function(g){
+        var open=gdOpen===g.sheetId;
+        var starred=gdStars.has(g.sheetId);
+        return '<div class="gd-item'+(open?' open':'')+'">'+
+          '<div style="display:flex;align-items:flex-start">'+
+            '<button class="gd-row" onclick="toggleGd(\''+g.sheetId+'\')">'+
+              gdGlyph(g.planet)+
+              '<span class="gd-txt"><span class="gd-s">'+escH(g.situation)+'</span>'+
+                '<span class="gd-a">'+escH(g.action)+'</span></span>'+
+              '<span class="gd-chev">\u25BE</span>'+
+            '</button>'+
+            '<button class="gd-star'+(starred?' on':'')+'" onclick="toggleGdStar(\''+g.sheetId+'\')" title="Star">'+(starred?'\u2605':'\u2606')+'</button>'+
+          '</div>'+
+          '<div class="gd-detail">'+
+            (g.why?'<div class="gd-d-l">Why it works</div><div class="gd-d-t">'+escH(g.why)+'</div>':'')+
+            (g.astro?'<div class="gd-d-l">The reading</div><div class="gd-d-astro">'+escH(g.astro)+'</div>':'')+
+            '<div class="gd-acts">'+
+              '<button class="rt-mini" onclick="editGuide(\''+g.sheetId+'\')" title="Edit">\u270e</button>'+
+              '<button class="rt-mini del" onclick="delGuide(\''+g.sheetId+'\')" title="Delete">\u00d7</button>'+
+            '</div>'+
+          '</div>'+
+        '</div>';
+      }).join('')+'</div>';
+  }).join('');
+
+  renderGdToday();
+}
+
+/* One situation surfaced each day, rotating by date so it differs
+   day to day but stays the same all of today. */
+function renderGdToday(){
+  var el=document.getElementById('gd-today'); if(!el) return;
+  if(!guide.length){ el.style.display='none'; return; }
+  el.style.display='block';
+  var pool = gdStars.size ? guide.filter(function(g){ return gdStars.has(g.sheetId); }) : guide;
+  if(!pool.length) pool=guide;
+  var day=Math.floor(Date.now()/864e5);
+  var g=pool[day%pool.length];
+  el.innerHTML='<div class="gd-today-l">Today\u2019s reminder'+(gdStars.size?' \u00b7 from your starred':'')+'</div>'+
+    '<div class="gd-today-s">'+gdGlyph(g.planet)+' '+escH(g.situation)+'</div>'+
+    '<div class="gd-today-a">'+escH(g.action)+'</div>';
+}
+
+function setGdCat(k){ gdCat=k; gdOpen=null; renderGuide(); }
+function toggleGd(id){ gdOpen = gdOpen===id ? null : id; renderGuide(); }
+function toggleGdStar(id){
+  if(gdStars.has(id)) gdStars.delete(id); else gdStars.add(id);
+  saveGdStars(); renderGuide();
+}
+
+async function addGuide(){
+  var sit=document.getElementById('gd-sit').value.trim();
+  var act=document.getElementById('gd-act').value.trim();
+  if(!sit||!act){ showToast('A situation and an action are needed.','error'); return; }
+  var id='g'+Date.now();
+  var rec={sheetId:id,
+    category:document.getElementById('gd-cat').value.trim()||'Other',
+    planet:document.getElementById('gd-planet').value.trim(),
+    situation:sit, action:act,
+    why:document.getElementById('gd-why').value.trim(),
+    astro:document.getElementById('gd-astro').value.trim(),
+    order:guide.length};
+  guide.push(rec);
+  ['gd-sit','gd-act','gd-why','gd-astro'].forEach(function(x){ document.getElementById(x).value=''; });
+  renderGuide();
+  var sy=document.getElementById('gd-sync');
+  if(sy){ sy.textContent='Syncing\u2026'; sy.className='sync-txt syncing'; }
+  var ok=await postToSheet({sheet:'Guide',sheetId:id,category:rec.category,planet:rec.planet,
+    situation:rec.situation,action_text:rec.action,why:rec.why,astro:rec.astro,order:rec.order});
+  if(sy){ sy.textContent=ok?'Saved to Sheet \u2713':'Sheet sync failed'; sy.className='sync-txt '+(ok?'ok':'err'); }
+}
+
+function editGuide(id){
+  var g=guide.find(function(x){ return x.sheetId===id; }); if(!g) return;
+  var planets=['','Sun','Moon','Mars','Mercury','Jupiter','Venus','Saturn','Rahu','Ketu'];
+  var html='<div style="margin-bottom:9px"><label class="sfl">Category</label>'+
+      '<input class="sin" id="eg-cat" type="text" value="'+escH(g.category||'')+'"></div>'+
+    '<div style="margin-bottom:9px"><label class="sfl">Planet</label><select class="sin" id="eg-planet">'+
+      planets.map(function(p){ return '<option'+(p===g.planet?' selected':'')+'>'+(p||'\u2014')+'</option>'; }).join('')+'</select></div>'+
+    '<div style="margin-bottom:9px"><label class="sfl">When this happens</label>'+
+      '<input class="sin" id="eg-sit" type="text" value="'+escH(g.situation||'')+'"></div>'+
+    '<div style="margin-bottom:9px"><label class="sfl">Do this</label>'+
+      '<textarea class="sin" id="eg-act" rows="2">'+escH(g.action||'')+'</textarea></div>'+
+    '<div style="margin-bottom:9px"><label class="sfl">Why it works</label>'+
+      '<textarea class="sin" id="eg-why" rows="3">'+escH(g.why||'')+'</textarea></div>'+
+    '<div><label class="sfl">The reading</label>'+
+      '<textarea class="sin" id="eg-astro" rows="3">'+escH(g.astro||'')+'</textarea></div>';
+  openEditModal('Edit situation',html,{type:'guide',id:id});
+}
+
+async function delGuide(id){
+  var g=guide.find(function(x){ return x.sheetId===id; }); if(!g) return;
+  if(!confirm('Delete "'+g.situation+'"?')) return;
+  guide=guide.filter(function(x){ return x.sheetId!==id; });
+  gdStars.delete(id); saveGdStars();
+  renderGuide();
+  await postToSheet({sheet:'Guide',action:'delete_guide',sheetId:id});
+  showToast('Deleted.','');
+}
+
+function exportGuideCSV(){
+  if(!guide.length){ showToast('Nothing to export.','error'); return; }
+  var h=['Category','Planet','Situation','Action','Why','Reading'];
+  var rows=guide.map(function(g){
+    return [g.category,g.planet,g.situation,g.action,g.why,g.astro]
+      .map(function(v){ return '"'+String(v||'').replace(/"/g,'""')+'"'; }).join(',');
+  });
+  var a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent([h.join(',')].concat(rows).join('\n'));
+  a.download='guide-'+isoToday()+'.csv'; a.click();
+  showToast('CSV exported \u2713','success');
+}
+
+async function fetchAllGuide(){
+  var d=await sheetFetch(WORKER_URL+'?action=getAllGuide');
+  if(d&&d.status==='ok'&&Array.isArray(d.guide)) replaceGuideFromSheet(d.guide);
+}
+
+function replaceGuideFromSheet(rows){
+  guide=rows.map(function(r){
+    return {sheetId:r.sheetId||'',category:r.category||'Other',planet:r.planet||'',
+      situation:r.situation||'',action:r.action||'',why:r.why||'',astro:r.astro||'',
+      order:(r.order===null||r.order===undefined)?9999:Number(r.order)};
+  });
+  renderGuide();
+}
+
+/* The full guide, written to the Sheet once. After the import this
+   array is never read again — the Sheet is the source of truth. */
+var GUIDE_SEED=[
+["Anger","Mars","A call comes in and the name itself makes me angry","Don't pick up. Call back after 5 minutes.","The first surge of anger peaks and fades within minutes. Calling back lets you choose your tone instead of reacting.","Mars sits in your 2nd house of speech, so words are where anger escapes first. A short gap turns Mars's heat into composure."],
+["Anger","Mars","I read a mail and feel anger rising","Don't reply now. Draft it if you need to, and send only after 5 minutes, or the next morning if it's serious.","Written words are permanent and get forwarded. A cooled reply is shorter, clearer and gets better results.","Mars in the 2nd house plus a weak Mercury (written communication) make heated emails your biggest risk."],
+["Anger","Mars","Anger rises mid-conversation","Stay silent. Excuse yourself and step away for 5 minutes.","Silence can't be quoted back. Physically moving away resets your nervous system faster than trying to calm down in place.","Mars in its own sign reacts fast and strong. Space is the simplest way to cool it."],
+["Anger","Moon","I notice I'm angry or in a bad mood","Change your surroundings, breathe in 4, hold 4, out 6, and create some distance.","Mood follows body state. A change of place and slower breathing break the loop.","Your Scorpio Moon is debilitated, so moods swing intensely. Movement and breath steady the Moon."],
+["Anger","Mars","I want to say something sharp to family","Say it tomorrow, about the situation, not the person.","A night's sleep softens the wording, and criticizing the situation keeps the relationship safe.","Mars in your 2nd house governs both speech and family, so sharp words hurt the people closest to you most."],
+["Anger","Moon","Someone criticises me","Say \u201cLet me think about it,\u201d and respond the next day.","A delay lets you separate useful feedback from the hurt, and you come across as composed.","Your report notes you take what others say to heart. That's your Scorpio Moon, and it needs a night to settle."],
+["Anger","Sun","Someone is rude to me in public","Stay calm and polite. Deal with it privately later, or not at all.","Whoever stays calm keeps the respect of everyone watching.","The Sun, your strongest planet, rules reputation. Protecting your standing matters more than winning the moment."],
+["Anger","Saturn","I'm stuck in traffic or delays and feel irritated","Use the time: an audio, a call to a parent, or slow breathing.","You can't change the delay, only how you spend it.","Saturn transiting your ascendant makes delays this period's lesson. Resisting them makes them heavier."],
+["Anger","Mars","An argument keeps escalating","Pause it: \u201cLet's continue this in an hour.\u201d","Arguments escalate when both people are flooded with emotion. A pause lets reason come back.","Mars gives you a strong fighting instinct. Choosing when to fight is how you master it."],
+["Overthinking","Saturn","Something goes wrong and I start blaming myself","Ask three questions: what part was mine, what wasn't, what's next.","Psychology calls this personalization. Owning only your part frees energy for solving the problem.","Your Pisces ascendant absorbs others' problems, and Saturn's aspect on your ascendant adds self-criticism. Own your part, not the whole."],
+["Overthinking","Moon","I keep replaying a conversation","Write it down, then close the notebook.","Writing moves the thought out of your head, so your mind stops rehearsing it.","Your Scorpio Moon loops on emotional events. Mercury, the writing planet, helps break the loop."],
+["Overthinking","Moon","Someone's comment keeps hurting","Speak to them within 48 hours, or consciously let it go.","Unspoken hurt grows. Either clearing it or releasing it ends the cycle.","A Scorpio Moon remembers hurts for a long time. Holding on costs you more than them."],
+["Overthinking","Rahu","Worries hit me at night","Write each worry and one next step. Deal with them in the morning.","Problems look bigger when you're tired. Morning-you will handle them better.","Rahu is linked with your 12th house (sleep), which amplifies night-time thoughts."],
+["Overthinking","Moon","I feel someone is upset with me","Ask them directly and kindly instead of guessing.","Guesses are usually worse than reality, and asking shows maturity.","A Pisces ascendant senses moods but often misreads the cause, and a Scorpio Moon assumes the worst."],
+["Overthinking","Jupiter","I made a mistake at work","Own it quickly, offer a fix, and move on.","Fast ownership builds more trust than a perfect record.","Jupiter, your ascendant lord, rewards honesty. Saturn rewards accountability, not self-punishment."],
+["Overthinking","Rahu","I compare myself with others' success","Compare yourself only with who you were a year ago.","Other people's highlights aren't a fair benchmark for your full life.","Rahu in your 10th house breeds comparison. Saturn in your 11th means your gains come steadily and later, which is different timing, not less worth."],
+["Overthinking","Saturn","I feel I'm not good enough","List three things you handled well this year.","Evidence beats feelings. Your track record is more reliable than your mood.","Saturn on your ascendant right now heightens self-doubt. It's a transit that eases by around mid-2027, not a verdict."],
+["Anxiety & mood","Moon","I feel low for no clear reason","Walk for 20 minutes before judging anything.","Movement lifts mood reliably, and many low moods pass on their own.","Your Moon fluctuates by nature. Not every dip means something is wrong."],
+["Anxiety & mood","Rahu","I'm anxious about the future","Write the worst case, the likely case, and one action for today.","Anxiety feeds on vagueness. A concrete action shrinks it.","Rahu creates fear of the unknown, and Saturn loves a plan. Planning satisfies both."],
+["Anxiety & mood","Rahu","I'm scrolling my phone at night","Put it away and keep the phone outside the bedroom.","Screens delay sleep and feed comparison and worry.","Rahu rules screens and obsessive loops. Cutting the trigger weakens Rahu's grip."],
+["Anxiety & mood","Moon","I've felt drained for weeks","Plan a 2\u20133 day trip.","A change of scene genuinely restores energy and perspective.","Your 3rd and 9th houses of travel are strongly activated, and the Moon in the 9th recharges through travel, temples and water."],
+["Anxiety & mood","Ketu","I'm restless and want to change everything at once","Change one thing this week. The rest waits.","One change you can sustain beats five you abandon.","Rahu\u2013Ketu restlessness and your Jyeshtha tendency to take on too much push you toward big sweeps."],
+["Anxiety & mood","Saturn","I feel stuck","Help someone today.","Helping others restores a sense of agency and often opens unexpected doors.","Saturn and Jupiter, your two career planets, both respond to service."],
+["Anxiety & mood","Mercury","I feel overwhelmed by tasks","Write every task, pick the top 3, and ignore the rest for today.","A list turns a fog of pressure into a clear sequence.","Mercury is your weakest planet, so keeping everything in your head is costly. Saturn rewards order."],
+["Work & boss","Sun","I disagree with my boss","Raise it privately, never in a meeting.","Bosses accept disagreement in private far more easily than in public.","Your Sun rules the 6th house of conflict, so clashes with authority come easily. Privacy keeps your strength without the fight."],
+["Work & boss","Sun","My boss takes credit for my work","Send a short weekly email summarizing what you delivered.","It creates a visible record without confrontation.","The Sun needs recognition, and writing it down covers weak Mercury. Let results do the talking."],
+["Work & boss","Rahu","Office gossip starts","Listen, add nothing, and change the topic.","Gossip always travels back, and staying neutral keeps you trusted by everyone.","Rahu in your career house and Jupiter in the 6th attract hidden rivals. Staying out keeps you safe."],
+["Work & boss","Jupiter","A colleague undermines me","Stay factual, document everything, and escalate only with evidence.","Facts and records win workplace disputes; emotions lose them.","Jupiter in your 6th house classically defeats rivals through patience and fairness."],
+["Work & boss","Jupiter","I'm asked to do something unethical","Decline politely and offer a correct alternative.","One shortcut can cost years of reputation.","Jupiter sits with Rahu in your career chart. That's a lifelong test of choosing the clean path."],
+["Work & boss","Saturn","I'm given more work than I can handle","Ask, \u201cWhich of these should come first?\u201d instead of saying yes to everything.","Prioritizing out loud protects quality and shows judgment.","Saturn loads you with responsibility, and Pisces finds it hard to say no."],
+["Work & boss","Moon","Someone asks for a favour I don't want to do","Say \u201cLet me check and get back to you,\u201d then decide calmly.","A pause turns a pressured yes into a real choice.","A Pisces ascendant tends to people-please. The delay protects your time."],
+["Work & boss","Sun","I feel undervalued at work","Keep a running list of achievements and bring it to reviews.","Recognition goes to people who make their value visible.","The Sun, your strongest planet, needs recognition to thrive. Feed it with evidence, not complaints."],
+["Work & boss","Mars","I'm starting a new job","For 90 days: listen more, promise less, and deliver early wins.","First impressions set your reputation for years.","The Mars sub-period right after your likely 2027 joining warns against overconfidence."],
+["Career moves","Ketu","I feel like quitting","Wait 30 days, and quit only with an offer in hand.","Urges to quit often pass, and leaving without a plan weakens your position.","Ketu brings sudden urges to walk away, and your Varshaphal warns against abrupt moves."],
+["Career moves","Moon","I want to tell people about my plan","Share the need with one trusted person, not the plan.","Early announcements invite opinions, pressure and jealousy, and can dull your drive.","A Scorpio Moon in Jyeshtha works best in private, and your Venus Mahadasha favors behind-the-scenes moves."],
+["Career moves","Sun","Before an interview or big meeting","Walk, breathe 4-4-6, and review three achievement stories.","Calm body plus prepared stories equals confident delivery.","The Sun and Jupiter carry your career, and Thursdays and Sundays favor them."],
+["Career moves","Mercury","Before explaining something important","Practise out loud first.","Rehearsal turns ideas into clear sentences.","Mercury is your weakest planet and Mars sharpens your delivery. Practice balances both."],
+["Career moves","Saturn","I get rejected after an interview","Ask for feedback, note one lesson, and apply to two more that day.","Momentum is the best cure for rejection.","Saturn's signature in your chart is delay, not denial. Persistence is how Saturn pays out."],
+["Career moves","Mercury","An offer arrives","Don't accept on the spot. Ask for it in writing and take 24\u201348 hours.","Offers rarely vanish in a day, and the pause lets you negotiate.","Weak Mercury means details slip under excitement. Read everything twice."],
+["Career moves","Mars","I'm negotiating salary","State your number with reasons, then stay silent.","Silence after an ask is powerful; filling it weakens your position.","Mars in your 2nd house gives you courage in money talks. Use it calmly."],
+["Career moves","Rahu","Something is going really well","Stay alert till it's done, then celebrate fully.","Mistakes happen when attention drops near the finish line.","Rahu in your 10th house brings sudden reversals, and your report notes you hurry. Focus is your protection."],
+["Money","Mars","I want to buy something big","Wait 24 hours.","Impulse fades within a day; real needs remain.","Mars in your house of money brings impulsive spending, and the Venus Mahadasha loves comfort."],
+["Money","Mercury","A quick-money tip arrives","Ignore it.","If it sounds fast and easy, the risk is hidden.","Mercury and Venus in your 5th house of speculation, with Mercury weak, make trading and betting your blind spot."],
+["Money","Ketu","A friend asks for a loan","Lend only what you could give as a gift.","Then neither the money nor the friendship is at risk.","Ketu and your report both warn that some friends will disappoint you."],
+["Money","Saturn","A raise or bonus arrives","Move a fixed share to savings the same day.","Lifestyle quietly expands to match income unless you save first.","Saturn in your 11th house builds wealth through steady accumulation, not windfalls."],
+["Money","Venus","Festival or social spending pressure","Set a budget before the season starts.","Decisions made in advance hold up better than ones made in the moment.","Venus, your current Mahadasha lord, loves celebration and comfort."],
+["Money","Rahu","I feel I must keep up with others' lifestyles","Ask, \u201cIs this for me or for them?\u201d","Spending for appearances rarely brings lasting satisfaction.","Rahu amplifies status hunger, and Venus amplifies comfort. Together they inflate spending."],
+["Decisions","Mercury","Someone makes me a verbal promise","Confirm it by mail or message.","Memories differ; written records don't.","Mercury, your weakest planet, governs agreements."],
+["Decisions","Mercury","I'm about to sign something","Read it twice and sleep on it.","Most contract regrets come from rushing.","Weak Mercury means details slip unless you slow down."],
+["Decisions","Ketu","I want to start something new while another thing is half-done","Finish or consciously drop the old one first.","Two finished things are worth more than five half-done ones.","Your Jyeshtha reading notes you take on many things, and Ketu adds restlessness."],
+["Decisions","Moon","I need to make a big decision while excited or upset","Decide only when calm, ideally after a night's sleep.","Strong emotions distort judgment in both directions.","A fluctuating Scorpio Moon plus quick Mars make in-the-moment decisions risky."],
+["Decisions","Mercury","I have too many options and can't decide","Write pros and cons and set a decision date.","A deadline turns endless thinking into a choice.","Your report notes Pisces finds it hard to make up its mind, and Mercury needs structure."],
+["Family","Moon","I disagree with my parents","Hear them out fully before replying.","People soften once they feel heard.","The Sun in your 4th house brings ego friction with parents. Listening first defuses it."],
+["Family","Venus","My wife seems upset","Ask, listen, and don't rush to fix it.","Often the need is to be heard, not solved.","Mercury rules both your 4th (home) and 7th (spouse) houses, so harmony with her shapes your whole home life."],
+["Family","Moon","I haven't called Mom or Dad in days","Call today.","Small regular contact keeps relationships close across distance.","The Moon (mother) in your 9th house (father) makes parents central to your peace."],
+["Family","Moon","I want to withdraw and go silent","Say \u201cI need an hour,\u201d then come back.","Naming the pause prevents your silence from being misread as anger.","A Scorpio Moon retreats when hurt. A clear time limit keeps retreat from becoming distance."],
+["Family","Mars","My child is acting up and I'm tired","Pause before reacting. Respond, don't react.","Children learn calm from watching it.","Mars gives a quick temper, and Ketu transiting your 5th house of children from December makes patience extra important."],
+["Family","Mercury","A family decision about living together comes up","Discuss it with your wife first, then your parents.","Aligning as a couple first prevents conflict later.","Mercury rules both your home and spouse houses, so her comfort is central to joint living."],
+["Family","Moon","A family member's health worries me","Act practically: book an appointment, check in. Worry less, do more.","Action reduces worry; worry alone changes nothing.","Your report flags family health in coming periods, and the Moon turns care into anxiety unless it's channeled."],
+["Friends & social","Ketu","A friend lets me down","Lower your expectations, but don't cut them off. Keep it light.","Most friendships survive disappointment if expectations are adjusted.","Ketu and your report indicate some friends won't deliver. Choose who to rely on, not who to drop."],
+["Friends & social","Moon","I'm invited out but feel like isolating","Go for one hour.","Connection reliably lifts mood, even when you don't feel like it.","A Scorpio Moon withdraws, but a good social life is one of your stated goals."],
+["Friends & social","Rahu","I want to vent about someone to friends","Vent to your journal or your wife, not the group.","Group venting spreads and comes back to you.","Your Scorpio nature thrives in privacy, and Rahu makes reputation sensitive."],
+["Friends & social","Mercury","A friend proposes a business together","Put terms in writing and keep money separate.","Clear terms protect both the deal and the friendship.","Your 7th house of partnerships is weak, so structure matters more for you."],
+["Wins & setbacks","Sun","I receive praise","Say thank you, credit the team, and keep it to yourself beyond that.","Gracious success builds goodwill; boasting builds rivals.","The Sun loves praise, but your own rule warns that celebrating early backfires."],
+["Wins & setbacks","Saturn","A big setback hits","Give yourself one day to feel it, then write the next step.","Feelings need room, but a time limit keeps them from taking over.","Your chart gives slowly but surely. Saturn tests, then rewards persistence."],
+["Wins & setbacks","Jupiter","I achieve a goal","Celebrate fully, then share credit and give something back.","Celebrating finished wins builds motivation for the next one.","Jupiter rewards gratitude, and your Moon in the 9th house loves giving back."]
+];
+
+async function importGuide(){
+  if(guide.length && !confirm('Your guide already has '+guide.length+' entries. Import anyway?')) return;
+  var btn=document.getElementById('gd-sync');
+  var total=GUIDE_SEED.length, added=0;
+  for(var i=0;i<total;i++){
+    var r=GUIDE_SEED[i];
+    var id='g'+(Date.now()+i);
+    guide.push({sheetId:id,category:r[0],planet:r[1],situation:r[2],action:r[3],why:r[4],astro:r[5],order:i});
+    var ok=await postToSheet({sheet:'Guide',sheetId:id,category:r[0],planet:r[1],
+      situation:r[2],action_text:r[3],why:r[4],astro:r[5],order:i});
+    if(ok) added++;
+    if(btn){ btn.textContent='Importing '+(i+1)+' of '+total+'\u2026'; btn.className='sync-txt syncing'; }
+    if(i%10===0) renderGuide();
+  }
+  renderGuide();
+  if(btn){ btn.textContent=added+' of '+total+' imported'+(added===total?' \u2713':''); btn.className='sync-txt '+(added===total?'ok':'err'); }
+  showToast(added+' situations imported \u2713','success');
 }
 
 /* ── Collapsible sections ─────────────────────────────────
