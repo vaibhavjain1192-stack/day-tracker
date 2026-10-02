@@ -49,10 +49,38 @@ body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:
 .mantra{background:var(--gold-glow);border:1px solid rgba(201,168,76,0.15);border-left:2px solid var(--gold);border-radius:0 var(--r) var(--r) 0;padding:.75rem 1rem;margin-bottom:1rem}
 .mantra-q{font-family:var(--fd);font-size:1rem;font-style:italic;color:var(--text-1);line-height:1.55}
 .mantra-src{font-size:11px;color:var(--text-3);margin-top:4px}
+/* ── Calm player ── */
+.calm{background:var(--card);border:1px solid var(--border);border-radius:var(--rlg);padding:.85rem 1rem;margin-bottom:1rem}
+.calm-top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:.6rem}
+.calm-title{font-family:var(--fb);font-weight:600;font-size:13px;color:var(--text-1);margin:0}
+.calm-state{font-size:11px;color:var(--text-3);white-space:nowrap}
+.calm-state.on{color:#4ECDC4}
+.calm-sounds{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:.7rem}
+.calm-chip{font-family:var(--fb);font-size:13px;padding:5px 12px;border-radius:20px;border:1px solid var(--border-md);background:transparent;color:var(--text-2);cursor:pointer;transition:all var(--tr)}
+.calm-chip:hover{color:var(--text-1)}
+.calm-chip.on{border-color:#4ECDC4;color:var(--text-1);background:rgba(78,205,196,.12)}
+.calm-ctrl{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.calm-play{font-family:var(--fb);font-size:13px;font-weight:600;padding:7px 18px;border-radius:20px;border:1px solid #4ECDC4;background:rgba(78,205,196,.14);color:var(--text-1);cursor:pointer;min-width:96px;transition:all var(--tr)}
+.calm-play:hover{background:rgba(78,205,196,.25)}
+.calm-play[aria-pressed="true"]{background:#4ECDC4;color:#0F1117}
+.calm-vol,.calm-tm{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--text-3)}
+.calm-vol input{width:110px;accent-color:#4ECDC4}
+.calm-sel{font-family:var(--fb);font-size:13px;background:var(--surface);color:var(--text-1);border:1px solid var(--border-md);border-radius:var(--rsm);padding:4px 6px}
+.calm-chip:focus-visible,.calm-play:focus-visible,.calm-sel:focus-visible,.calm-vol input:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.calm-breath{display:flex;align-items:center;gap:14px;margin-top:.85rem;padding-top:.8rem;border-top:1px solid var(--border)}
+.calm-breath[hidden]{display:none}
+.calm-orb{width:44px;height:44px;border-radius:50%;flex-shrink:0;background:radial-gradient(circle at 40% 35%,rgba(78,205,196,.85),rgba(78,205,196,.25));box-shadow:0 0 18px rgba(78,205,196,.35);transform:scale(.6);transition:transform 4s ease-in-out}
+.calm-orb.in,.calm-orb.hold{transform:scale(1)}
+.calm-orb.out{transform:scale(.6);transition-duration:6s}
+.calm-cue{font-size:13px;font-weight:600;color:var(--text-1)}
+.calm-sub{font-size:11px;color:var(--text-3);margin-top:2px}
+@media(max-width:640px){.calm-vol input{width:90px}}
+@media(prefers-reduced-motion:reduce){.calm-orb,.calm-orb.in,.calm-orb.out{transition:none;transform:scale(.8)}}
+
 /* ── My feed for today ── */
 .feed{margin-bottom:1rem}
 .feed-hd{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin:0 2px .6rem}
-.feed-title{font-family:var(--fd);font-weight:400;font-size:1.08rem;color:var(--text-1);margin:0}
+.feed-title{font-family:var(--fb);font-weight:600;font-size:13px;color:var(--text-1);margin:0}
 .feed-sub{font-size:11px;color:var(--text-3)}
 .feed-vids,.feed-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
 .feed-card{background:var(--card);border:1px solid var(--border);border-top:2px solid var(--fc,var(--gold));border-radius:var(--r);padding:10px 12px 11px;min-width:0;display:flex;flex-direction:column}
@@ -61,8 +89,8 @@ body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:
 #feed-kundali{--fc:#b0a0d6}
 #feed-guide{--fc:var(--gold)}
 #feed-gratitude{--fc:#4ECDC4}
-.feed-lbl{display:flex;justify-content:space-between;align-items:center;gap:6px;font-size:11.5px;font-weight:600;color:var(--fc,var(--gold));margin-bottom:8px}
-.feed-h{font-family:var(--fd);font-size:15px;color:var(--text-1);line-height:1.35;margin-bottom:4px}
+.feed-lbl{display:flex;justify-content:space-between;align-items:center;gap:6px;font-size:11px;font-weight:600;color:var(--fc,var(--gold));margin-bottom:8px}
+.feed-h{font-family:var(--fb);font-size:13px;font-weight:600;color:var(--text-1);line-height:1.45;margin-bottom:4px}
 .feed-t{font-size:13px;color:var(--text-2);line-height:1.55}
 .feed-clamp{display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
 .feed-do{margin-top:7px;padding:6px 9px;background:var(--surface);border-left:2px solid var(--gold);border-radius:var(--rsm);font-size:13px;color:var(--text-1);line-height:1.5}
@@ -72,7 +100,7 @@ body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:
 .feed-open{background:none;border:none;color:var(--text-2);font-family:var(--fb);font-size:11px;cursor:pointer;padding:0;white-space:nowrap}
 .feed-open:hover{color:var(--fc,var(--gold))}
 .feed-open:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
-.feed-empty{font-size:12.5px;color:var(--text-3);line-height:1.5}
+.feed-empty{font-size:13px;color:var(--text-3);line-height:1.5}
 .feed-video .vid-prev{margin-bottom:8px}
 .feed-video .focus-in:focus{border-bottom-color:var(--rose)}
 .feed-thumb-img{width:112px;height:63px;border-radius:var(--rsm);object-fit:cover;border:1px solid var(--border);background:var(--surface);flex-shrink:0}
@@ -81,18 +109,18 @@ body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:
 /* ── Daily rules (standing "when → do" list under the quote) ── */
 .dr{background:var(--card);border:1px solid var(--border);border-radius:var(--rlg);padding:.85rem 1rem .75rem;margin-bottom:1rem}
 .dr-top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:.55rem}
-.dr-title{font-family:var(--fd);font-weight:400;font-size:1.08rem;color:var(--text-1);margin:0}
+.dr-title{font-family:var(--fb);font-weight:600;font-size:13px;color:var(--text-1);margin:0}
 .dr-edit{background:none;border:1px solid var(--border-md);color:var(--text-2);font-family:var(--fb);font-size:11.5px;border-radius:var(--rsm);padding:3px 10px;cursor:pointer}
 .dr-edit:hover{color:var(--gold);border-color:rgba(201,168,76,.4)}
 .dr-list{list-style:none;margin:0;padding:0}
 .dr-row{display:grid;grid-template-columns:minmax(160px,40%) 1fr;gap:5px 16px;padding:9px 0;border-top:1px solid var(--border)}
 .dr-row:first-child{border-top:none;padding-top:2px}
 .dr-row{align-items:start}
-.dr-when{font-size:14.5px;color:var(--text-1);line-height:1.45;font-weight:600}
+.dr-when{font-size:13px;color:var(--text-1);line-height:1.5;font-weight:600}
 .dr-when b{font-weight:600;color:var(--gold)}
-.dr-do{font-size:14.5px;color:var(--text-1);line-height:1.45;font-weight:400;padding-left:12px;border-left:2px solid var(--gold)}
+.dr-do{font-size:13px;color:var(--text-1);line-height:1.5;font-weight:400;padding-left:12px;border-left:2px solid var(--gold)}
 .dr-foot{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-top:.55rem;font-size:11px;color:var(--text-3)}
-.dr-note{font-size:12.5px;color:var(--text-2);line-height:1.55}
+.dr-note{font-size:13px;color:var(--text-2);line-height:1.55}
 .dr-empty-acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
 .dr-ed-row{display:grid;grid-template-columns:1fr 1.4fr auto;gap:6px;align-items:start;padding:6px 0;border-top:1px solid var(--border)}
 .dr-ed-row:first-child{border-top:none}
@@ -439,9 +467,9 @@ body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:
 /* Home row: plan + two outcome toggles */
 .sp-item{padding:9px 0;border-bottom:1px solid var(--border)}
 .sp-item:last-child{border-bottom:none}
-.sp-when{font-size:12.5px;color:var(--text-1);line-height:1.5}
+.sp-when{font-size:13px;color:var(--text-1);line-height:1.5}
 .sp-when b{color:var(--gold);font-weight:600}
-.sp-then{font-size:12px;color:var(--text-2);line-height:1.5;margin-top:2px;padding-left:12px;border-left:2px solid rgba(107,191,142,.35)}
+.sp-then{font-size:13px;color:var(--text-2);line-height:1.5;margin-top:2px;padding-left:12px;border-left:2px solid rgba(107,191,142,.35)}
 .sp-marks{display:flex;gap:6px;align-items:center;margin-top:7px;flex-wrap:wrap}
 .sp-mk{font-family:var(--fb);font-size:10px;font-weight:600;border:1px solid var(--border-md);background:transparent;color:var(--text-3);border-radius:20px;padding:3px 10px;cursor:pointer;transition:all var(--tr)}
 .sp-mk:hover{color:var(--text-1)}
@@ -449,7 +477,7 @@ body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:
 .sp-mk.did.on{background:var(--green);border-color:var(--green);color:#0F1117}
 .sp-mk.miss.on{background:var(--rose);border-color:var(--rose);color:#0F1117}
 .sp-rate{font-family:var(--fm);font-size:9px;color:var(--text-3);margin-left:auto}
-.sp-empty{font-size:12px;color:var(--text-3);padding:8px 0;line-height:1.6}
+.sp-empty{font-size:13px;color:var(--text-3);padding:8px 0;line-height:1.6}
 /* Library */
 .spl-tabs{display:flex;gap:6px;margin-bottom:10px;border-bottom:1px solid var(--border)}
 .spl-row{display:grid;grid-template-columns:20px 1fr auto;gap:9px;align-items:start;padding:10px 0;border-bottom:1px solid var(--border);background:var(--card)}
@@ -469,12 +497,13 @@ body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:
 .spl-tip.warn{color:var(--gold);border-left-color:var(--gold)}
 @media(max-width:640px){.spl-row{grid-template-columns:18px 1fr auto;gap:7px}}
 .sp-hint{font-size:11px;color:var(--text-3);margin-bottom:10px;line-height:1.5}
+.sit-pairs .focus-lbl{font-family:var(--fb);font-size:13px;font-weight:600;letter-spacing:0;text-transform:none;color:var(--text-1)}
 .sp-hint em{color:var(--text-2);font-style:normal}
 .sp-row{display:grid;grid-template-columns:20px 1fr 1fr;gap:8px;align-items:start;padding:7px 0;border-bottom:1px solid var(--border)}
 .sp-row:last-child{border-bottom:none}
 .sp-n{font-family:var(--fm);font-size:9px;color:var(--text-3);padding-top:7px;text-align:center}
 .sp-row.filled .sp-n{color:var(--gold)}
-.sp-in{width:100%;background:transparent;border:none;border-bottom:1px dashed var(--border);padding:4px 2px;font-size:12.5px;line-height:1.5;color:var(--text-1);font-family:var(--fb);outline:none;resize:none;overflow:hidden;transition:border-color var(--tr)}
+.sp-in{width:100%;background:transparent;border:none;border-bottom:1px dashed var(--border);padding:4px 2px;font-size:13px;line-height:1.5;color:var(--text-1);font-family:var(--fb);outline:none;resize:none;overflow:hidden;transition:border-color var(--tr)}
 .sp-in::placeholder{color:var(--text-3)}
 .sp-in.sit:focus{border-bottom-color:var(--rose)}
 .sp-in.app:focus{border-bottom-color:var(--green)}
@@ -497,9 +526,9 @@ body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:
 /* Home row: plan + two outcome toggles */
 .sp-item{padding:9px 0;border-bottom:1px solid var(--border)}
 .sp-item:last-child{border-bottom:none}
-.sp-when{font-size:12.5px;color:var(--text-1);line-height:1.5}
+.sp-when{font-size:13px;color:var(--text-1);line-height:1.5}
 .sp-when b{color:var(--gold);font-weight:600}
-.sp-then{font-size:12px;color:var(--text-2);line-height:1.5;margin-top:2px;padding-left:12px;border-left:2px solid rgba(107,191,142,.35)}
+.sp-then{font-size:13px;color:var(--text-2);line-height:1.5;margin-top:2px;padding-left:12px;border-left:2px solid rgba(107,191,142,.35)}
 .sp-marks{display:flex;gap:6px;align-items:center;margin-top:7px;flex-wrap:wrap}
 .sp-mk{font-family:var(--fb);font-size:10px;font-weight:600;border:1px solid var(--border-md);background:transparent;color:var(--text-3);border-radius:20px;padding:3px 10px;cursor:pointer;transition:all var(--tr)}
 .sp-mk:hover{color:var(--text-1)}
@@ -507,7 +536,7 @@ body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:
 .sp-mk.did.on{background:var(--green);border-color:var(--green);color:#0F1117}
 .sp-mk.miss.on{background:var(--rose);border-color:var(--rose);color:#0F1117}
 .sp-rate{font-family:var(--fm);font-size:9px;color:var(--text-3);margin-left:auto}
-.sp-empty{font-size:12px;color:var(--text-3);padding:8px 0;line-height:1.6}
+.sp-empty{font-size:13px;color:var(--text-3);padding:8px 0;line-height:1.6}
 /* Library */
 .spl-tabs{display:flex;gap:6px;margin-bottom:10px;border-bottom:1px solid var(--border)}
 .spl-row{display:grid;grid-template-columns:20px 1fr auto;gap:9px;align-items:start;padding:10px 0;border-bottom:1px solid var(--border);background:var(--card)}
@@ -532,7 +561,7 @@ body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:
 .sp-row:last-child{border-bottom:none}
 .sp-n{font-family:var(--fm);font-size:9px;color:var(--text-3);padding-top:7px;text-align:center}
 .sp-row.filled .sp-n{color:var(--gold)}
-.sp-in{width:100%;background:transparent;border:none;border-bottom:1px dashed var(--border);padding:4px 2px;font-size:12.5px;line-height:1.5;color:var(--text-1);font-family:var(--fb);outline:none;resize:none;overflow:hidden;transition:border-color var(--tr)}
+.sp-in{width:100%;background:transparent;border:none;border-bottom:1px dashed var(--border);padding:4px 2px;font-size:13px;line-height:1.5;color:var(--text-1);font-family:var(--fb);outline:none;resize:none;overflow:hidden;transition:border-color var(--tr)}
 .sp-in::placeholder{color:var(--text-3)}
 .sp-in.sit:focus{border-bottom-color:var(--rose)}
 .sp-in.app:focus{border-bottom-color:var(--green)}
@@ -844,6 +873,32 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
     </div>
     <div id="dr-body"><div class="dr-note">Loading your rules…</div></div>
   </section>
+  <section class="calm" id="calm" aria-labelledby="calm-title">
+    <div class="calm-top">
+      <h2 class="calm-title" id="calm-title">&#127911; Feeling tense? Play something calm</h2>
+      <span class="calm-state" id="calm-state" aria-live="polite"></span>
+    </div>
+    <div class="calm-sounds" role="radiogroup" aria-label="Choose a sound">
+      <button type="button" class="calm-chip" data-s="pads"  role="radio" onclick="setCalmSound('pads')">Soft pads</button>
+      <button type="button" class="calm-chip" data-s="ocean" role="radio" onclick="setCalmSound('ocean')">Ocean waves</button>
+      <button type="button" class="calm-chip" data-s="rain"  role="radio" onclick="setCalmSound('rain')">Gentle rain</button>
+      <button type="button" class="calm-chip" data-s="hum"   role="radio" onclick="setCalmSound('hum')">Deep hum</button>
+    </div>
+    <div class="calm-ctrl">
+      <button type="button" class="calm-play" id="calm-play" onclick="toggleCalm()" aria-pressed="false">&#9654; Play</button>
+      <label class="calm-vol"><span>Volume</span><input type="range" id="calm-vol" min="0" max="100" value="60" oninput="setCalmVolume(this.value)"></label>
+      <label class="calm-tm"><span>Stop</span>
+        <select class="calm-sel" id="calm-timer" onchange="setCalmTimer(this.value)">
+          <option value="0">When I stop it</option><option value="5">After 5 min</option>
+          <option value="10">After 10 min</option><option value="20">After 20 min</option>
+        </select></label>
+    </div>
+    <div class="calm-breath" id="calm-breath" hidden>
+      <div class="calm-orb" id="calm-orb" aria-hidden="true"></div>
+      <div><div class="calm-cue" id="calm-cue">Breathe in</div><div class="calm-sub">In for 4, hold for 4, out for 6</div></div>
+    </div>
+  </section>
+
   <section class="feed" id="feed" aria-labelledby="feed-title">
     <div class="feed-hd">
       <h2 class="feed-title" id="feed-title">My feed for today</h2>
@@ -1466,6 +1521,7 @@ function init(){
   setIntentionsState('loading');
   renderFeed();
   drLoadSnap();
+  renderCalm();
 
   /* Two-stage load. The core request carries only what Home and
      Routine render, so the page is usable in a fraction of the time;
@@ -3873,6 +3929,231 @@ function replaceDailyFocusFromSheet(rows){
     dailyFocus[r.dateISO]={focus:r.focus||'',videoUrl:r.videoUrl||'',videoNote:r.videoNote||'',situations:r.situations||''};
   });
   renderDailyFocus();
+}
+
+/* ═══════════════════════════════════════════════════
+   CALM PLAYER — sound generated live with the Web Audio API.
+   Nothing is downloaded, so it works offline and never runs out.
+   Sound choice and volume are display preferences (localStorage).
+═══════════════════════════════════════════════════ */
+var calm={ctx:null, master:null, verb:null, sess:null, sound:'pads', vol:60, playing:false,
+          timer:null, fadeT:null, timerMin:0, breathT:null, ends:0, tick:null};
+try{
+  var _cp=JSON.parse(localStorage.getItem('calm_prefs')||'{}');
+  if(['pads','ocean','rain','hum'].indexOf(_cp.sound)>-1) calm.sound=_cp.sound;
+  if(_cp.vol!=null && !isNaN(+_cp.vol)) calm.vol=Math.max(0,Math.min(100,+_cp.vol));
+}catch(e){}
+function calmSavePrefs(){ try{ localStorage.setItem('calm_prefs',JSON.stringify({sound:calm.sound,vol:calm.vol})); }catch(e){} }
+
+function calmInit(){
+  if(calm.ctx) return true;
+  var AC=window.AudioContext||window.webkitAudioContext;
+  if(!AC){ showToast('This browser can\u2019t play generated sound.','error'); return false; }
+  var c=new AC();
+  calm.ctx=c;
+  calm.master=c.createGain(); calm.master.gain.value=0;
+  var comp=c.createDynamicsCompressor(); comp.threshold.value=-18; comp.ratio.value=3;
+  calm.master.connect(comp); comp.connect(c.destination);
+  // Soft room reverb from a decaying-noise impulse
+  var len=Math.floor(c.sampleRate*3.5), ir=c.createBuffer(2,len,c.sampleRate);
+  for(var ch=0;ch<2;ch++){ var d=ir.getChannelData(ch); for(var i=0;i<len;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/len,3); }
+  calm.verb=c.createConvolver(); calm.verb.buffer=ir;
+  var vg=c.createGain(); vg.gain.value=0.6; calm.verb.connect(vg); vg.connect(calm.master);
+  return true;
+}
+function calmLevel(){ var v=calm.vol/100; return v*v*0.9; }
+
+function calmNoise(kind,seconds){
+  var c=calm.ctx, n=Math.floor(c.sampleRate*seconds), buf=c.createBuffer(2,n,c.sampleRate);
+  for(var ch=0;ch<2;ch++){
+    var d=buf.getChannelData(ch), last=0, b0=0,b1=0,b2=0,b3=0,b4=0,b5=0,b6=0;
+    for(var i=0;i<n;i++){
+      var w=Math.random()*2-1;
+      if(kind==='brown'){ last=(last+0.02*w)/1.02; d[i]=last*3.5; }
+      else{ b0=.99886*b0+w*.0555179; b1=.99332*b1+w*.0750759; b2=.969*b2+w*.153852; b3=.8665*b3+w*.3104856;
+            b4=.55*b4+w*.5329522; b5=-.7616*b5-w*.016898; d[i]=(b0+b1+b2+b3+b4+b5+b6+w*.5362)*.11; b6=w*.115926; }
+    }
+    // short crossfade so the loop point has no click
+    var xf=Math.floor(c.sampleRate*0.05);
+    for(var k=0;k<xf;k++){ var a=k/xf; d[k]=d[k]*a+d[n-xf+k]*(1-a); }
+  }
+  return buf;
+}
+
+/* Each sound is a "session" with its own bus, nodes and timers,
+   so one can fade out while the next fades in. */
+function calmStartSession(kind){
+  var c=calm.ctx, t=c.currentTime, bus=c.createGain(), s={bus:bus,nodes:[],timers:[]};
+  bus.gain.value=0; bus.connect(calm.master);
+  bus.gain.setTargetAtTime(1,t,1.2);
+  function keep(n){ s.nodes.push(n); return n; }
+  function lfo(freq,depth,param,base){
+    if(base!=null) param.value=base;
+    var o=keep(c.createOscillator()), g=c.createGain(); o.frequency.value=freq; g.gain.value=depth;
+    o.connect(g); g.connect(param); o.start(); return o;
+  }
+
+  if(kind==='pads'){
+    // Slow, warm chords: Cmaj7 → Am9 → Fmaj7 → G6, about 11s each
+    var chords=[[130.81,164.81,196.00,246.94],[110.00,130.81,164.81,196.00,246.94],
+                [87.31,110.00,130.81,164.81],[98.00,123.47,146.83,164.81]];
+    var lp=c.createBiquadFilter(); lp.type='lowpass'; lp.Q.value=0.4;
+    var dry=c.createGain(); dry.gain.value=0.55;
+    lp.connect(dry); dry.connect(bus); lp.connect(calm.verb);
+    lfo(0.05,250,lp.frequency,900);
+    var idx=0, dur=11;
+    var chord=function(){
+      var now=c.currentTime;
+      chords[idx%chords.length].forEach(function(f,vi){
+        [0,1].forEach(function(k){
+          var o=c.createOscillator(), g=c.createGain();
+          o.type=k?'triangle':'sine'; o.frequency.value=f*(vi===0?1:2)*(k?1.004:0.998);
+          g.gain.value=0;
+          g.gain.setTargetAtTime(k?0.06:0.12,now,1.6);
+          g.gain.setTargetAtTime(0,now+dur-1,1.8);
+          o.connect(g); g.connect(lp); o.start(now); o.stop(now+dur+8);
+          s.nodes.push(o);
+          o.onended=function(){ var i=s.nodes.indexOf(o); if(i>-1) s.nodes.splice(i,1); try{ g.disconnect(); }catch(e){} };
+        });
+      });
+      idx++;
+    };
+    chord(); s.timers.push(setInterval(chord,(dur-2)*1000));
+  }
+  else if(kind==='ocean'){
+    var src=keep(c.createBufferSource()); src.buffer=calmNoise('brown',6); src.loop=true;
+    var f=c.createBiquadFilter(); f.type='lowpass'; f.Q.value=0.3;
+    var g=c.createGain();
+    src.connect(f); f.connect(g); g.connect(bus); g.connect(calm.verb);
+    lfo(0.085,0.38,g.gain,0.5);       // a swell about every 12 seconds
+    lfo(0.085,420,f.frequency,650);   // brighter at the crest
+    src.start();
+  }
+  else if(kind==='rain'){
+    var src2=keep(c.createBufferSource()); src2.buffer=calmNoise('pink',5); src2.loop=true;
+    var hp=c.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=500;
+    var lp2=c.createBiquadFilter(); lp2.type='lowpass'; lp2.frequency.value=5200;
+    var g2=c.createGain();
+    src2.connect(hp); hp.connect(lp2); lp2.connect(g2); g2.connect(bus);
+    lfo(0.13,0.1,g2.gain,0.8);
+    var src3=keep(c.createBufferSource()); src3.buffer=calmNoise('brown',6); src3.loop=true;   // low, distant bed
+    var g3=c.createGain(); g3.gain.value=0.35; src3.connect(g3); g3.connect(bus);
+    src2.start(); src3.start();
+  }
+  else{ // Deep hum: 136.1 Hz ("Om") with an octave below and a soft fifth
+    var lp3=c.createBiquadFilter(); lp3.type='lowpass'; lp3.frequency.value=700;
+    var g4=c.createGain();
+    lp3.connect(g4); g4.connect(bus); g4.connect(calm.verb);
+    [[136.1,0.22,'sine'],[68.05,0.18,'sine'],[204.15,0.05,'triangle'],[136.6,0.12,'sine']].forEach(function(v){
+      var o=keep(c.createOscillator()), og=c.createGain(); o.type=v[2]; o.frequency.value=v[0]; og.gain.value=v[1];
+      o.connect(og); og.connect(lp3); o.start();
+    });
+    lfo(0.07,0.12,g4.gain,0.42);
+  }
+  return s;
+}
+function calmStopSession(s,fade){
+  if(!s) return;
+  var c=calm.ctx; fade=fade||1.5;
+  s.timers.forEach(clearInterval);
+  try{ s.bus.gain.cancelScheduledValues(c.currentTime); s.bus.gain.setTargetAtTime(0,c.currentTime,fade/4); }catch(e){}
+  setTimeout(function(){
+    s.nodes.slice().forEach(function(n){ try{ n.stop(); }catch(e){} try{ n.disconnect(); }catch(e){} });
+    try{ s.bus.disconnect(); }catch(e){}
+  },fade*1000+300);
+}
+
+async function toggleCalm(){ if(calm.playing) stopCalm(); else await playCalm(); }
+async function playCalm(){
+  if(!calmInit()) return;
+  try{ await calm.ctx.resume(); }catch(e){}
+  clearTimeout(calm.fadeT); calm.fadeT=null;
+  calm.sess=calmStartSession(calm.sound);
+  calm.master.gain.cancelScheduledValues(calm.ctx.currentTime);
+  calm.master.gain.setTargetAtTime(calmLevel(),calm.ctx.currentTime,0.8);
+  calm.playing=true;
+  if(calm.timerMin) calmArmTimer();
+  calmBreathStart();
+  renderCalm();
+}
+function stopCalm(fade){
+  if(!calm.playing) return;
+  calm.playing=false;
+  calmStopSession(calm.sess,fade||1.5); calm.sess=null;
+  clearTimeout(calm.timer); clearTimeout(calm.fadeT); calm.timer=calm.fadeT=null; calm.ends=0;
+  calmBreathStop();
+  renderCalm();
+}
+function setCalmSound(k){
+  if(k===calm.sound) return;
+  calm.sound=k; calmSavePrefs();
+  if(calm.playing){ calmStopSession(calm.sess,2.5); calm.sess=calmStartSession(k); }
+  renderCalm();
+}
+function setCalmVolume(v){
+  calm.vol=+v; calmSavePrefs();
+  if(calm.ctx&&calm.playing) calm.master.gain.setTargetAtTime(calmLevel(),calm.ctx.currentTime,0.1);
+}
+function setCalmTimer(m){
+  calm.timerMin=+m;
+  clearTimeout(calm.timer); clearTimeout(calm.fadeT); calm.timer=calm.fadeT=null; calm.ends=0;
+  if(calm.playing&&calm.timerMin){
+    calm.master.gain.setTargetAtTime(calmLevel(),calm.ctx.currentTime,0.3);   // undo any fade already started
+    calmArmTimer();
+  }
+  renderCalm();
+}
+/* Fades out gently over the last 9 seconds, then stops */
+function calmArmTimer(){
+  clearTimeout(calm.timer); clearTimeout(calm.fadeT);
+  calm.ends=Date.now()+calm.timerMin*60000;
+  calm.timer=setTimeout(function(){
+    if(calm.ctx) calm.master.gain.setTargetAtTime(0,calm.ctx.currentTime,2.5);
+    calm.fadeT=setTimeout(function(){
+      stopCalm(0.5);
+      calm.timerMin=0; var t=document.getElementById('calm-timer'); if(t) t.value='0';
+      renderCalm();
+    },9000);
+  },Math.max(0,calm.timerMin*60000-9000));
+}
+
+/* Breathing guide: in 4 · hold 4 · out 6, the pattern from your Guide */
+function calmBreathStart(){
+  var box=document.getElementById('calm-breath'), orb=document.getElementById('calm-orb'), cue=document.getElementById('calm-cue');
+  if(!box||!orb||!cue) return;
+  calmBreathStop(); box.hidden=false;
+  var steps=[['in','Breathe in',4000],['hold','Hold',4000],['out','Breathe out',6000]], i=0;
+  var step=function(){
+    var st=steps[i%3]; orb.className='calm-orb '+st[0]; cue.textContent=st[1]; i++;
+    calm.breathT=setTimeout(step,st[2]);
+  };
+  // let the orb render small first so the first "in" grows
+  calm.breathT=setTimeout(step,60);
+}
+function calmBreathStop(){
+  clearTimeout(calm.breathT); calm.breathT=null;
+  var box=document.getElementById('calm-breath'), orb=document.getElementById('calm-orb');
+  if(orb) orb.className='calm-orb';
+  if(box) box.hidden=true;
+}
+
+function renderCalm(){
+  document.querySelectorAll('.calm-chip').forEach(function(b){
+    var on=b.getAttribute('data-s')===calm.sound; b.classList.toggle('on',on); b.setAttribute('aria-checked',on);
+  });
+  var p=document.getElementById('calm-play');
+  if(p){ p.innerHTML=calm.playing?'&#10074;&#10074; Pause':'&#9654; Play'; p.setAttribute('aria-pressed',calm.playing); }
+  var v=document.getElementById('calm-vol'); if(v&&+v.value!==calm.vol) v.value=calm.vol;
+  var st=document.getElementById('calm-state');
+  clearInterval(calm.tick); calm.tick=null;
+  if(!st) return;
+  var paint=function(){
+    if(!calm.playing){ st.textContent=''; st.className='calm-state'; return; }
+    st.className='calm-state on';
+    if(calm.ends){ var left=Math.max(1,Math.ceil((calm.ends-Date.now())/60000)); st.textContent='Playing \u00b7 '+left+' min left'; }
+    else st.textContent='Playing';
+  };
+  paint(); if(calm.playing&&calm.ends) calm.tick=setInterval(paint,15000);
 }
 
 /* ═══════════════════════════════════════════════════
