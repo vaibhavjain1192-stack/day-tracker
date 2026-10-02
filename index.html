@@ -496,37 +496,100 @@ body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:
 #lightbox.on{display:flex}
 #lightbox img{max-width:100%;max-height:100%;border-radius:var(--r)}
 /* SITUATION GUIDE */
-.gd-today{background:var(--gold-glow);border:1px solid rgba(201,168,76,.18);border-left:2px solid var(--gold);border-radius:0 var(--r) var(--r) 0;padding:10px 13px;margin-bottom:12px}
-.gd-today-l{font-family:var(--fm);font-size:8.5px;color:var(--gold);letter-spacing:.12em;text-transform:uppercase;margin-bottom:5px}
-.gd-today-s{font-size:12px;color:var(--text-1);line-height:1.45;font-weight:500}
-.gd-today-a{font-size:11.5px;color:var(--text-2);line-height:1.5;margin-top:3px}
-.gd-chips{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px}
-.gd-chip{padding:3px 10px;font-size:10.5px;border-radius:20px;border:1px solid var(--border);color:var(--text-3);background:transparent;cursor:pointer;font-family:var(--fb);transition:all var(--tr);white-space:nowrap}
+/* ── Guide ─────────────────────────────────────────────── */
+.gd-today{display:block;width:100%;text-align:left;font-family:var(--fb);background:var(--gold-glow);border:1px solid rgba(201,168,76,.18);border-left:2px solid var(--gold);border-radius:0 var(--r) var(--r) 0;padding:11px 14px;margin-bottom:14px;cursor:pointer;transition:border-color var(--tr)}
+.gd-today:hover{border-color:rgba(201,168,76,.4)}
+.gd-today-l{font-size:11px;color:var(--gold);margin-bottom:5px;font-weight:500}
+.gd-today-s{font-family:var(--fd);font-size:15px;color:var(--text-1);line-height:1.35;display:flex;gap:8px;align-items:flex-start}
+.gd-today-a{font-size:12.5px;color:var(--text-2);line-height:1.5;margin:5px 0 0 27px}
+.gd-today-go{font-size:11px;color:var(--text-3);margin:6px 0 0 27px}
+.gd-today:hover .gd-today-go{color:var(--gold)}
+
+.gd-bar{position:sticky;top:0;z-index:20;background:var(--bg);padding:8px 0 10px;margin:0 0 4px;border-bottom:1px solid var(--border)}
+.gd-search{position:relative;display:flex;align-items:center}
+.gd-search-ic{position:absolute;left:11px;color:var(--text-3);font-size:13px;pointer-events:none}
+.gd-search input{width:100%;background:var(--card);border:1px solid var(--border-md);border-radius:var(--r);padding:10px 64px 10px 32px;font-size:14px;color:var(--text-1);font-family:var(--fb);outline:none;transition:border-color var(--tr)}
+.gd-search input:focus{border-color:var(--gold)}
+.gd-search input::placeholder{color:var(--text-3)}
+.gd-key{position:absolute;right:10px;font-family:var(--fm);font-size:10px;color:var(--text-3);border:1px solid var(--border-md);border-radius:4px;padding:1px 6px}
+.gd-clear{position:absolute;right:6px;background:var(--surface);border:1px solid var(--border-md);color:var(--text-2);border-radius:var(--rsm);font-size:11px;padding:3px 8px;cursor:pointer;font-family:var(--fb)}
+.gd-clear:hover{color:var(--text-1)}
+.gd-chips{display:flex;gap:5px;flex-wrap:wrap;margin-top:9px}
+.gd-chip{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;font-size:11.5px;border-radius:20px;border:1px solid var(--border);color:var(--text-2);background:transparent;cursor:pointer;font-family:var(--fb);transition:color var(--tr),border-color var(--tr),background var(--tr);white-space:nowrap}
 .gd-chip:hover{color:var(--text-1);border-color:var(--border-md)}
-.gd-chip.on{background:var(--gold-dim);border-color:rgba(201,168,76,.4);color:var(--gold)}
-.gd-grp{margin-bottom:14px}
-.gd-grp-h{font-family:var(--fm);font-size:8.5px;color:var(--text-3);letter-spacing:.12em;text-transform:uppercase;margin:0 0 6px;display:flex;align-items:center;gap:7px}
-.gd-grp-h::after{content:'';flex:1;height:1px;background:var(--border)}
-.gd-item{border-bottom:1px solid var(--border)}
-.gd-item:last-child{border-bottom:none}
-.gd-row{display:flex;align-items:flex-start;gap:9px;padding:8px 0;cursor:pointer;width:100%;background:none;border:none;text-align:left;font-family:var(--fb)}
-.gd-row:hover .gd-s{color:var(--gold)}
-.gd-glyph{width:19px;height:19px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;margin-top:1px}
+.gd-chip.on{background:var(--gold-dim);border-color:rgba(201,168,76,.45);color:var(--gold)}
+.gd-chip.empty{opacity:.4}
+.gd-chip-n{font-family:var(--fm);font-size:10px;color:var(--text-3)}
+.gd-chip.on .gd-chip-n{color:var(--gold)}
+.gd-planets{display:flex;gap:4px;flex-wrap:wrap;align-items:center;margin-top:7px}
+.gd-planets-l{font-size:11px;color:var(--text-3);margin-right:3px}
+.gd-pl{display:inline-flex;align-items:center;gap:5px;padding:2px 9px 2px 3px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--text-2);font-size:11px;cursor:pointer;font-family:var(--fb);transition:border-color var(--tr),color var(--tr)}
+.gd-pl:hover{color:var(--text-1);border-color:var(--border-md)}
+.gd-pl.on{border-color:var(--gold);color:var(--text-1);background:var(--surface)}
+.gd-pl .gd-glyph{width:17px;height:17px;font-size:9px;margin:0}
+
+.gd-meta{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:12px 0 8px;flex-wrap:wrap}
+.gd-count{font-size:12px;color:var(--text-2)}
+.gd-count b{color:var(--text-1);font-weight:600}
+.gd-reset{background:none;border:none;color:var(--gold);font-size:12px;cursor:pointer;padding:0 0 0 6px;font-family:var(--fb)}
+.gd-tools{display:flex;gap:6px}
+
+.gd-grp{margin-bottom:18px}
+.gd-grp-h{font-family:var(--fd);font-size:1.05rem;font-weight:400;color:var(--text-1);margin:0 0 8px;display:flex;align-items:baseline;gap:8px}
+.gd-grp-h small{font-family:var(--fb);font-size:11px;color:var(--text-3)}
+.gd-grp-h::after{content:'';flex:1;height:1px;background:var(--border);align-self:center}
+
+.gd-item{background:var(--card);border:1px solid var(--border);border-radius:var(--r);margin-bottom:6px;transition:border-color var(--tr)}
+.gd-item:hover{border-color:var(--border-md)}
+.gd-item.open{border-color:var(--border-md)}
+.gd-item.starred{border-left:2px solid var(--gold)}
+.gd-item.flash{animation:gdFlash 1.4s ease}
+@keyframes gdFlash{0%,40%{border-color:var(--gold);box-shadow:0 0 0 3px var(--gold-dim)}100%{box-shadow:none}}
+.gd-top{display:flex;align-items:flex-start}
+.gd-row{display:flex;align-items:flex-start;gap:10px;padding:12px 4px 12px 12px;cursor:pointer;flex:1;min-width:0;background:none;border:none;text-align:left;font-family:var(--fb);color:inherit;border-radius:var(--r)}
+.gd-row:focus-visible,.gd-star:focus-visible,.gd-chip:focus-visible,.gd-pl:focus-visible,.gd-today:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.gd-glyph{width:20px;height:20px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;margin-top:2px}
 .gd-txt{flex:1;min-width:0}
-.gd-s{font-size:12px;color:var(--text-1);line-height:1.45;transition:color var(--tr)}
-.gd-a{font-size:11.5px;color:var(--text-2);line-height:1.5;margin-top:2px}
-.gd-star{background:none;border:none;color:var(--text-3);cursor:pointer;font-size:12px;padding:2px 3px;flex-shrink:0;transition:color var(--tr)}
-.gd-star.on{color:var(--gold)}
-.gd-chev{color:var(--text-3);font-size:9px;flex-shrink:0;margin-top:4px;transition:transform var(--tr)}
+.gd-s{font-family:var(--fd);font-size:15.5px;color:var(--text-1);line-height:1.35}
+.gd-do{display:flex;gap:8px;margin-top:8px;padding:7px 10px;background:var(--surface);border-radius:var(--rsm);border-left:2px solid var(--gold)}
+.gd-do-l{font-size:11px;font-weight:600;color:var(--gold);flex-shrink:0;padding-top:1px}
+.gd-a{font-size:13px;color:var(--text-1);line-height:1.5}
+.gd-more{display:inline-block;font-size:11px;color:var(--text-3);margin-top:7px}
+.gd-row:hover .gd-more{color:var(--text-2)}
+.gd-chev{display:inline-block;transition:transform var(--tr)}
 .gd-item.open .gd-chev{transform:rotate(180deg)}
-.gd-detail{display:none;padding:0 0 10px 28px}
+.gd-star{background:none;border:none;color:var(--text-3);cursor:pointer;font-size:17px;line-height:1;padding:12px 12px 8px 8px;flex-shrink:0;transition:color var(--tr),transform var(--tr)}
+.gd-star:hover{color:var(--gold)}
+.gd-star.on{color:var(--gold)}
+.gd-star.busy{opacity:.5;pointer-events:none}
+.gd-detail{display:none;padding:2px 14px 12px 42px}
 .gd-item.open .gd-detail{display:block}
-.gd-d-l{font-family:var(--fm);font-size:8px;color:var(--text-3);letter-spacing:.11em;text-transform:uppercase;margin-bottom:3px}
-.gd-d-t{font-size:11.5px;color:var(--text-2);line-height:1.6;margin-bottom:8px}
-.gd-d-t:last-child{margin-bottom:0}
-.gd-d-astro{font-size:11.5px;color:var(--text-2);line-height:1.6;padding-left:9px;border-left:2px solid var(--border-md)}
-.gd-acts{display:flex;gap:4px;margin-top:9px}
-.gd-count{font-family:var(--fm);font-size:10px;color:var(--text-3);margin-bottom:8px}
+.gd-d-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding-top:10px;border-top:1px solid var(--border)}
+.gd-d-grid.one{grid-template-columns:1fr}
+.gd-d-l{font-size:11px;font-weight:600;color:var(--text-2);margin-bottom:4px}
+.gd-d-t{font-size:12.5px;color:var(--text-2);line-height:1.6}
+.gd-d-astro{font-size:12.5px;color:var(--text-2);line-height:1.6;font-style:italic}
+.gd-foot{display:flex;justify-content:space-between;align-items:center;margin-top:10px}
+.gd-tagline{font-size:11px;color:var(--text-3)}
+.gd-acts{display:flex;gap:4px}
+.gd-item mark{background:rgba(201,168,76,.28);color:var(--text-1);border-radius:2px;padding:0 1px}
+.gd-empty{text-align:center;padding:2rem 1rem;color:var(--text-2);font-size:13px;background:var(--card);border:1px dashed var(--border-md);border-radius:var(--r)}
+.gd-empty .btn{margin-top:10px}
+.gd-add{margin-top:1.5rem}
+.gd-add>summary{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:500;color:var(--text-2);padding:8px 12px;border:1px dashed var(--border-md);border-radius:var(--r);user-select:none}
+.gd-add>summary::-webkit-details-marker{display:none}
+.gd-add>summary:hover{color:var(--gold);border-color:rgba(201,168,76,.4)}
+.gd-add[open]>summary{margin-bottom:10px}
+@media(max-width:640px){
+  .gd-chips,.gd-planets{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;margin-right:-1rem;padding-right:1rem}
+  .gd-chips::-webkit-scrollbar,.gd-planets::-webkit-scrollbar{display:none}
+  .gd-planets-l{flex-shrink:0}
+  .gd-d-grid{grid-template-columns:1fr}
+  .gd-detail{padding-left:14px}
+  .gd-key{display:none}
+  .gd-s{font-size:14.5px}
+}
+@media(prefers-reduced-motion:reduce){.gd-item.flash{animation:none}.gd-chev{transition:none}}
 /* POSTS: Pinned / All + emotion */
 .pst-tabs{display:flex;gap:6px;margin-bottom:12px;border-bottom:1px solid var(--border)}
 .pst-tab{padding:8px 14px 9px;font-size:12px;font-weight:600;font-family:var(--fb);color:var(--text-3);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;transition:all var(--tr);margin-bottom:-1px;display:flex;align-items:center;gap:6px}
@@ -1048,17 +1111,30 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
 <div class="pg" id="pg-guide">
   <div class="past-hdr">
     <div class="past-title">When this happens…</div>
-    <div class="past-sub">What to do, why it works, and the reading behind it.</div>
+    <div class="past-sub">Find the situation you're in, see what to do. Tap any entry for why it works and the reading behind it.</div>
   </div>
 
-  <div class="gd-today" id="gd-today"></div>
+  <button class="gd-today" id="gd-today" type="button" style="display:none"></button>
 
-  <div class="th-filter-bar" style="margin-bottom:10px">
-    <input class="psearch" id="gd-search" type="text" placeholder="Search situations..." oninput="renderGuide()" style="flex:1">
-    <button class="btn" onclick="exportGuideCSV()">CSV</button>
+  <div class="gd-bar">
+    <div class="gd-search">
+      <span class="gd-search-ic" aria-hidden="true">&#9906;</span>
+      <input id="gd-search" type="search" autocomplete="off" placeholder="Search: boss, anger, money, Saturn…" aria-label="Search the guide"
+             oninput="renderGuide()" onkeydown="if(event.key==='Escape'){clearGdSearch();this.blur();}">
+      <span class="gd-key" id="gd-key" title="Press / to search">/</span>
+      <button class="gd-clear" id="gd-clear" type="button" onclick="clearGdSearch()" style="display:none">Clear</button>
+    </div>
+    <div class="gd-chips" id="gd-chips" role="group" aria-label="Category"></div>
+    <div class="gd-planets" id="gd-planets" role="group" aria-label="Planet"></div>
   </div>
-  <div class="gd-chips" id="gd-chips"></div>
-  <div class="gd-count" id="gd-count"></div>
+
+  <div class="gd-meta">
+    <div class="gd-count" id="gd-count"></div>
+    <div class="gd-tools">
+      <button class="btn" id="gd-expand" type="button" onclick="toggleGdAll()">Expand all</button>
+      <button class="btn" type="button" onclick="exportGuideCSV()">Export CSV</button>
+    </div>
+  </div>
   <div id="gd-list"></div>
 
   <div id="gd-import" style="display:none;margin-top:12px">
@@ -1066,20 +1142,22 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
     <div style="font-size:10.5px;color:var(--text-3);margin-top:6px;line-height:1.6">Loads the full guide into your Sheet once. After that everything is read from there.</div>
   </div>
 
-  <div class="lbl" style="margin-top:1.5rem">Add a situation <span class="lbl-line"></span></div>
-  <div class="sit-block">
-    <div class="th-add-grid">
-      <div><label class="sfl">Category</label><input class="sin" id="gd-cat" type="text" list="gd-cats" placeholder="e.g. Anger"><datalist id="gd-cats"></datalist></div>
-      <div><label class="sfl">Planet</label><select class="sin" id="gd-planet">
-        <option value="">—</option><option>Sun</option><option>Moon</option><option>Mars</option><option>Mercury</option>
-        <option>Jupiter</option><option>Venus</option><option>Saturn</option><option>Rahu</option><option>Ketu</option></select></div>
-      <div class="th-field-full"><label class="sfl">When this happens</label><input class="sin" id="gd-sit" type="text" placeholder="The situation"></div>
-      <div class="th-field-full"><label class="sfl">Do this</label><textarea class="sin" id="gd-act" rows="2" placeholder="The action to take"></textarea></div>
-      <div class="th-field-full"><label class="sfl">Why it works</label><textarea class="sin" id="gd-why" rows="2" placeholder="The reasoning"></textarea></div>
-      <div class="th-field-full"><label class="sfl">The reading <span style="color:var(--text-3);font-weight:400">(optional)</span></label><textarea class="sin" id="gd-astro" rows="2" placeholder="Astrological context"></textarea></div>
+  <details class="gd-add" id="gd-add">
+    <summary>+ Add a situation</summary>
+    <div class="sit-block">
+      <div class="th-add-grid">
+        <div><label class="sfl">Category</label><input class="sin" id="gd-cat" type="text" list="gd-cats" placeholder="e.g. Anger"><datalist id="gd-cats"></datalist></div>
+        <div><label class="sfl">Planet</label><select class="sin" id="gd-planet">
+          <option value="">—</option><option>Sun</option><option>Moon</option><option>Mars</option><option>Mercury</option>
+          <option>Jupiter</option><option>Venus</option><option>Saturn</option><option>Rahu</option><option>Ketu</option></select></div>
+        <div class="th-field-full"><label class="sfl">When this happens</label><input class="sin" id="gd-sit" type="text" placeholder="The situation"></div>
+        <div class="th-field-full"><label class="sfl">Do this</label><textarea class="sin" id="gd-act" rows="2" placeholder="The action to take"></textarea></div>
+        <div class="th-field-full"><label class="sfl">Why it works</label><textarea class="sin" id="gd-why" rows="2" placeholder="The reasoning"></textarea></div>
+        <div class="th-field-full"><label class="sfl">The reading <span style="color:var(--text-3);font-weight:400">(optional)</span></label><textarea class="sin" id="gd-astro" rows="2" placeholder="Astrological context"></textarea></div>
+      </div>
+      <div class="sit-foot"><span class="sync-txt" id="gd-sync">Ready</span><button class="btn gold" onclick="addGuide()">Add situation &#8599;</button></div>
     </div>
-    <div class="sit-foot"><span class="sync-txt" id="gd-sync">Ready</span><button class="btn gold" onclick="addGuide()">Add &#8599;</button></div>
-  </div>
+  </details>
 
   <div class="foot" style="margin-top:1.5rem"><span class="foot-note">Synced to Google Sheets</span><button class="btn" onclick="switchTab('morning')">&#8592; Morning</button></div>
 </div><!-- /pg-guide -->
@@ -3632,31 +3710,82 @@ function replaceDailyFocusFromSheet(rows){
 /* ═══════════════════════════════════════════════════
    SITUATION GUIDE — read from the Sheet
 
-   Rows are [category, planet, situation, action, why, astro].
-   Stars are a per-device preference and stay in localStorage;
-   everything else comes from the Guide sheet.
+   Everything, stars included, lives in the Guide sheet.
+   Starred is column J, written by action=star_guide.
 ═══════════════════════════════════════════════════ */
 var guide=[];
-var gdCat='All', gdOpen=null;
-var gdStars=new Set();
-try{ var _gs=localStorage.getItem('guide_stars'); if(_gs) gdStars=new Set(JSON.parse(_gs)); }catch(e){}
+var gdCat='All', gdPlanet='';
+var gdOpen=new Set();          // ids whose details are expanded
+var gdStarBusy=new Set();      // ids with a star write in flight
 
 var GD_PLANETS={
   Sun:['\u2609','#D9701A'], Moon:['\u263D','#5B7FA6'], Mars:['\u2642','#C8413B'],
   Mercury:['\u263F','#2F8A52'], Jupiter:['\u2643','#B8890F'], Venus:['\u2640','#C0507F'],
   Saturn:['\u2644','#34507F'], Rahu:['\u260A','#5E6670'], Ketu:['\u260B','#8A6A4F']
 };
+var GD_PLANET_ORDER=['Sun','Moon','Mars','Mercury','Jupiter','Venus','Saturn','Rahu','Ketu'];
 
 function gdGlyph(p){
   var g=GD_PLANETS[p]||['\u2726','#5C5A64'];
   return '<span class="gd-glyph" style="background:'+g[1]+'" title="'+escH(p||'')+'">'+g[0]+'\uFE0E</span>';
 }
-function saveGdStars(){ try{ localStorage.setItem('guide_stars',JSON.stringify([...gdStars])); }catch(e){} }
+function gdById(id){ return guide.find(function(x){ return x.sheetId===id; }); }
+function gdStarCount(){ return guide.filter(function(g){ return g.starred; }).length; }
 
 function gdCats(){
   var seen=[];
   guide.forEach(function(g){ if(g.category && seen.indexOf(g.category)===-1) seen.push(g.category); });
-  return ['All','Starred'].concat(seen);
+  return seen;
+}
+
+/* ── Search ──
+   Every word must appear somewhere in the entry (any order, any field),
+   so "boss angry" finds entries that mention both. */
+function gdTerms(){
+  var el=document.getElementById('gd-search');
+  var q=(el&&el.value||'').toLowerCase().trim();
+  return q ? q.split(/\s+/).filter(Boolean) : [];
+}
+function gdHay(g){
+  return [g.situation,g.action,g.why,g.astro,g.category,g.planet].join(' \u0001 ').toLowerCase();
+}
+var gdLoose=false;   // true when no entry has every word, so any word counts
+function gdMatches(g,terms){
+  if(!terms.length) return true;
+  var h=gdHay(g);
+  var hit=function(t){ return h.indexOf(t)!==-1; };
+  return gdLoose ? terms.some(hit) : terms.every(hit);
+}
+/* True when a term only shows up in the hidden details, so the entry
+   opens itself and the reason it matched is visible. */
+function gdMatchHidden(g,terms){
+  if(!terms.length) return false;
+  var vis=[g.situation,g.action,g.category,g.planet].join(' ').toLowerCase();
+  var hid=[g.why,g.astro].join(' ').toLowerCase();
+  return terms.some(function(t){ return vis.indexOf(t)===-1 && hid.indexOf(t)!==-1; });
+}
+function gdRx(terms){
+  if(!terms.length) return null;
+  var parts=terms.slice().sort(function(a,b){ return b.length-a.length; })
+    .map(function(t){ return t.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); });
+  return new RegExp('('+parts.join('|')+')','gi');
+}
+/* Escape first per piece, then wrap matches — never highlight inside an entity */
+function gdHL(text,rx){
+  text=String(text||'');
+  if(!rx) return escH(text);
+  return text.split(rx).map(function(piece,i){
+    return i%2 ? '<mark>'+escH(piece)+'</mark>' : escH(piece);
+  }).join('');
+}
+
+function gdPassesFilters(g,terms,ignoreCat){
+  if(!ignoreCat){
+    if(gdCat==='Starred'){ if(!g.starred) return false; }
+    else if(gdCat!=='All' && g.category!==gdCat) return false;
+  }
+  if(gdPlanet && g.planet!==gdPlanet) return false;
+  return gdMatches(g,terms);
 }
 
 function renderGuide(){
@@ -3664,37 +3793,74 @@ function renderGuide(){
   var imp=document.getElementById('gd-import');
   if(imp) imp.style.display = guide.length ? 'none' : 'block';
 
-  // category chips
+  var terms=gdTerms(), rx=gdRx(terms);
+  gdLoose=false;
+  if(terms.length>1 && !guide.some(function(g){ return gdPassesFilters(g,terms,false); })) gdLoose=true;
+  var clr=document.getElementById('gd-clear'), key=document.getElementById('gd-key');
+  if(clr) clr.style.display=terms.length?'':'none';
+  if(key) key.style.display=terms.length?'none':'';
+
+  // Chip counts reflect the search and planet filter, so you can see
+  // which categories hold the results before clicking.
+  var base=guide.filter(function(g){ return gdPassesFilters(g,terms,true); });
   var chipsEl=document.getElementById('gd-chips');
   if(chipsEl){
-    chipsEl.innerHTML=gdCats().map(function(k){
-      var label = k==='Starred' ? '\u2605 Starred' : escH(k);
-      return '<button class="gd-chip'+(k===gdCat?' on':'')+'" onclick="setGdCat(\''+escH(k).replace(/'/g,"\\'")+'\')">'+label+'</button>';
+    var chips=[['All',base.length,'All'],['Starred',base.filter(function(g){return g.starred;}).length,'\u2605 Starred']]
+      .concat(gdCats().map(function(k){
+        return [k,base.filter(function(g){ return g.category===k; }).length,escH(k)];
+      }));
+    chipsEl.innerHTML=chips.map(function(c){
+      var on=c[0]===gdCat;
+      return '<button type="button" class="gd-chip'+(on?' on':'')+(c[1]||on?'':' empty')+'" aria-pressed="'+on+'" '+
+        'onclick="setGdCat(\''+escH(c[0]).replace(/'/g,"\\'")+'\')">'+c[2]+' <span class="gd-chip-n">'+c[1]+'</span></button>';
     }).join('');
   }
-  // the datalist of existing categories, for the add form
-  var dl=document.getElementById('gd-cats');
-  if(dl) dl.innerHTML=gdCats().slice(2).map(function(k){ return '<option value="'+escH(k)+'">'; }).join('');
 
-  var q=(document.getElementById('gd-search').value||'').toLowerCase().trim();
-  var items=guide.filter(function(g){
-    if(gdCat==='Starred'){ if(!gdStars.has(g.sheetId)) return false; }
-    else if(gdCat!=='All' && g.category!==gdCat) return false;
-    if(q && ((g.situation||'')+(g.action||'')+(g.why||'')+(g.astro||'')+(g.category||'')).toLowerCase().indexOf(q)===-1) return false;
-    return true;
-  });
+  // Planet filter — only planets that are actually used
+  var plEl=document.getElementById('gd-planets');
+  if(plEl){
+    var used=GD_PLANET_ORDER.filter(function(p){ return guide.some(function(g){ return g.planet===p; }); });
+    plEl.style.display=used.length?'':'none';
+    plEl.innerHTML='<span class="gd-planets-l">Planet</span>'+used.map(function(p){
+      var on=gdPlanet===p;
+      return '<button type="button" class="gd-pl'+(on?' on':'')+'" aria-pressed="'+on+'" onclick="setGdPlanet(\''+p+'\')">'+gdGlyph(p)+p+'</button>';
+    }).join('');
+  }
+
+  // Categories for the add form
+  var dl=document.getElementById('gd-cats');
+  if(dl) dl.innerHTML=gdCats().map(function(k){ return '<option value="'+escH(k)+'">'; }).join('');
+
+  var items=guide.filter(function(g){ return gdPassesFilters(g,terms,false); });
+  var filtered = terms.length || gdCat!=='All' || gdPlanet;
 
   var cnt=document.getElementById('gd-count');
-  if(cnt) cnt.textContent=items.length+' of '+guide.length+' situation'+(guide.length!==1?'s':'');
+  if(cnt){
+    cnt.innerHTML = filtered
+      ? (gdLoose&&items.length?'No entry has all those words. ':'')+'Showing <b>'+items.length+'</b> of '+guide.length+(gdLoose&&items.length?' with any of them':'')+'<button type="button" class="gd-reset" onclick="resetGdFilters()">Show all</button>'
+      : '<b>'+guide.length+'</b> situation'+(guide.length!==1?'s':'')+(gdStarCount()?' \u00b7 '+gdStarCount()+' starred':'');
+  }
+
+  var expBtn=document.getElementById('gd-expand');
+  var allOpen=items.length && items.every(function(g){ return gdOpen.has(g.sheetId) || gdMatchHidden(g,terms); });
+  if(expBtn){ expBtn.textContent=allOpen?'Collapse all':'Expand all'; expBtn.style.display=items.length?'':'none'; }
 
   if(!items.length){
-    listEl.innerHTML='<div class="sit-empty" style="font-size:12px">'+
-      (guide.length?'Nothing matches that.':'Nothing here yet \u2014 import the guide or add your first situation below.')+'</div>';
+    if(!guide.length){
+      listEl.innerHTML='<div class="gd-empty">Your guide is empty. Import the starter set above, or add your first situation below.</div>';
+    }else if(gdCat==='Starred' && !terms.length && !gdPlanet){
+      listEl.innerHTML='<div class="gd-empty">No starred situations yet. Tap \u2606 on any entry to keep it here \u2014 starred entries also feed Today\u2019s reminder.'+
+        '<br><button class="btn" type="button" onclick="resetGdFilters()">Browse all situations</button></div>';
+    }else{
+      listEl.innerHTML='<div class="gd-empty">Nothing matches'+(terms.length?' \u201c'+escH(terms.join(' '))+'\u201d':'')+
+        (gdCat!=='All'||gdPlanet?' with these filters':'')+'. Try fewer words, or clear the filters.'+
+        '<br><button class="btn" type="button" onclick="resetGdFilters()">Clear search and filters</button></div>';
+    }
     renderGdToday();
     return;
   }
 
-  // group by category, preserving order
+  // Group by category, preserving sheet order
   var groups={}, order=[];
   items.forEach(function(g){
     var k=g.category||'Other';
@@ -3703,61 +3869,155 @@ function renderGuide(){
   });
 
   listEl.innerHTML=order.map(function(k){
-    return '<div class="gd-grp"><h3 class="gd-grp-h">'+escH(k)+'</h3>'+
-      groups[k].map(function(g){
-        var open=gdOpen===g.sheetId;
-        var starred=gdStars.has(g.sheetId);
-        return '<div class="gd-item'+(open?' open':'')+'">'+
-          '<div style="display:flex;align-items:flex-start">'+
-            '<button class="gd-row" onclick="toggleGd(\''+g.sheetId+'\')">'+
-              gdGlyph(g.planet)+
-              '<span class="gd-txt"><span class="gd-s">'+escH(g.situation)+'</span>'+
-                '<span class="gd-a">'+escH(g.action)+'</span></span>'+
-              '<span class="gd-chev">\u25BE</span>'+
-            '</button>'+
-            '<button class="gd-star'+(starred?' on':'')+'" onclick="toggleGdStar(\''+g.sheetId+'\')" title="Star">'+(starred?'\u2605':'\u2606')+'</button>'+
-          '</div>'+
-          '<div class="gd-detail">'+
-            (g.why?'<div class="gd-d-l">Why it works</div><div class="gd-d-t">'+escH(g.why)+'</div>':'')+
-            (g.astro?'<div class="gd-d-l">The reading</div><div class="gd-d-astro">'+escH(g.astro)+'</div>':'')+
-            '<div class="gd-acts">'+
-              '<button class="rt-mini" onclick="editGuide(\''+g.sheetId+'\')" title="Edit">\u270e</button>'+
-              '<button class="rt-mini del" onclick="delGuide(\''+g.sheetId+'\')" title="Delete">\u00d7</button>'+
-            '</div>'+
-          '</div>'+
-        '</div>';
-      }).join('')+'</div>';
+    return '<section class="gd-grp"><h3 class="gd-grp-h">'+escH(k)+' <small>'+groups[k].length+'</small></h3>'+
+      groups[k].map(function(g){ return gdItemHTML(g,terms,rx); }).join('')+'</section>';
   }).join('');
 
   renderGdToday();
 }
 
-/* One situation surfaced each day, rotating by date so it differs
-   day to day but stays the same all of today. */
-function renderGdToday(){
-  var el=document.getElementById('gd-today'); if(!el) return;
-  if(!guide.length){ el.style.display='none'; return; }
-  el.style.display='block';
-  var pool = gdStars.size ? guide.filter(function(g){ return gdStars.has(g.sheetId); }) : guide;
-  if(!pool.length) pool=guide;
-  var day=Math.floor(Date.now()/864e5);
-  var g=pool[day%pool.length];
-  el.innerHTML='<div class="gd-today-l">Today\u2019s reminder'+(gdStars.size?' \u00b7 from your starred':'')+'</div>'+
-    '<div class="gd-today-s">'+gdGlyph(g.planet)+' '+escH(g.situation)+'</div>'+
-    '<div class="gd-today-a">'+escH(g.action)+'</div>';
+function gdItemHTML(g,terms,rx){
+  var id=g.sheetId;
+  var open=gdOpen.has(id) || gdMatchHidden(g,terms);
+  var hasDetail=!!(g.why||g.astro);
+  var busy=gdStarBusy.has(id);
+  var detail='';
+  if(hasDetail){
+    detail='<div class="gd-d-grid'+(g.why&&g.astro?'':' one')+'">'+
+      (g.why?'<div><div class="gd-d-l">Why it works</div><div class="gd-d-t">'+gdHL(g.why,rx)+'</div></div>':'')+
+      (g.astro?'<div><div class="gd-d-l">The reading</div><div class="gd-d-astro">'+gdHL(g.astro,rx)+'</div></div>':'')+
+    '</div>';
+  }
+  return '<article class="gd-item'+(open?' open':'')+(g.starred?' starred':'')+'" id="gd-i-'+id+'">'+
+    '<div class="gd-top">'+
+      '<button type="button" class="gd-row" aria-expanded="'+open+'" onclick="toggleGd(\''+id+'\')">'+
+        gdGlyph(g.planet)+
+        '<span class="gd-txt">'+
+          '<span class="gd-s">'+gdHL(g.situation,rx)+'</span>'+
+          '<span class="gd-do"><span class="gd-do-l">Do</span><span class="gd-a">'+gdHL(g.action,rx)+'</span></span>'+
+          '<span class="gd-more">'+(open?'Hide':(hasDetail?'Why it works & the reading':'Details'))+' <span class="gd-chev">\u25BE</span></span>'+
+        '</span>'+
+      '</button>'+
+      '<button type="button" class="gd-star'+(g.starred?' on':'')+(busy?' busy':'')+'" onclick="toggleGdStar(\''+id+'\')" '+
+        'aria-pressed="'+!!g.starred+'" title="'+(g.starred?'Unstar':'Star')+'" aria-label="'+(g.starred?'Unstar':'Star')+' this situation">'+
+        (g.starred?'\u2605':'\u2606')+'</button>'+
+    '</div>'+
+    '<div class="gd-detail">'+detail+
+      '<div class="gd-foot"><span class="gd-tagline">'+escH(g.category||'Other')+(g.planet?', '+escH(g.planet):'')+'</span>'+
+        '<span class="gd-acts">'+
+          '<button class="rt-mini" onclick="editGuide(\''+id+'\')" title="Edit">\u270e</button>'+
+          '<button class="rt-mini del" onclick="delGuide(\''+id+'\')" title="Delete">\u00d7</button>'+
+        '</span></div>'+
+    '</div>'+
+  '</article>';
 }
 
-function setGdCat(k){ gdCat=k; gdOpen=null; renderGuide(); }
-function toggleGd(id){ gdOpen = gdOpen===id ? null : id; renderGuide(); }
-function toggleGdStar(id){
-  if(gdStars.has(id)) gdStars.delete(id); else gdStars.add(id);
-  saveGdStars(); renderGuide();
+/* One situation surfaced each day, rotating by date so it differs
+   day to day but stays the same all of today. Starred first. */
+function gdTodayPick(){
+  if(!guide.length) return null;
+  var st=guide.filter(function(g){ return g.starred; });
+  var pool=st.length?st:guide;
+  return pool[Math.floor(Date.now()/864e5)%pool.length];
+}
+function renderGdToday(){
+  var el=document.getElementById('gd-today'); if(!el) return;
+  var g=gdTodayPick();
+  if(!g){ el.style.display='none'; return; }
+  el.style.display='block';
+  el.onclick=function(){ showGdItem(g.sheetId); };
+  el.innerHTML='<div class="gd-today-l">Today\u2019s reminder'+(gdStarCount()?', from your starred':'')+'</div>'+
+    '<div class="gd-today-s">'+gdGlyph(g.planet)+'<span>'+escH(g.situation)+'</span></div>'+
+    '<div class="gd-today-a">'+escH(g.action)+'</div>'+
+    '<div class="gd-today-go">Open in the guide \u2193</div>';
+}
+
+/* Jump to one entry: clear anything that could hide it, open it, scroll. */
+function showGdItem(id){
+  var s=document.getElementById('gd-search'); if(s) s.value='';
+  gdCat='All'; gdPlanet=''; gdOpen.add(id);
+  renderGuide();
+  var el=document.getElementById('gd-i-'+id);
+  if(el){
+    el.scrollIntoView({behavior:'smooth',block:'center'});
+    el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash');
+  }
+}
+
+function setGdCat(k){ gdCat=k; renderGuide(); }
+function setGdPlanet(p){ gdPlanet = gdPlanet===p ? '' : p; renderGuide(); }
+function clearGdSearch(){ var s=document.getElementById('gd-search'); if(s){ s.value=''; s.focus(); } renderGuide(); }
+function resetGdFilters(){ var s=document.getElementById('gd-search'); if(s) s.value=''; gdCat='All'; gdPlanet=''; renderGuide(); }
+function toggleGd(id){ if(gdOpen.has(id)) gdOpen.delete(id); else gdOpen.add(id); renderGuide(); }
+function toggleGdAll(){
+  var terms=gdTerms();
+  var items=guide.filter(function(g){ return gdPassesFilters(g,terms,false); });
+  var allOpen=items.every(function(g){ return gdOpen.has(g.sheetId); });
+  if(allOpen) items.forEach(function(g){ gdOpen.delete(g.sheetId); });
+  else items.forEach(function(g){ gdOpen.add(g.sheetId); });
+  renderGuide();
+}
+
+/* "/" jumps to the search box while the Guide tab is showing */
+document.addEventListener('keydown',function(e){
+  if(e.key!=='/' || e.ctrlKey || e.metaKey || e.altKey) return;
+  var pg=document.getElementById('pg-guide'); if(!pg || !pg.classList.contains('on')) return;
+  var t=e.target, tag=(t&&t.tagName||'').toLowerCase();
+  if(tag==='input'||tag==='textarea'||tag==='select'||(t&&t.isContentEditable)) return;
+  e.preventDefault();
+  var s=document.getElementById('gd-search'); if(s){ s.focus(); s.select(); }
+});
+
+/* Star / unstar — saved to the Guide sheet (column J).
+   Optimistic: the star flips at once, and flips back if the write fails. */
+async function toggleGdStar(id){
+  var g=gdById(id); if(!g || gdStarBusy.has(id)) return;
+  var next=!g.starred;
+  g.starred=next; gdStarBusy.add(id); renderGuide();
+  var ok=await postToSheet({sheet:'Guide',action:'star_guide',sheetId:id,starred:next?'yes':'no'});
+  gdStarBusy.delete(id);
+  var cur=gdById(id);
+  if(!ok && cur){
+    cur.starred=!next;
+    showToast('Couldn\u2019t save the star to the Sheet. Check your connection and try again.','error');
+  }
+  renderGuide();
+}
+
+/* One-time move of stars that were saved on this device before stars
+   moved to the Sheet. Runs after the first Sheet load, then deletes
+   the old localStorage key so it never runs again. */
+var gdLegacyMoving=false;
+async function migrateLegacyGdStars(){
+  if(gdLegacyMoving) return;
+  var raw=null;
+  try{ raw=localStorage.getItem('guide_stars'); }catch(e){ return; }
+  if(!raw) return;
+  var ids=[];
+  try{ ids=JSON.parse(raw)||[]; }catch(e){ ids=[]; }
+  var todo=ids.map(gdById).filter(function(g){ return g && !g.starred; });
+  if(!todo.length){ try{ localStorage.removeItem('guide_stars'); }catch(e){} return; }
+  gdLegacyMoving=true;
+  var failed=0;
+  for(var i=0;i<todo.length;i++){
+    todo[i].starred=true;
+    var ok=await postToSheet({sheet:'Guide',action:'star_guide',sheetId:todo[i].sheetId,starred:'yes'});
+    if(!ok) failed++;
+  }
+  gdLegacyMoving=false;
+  renderGuide();
+  if(!failed){
+    try{ localStorage.removeItem('guide_stars'); }catch(e){}
+    showToast(todo.length+' starred situation'+(todo.length!==1?'s':'')+' moved to your Sheet \u2713','success');
+  }else{
+    showToast(failed+' star'+(failed!==1?'s':'')+' couldn\u2019t be saved to the Sheet. They\u2019ll retry next time you open the dashboard.','error');
+  }
 }
 
 async function addGuide(){
   var sit=document.getElementById('gd-sit').value.trim();
   var act=document.getElementById('gd-act').value.trim();
-  if(!sit||!act){ showToast('A situation and an action are needed.','error'); return; }
+  if(!sit||!act){ showToast('Fill in both \u201cWhen this happens\u201d and \u201cDo this\u201d.','error'); return; }
   var id='g'+Date.now();
   var rec={sheetId:id,
     category:document.getElementById('gd-cat').value.trim()||'Other',
@@ -3765,19 +4025,20 @@ async function addGuide(){
     situation:sit, action:act,
     why:document.getElementById('gd-why').value.trim(),
     astro:document.getElementById('gd-astro').value.trim(),
-    order:guide.length};
+    order:guide.length, starred:false};
   guide.push(rec);
   ['gd-sit','gd-act','gd-why','gd-astro'].forEach(function(x){ document.getElementById(x).value=''; });
   renderGuide();
   var sy=document.getElementById('gd-sync');
-  if(sy){ sy.textContent='Syncing\u2026'; sy.className='sync-txt syncing'; }
+  if(sy){ sy.textContent='Saving\u2026'; sy.className='sync-txt syncing'; }
   var ok=await postToSheet({sheet:'Guide',sheetId:id,category:rec.category,planet:rec.planet,
-    situation:rec.situation,action_text:rec.action,why:rec.why,astro:rec.astro,order:rec.order});
-  if(sy){ sy.textContent=ok?'Saved to Sheet \u2713':'Sheet sync failed'; sy.className='sync-txt '+(ok?'ok':'err'); }
+    situation:rec.situation,action_text:rec.action,why:rec.why,astro:rec.astro,order:rec.order,starred:'no'});
+  if(sy){ sy.textContent=ok?'Saved to Sheet \u2713':'Couldn\u2019t save to Sheet'; sy.className='sync-txt '+(ok?'ok':'err'); }
+  if(ok) showGdItem(id);
 }
 
 function editGuide(id){
-  var g=guide.find(function(x){ return x.sheetId===id; }); if(!g) return;
+  var g=gdById(id); if(!g) return;
   var planets=['','Sun','Moon','Mars','Mercury','Jupiter','Venus','Saturn','Rahu','Ketu'];
   var html='<div style="margin-bottom:9px"><label class="sfl">Category</label>'+
       '<input class="sin" id="eg-cat" type="text" value="'+escH(g.category||'')+'"></div>'+
@@ -3795,10 +4056,10 @@ function editGuide(id){
 }
 
 async function delGuide(id){
-  var g=guide.find(function(x){ return x.sheetId===id; }); if(!g) return;
+  var g=gdById(id); if(!g) return;
   if(!confirm('Delete "'+g.situation+'"?')) return;
   guide=guide.filter(function(x){ return x.sheetId!==id; });
-  gdStars.delete(id); saveGdStars();
+  gdOpen.delete(id);
   renderGuide();
   await postToSheet({sheet:'Guide',action:'delete_guide',sheetId:id});
   showToast('Deleted.','');
@@ -3806,9 +4067,9 @@ async function delGuide(id){
 
 function exportGuideCSV(){
   if(!guide.length){ showToast('Nothing to export.','error'); return; }
-  var h=['Category','Planet','Situation','Action','Why','Reading'];
+  var h=['Category','Planet','Situation','Action','Why','Reading','Starred'];
   var rows=guide.map(function(g){
-    return [g.category,g.planet,g.situation,g.action,g.why,g.astro]
+    return [g.category,g.planet,g.situation,g.action,g.why,g.astro,g.starred?'yes':'no']
       .map(function(v){ return '"'+String(v||'').replace(/"/g,'""')+'"'; }).join(',');
   });
   var a=document.createElement('a');
@@ -3824,11 +4085,17 @@ async function fetchAllGuide(){
 
 function replaceGuideFromSheet(rows){
   guide=rows.map(function(r){
-    return {sheetId:r.sheetId||'',category:r.category||'Other',planet:r.planet||'',
+    var sid=r.sheetId||'';
+    var st=(r.starred===true||String(r.starred).toLowerCase()==='yes');
+    // A star write still in flight wins over a stale read
+    var prev=gdStarBusy.has(sid)?gdById(sid):null;
+    return {sheetId:sid,category:r.category||'Other',planet:r.planet||'',
       situation:r.situation||'',action:r.action||'',why:r.why||'',astro:r.astro||'',
-      order:(r.order===null||r.order===undefined)?9999:Number(r.order)};
+      order:(r.order===null||r.order===undefined)?9999:Number(r.order),
+      starred: prev ? prev.starred : st};
   });
   renderGuide();
+  if(guide.length) migrateLegacyGdStars();
 }
 
 /* The full guide, written to the Sheet once. After the import this
@@ -3909,7 +4176,7 @@ async function importGuide(){
   for(var i=0;i<total;i++){
     var r=GUIDE_SEED[i];
     var id='g'+(Date.now()+i);
-    guide.push({sheetId:id,category:r[0],planet:r[1],situation:r[2],action:r[3],why:r[4],astro:r[5],order:i});
+    guide.push({sheetId:id,category:r[0],planet:r[1],situation:r[2],action:r[3],why:r[4],astro:r[5],order:i,starred:false});
     var ok=await postToSheet({sheet:'Guide',sheetId:id,category:r[0],planet:r[1],
       situation:r[2],action_text:r[3],why:r[4],astro:r[5],order:i});
     if(ok) added++;
