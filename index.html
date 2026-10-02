@@ -534,10 +534,23 @@ body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:
 .gd-reset{background:none;border:none;color:var(--gold);font-size:12px;cursor:pointer;padding:0 0 0 6px;font-family:var(--fb)}
 .gd-tools{display:flex;gap:6px}
 
-.gd-grp{margin-bottom:18px}
-.gd-grp-h{font-family:var(--fd);font-size:1.05rem;font-weight:400;color:var(--text-1);margin:0 0 8px;display:flex;align-items:baseline;gap:8px}
-.gd-grp-h small{font-family:var(--fb);font-size:11px;color:var(--text-3)}
-.gd-grp-h::after{content:'';flex:1;height:1px;background:var(--border);align-self:center}
+.gd-grp{margin-bottom:8px}
+.gd-grp-hd{margin:0;font-weight:400}
+.gd-grp-h{display:flex;align-items:center;gap:10px;width:100%;padding:13px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);cursor:pointer;text-align:left;font-family:var(--fb);color:var(--text-1);transition:border-color var(--tr),background var(--tr)}
+.gd-grp-h:hover{border-color:var(--border-md);background:var(--card)}
+.gd-grp-h:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.gd-grp.open .gd-grp-h{border-color:var(--border-md);border-bottom-left-radius:0;border-bottom-right-radius:0;background:var(--card)}
+.gd-grp-name{font-family:var(--fd);font-size:1.12rem;line-height:1.2}
+.gd-grp-n{font-size:12px;color:var(--text-3)}
+.gd-grp-st{font-size:11.5px;color:var(--gold)}
+.gd-grp-pl{display:flex;margin-left:auto}
+.gd-grp-pl .gd-glyph{width:18px;height:18px;font-size:9px;margin:0 0 0 -4px;box-shadow:0 0 0 2px var(--surface)}
+.gd-grp.open .gd-grp-pl .gd-glyph{box-shadow:0 0 0 2px var(--card)}
+.gd-grp-chev{color:var(--text-3);font-size:11px;transition:transform var(--tr);margin-left:4px}
+.gd-grp.open .gd-grp-chev{transform:rotate(180deg);color:var(--gold)}
+.gd-grp-body{border:1px solid var(--border-md);border-top:none;border-radius:0 0 var(--r) var(--r);padding:8px 8px 2px;background:rgba(0,0,0,.12);margin-bottom:6px}
+.gd-dupes{align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:12px 0 0;padding:10px 12px;background:var(--rose-dim);border:1px solid rgba(224,123,123,.3);border-radius:var(--r);font-size:12.5px;color:var(--text-1);line-height:1.5}
+.gd-dupes b{color:var(--rose)}
 
 .gd-item{background:var(--card);border:1px solid var(--border);border-radius:var(--r);margin-bottom:6px;transition:border-color var(--tr)}
 .gd-item:hover{border-color:var(--border-md)}
@@ -588,8 +601,10 @@ body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:
   .gd-detail{padding-left:14px}
   .gd-key{display:none}
   .gd-s{font-size:14.5px}
+  .gd-grp-pl{display:none}
+  .gd-grp-n{margin-left:auto}
 }
-@media(prefers-reduced-motion:reduce){.gd-item.flash{animation:none}.gd-chev{transition:none}}
+@media(prefers-reduced-motion:reduce){.gd-item.flash{animation:none}.gd-chev,.gd-grp-chev{transition:none}}
 /* POSTS: Pinned / All + emotion */
 .pst-tabs{display:flex;gap:6px;margin-bottom:12px;border-bottom:1px solid var(--border)}
 .pst-tab{padding:8px 14px 9px;font-size:12px;font-weight:600;font-family:var(--fb);color:var(--text-3);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;transition:all var(--tr);margin-bottom:-1px;display:flex;align-items:center;gap:6px}
@@ -1127,6 +1142,8 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
     <div class="gd-chips" id="gd-chips" role="group" aria-label="Category"></div>
     <div class="gd-planets" id="gd-planets" role="group" aria-label="Planet"></div>
   </div>
+
+  <div class="gd-dupes" id="gd-dupes" style="display:none"></div>
 
   <div class="gd-meta">
     <div class="gd-count" id="gd-count"></div>
@@ -3717,6 +3734,17 @@ var guide=[];
 var gdCat='All', gdPlanet='';
 var gdOpen=new Set();          // ids whose details are expanded
 var gdStarBusy=new Set();      // ids with a star write in flight
+var gdLoaded=false;            // true once the Sheet has answered at least once
+var gdDupes=[];                // [{id, keepId}] extra rows hidden from view
+var gdDupeBusy=false;
+
+/* Which emotion groups are open. A display preference, so it lives in
+   localStorage like the other section states. Closed by default. */
+var gdGrpOpen=new Set();
+try{ var _go=localStorage.getItem('gd_groups_open'); if(_go) gdGrpOpen=new Set(JSON.parse(_go)); }catch(e){}
+function saveGdGrps(){ try{ localStorage.setItem('gd_groups_open',JSON.stringify([...gdGrpOpen])); }catch(e){} }
+var gdGrpShut=new Set();       // groups closed by hand while a search/filter is active
+var gdFilterSig='';
 
 var GD_PLANETS={
   Sun:['\u2609','#D9701A'], Moon:['\u263D','#5B7FA6'], Mars:['\u2642','#C8413B'],
@@ -3791,9 +3819,22 @@ function gdPassesFilters(g,terms,ignoreCat){
 function renderGuide(){
   var listEl=document.getElementById('gd-list'); if(!listEl) return;
   var imp=document.getElementById('gd-import');
-  if(imp) imp.style.display = guide.length ? 'none' : 'block';
+  // Only offer the import once the Sheet has actually answered — before that
+  // an empty list just means "still loading", and importing would duplicate rows.
+  if(imp) imp.style.display = (gdLoaded && !guide.length) ? 'block' : 'none';
+  renderGdDupes();
+
+  if(!gdLoaded && !guide.length){
+    listEl.innerHTML='<div class="gd-empty">Loading your guide from the Sheet\u2026</div>';
+    var c0=document.getElementById('gd-count'); if(c0) c0.textContent='';
+    var e0=document.getElementById('gd-expand'); if(e0) e0.style.display='none';
+    return;
+  }
 
   var terms=gdTerms(), rx=gdRx(terms);
+  var sig=terms.join(' ')+'|'+gdCat+'|'+gdPlanet;
+  if(sig!==gdFilterSig){ gdFilterSig=sig; gdGrpShut.clear(); }
+  var filtering = !!(terms.length || gdCat!=='All' || gdPlanet);
   gdLoose=false;
   if(terms.length>1 && !guide.some(function(g){ return gdPassesFilters(g,terms,false); })) gdLoose=true;
   var clr=document.getElementById('gd-clear'), key=document.getElementById('gd-key');
@@ -3842,8 +3883,7 @@ function renderGuide(){
   }
 
   var expBtn=document.getElementById('gd-expand');
-  var allOpen=items.length && items.every(function(g){ return gdOpen.has(g.sheetId) || gdMatchHidden(g,terms); });
-  if(expBtn){ expBtn.textContent=allOpen?'Collapse all':'Expand all'; expBtn.style.display=items.length?'':'none'; }
+  if(expBtn){ expBtn.textContent=gdAllOpen(items,terms,filtering)?'Collapse all':'Expand all'; expBtn.style.display=items.length?'':'none'; }
 
   if(!items.length){
     if(!guide.length){
@@ -3869,8 +3909,21 @@ function renderGuide(){
   });
 
   listEl.innerHTML=order.map(function(k){
-    return '<section class="gd-grp"><h3 class="gd-grp-h">'+escH(k)+' <small>'+groups[k].length+'</small></h3>'+
-      groups[k].map(function(g){ return gdItemHTML(g,terms,rx); }).join('')+'</section>';
+    var list=groups[k], open=gdGrpIsOpen(k,filtering);
+    var stars=list.filter(function(g){ return g.starred; }).length;
+    var planets=[];
+    list.forEach(function(g){ if(g.planet && planets.indexOf(g.planet)===-1) planets.push(g.planet); });
+    var kq=escH(k).replace(/'/g,"\\'");
+    return '<section class="gd-grp'+(open?' open':'')+'">'+
+      '<h3 class="gd-grp-hd"><button type="button" class="gd-grp-h" aria-expanded="'+open+'" onclick="toggleGdGrp(\''+kq+'\')">'+
+        '<span class="gd-grp-name">'+escH(k)+'</span>'+
+        '<span class="gd-grp-n">'+list.length+' situation'+(list.length!==1?'s':'')+'</span>'+
+        (stars?'<span class="gd-grp-st">\u2605 '+stars+'</span>':'')+
+        '<span class="gd-grp-pl" aria-hidden="true">'+planets.slice(0,5).map(gdGlyph).join('')+'</span>'+
+        '<span class="gd-grp-chev" aria-hidden="true">\u25BE</span>'+
+      '</button></h3>'+
+      (open?'<div class="gd-grp-body">'+list.map(function(g){ return gdItemHTML(g,terms,rx); }).join('')+'</div>':'')+
+    '</section>';
   }).join('');
 
   renderGdToday();
@@ -3936,6 +3989,7 @@ function renderGdToday(){
 function showGdItem(id){
   var s=document.getElementById('gd-search'); if(s) s.value='';
   gdCat='All'; gdPlanet=''; gdOpen.add(id);
+  var g=gdById(id); if(g){ gdGrpOpen.add(g.category||'Other'); saveGdGrps(); }
   renderGuide();
   var el=document.getElementById('gd-i-'+id);
   if(el){
@@ -3949,12 +4003,36 @@ function setGdPlanet(p){ gdPlanet = gdPlanet===p ? '' : p; renderGuide(); }
 function clearGdSearch(){ var s=document.getElementById('gd-search'); if(s){ s.value=''; s.focus(); } renderGuide(); }
 function resetGdFilters(){ var s=document.getElementById('gd-search'); if(s) s.value=''; gdCat='All'; gdPlanet=''; renderGuide(); }
 function toggleGd(id){ if(gdOpen.has(id)) gdOpen.delete(id); else gdOpen.add(id); renderGuide(); }
+/* While searching or filtering, every group with results opens on its own
+   (you can still close one by hand). Otherwise the saved choice applies. */
+function gdGrpIsOpen(k,filtering){
+  return filtering ? !gdGrpShut.has(k) : gdGrpOpen.has(k);
+}
+function gdFiltering(){ return !!(gdTerms().length || gdCat!=='All' || gdPlanet); }
+function toggleGdGrp(k){
+  if(gdFiltering()){ if(gdGrpShut.has(k)) gdGrpShut.delete(k); else gdGrpShut.add(k); }
+  else{ if(gdGrpOpen.has(k)) gdGrpOpen.delete(k); else gdGrpOpen.add(k); saveGdGrps(); }
+  renderGuide();
+}
+function gdAllOpen(items,terms,filtering){
+  if(!items.length) return false;
+  return items.every(function(g){
+    return gdGrpIsOpen(g.category||'Other',filtering) && (gdOpen.has(g.sheetId)||gdMatchHidden(g,terms));
+  });
+}
+/* Expand all: every group and every entry's details. Collapse all: the reverse. */
 function toggleGdAll(){
-  var terms=gdTerms();
+  var terms=gdTerms(), filtering=gdFiltering();
   var items=guide.filter(function(g){ return gdPassesFilters(g,terms,false); });
-  var allOpen=items.every(function(g){ return gdOpen.has(g.sheetId); });
-  if(allOpen) items.forEach(function(g){ gdOpen.delete(g.sheetId); });
-  else items.forEach(function(g){ gdOpen.add(g.sheetId); });
+  var cats=[]; items.forEach(function(g){ var k=g.category||'Other'; if(cats.indexOf(k)===-1) cats.push(k); });
+  if(gdAllOpen(items,terms,filtering)){
+    items.forEach(function(g){ gdOpen.delete(g.sheetId); });
+    cats.forEach(function(k){ if(filtering) gdGrpShut.add(k); else gdGrpOpen.delete(k); });
+  }else{
+    items.forEach(function(g){ gdOpen.add(g.sheetId); });
+    cats.forEach(function(k){ if(filtering) gdGrpShut.delete(k); else gdGrpOpen.add(k); });
+  }
+  if(!filtering) saveGdGrps();
   renderGuide();
 }
 
@@ -4078,13 +4156,59 @@ function exportGuideCSV(){
   showToast('CSV exported \u2713','success');
 }
 
+function gdKey(sit,act){
+  var n=function(x){ return String(x||'').toLowerCase().replace(/[\u2018\u2019]/g,"'").replace(/[\u201c\u201d]/g,'"').replace(/\s+/g,' ').trim(); };
+  var a=n(sit), b=n(act);
+  return (a||b) ? a+'\u0001'+b : '';
+}
+
+/* Banner offering to delete the hidden duplicate rows from the Sheet */
+function renderGdDupes(){
+  var el=document.getElementById('gd-dupes'); if(!el) return;
+  if(!gdDupes.length){ el.style.display='none'; return; }
+  el.style.display='flex';
+  el.innerHTML='<span>Your Sheet has <b>'+gdDupes.length+'</b> duplicate row'+(gdDupes.length!==1?'s':'')+
+    '. '+(gdDupes.length!==1?'They\u2019re':'It\u2019s')+' hidden here, but still in the Sheet.</span>'+
+    '<button class="btn gold" type="button" id="gd-dupes-btn" onclick="removeGdDupes()"'+(gdDupeBusy?' disabled':'')+'>'+
+      (gdDupeBusy?'Removing\u2026':'Remove duplicates from Sheet')+'</button>';
+}
+
+async function removeGdDupes(){
+  if(gdDupeBusy || !gdDupes.length) return;
+  if(!confirm('Delete '+gdDupes.length+' duplicate row'+(gdDupes.length!==1?'s':'')+' from the Guide sheet? One copy of each situation is kept.')) return;
+  gdDupeBusy=true; renderGdDupes();
+  var todo=gdDupes.slice(), failed=[];
+  for(var i=0;i<todo.length;i++){
+    var b=document.getElementById('gd-dupes-btn');
+    if(b) b.textContent='Removing '+(i+1)+' of '+todo.length+'\u2026';
+    var ok=await postToSheet({sheet:'Guide',action:'delete_guide',sheetId:todo[i].id});
+    if(!ok) failed.push(todo[i]);
+  }
+  // A star that only lived on a deleted copy is written onto the kept row
+  var restar=guide.filter(function(g){ return g._starFromDupe; });
+  for(var j=0;j<restar.length;j++){
+    var ok2=await postToSheet({sheet:'Guide',action:'star_guide',sheetId:restar[j].sheetId,starred:'yes'});
+    if(ok2) delete restar[j]._starFromDupe;
+  }
+  // Rows sharing one Sheet ID: deleting by ID removes either copy, so re-assert the star
+  var kept=guide.filter(function(g){ return g.starred && todo.some(function(d){ return d.id===g.sheetId; }); });
+  for(var k=0;k<kept.length;k++){
+    await postToSheet({sheet:'Guide',action:'star_guide',sheetId:kept[k].sheetId,starred:'yes'});
+  }
+  gdDupes=failed; gdDupeBusy=false;
+  renderGuide();
+  if(failed.length) showToast(failed.length+' row'+(failed.length!==1?'s':'')+' couldn\u2019t be deleted. Tap the button again to retry.','error');
+  else showToast((todo.length)+' duplicate'+(todo.length!==1?'s':'')+' removed from the Sheet \u2713','success');
+}
+
 async function fetchAllGuide(){
   var d=await sheetFetch(WORKER_URL+'?action=getAllGuide');
   if(d&&d.status==='ok'&&Array.isArray(d.guide)) replaceGuideFromSheet(d.guide);
 }
 
 function replaceGuideFromSheet(rows){
-  guide=rows.map(function(r){
+  gdLoaded=true;
+  var all=rows.map(function(r){
     var sid=r.sheetId||'';
     var st=(r.starred===true||String(r.starred).toLowerCase()==='yes');
     // A star write still in flight wins over a stale read
@@ -4093,6 +4217,17 @@ function replaceGuideFromSheet(rows){
       situation:r.situation||'',action:r.action||'',why:r.why||'',astro:r.astro||'',
       order:(r.order===null||r.order===undefined)?9999:Number(r.order),
       starred: prev ? prev.starred : st};
+  });
+  // Same situation + same action = the same entry. Show it once; keep the
+  // earliest row, and keep the star if any copy was starred.
+  var seen={}; gdDupes=[]; guide=[];
+  all.forEach(function(g){
+    var k=gdKey(g.situation,g.action);
+    if(!k){ guide.push(g); return; }
+    var keep=seen[k];
+    if(!keep){ seen[k]=g; guide.push(g); return; }
+    if(g.starred && !keep.starred){ keep.starred=true; keep._starFromDupe=true; }
+    gdDupes.push({id:g.sheetId, keepId:keep.sheetId});
   });
   renderGuide();
   if(guide.length) migrateLegacyGdStars();
@@ -4170,18 +4305,24 @@ var GUIDE_SEED=[
 ];
 
 async function importGuide(){
-  if(guide.length && !confirm('Your guide already has '+guide.length+' entries. Import anyway?')) return;
+  if(!gdLoaded){ showToast('Still loading your guide from the Sheet. Try again in a moment.','error'); return; }
+  // Never add a situation that is already in the guide
+  var have={}; guide.forEach(function(g){ have[gdKey(g.situation,g.action)]=1; });
+  var seeds=GUIDE_SEED.map(function(r,i){ return {r:r,i:i}; })
+    .filter(function(x){ return !have[gdKey(x.r[2],x.r[3])]; });
+  if(!seeds.length){ showToast('All '+GUIDE_SEED.length+' situations are already in your guide.',''); return; }
+  if(guide.length && !confirm('Add the '+seeds.length+' starter situations that aren\u2019t in your guide yet?')) return;
   var btn=document.getElementById('gd-sync');
-  var total=GUIDE_SEED.length, added=0;
-  for(var i=0;i<total;i++){
-    var r=GUIDE_SEED[i];
+  var total=seeds.length, added=0;
+  for(var si=0;si<total;si++){
+    var r=seeds[si].r, i=seeds[si].i;
     var id='g'+(Date.now()+i);
     guide.push({sheetId:id,category:r[0],planet:r[1],situation:r[2],action:r[3],why:r[4],astro:r[5],order:i,starred:false});
     var ok=await postToSheet({sheet:'Guide',sheetId:id,category:r[0],planet:r[1],
       situation:r[2],action_text:r[3],why:r[4],astro:r[5],order:i});
     if(ok) added++;
-    if(btn){ btn.textContent='Importing '+(i+1)+' of '+total+'\u2026'; btn.className='sync-txt syncing'; }
-    if(i%10===0) renderGuide();
+    if(btn){ btn.textContent='Importing '+(si+1)+' of '+total+'\u2026'; btn.className='sync-txt syncing'; }
+    if(si%10===0) renderGuide();
   }
   renderGuide();
   if(btn){ btn.textContent=added+' of '+total+' imported'+(added===total?' \u2713':''); btn.className='sync-txt '+(added===total?'ok':'err'); }
