@@ -47,6 +47,41 @@ body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:
 .mantra{background:var(--gold-glow);border:1px solid rgba(201,168,76,0.15);border-left:2px solid var(--gold);border-radius:0 var(--r) var(--r) 0;padding:.75rem 1rem;margin-bottom:1rem}
 .mantra-q{font-family:var(--fd);font-size:1rem;font-style:italic;color:var(--text-1);line-height:1.55}
 .mantra-src{font-size:11px;color:var(--text-3);margin-top:4px}
+/* ── Daily rules (standing "when → do" list under the quote) ── */
+.dr{background:var(--card);border:1px solid var(--border);border-radius:var(--rlg);padding:.85rem 1rem .75rem;margin-bottom:1rem}
+.dr-top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:.55rem}
+.dr-title{font-family:var(--fd);font-weight:400;font-size:1.08rem;color:var(--text-1);margin:0}
+.dr-edit{background:none;border:1px solid var(--border-md);color:var(--text-2);font-family:var(--fb);font-size:11.5px;border-radius:var(--rsm);padding:3px 10px;cursor:pointer}
+.dr-edit:hover{color:var(--gold);border-color:rgba(201,168,76,.4)}
+.dr-list{list-style:none;margin:0;padding:0}
+.dr-row{display:grid;grid-template-columns:minmax(150px,38%) 1fr;gap:4px 14px;padding:7px 0;border-top:1px solid var(--border)}
+.dr-row:first-child{border-top:none;padding-top:2px}
+.dr-when{font-size:12.5px;color:var(--text-2);line-height:1.45}
+.dr-when b{font-weight:500;color:var(--text-3)}
+.dr-do{font-size:13.5px;color:var(--text-1);line-height:1.45;font-weight:500;padding-left:12px;border-left:2px solid var(--gold)}
+.dr-foot{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-top:.55rem;font-size:11px;color:var(--text-3)}
+.dr-note{font-size:12.5px;color:var(--text-2);line-height:1.55}
+.dr-empty-acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.dr-ed-row{display:grid;grid-template-columns:1fr 1.4fr auto;gap:6px;align-items:start;padding:6px 0;border-top:1px solid var(--border)}
+.dr-ed-row:first-child{border-top:none}
+.dr-ed-row .sin{font-size:12.5px;padding:6px 8px}
+.dr-ed-row textarea.sin{min-height:52px;resize:vertical}
+.dr-ed-lbl{display:block;font-size:10.5px;color:var(--text-3);margin:0 0 3px 2px}
+.dr-ed-tools{display:flex;gap:2px;padding-top:18px}
+.dr-ed-tools button{background:none;border:1px solid var(--border);color:var(--text-2);border-radius:var(--rsm);width:26px;height:28px;cursor:pointer;font-size:12px;line-height:1}
+.dr-ed-tools button:hover:not(:disabled){color:var(--text-1);border-color:var(--border-md)}
+.dr-ed-tools button.del:hover{color:var(--rose);border-color:rgba(224,123,123,.4)}
+.dr-ed-tools button:disabled{opacity:.3;cursor:default}
+.dr-ed-foot{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px}
+.dr-ed-foot .acts{display:flex;gap:6px}
+.dr-edit:focus-visible,.dr-ed-tools button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+@media(max-width:640px){
+  .dr-row{grid-template-columns:1fr;gap:2px}
+  .dr-do{padding-left:10px}
+  .dr-ed-row{grid-template-columns:1fr auto}
+  .dr-ed-row .dr-ed-do{grid-column:1/2}
+  .dr-ed-tools{grid-row:1/3;grid-column:2;flex-direction:column;padding-top:18px}
+}
 .lbl{font-family:var(--fm);font-size:9px;color:var(--text-3);letter-spacing:0.13em;text-transform:uppercase;margin-bottom:8px;margin-top:1.25rem;display:flex;align-items:center;gap:8px}
 .lbl-line{flex:1;height:1px;background:var(--border)}
 .btn{padding:5px 13px;font-size:11px;font-weight:500;font-family:var(--fb);background:transparent;color:var(--text-2);border:1px solid var(--border-md);border-radius:var(--rsm);cursor:pointer;transition:var(--tr)}
@@ -770,6 +805,13 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
 <div class="pg on" id="pg-morning">
   <div class="hdr"><div class="hdr-l"><div class="eyebrow" id="time-now">--</div><h1 class="greeting" id="greeting">Good morning</h1><div class="dateline" id="date-line">Loading...</div></div><div class="hdr-r"><div class="daynum" id="day-num">--</div><div class="daynum-lbl">Day of year</div></div></div>
   <div class="mantra"><div class="mantra-q" id="mantra-text">"..."</div><div class="mantra-src" id="mantra-source"></div></div>
+  <section class="dr" id="dr-box" aria-labelledby="dr-title">
+    <div class="dr-top">
+      <h2 class="dr-title" id="dr-title">My rules for every day</h2>
+      <button class="dr-edit" id="dr-edit-btn" type="button" onclick="editDailyRules()" style="display:none">Edit</button>
+    </div>
+    <div id="dr-body"><div class="dr-note">Loading your rules…</div></div>
+  </section>
   <div class="focus-box sit-pairs">
     <div class="focus-top">
       <div class="focus-lbl">&#129504; Situations &amp; how I'll handle them</div>
@@ -1383,6 +1425,8 @@ function init(){
       if(Array.isArray(d.todayHabits)) replaceHabitsFromSheet(d.todayHabits);
       if(Array.isArray(d.routineLog))  replaceRoutineLogFromSheet(d.routineLog);
       if(Array.isArray(d.routineDay))  replaceRoutineDayFromSheet(d.routineDay);
+      // An older Code.gs doesn't send dailyRules — say so instead of offering a save it would misroute
+      if(Array.isArray(d.dailyRules))  replaceDailyRulesFromSheet(d.dailyRules); else markDailyRulesUnsupported();
       if(!selDate) selDate=isoToday();
       activeRoutine=routineForDate(selDate);
       _calNeedsScroll=true;
@@ -1424,13 +1468,15 @@ function init(){
         ['getAllGratitude','gratitude',replaceGratitudeFromSheet],
         ['getAllKundali','kundali',replaceKundaliFromSheet],
         ['getAllGuide','guide',replaceGuideFromSheet],
-        ['getAllHabitReasons','habitReasons',replaceHabitReasonsFromSheet]
+        ['getAllHabitReasons','habitReasons',replaceHabitReasonsFromSheet],
+        ['getAllDailyRules','dailyRules',replaceDailyRulesFromSheet]
       ];
       var got=0;
       for(var i=0;i<jobs.length;i++){
         var r=await sheetFetch(WORKER_URL+'?action='+jobs[i][0]);
         if(r&&r.status==='ok'&&Array.isArray(r[jobs[i][1]])){ jobs[i][2](r[jobs[i][1]]); got++; }
       }
+      if(!drLoaded) markDailyRulesFailed();
       if(!selDate) selDate=isoToday();
       activeRoutine=routineForDate(selDate);
       renderMaster(); renderRoutine(); renderDailyFocus(); renderPlanLibrary();
@@ -3722,6 +3768,184 @@ function replaceDailyFocusFromSheet(rows){
     dailyFocus[r.dateISO]={focus:r.focus||'',videoUrl:r.videoUrl||'',videoNote:r.videoNote||'',situations:r.situations||''};
   });
   renderDailyFocus();
+}
+
+/* ═══════════════════════════════════════════════════
+   DAILY RULES — the standing "when → do" summary under the quote
+
+   One list, not one per day: it carries forward unchanged until
+   it's edited. Saved to the DailyRules sheet as a whole list in a
+   single write (action=replace_all), so edits can't land out of order.
+═══════════════════════════════════════════════════ */
+var dailyRules=[];          // [{sheetId, when, do}]
+var drChangedOn='';         // yyyy-mm-dd the list last changed
+var drLoaded=false, drUnsupported=false, drFailed=false, drEditing=false, drSaving=false;
+var drDraft=[];             // working copy while editing
+
+/* Drawn from the patterns that repeat most across your Situations,
+   Situation plans, Daily focus, Motivation and Kundali notes. */
+var DR_SUGGESTED=[
+  {when:'angry, on a call, mail or in a conversation', do:'Stay quiet. Step away for 10 minutes, then reply.'},
+  {when:'an argument starts', do:'Ask: does winning this help what I want? If not, let it go.'},
+  {when:'preparing for a meeting or interview', do:'Over-prepare: 10\u201320 minutes on my points and likely questions.'},
+  {when:'someone complains or wants me to step in', do:'Ask: does this really need me? Not everything does.'},
+  {when:'something goes wrong', do:'Own my part, not the whole. Fix it, don\u2019t blame myself.'},
+  {when:'a plan is in progress', do:'Don\u2019t announce it. Stay alert until it\u2019s done.'},
+  {when:'it\u2019s 10:30 PM', do:'Phone away, sleep by 11. Tomorrow\u2019s 6:30 depends on it.'}
+];
+
+function drClean(w){ return String(w||'').trim().replace(/^when\s+/i,'').trim(); }
+function drFmtDate(iso){
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(iso||'')) return '';
+  var d=new Date(iso+'T00:00:00');
+  return d.toLocaleDateString('en-IN',{day:'numeric',month:'short'})+(d.getFullYear()!==new Date().getFullYear()?' '+d.getFullYear():'');
+}
+
+function replaceDailyRulesFromSheet(rows){
+  drLoaded=true; drUnsupported=false; drFailed=false;
+  if(drSaving) return;                 // a save in flight wins over a stale read
+  dailyRules=rows.map(function(r){ return {sheetId:r.sheetId||'', when:drClean(r.when), do:String(r['do']||'').trim()}; })
+    .filter(function(r){ return r.when||r.do; });
+  drChangedOn=rows.reduce(function(m,r){ return (r.changedOn||'')>m ? r.changedOn : m; },'');
+  if(!drEditing) renderDailyRules();
+}
+function markDailyRulesUnsupported(){
+  if(drLoaded) return;
+  drUnsupported=true; renderDailyRules();
+}
+function markDailyRulesFailed(){
+  if(drLoaded||drUnsupported) return;
+  drFailed=true; renderDailyRules();
+}
+
+function renderDailyRules(){
+  var body=document.getElementById('dr-body'), btn=document.getElementById('dr-edit-btn');
+  if(!body) return;
+  if(drEditing){ renderDailyRulesEditor(); return; }
+  if(btn) btn.style.display=(drLoaded&&dailyRules.length)?'':'none';
+
+  if(drUnsupported){
+    body.innerHTML='<div class="dr-note">This section needs the updated <b>Code.gs</b>. Deploy it in Apps Script (New version), then reload.</div>';
+    return;
+  }
+  if(!drLoaded && drFailed){ body.innerHTML='<div class="dr-note">Couldn\u2019t load your rules from the Sheet. Reload the page to try again.</div>'; return; }
+  if(!drLoaded){ body.innerHTML='<div class="dr-note">Loading your rules\u2026</div>'; return; }
+
+  if(!dailyRules.length){
+    body.innerHTML='<div class="dr-note">The few rules you want in front of you every morning, like <i>When angry \u2192 stay quiet and step away</i>. They stay here every day until you change them.</div>'+
+      '<div class="dr-empty-acts">'+
+        '<button class="btn gold" type="button" onclick="useSuggestedRules()">Start with suggested rules</button>'+
+        '<button class="btn" type="button" onclick="editDailyRules(true)">Write my own</button>'+
+      '</div>';
+    return;
+  }
+  body.innerHTML='<ul class="dr-list">'+dailyRules.map(function(r){
+      return '<li class="dr-row"><span class="dr-when"><b>When</b> '+escH(r.when)+'</span><span class="dr-do">'+escH(r.do)+'</span></li>';
+    }).join('')+'</ul>'+
+    '<div class="dr-foot"><span>'+(drChangedOn?'Same since '+drFmtDate(drChangedOn)+'. ':'')+'Carries forward until you edit it.</span></div>';
+}
+
+/* ── Editing ── */
+function editDailyRules(addBlank){
+  if(drUnsupported||!drLoaded) return;
+  drEditing=true;
+  drDraft=dailyRules.map(function(r){ return {sheetId:r.sheetId, when:r.when, do:r.do}; });
+  if(addBlank||!drDraft.length) drDraft.push({sheetId:'', when:'', do:''});
+  renderDailyRulesEditor(true);
+}
+function useSuggestedRules(){
+  if(drUnsupported||!drLoaded) return;
+  drEditing=true;
+  drDraft=DR_SUGGESTED.map(function(r){ return {sheetId:'', when:r.when, do:r.do}; });
+  renderDailyRulesEditor();
+  showToast('Suggested rules loaded. Edit anything, then save.','');
+}
+function drReadInputs(){
+  document.querySelectorAll('#dr-body .dr-ed-row').forEach(function(row){
+    var i=+row.getAttribute('data-i'); if(!drDraft[i]) return;
+    drDraft[i].when=row.querySelector('.dr-in-when').value;
+    drDraft[i].do=row.querySelector('.dr-in-do').value;
+  });
+}
+function renderDailyRulesEditor(focusLast){
+  var body=document.getElementById('dr-body'), btn=document.getElementById('dr-edit-btn');
+  if(btn) btn.style.display='none';
+  var n=drDraft.length;
+  body.innerHTML=
+    drDraft.map(function(r,i){
+      return '<div class="dr-ed-row" data-i="'+i+'">'+
+        '<div><label class="dr-ed-lbl" for="dr-w-'+i+'">When\u2026</label>'+
+          '<input class="sin dr-in-when" id="dr-w-'+i+'" type="text" value="'+escH(r.when)+'" placeholder="I\u2019m angry" '+
+            'onkeydown="drKey(event,'+i+',\'when\')"></div>'+
+        '<div class="dr-ed-do"><label class="dr-ed-lbl" for="dr-d-'+i+'">I will\u2026</label>'+
+          '<textarea class="sin dr-in-do" id="dr-d-'+i+'" rows="2" placeholder="Stay quiet and move away" '+
+            'onkeydown="drKey(event,'+i+',\'do\')">'+escH(r.do)+'</textarea></div>'+
+        '<div class="dr-ed-tools">'+
+          '<button type="button" title="Move up" aria-label="Move rule up" onclick="drMove('+i+',-1)"'+(i===0?' disabled':'')+'>\u2191</button>'+
+          '<button type="button" title="Move down" aria-label="Move rule down" onclick="drMove('+i+',1)"'+(i===n-1?' disabled':'')+'>\u2193</button>'+
+          '<button type="button" class="del" title="Remove" aria-label="Remove rule" onclick="drRemove('+i+')">\u00d7</button>'+
+        '</div>'+
+      '</div>';
+    }).join('')+
+    '<div class="dr-ed-foot">'+
+      '<button class="btn" type="button" onclick="drAdd()">+ Add a rule</button>'+
+      '<span class="acts">'+
+        '<button class="btn" type="button" onclick="cancelDailyRules()"'+(drSaving?' disabled':'')+'>Cancel</button>'+
+        '<button class="btn gold" type="button" id="dr-save" onclick="saveDailyRules()"'+(drSaving?' disabled':'')+'>'+(drSaving?'Saving\u2026':'Save rules')+'</button>'+
+      '</span>'+
+    '</div>';
+  if(focusLast){
+    var last=document.getElementById('dr-w-'+(n-1));
+    if(last && !last.value) last.focus();
+  }
+}
+function drKey(e,i,field){
+  if(e.key==='Escape'){ e.preventDefault(); cancelDailyRules(); return; }
+  if(e.key!=='Enter') return;
+  e.preventDefault();
+  if(field==='when'){ var d=document.getElementById('dr-d-'+i); if(d) d.focus(); }
+  else if(i===drDraft.length-1) drAdd();
+  else { var w=document.getElementById('dr-w-'+(i+1)); if(w) w.focus(); }
+}
+function drAdd(){ drReadInputs(); drDraft.push({sheetId:'',when:'',do:''}); renderDailyRulesEditor(true); }
+function drRemove(i){ drReadInputs(); drDraft.splice(i,1); renderDailyRulesEditor(); }
+function drMove(i,dir){
+  drReadInputs();
+  var j=i+dir; if(j<0||j>=drDraft.length) return;
+  var t=drDraft[i]; drDraft[i]=drDraft[j]; drDraft[j]=t;
+  renderDailyRulesEditor();
+  var b=document.querySelector('#dr-body .dr-ed-row[data-i="'+j+'"] .dr-ed-tools button:'+(dir<0?'first-child':'nth-child(2)'));
+  if(b && !b.disabled) b.focus();
+}
+function cancelDailyRules(){ if(drSaving) return; drEditing=false; drDraft=[]; renderDailyRules(); }
+
+async function saveDailyRules(){
+  if(drSaving) return;
+  drReadInputs();
+  var half=drDraft.filter(function(r){ var w=drClean(r.when), d=String(r.do||'').trim(); return (w&&!d)||(!w&&d); });
+  if(half.length){ showToast('Each rule needs both a \u201cWhen\u201d and an \u201cI will\u201d. Fill it in or remove it.','error'); return; }
+  var next=drDraft.map(function(r,i){
+    return {sheetId:r.sheetId||('dr'+Date.now()+'_'+i), when:drClean(r.when), do:String(r.do||'').trim()};
+  }).filter(function(r){ return r.when&&r.do; });
+
+  var sameAsBefore = next.length===dailyRules.length && next.every(function(r,i){
+    return r.when===dailyRules[i].when && r.do===dailyRules[i].do;
+  });
+  if(sameAsBefore){ drEditing=false; renderDailyRules(); return; }
+
+  drSaving=true; renderDailyRulesEditor();
+  var today=isoToday();
+  var ok=await postToSheet({sheet:'DailyRules',action:'replace_all',changedOn:today,
+    rules:JSON.stringify(next.map(function(r){ return {sheetId:r.sheetId,when:r.when,'do':r.do}; }))});
+  drSaving=false;
+  if(!ok){
+    renderDailyRulesEditor();   // keep the edits on screen so nothing is lost
+    showToast('Couldn\u2019t save your rules to the Sheet. Check your connection and tap Save again.','error');
+    return;
+  }
+  dailyRules=next; drChangedOn=today; drEditing=false; drDraft=[];
+  renderDailyRules();
+  showToast('Rules saved. They\u2019ll show here every day \u2713','success');
 }
 
 /* ═══════════════════════════════════════════════════
