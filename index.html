@@ -29,6 +29,8 @@ body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:
 .nav-inner{display:flex;align-items:stretch;width:100%}
 .tab{flex:1;min-width:0;padding:.45rem .06rem .35rem;font-weight:500;font-family:var(--fb);color:var(--text-3);background:none;border:none;border-top:2px solid transparent;cursor:pointer;transition:color var(--tr),border-color var(--tr);display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:3px;line-height:1.1;overflow:visible}
 .tab-icon{font-size:17px;line-height:1;display:block;flex-shrink:0;position:relative}
+.tl-short{display:none}
+@media(max-width:640px){.tl-full{display:none}.tl-short{display:inline}}
 .tab-label{font-size:8.5px;display:block;width:100%;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;letter-spacing:-0.1px}
 .tab:hover{color:var(--text-2)}
 .tab.on{color:var(--gold);border-top-color:var(--gold)}
@@ -47,6 +49,35 @@ body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:
 .mantra{background:var(--gold-glow);border:1px solid rgba(201,168,76,0.15);border-left:2px solid var(--gold);border-radius:0 var(--r) var(--r) 0;padding:.75rem 1rem;margin-bottom:1rem}
 .mantra-q{font-family:var(--fd);font-size:1rem;font-style:italic;color:var(--text-1);line-height:1.55}
 .mantra-src{font-size:11px;color:var(--text-3);margin-top:4px}
+/* ── My feed for today ── */
+.feed{margin-bottom:1rem}
+.feed-hd{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin:0 2px .6rem}
+.feed-title{font-family:var(--fd);font-weight:400;font-size:1.08rem;color:var(--text-1);margin:0}
+.feed-sub{font-size:11px;color:var(--text-3)}
+.feed-vids,.feed-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.feed-card{background:var(--card);border:1px solid var(--border);border-top:2px solid var(--fc,var(--gold));border-radius:var(--r);padding:10px 12px 11px;min-width:0;display:flex;flex-direction:column}
+.feed-video{--fc:var(--rose)}
+#feed-learning{--fc:#6BBF8E}
+#feed-kundali{--fc:#b0a0d6}
+#feed-guide{--fc:var(--gold)}
+#feed-gratitude{--fc:#4ECDC4}
+.feed-lbl{display:flex;justify-content:space-between;align-items:center;gap:6px;font-size:11.5px;font-weight:600;color:var(--fc,var(--gold));margin-bottom:8px}
+.feed-h{font-family:var(--fd);font-size:15px;color:var(--text-1);line-height:1.35;margin-bottom:4px}
+.feed-t{font-size:13px;color:var(--text-2);line-height:1.55}
+.feed-clamp{display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.feed-do{margin-top:7px;padding:6px 9px;background:var(--surface);border-left:2px solid var(--gold);border-radius:var(--rsm);font-size:13px;color:var(--text-1);line-height:1.5}
+.feed-do b{color:var(--gold);font-weight:600;margin-right:4px}
+.feed-list{margin:2px 0 0;padding-left:18px;font-size:13px;color:var(--text-1);line-height:1.6}
+.feed-meta{margin-top:auto;padding-top:9px;display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:11px;color:var(--text-3)}
+.feed-open{background:none;border:none;color:var(--text-2);font-family:var(--fb);font-size:11px;cursor:pointer;padding:0;white-space:nowrap}
+.feed-open:hover{color:var(--fc,var(--gold))}
+.feed-open:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.feed-empty{font-size:12.5px;color:var(--text-3);line-height:1.5}
+.feed-video .vid-prev{margin-bottom:8px}
+.feed-video .focus-in:focus{border-bottom-color:var(--rose)}
+.feed-thumb-img{width:112px;height:63px;border-radius:var(--rsm);object-fit:cover;border:1px solid var(--border);background:var(--surface);flex-shrink:0}
+@media(max-width:640px){.feed-vids,.feed-grid{grid-template-columns:1fr}}
+
 /* ── Daily rules (standing "when → do" list under the quote) ── */
 .dr{background:var(--card);border:1px solid var(--border);border-radius:var(--rlg);padding:.85rem 1rem .75rem;margin-bottom:1rem}
 .dr-top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:.55rem}
@@ -54,11 +85,12 @@ body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:
 .dr-edit{background:none;border:1px solid var(--border-md);color:var(--text-2);font-family:var(--fb);font-size:11.5px;border-radius:var(--rsm);padding:3px 10px;cursor:pointer}
 .dr-edit:hover{color:var(--gold);border-color:rgba(201,168,76,.4)}
 .dr-list{list-style:none;margin:0;padding:0}
-.dr-row{display:grid;grid-template-columns:minmax(150px,38%) 1fr;gap:4px 14px;padding:7px 0;border-top:1px solid var(--border)}
+.dr-row{display:grid;grid-template-columns:minmax(160px,40%) 1fr;gap:5px 16px;padding:9px 0;border-top:1px solid var(--border)}
 .dr-row:first-child{border-top:none;padding-top:2px}
-.dr-when{font-size:12.5px;color:var(--text-2);line-height:1.45}
-.dr-when b{font-weight:500;color:var(--text-3)}
-.dr-do{font-size:13.5px;color:var(--text-1);line-height:1.45;font-weight:500;padding-left:12px;border-left:2px solid var(--gold)}
+.dr-row{align-items:start}
+.dr-when{font-size:14.5px;color:var(--text-1);line-height:1.45;font-weight:600}
+.dr-when b{font-weight:600;color:var(--gold)}
+.dr-do{font-size:14.5px;color:var(--text-1);line-height:1.45;font-weight:400;padding-left:12px;border-left:2px solid var(--gold)}
 .dr-foot{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-top:.55rem;font-size:11px;color:var(--text-3)}
 .dr-note{font-size:12.5px;color:var(--text-2);line-height:1.55}
 .dr-empty-acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
@@ -76,7 +108,7 @@ body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:
 .dr-ed-foot .acts{display:flex;gap:6px}
 .dr-edit:focus-visible,.dr-ed-tools button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 @media(max-width:640px){
-  .dr-row{grid-template-columns:1fr;gap:2px}
+  .dr-row{grid-template-columns:1fr;gap:4px}
   .dr-do{padding-left:10px}
   .dr-ed-row{grid-template-columns:1fr auto}
   .dr-ed-row .dr-ed-do{grid-column:1/2}
@@ -794,7 +826,7 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
     <button class="tab" onclick="switchTab('situations')"><span class="tab-icon">&#128250;<span class="badge" id="sit-badge">0</span></span><span class="tab-label">Situations</span></button>
     <button class="tab" onclick="switchTab('thoughts')"><span class="tab-icon">&#128161;<span class="badge" id="th-badge">0</span></span><span class="tab-label">Thoughts</span></button>
     <button class="tab" onclick="switchTab('posts')"><span class="tab-icon">&#128204;<span class="badge" id="post-badge">0</span></span><span class="tab-label">Posts</span></button>
-    <button class="tab" onclick="switchTab('motivation')"><span class="tab-icon">&#128293;</span><span class="tab-label">Motivation</span></button>
+    <button class="tab" onclick="switchTab('motivation')"><span class="tab-icon">&#128293;</span><span class="tab-label"><span class="tl-full">Small learnings</span><span class="tl-short">Learnings</span></span></button>
     <button class="tab" onclick="switchTab('gratitude')"><span class="tab-icon">&#128591;</span><span class="tab-label">Gratitude</span></button>
     <button class="tab" onclick="switchTab('kundali')"><span class="tab-icon">&#128337;</span><span class="tab-label">Kundali</span></button>
     <button class="tab" onclick="switchTab('guide')"><span class="tab-icon">&#10024;</span><span class="tab-label">Guide</span></button>
@@ -812,6 +844,34 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
     </div>
     <div id="dr-body"><div class="dr-note">Loading your rules…</div></div>
   </section>
+  <section class="feed" id="feed" aria-labelledby="feed-title">
+    <div class="feed-hd">
+      <h2 class="feed-title" id="feed-title">My feed for today</h2>
+      <span class="feed-sub">New picks every morning</span>
+    </div>
+    <div class="feed-vids">
+      <div class="feed-card feed-video">
+        <div class="feed-lbl"><span>&#127909; My pick</span><span class="focus-sync" id="vid-sync"></span></div>
+        <div id="vid-preview"></div>
+        <input class="focus-in" id="vid-url" type="text" placeholder="Paste a YouTube or Instagram link..."
+               onblur="saveDailyVideo()"
+               onkeydown="if(event.key==='Enter'){saveDailyVideo();this.blur();event.preventDefault();}">
+        <textarea class="focus-in" id="vid-note" rows="1" placeholder="Why this one? What to take from it..."
+                  style="margin-top:6px"
+                  oninput="autoGrowFocus(this)"
+                  onkeydown="if(event.key==='Enter'&&!event.shiftKey){saveDailyVideo();this.blur();event.preventDefault();}"
+                  onblur="saveDailyVideo()"></textarea>
+        <div class="focus-carry" id="vid-carry"></div>
+      </div>
+      <div class="feed-card feed-video" id="feed-post"></div>
+    </div>
+    <div class="feed-grid">
+      <div class="feed-card" id="feed-learning"></div>
+      <div class="feed-card" id="feed-kundali"></div>
+      <div class="feed-card" id="feed-guide"></div>
+      <div class="feed-card" id="feed-gratitude"></div>
+    </div>
+  </section>
   <div class="focus-box sit-pairs">
     <div class="focus-top">
       <div class="focus-lbl">&#129504; Situations &amp; how I'll handle them</div>
@@ -825,22 +885,6 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
     </div>
   </div>
 
-  <div class="focus-box vid">
-    <div class="focus-top">
-      <div class="focus-lbl vid">&#127909; Video to watch</div>
-      <span class="focus-sync" id="vid-sync"></span>
-    </div>
-    <div id="vid-preview"></div>
-    <input class="focus-in" id="vid-url" type="text" placeholder="Paste a YouTube or Instagram link..."
-           onblur="saveDailyVideo()"
-           onkeydown="if(event.key==='Enter'){saveDailyVideo();this.blur();event.preventDefault();}">
-    <textarea class="focus-in" id="vid-note" rows="1" placeholder="Why this one? What to take from it..."
-              style="margin-top:6px"
-              oninput="autoGrowFocus(this)"
-              onkeydown="if(event.key==='Enter'&&!event.shiftKey){saveDailyVideo();this.blur();event.preventDefault();}"
-              onblur="saveDailyVideo()"></textarea>
-    <div class="focus-carry" id="vid-carry"></div>
-  </div>
   <div id="sync-banner" style="display:none;font-size:11px;padding:8px 12px;border-radius:var(--rsm);margin-bottom:1rem;font-family:var(--fm)"></div>
   <div class="glance" id="glance"></div>
   <hr class="d">
@@ -1063,7 +1107,7 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
 
 <!-- TAB 6: MOTIVATION -->
 <div class="pg" id="pg-motivation">
-  <div class="past-hdr"><div class="past-title">Morning Motivation</div><div class="past-sub">Your personal reading list — habits, practices and principles to live by.</div></div>
+  <div class="past-hdr"><div class="past-title">Small learnings</div><div class="past-sub">The lessons, habits and principles you've collected along the way.</div></div>
   <div class="mot-filter-bar" id="mot-cat-filter"><button class="mf on" data-mc="all" onclick="setMotCatFilter(this)">All</button><button class="mf" data-mc="habit" onclick="setMotCatFilter(this)">&#127775; Habit</button><button class="mf" data-mc="practice" onclick="setMotCatFilter(this)">&#129490; Practice</button><button class="mf" data-mc="principle" onclick="setMotCatFilter(this)">&#128214; Principle</button><button class="mf" data-mc="mantra" onclick="setMotCatFilter(this)">&#128591; Mantra</button><button class="mf" data-mc="reminder" onclick="setMotCatFilter(this)">&#128276; Reminder</button></div>
   <div class="pst-tabs">
     <button class="pst-tab on" id="mot-tab-pinned" onclick="setMotView('pinned')">&#128204; Pinned <span class="pst-ct" id="mot-ct-pinned">0</span></button>
@@ -1408,6 +1452,7 @@ function init(){
 
   // Show shimmer/loading state on morning intentions
   setIntentionsState('loading');
+  renderFeed();
 
   /* Two-stage load. The core request carries only what Home and
      Routine render, so the page is usable in a fraction of the time;
@@ -1441,6 +1486,7 @@ function init(){
       if(Array.isArray(d.gratitude))  replaceGratitudeFromSheet(d.gratitude);
       if(Array.isArray(d.kundali))    replaceKundaliFromSheet(d.kundali);
       if(Array.isArray(d.guide))      replaceGuideFromSheet(d.guide);
+      feedReady=true; renderFeed();
       banner();
     }
 
@@ -1477,6 +1523,7 @@ function init(){
         if(r&&r.status==='ok'&&Array.isArray(r[jobs[i][1]])){ jobs[i][2](r[jobs[i][1]]); got++; }
       }
       if(!drLoaded) markDailyRulesFailed();
+      feedReady=true; renderFeed();
       if(!selDate) selDate=isoToday();
       activeRoutine=routineForDate(selDate);
       renderMaster(); renderRoutine(); renderDailyFocus(); renderPlanLibrary();
@@ -1501,7 +1548,7 @@ function init(){
       var t1=Date.now();
       var arc=await sheetFetch(WORKER_URL+'?action=getArchives');
       if(arc&&arc.status==='ok'){ applyArchives(arc); DIAG.archiveMs=(Date.now()-t1)+'ms'; }
-      else { showSyncBanner(false,'Main sections loaded; archives failed \u2014 tap for details'); }
+      else { feedFailed=true; renderFeed(); showSyncBanner(false,'Main sections loaded; archives failed \u2014 tap for details'); }
     }catch(err){
       console.error('[init fetch error]',err);
       DIAG.everything='EXCEPTION \u2014 '+(err.message||err);
@@ -2506,7 +2553,7 @@ function exportMotCSV(){
   var rows=motEntries.map(function(e){return[e.category||'',e.pinned?'yes':'no',e.text||''].map(function(v){return'"'+String(v).replace(/"/g,'""')+'"';}).join(',');});
   var a=document.createElement('a');
   a.href='data:text/csv;charset=utf-8,'+encodeURIComponent([h.join(',')].concat(rows).join('\n'));
-  a.download='morning-motivation.csv'; a.click(); showToast('CSV exported ✓','success');
+  a.download='small-learnings.csv'; a.click(); showToast('CSV exported ✓','success');
 }
 
 /* GRATITUDE */
@@ -3747,6 +3794,7 @@ function saveDailyVideo(){
   if(key===_dvLast) return;
   _dvLast=key;
   renderVideoPreview(u.value.trim());
+  if(feedReady) renderFeed();
   var s=document.getElementById('vid-sync');
   if(s){ s.textContent='Saving\u2026'; s.className='focus-sync'; }
   clearTimeout(_dvTimer);
@@ -3768,6 +3816,121 @@ function replaceDailyFocusFromSheet(rows){
     dailyFocus[r.dateISO]={focus:r.focus||'',videoUrl:r.videoUrl||'',videoNote:r.videoNote||'',situations:r.situations||''};
   });
   renderDailyFocus();
+}
+
+/* ═══════════════════════════════════════════════════
+   MY FEED FOR TODAY
+
+   One pick per list, fixed for the whole day and new each morning.
+   Each item is scored by hash(date | list | id) and the lowest score
+   wins, so adding a new entry only changes today's pick if the new
+   entry happens to win — the feed doesn't reshuffle mid-day.
+═══════════════════════════════════════════════════ */
+var feedReady=false, feedFailed=false;
+
+function feedHash(str){
+  var h=2166136261;
+  for(var i=0;i<str.length;i++){ h^=str.charCodeAt(i); h=Math.imul(h,16777619); }
+  return h>>>0;
+}
+function feedPick(list,key,idOf){
+  if(!list||!list.length) return null;
+  var day=isoToday(), best=null, bestH=Infinity;
+  list.forEach(function(x,i){
+    var h=feedHash(day+'|'+key+'|'+(idOf(x)||('i'+i)));
+    if(h<bestH){ bestH=h; best=x; }
+  });
+  return best;
+}
+function feedDate(iso){
+  if(!/^\d{4}-\d{2}-\d{2}/.test(iso||'')) return '';
+  var d=new Date(iso.slice(0,10)+'T00:00:00');
+  return d.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:d.getFullYear()!==new Date().getFullYear()?'numeric':undefined});
+}
+function feedCard(id,label,inner,openLabel,openJs,meta){
+  var el=document.getElementById(id); if(!el) return;
+  el.innerHTML='<div class="feed-lbl"><span>'+label+'</span></div>'+inner+
+    '<div class="feed-meta"><span>'+(meta||'')+'</span>'+
+    (openJs?'<button type="button" class="feed-open" onclick="'+openJs+'">'+openLabel+' \u203a</button>':'')+'</div>';
+}
+function feedEmpty(id,label,msg){
+  var el=document.getElementById(id); if(!el) return;
+  el.innerHTML='<div class="feed-lbl"><span>'+label+'</span></div><div class="feed-empty">'+msg+'</div>';
+}
+/* Motivation entries are stored as "Title  Body" (two spaces) */
+function feedSplitTitle(t){
+  t=String(t||'').trim();
+  var m=t.match(/^(.{3,90}?)\s{2,}([\s\S]+)$/);
+  return m ? {h:m[1].trim(), b:m[2].trim()} : {h:'', b:t};
+}
+
+function renderFeed(){
+  var L={post:'\ud83c\udfac From your saved posts', learn:'\ud83c\udf31 Small learning', kun:'\u2728 From your Kundali',
+         guide:'\ud83e\udded From your Guide', grat:'\ud83d\ude4f From your Gratitude'};
+  if(!feedReady){
+    var msg=feedFailed?'Couldn\u2019t load. Reload the page to try again.':'Loading\u2026';
+    feedEmpty('feed-post',L.post,msg); feedEmpty('feed-learning',L.learn,msg);
+    feedEmpty('feed-kundali',L.kun,msg); feedEmpty('feed-guide',L.guide,msg); feedEmpty('feed-gratitude',L.grat,msg);
+    return;
+  }
+
+  // Video 2 — a saved post with a link, never the same as video 1
+  var mine=(document.getElementById('vid-url')||{}).value||'';
+  var vids=posts.filter(function(p){ return /^https?:\/\//i.test(p.url||'') && p.url.trim()!==mine.trim(); });
+  var p=feedPick(vids,'post',function(x){ return x.sheetId||x.url; });
+  if(!p) feedEmpty('feed-post',L.post,'No saved posts with a link yet. Save one in Posts and it\u2019ll show up here.');
+  else{
+    var yt=ytThumb(p.url), img=(p.images||'').split('|')[0];
+    var thumb = yt ? '<img class="vid-thumb" src="'+escH(yt)+'" alt="" onerror="this.style.opacity=.3">'
+              : (/^https?:\/\//i.test(img) ? '<img class="feed-thumb-img" src="'+escH(img)+'" alt="" onerror="this.style.opacity=.3">'
+              : '<div class="vid-thumb-ph">\ud83c\udfac</div>');
+    feedCard('feed-post',L.post,
+      '<div class="vid-prev">'+thumb+'<div style="min-width:0">'+
+        '<div class="feed-h">'+escH(p.heading||'Saved post')+'</div>'+
+        '<a class="vid-watch" href="'+escH(p.url)+'" target="_blank" rel="noopener">Watch \u2197</a></div></div>'+
+      (p.desc?'<div class="feed-t feed-clamp">'+escH(p.desc)+'</div>':''),
+      'All posts',"switchTab('posts')",
+      [p.dateISO?'Saved '+feedDate(p.dateISO):'', vids.length>1?'1 of '+vids.length+' saved':''].filter(Boolean).join(' \u00b7 '));
+  }
+
+  // Small learning
+  var learns=motEntries.filter(function(m){ return String(m.text||'').trim(); });
+  var m=feedPick(learns,'learn',function(x){ return x.sheetId||x.text; });
+  if(!m) feedEmpty('feed-learning',L.learn,'Nothing in Small learnings yet.');
+  else{
+    var st=feedSplitTitle(m.text);
+    feedCard('feed-learning',L.learn,
+      (st.h?'<div class="feed-h">'+escH(st.h)+'</div>':'')+'<div class="feed-t feed-clamp">'+escH(st.b)+'</div>',
+      'All learnings',"switchTab('motivation')",
+      [m.category?m.category.charAt(0).toUpperCase()+m.category.slice(1):'', m.pinned?'Pinned':''].filter(Boolean).join(' \u00b7 '));
+  }
+
+  // Kundali
+  var kuns=kunEntries.filter(function(k){ return String(k.learning||'').trim(); });
+  var k=feedPick(kuns,'kun',function(x){ return x.sheetId||x.learning; });
+  if(!k) feedEmpty('feed-kundali',L.kun,'No Kundali learnings saved yet.');
+  else feedCard('feed-kundali',L.kun,
+      '<div class="feed-h">'+escH(k.learning)+'</div>'+(k.logic?'<div class="feed-t feed-clamp">'+escH(k.logic)+'</div>':''),
+      'All Kundali',"switchTab('kundali')",
+      k.category?k.category.charAt(0).toUpperCase()+k.category.slice(1):'');
+
+  // Guide
+  var g=feedPick(guide,'guide',function(x){ return x.sheetId; });
+  if(!g) feedEmpty('feed-guide',L.guide,'Your Guide is empty.');
+  else feedCard('feed-guide',L.guide,
+      '<div class="feed-h">'+escH(g.situation)+'</div>'+
+      '<div class="feed-do"><b>Do</b>'+escH(g.action)+'</div>',
+      'Open in Guide',"switchTab('guide');showGdItem('"+escH(g.sheetId).replace(/'/g,'')+"')",
+      [escH(g.category||''), escH(g.planet||'')].filter(Boolean).join(' \u00b7 '));
+
+  // Gratitude — one past day, with everything you wrote that day
+  var grats=gratEntries.filter(function(e){ return e.items&&e.items.length; });
+  var e=feedPick(grats,'grat',function(x){ return x.sheetId||x.dateISO; });
+  if(!e) feedEmpty('feed-gratitude',L.grat,'No gratitude entries yet.');
+  else feedCard('feed-gratitude',L.grat,
+      (e.dateISO?'<div class="feed-t" style="margin-bottom:3px">On '+feedDate(e.dateISO)+' you were grateful for</div>':'')+
+      '<ul class="feed-list">'+e.items.map(function(t){ return '<li>'+escH(t)+'</li>'; }).join('')+'</ul>',
+      'All gratitude',"switchTab('gratitude')",'');
 }
 
 /* ═══════════════════════════════════════════════════
