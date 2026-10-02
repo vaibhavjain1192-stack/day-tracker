@@ -1277,7 +1277,7 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
 <script>
 'use strict';
 const WORKER_URL='https://muddy-shadow-1aa7.vaibhavjain-1192.workers.dev';
-const FETCH_TIMEOUT=90000;   // one bulk request does a lot of work
+const FETCH_TIMEOUT=45000;   // default; page loads pass shorter ones
 var DIAG={};  // diagnostics collected during fetch
 
 /* Apps Script returns an HTML page (sign-in / error) rather than
@@ -1286,9 +1286,19 @@ var DIAG={};  // diagnostics collected during fetch
    so detect it and report something actionable instead. */
 var LAST_SHEET_ERROR='';
 
-async function sheetFetch(url,opts){
+/* Pull the readable message out of Google's HTML error page */
+function htmlErrorText(html){
+  var t=String(html||'').replace(/<(script|style)[\s\S]*?<\/\1>/gi,' ')
+    .replace(/<[^>]+>/g,' ').replace(/&nbsp;/g,' ').replace(/&#39;/g,"'").replace(/&quot;/g,'"').replace(/&amp;/g,'&')
+    .replace(/\s+/g,' ').trim();
+  return t.slice(0,220);
+}
+
+async function sheetFetch(url,opts,timeoutMs){
+  var ms=timeoutMs||FETCH_TIMEOUT;
   var ctrl=new AbortController();
-  var tid=setTimeout(function(){ctrl.abort();},FETCH_TIMEOUT);
+  var tid=setTimeout(function(){ctrl.abort();},ms);
+  LAST_SHEET_ERROR='';          // never report a previous request's error for this one
   try{
     var resp=await fetch(url,Object.assign({signal:ctrl.signal},opts||{}));
     clearTimeout(tid);
@@ -1298,9 +1308,10 @@ async function sheetFetch(url,opts){
     var head=text.slice(0,300).trim();
 
     if(head.charAt(0)==='<'){
+      var said=htmlErrorText(text);
       LAST_SHEET_ERROR = /sign ?in|accounts\.google/i.test(head)
         ? 'Apps Script is asking for sign-in \u2014 open the script and re-authorise, then Deploy > New version.'
-        : 'Apps Script returned an error page \u2014 redeploy it (Deploy > Manage deployments > New version).';
+        : 'Apps Script returned an error page'+(said?': \u201c'+said+'\u201d':'')+'.';
       throw new Error(LAST_SHEET_ERROR);
     }
 
@@ -1308,7 +1319,7 @@ async function sheetFetch(url,opts){
       var json=JSON.parse(text);
       if(json&&json.status==='error'){
         LAST_SHEET_ERROR='Script error: '+(json.message||'unknown');
-        console.warn('[sheetFetch] script reported:',json.message);
+        console.warn('[sheetFetch] script reported:',url,json.message);
       }else{
         LAST_SHEET_ERROR='';
       }
@@ -1319,7 +1330,8 @@ async function sheetFetch(url,opts){
     }
   }catch(e){
     clearTimeout(tid);
-    if(!LAST_SHEET_ERROR) LAST_SHEET_ERROR=e.message||String(e);
+    if(e&&e.name==='AbortError') LAST_SHEET_ERROR='Timed out after '+Math.round(ms/1000)+'s \u2014 the Sheet was too slow to answer.';
+    else if(!LAST_SHEET_ERROR) LAST_SHEET_ERROR=e.message||String(e);
     console.warn('[sheetFetch]',url,LAST_SHEET_ERROR);
     return null;
   }
@@ -1453,6 +1465,7 @@ function init(){
   // Show shimmer/loading state on morning intentions
   setIntentionsState('loading');
   renderFeed();
+  drLoadSnap();
 
   /* Two-stage load. The core request carries only what Home and
      Routine render, so the page is usable in a fraction of the time;
@@ -1496,7 +1509,7 @@ function init(){
         gratEntries.length+' grat \u00b7 '+kunEntries.length+' kun   (tap for details)');
     }
 
-    async function fallback(){
+    async function fallback(skipArchives){
       DIAG.everything='FELL BACK \u2014 fetched section by section';
       var jobs=[
         ['getAllSitPlans','sitPlans',replaceSitPlansFromSheet],
@@ -1517,11 +1530,20 @@ function init(){
         ['getAllHabitReasons','habitReasons',replaceHabitReasonsFromSheet],
         ['getAllDailyRules','dailyRules',replaceDailyRulesFromSheet]
       ];
-      var got=0;
-      for(var i=0;i<jobs.length;i++){
-        var r=await sheetFetch(WORKER_URL+'?action='+jobs[i][0]);
-        if(r&&r.status==='ok'&&Array.isArray(r[jobs[i][1]])){ jobs[i][2](r[jobs[i][1]]); got++; }
+      if(skipArchives){
+        var arcKeys={situations:1,thoughts:1,posts:1,motivation:1,gratitude:1,kundali:1,guide:1};
+        jobs=jobs.filter(function(j){ return !arcKeys[j[1]]; });
       }
+      // Four at a time, each shown as soon as it arrives
+      var got=0, next=0;
+      async function worker(){
+        while(next<jobs.length){
+          var j=jobs[next++];
+          var r=await sheetFetch(WORKER_URL+'?action='+j[0],null,20000);
+          if(r&&r.status==='ok'&&Array.isArray(r[j[1]])){ try{ j[2](r[j[1]]); got++; }catch(er){ console.error(er); } }
+        }
+      }
+      await Promise.all([worker(),worker(),worker(),worker()]);
       if(!drLoaded) markDailyRulesFailed();
       feedReady=true; renderFeed();
       if(!selDate) selDate=isoToday();
@@ -1533,22 +1555,57 @@ function init(){
 
     var t0=Date.now();
     try{
-      var core=await sheetFetch(WORKER_URL+'?action=getCore&date='+isoToday());
-      DIAG.everything = core ? core.status : 'NULL response';
-      if(!core||core.status!=='ok'){ setIntentionsState('form'); await fallback(); return; }
+      /* Both requests go out together; whichever answers first is shown
+         first. Archives no longer wait for the core to finish. */
+      var arcApplied=false;
+      var arcP=sheetFetch(WORKER_URL+'?action=getArchives',null,40000).then(function(arc){
+        if(arc&&arc.status==='ok'){
+          try{ applyArchives(arc); arcApplied=true; DIAG.archiveMs=(Date.now()-t0)+'ms'; }
+          catch(er){ console.error('[archives apply]',er); }
+        }else{ DIAG.archives=LAST_SHEET_ERROR||'failed'; }
+        return arc;
+      });
+      var core=await sheetFetch(WORKER_URL+'?action=getCore&date='+isoToday(),null,30000);
+      DIAG.everything = core ? core.status : ('NULL response \u2014 '+(LAST_SHEET_ERROR||'no detail'));
+      if(!core||core.status!=='ok'){
+        setIntentionsState('form');
+        await arcP;                      // don't refetch what the archives already brought
+        await fallback(arcApplied);
+        return;
+      }
 
       applyCore(core);
       DIAG.coreMs = (Date.now()-t0)+'ms';
       if(core.morning&&(core.morning.priority||core.morning.emotional_intention)){
         showReadView(core.morning.priority||'',core.morning.emotional_intention||'');
       }else{ setIntentionsState('form'); }
-      showSyncBanner(true,'Loaded \u2713 fetching the rest\u2026');
+      if(!arcApplied) showSyncBanner(true,'Loaded \u2713 fetching the rest\u2026');
 
-      // Archives fill the other tabs; the page is already usable
-      var t1=Date.now();
-      var arc=await sheetFetch(WORKER_URL+'?action=getArchives');
-      if(arc&&arc.status==='ok'){ applyArchives(arc); DIAG.archiveMs=(Date.now()-t1)+'ms'; }
-      else { feedFailed=true; renderFeed(); showSyncBanner(false,'Main sections loaded; archives failed \u2014 tap for details'); }
+      await arcP;
+      if(!arcApplied){
+        // Archives failed on their own: fetch just those sections, four at a time
+        var arcJobs=[
+          ['getAllSituations','situations',replaceSituationsFromSheet],
+          ['getAllThoughts','thoughts',replaceThoughtsFromSheet],
+          ['getAllPosts','posts',replacePostsFromSheet],
+          ['getAllMotivation','motivation',replaceMotivationFromSheet],
+          ['getAllGratitude','gratitude',replaceGratitudeFromSheet],
+          ['getAllKundali','kundali',replaceKundaliFromSheet],
+          ['getAllGuide','guide',replaceGuideFromSheet]
+        ], aGot=0, aNext=0;
+        async function aWorker(){
+          while(aNext<arcJobs.length){
+            var j=arcJobs[aNext++];
+            var r=await sheetFetch(WORKER_URL+'?action='+j[0],null,20000);
+            if(r&&r.status==='ok'&&Array.isArray(r[j[1]])){ try{ j[2](r[j[1]]); aGot++; }catch(er){ console.error(er); } }
+          }
+        }
+        await Promise.all([aWorker(),aWorker(),aWorker(),aWorker()]);
+        if(aGot){ feedReady=true; renderFeed(); }
+        else { feedFailed=true; renderFeed(); }
+        if(aGot<arcJobs.length) showSyncBanner(false,'Loaded '+aGot+' of '+arcJobs.length+' archive sections \u2014 tap for details');
+        else banner();
+      }
     }catch(err){
       console.error('[init fetch error]',err);
       DIAG.everything='EXCEPTION \u2014 '+(err.message||err);
@@ -3867,7 +3924,16 @@ function feedSplitTitle(t){
 function renderFeed(){
   var L={post:'\ud83c\udfac From your saved posts', learn:'\ud83c\udf31 Small learning', kun:'\u2728 From your Kundali',
          guide:'\ud83e\udded From your Guide', grat:'\ud83d\ude4f From your Gratitude'};
+  var FEED_IDS=['feed-post','feed-learning','feed-kundali','feed-guide','feed-gratitude'];
   if(!feedReady){
+    // Today's picks from earlier today paint instantly; they're the same picks anyway
+    try{
+      var sn=JSON.parse(localStorage.getItem('snap_feed')||'null');
+      if(sn&&sn.date===isoToday()&&sn.html){
+        FEED_IDS.forEach(function(id){ var el=document.getElementById(id); if(el&&sn.html[id]) el.innerHTML=sn.html[id]; });
+        return;
+      }
+    }catch(e){}
     var msg=feedFailed?'Couldn\u2019t load. Reload the page to try again.':'Loading\u2026';
     feedEmpty('feed-post',L.post,msg); feedEmpty('feed-learning',L.learn,msg);
     feedEmpty('feed-kundali',L.kun,msg); feedEmpty('feed-guide',L.guide,msg); feedEmpty('feed-gratitude',L.grat,msg);
@@ -3931,6 +3997,11 @@ function renderFeed(){
       (e.dateISO?'<div class="feed-t" style="margin-bottom:3px">On '+feedDate(e.dateISO)+' you were grateful for</div>':'')+
       '<ul class="feed-list">'+e.items.map(function(t){ return '<li>'+escH(t)+'</li>'; }).join('')+'</ul>',
       'All gratitude',"switchTab('gratitude')",'');
+
+  try{
+    var html={}; FEED_IDS.forEach(function(id){ var el=document.getElementById(id); if(el) html[id]=el.innerHTML; });
+    localStorage.setItem('snap_feed',JSON.stringify({date:isoToday(),html:html}));
+  }catch(e){}
 }
 
 /* ═══════════════════════════════════════════════════
@@ -3944,6 +4015,19 @@ var dailyRules=[];          // [{sheetId, when, do}]
 var drChangedOn='';         // yyyy-mm-dd the list last changed
 var drLoaded=false, drUnsupported=false, drFailed=false, drEditing=false, drSaving=false;
 var drDraft=[];             // working copy while editing
+var drSnapshot=false;       // showing last visit's rules while the Sheet loads (read-only)
+
+/* Display-only copy of the last rules seen, so the top of the page paints
+   instantly. Never edited from: Edit stays hidden until the Sheet answers. */
+function drSaveSnap(){ try{ localStorage.setItem('snap_daily_rules',JSON.stringify({rules:dailyRules,changedOn:drChangedOn})); }catch(e){} }
+function drLoadSnap(){
+  if(drLoaded) return;
+  try{
+    var sn=JSON.parse(localStorage.getItem('snap_daily_rules')||'null');
+    if(sn&&Array.isArray(sn.rules)&&sn.rules.length){ dailyRules=sn.rules; drChangedOn=sn.changedOn||''; drSnapshot=true; }
+  }catch(e){}
+  renderDailyRules();
+}
 
 /* Drawn from the patterns that repeat most across your Situations,
    Situation plans, Daily focus, Motivation and Kundali notes. */
@@ -3970,6 +4054,7 @@ function replaceDailyRulesFromSheet(rows){
   dailyRules=rows.map(function(r){ return {sheetId:r.sheetId||'', when:drClean(r.when), do:String(r['do']||'').trim()}; })
     .filter(function(r){ return r.when||r.do; });
   drChangedOn=rows.reduce(function(m,r){ return (r.changedOn||'')>m ? r.changedOn : m; },'');
+  drSnapshot=false; drSaveSnap();
   if(!drEditing) renderDailyRules();
 }
 function markDailyRulesUnsupported(){
@@ -3981,12 +4066,23 @@ function markDailyRulesFailed(){
   drFailed=true; renderDailyRules();
 }
 
+function drListHTML(){
+  return '<ul class="dr-list">'+dailyRules.map(function(r){
+    return '<li class="dr-row"><span class="dr-when"><b>When</b> '+escH(r.when)+'</span><span class="dr-do">'+escH(r.do)+'</span></li>';
+  }).join('')+'</ul>';
+}
 function renderDailyRules(){
   var body=document.getElementById('dr-body'), btn=document.getElementById('dr-edit-btn');
   if(!body) return;
   if(drEditing){ renderDailyRulesEditor(); return; }
   if(btn) btn.style.display=(drLoaded&&dailyRules.length)?'':'none';
 
+  if(!drLoaded && drSnapshot && dailyRules.length){
+    body.innerHTML=drListHTML()+'<div class="dr-foot"><span>'+
+      (drFailed||drUnsupported?'Couldn\u2019t reach the Sheet, so these are your rules from your last visit.':'Checking your Sheet for changes\u2026')+
+      '</span></div>';
+    return;
+  }
   if(drUnsupported){
     body.innerHTML='<div class="dr-note">This section needs the updated <b>Code.gs</b>. Deploy it in Apps Script (New version), then reload.</div>';
     return;
@@ -4002,9 +4098,7 @@ function renderDailyRules(){
       '</div>';
     return;
   }
-  body.innerHTML='<ul class="dr-list">'+dailyRules.map(function(r){
-      return '<li class="dr-row"><span class="dr-when"><b>When</b> '+escH(r.when)+'</span><span class="dr-do">'+escH(r.do)+'</span></li>';
-    }).join('')+'</ul>'+
+  body.innerHTML=drListHTML()+
     '<div class="dr-foot"><span>'+(drChangedOn?'Same since '+drFmtDate(drChangedOn)+'. ':'')+'Carries forward until you edit it.</span></div>';
 }
 
@@ -4107,6 +4201,7 @@ async function saveDailyRules(){
     return;
   }
   dailyRules=next; drChangedOn=today; drEditing=false; drDraft=[];
+  drSaveSnap();
   renderDailyRules();
   showToast('Rules saved. They\u2019ll show here every day \u2713','success');
 }
