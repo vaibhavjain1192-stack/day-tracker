@@ -121,6 +121,12 @@ body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:
 .feed-open{background:none;border:none;color:var(--text-2);font-family:var(--fb);font-size:11px;cursor:pointer;padding:0;white-space:nowrap}
 .feed-open:hover{color:var(--fc,var(--gold))}
 .feed-open:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.feed-nav{display:inline-flex;align-items:center;gap:6px;margin-left:auto}
+.feed-pos{font-family:var(--fm);font-size:10px;font-weight:400;color:var(--text-3)}
+.feed-next{width:26px;height:26px;border-radius:50%;border:1px solid var(--border-md);background:var(--surface);color:var(--text-1);
+  font-size:17px;line-height:1;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0 0 2px 1px;transition:border-color var(--tr),color var(--tr)}
+.feed-next:hover{border-color:var(--fc,var(--gold));color:var(--fc,var(--gold))}
+.feed-next:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 .feed-empty{font-size:13px;color:var(--text-3);line-height:1.5}
 .feed-video .vid-prev{margin-bottom:8px}
 .feed-video .focus-in:focus{border-bottom-color:var(--rose)}
@@ -1623,7 +1629,10 @@ function init(){
       }
       await Promise.all([worker(),worker(),worker(),worker()]);
       if(!drLoaded) markDailyRulesFailed();
-      feedReady=true; renderFeed();
+      // Only call the feed loaded if something for it actually arrived
+      if(posts.length||motEntries.length||kunEntries.length||guide.length||gratEntries.length) feedReady=true;
+      else feedFailed=true;
+      renderFeed();
       if(!selDate) selDate=isoToday();
       activeRoutine=routineForDate(selDate);
       renderMaster(); renderRoutine(); renderDailyFocus(); renderPlanLibrary();
@@ -4205,14 +4214,40 @@ function feedPick(list,key,idOf){
   });
   return best;
 }
+/* Every item of a list in today's order. Index 0 is exactly feedPick's
+   choice, so the card opens on today's pick and › walks on from there. */
+var feedPos={post:0,learn:0,kun:0,guide:0,grat:0};   // in memory only: a refresh starts over
+var feedBrowsed=false;
+function feedOrder(list,key,idOf){
+  var day=isoToday();
+  return list.map(function(x,i){ return {x:x,h:feedHash(day+'|'+key+'|'+(idOf(x)||('i'+i)))}; })
+    .sort(function(a,b){ return a.h-b.h; }).map(function(o){ return o.x; });
+}
+function feedAt(list,key,idOf){
+  if(!list||!list.length) return {item:null,i:0,n:0};
+  var ord=feedOrder(list,key,idOf), n=ord.length, i=((feedPos[key]%n)+n)%n;
+  return {item:ord[i],i:i,n:n,key:key};
+}
+var FEED_CARD_OF={post:'feed-post',learn:'feed-learning',kun:'feed-kundali',guide:'feed-guide',grat:'feed-gratitude'};
+function feedNext(key){
+  if(!feedReady) return;
+  feedPos[key]=(feedPos[key]||0)+1; feedBrowsed=true;
+  renderFeed();
+  var b=document.querySelector('#'+FEED_CARD_OF[key]+' .feed-next'); if(b) b.focus();
+}
+
 function feedDate(iso){
   if(!/^\d{4}-\d{2}-\d{2}/.test(iso||'')) return '';
   var d=new Date(iso.slice(0,10)+'T00:00:00');
   return d.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:d.getFullYear()!==new Date().getFullYear()?'numeric':undefined});
 }
-function feedCard(id,label,inner,openLabel,openJs,meta){
+function feedCard(id,label,inner,openLabel,openJs,meta,nav){
   var el=document.getElementById(id); if(!el) return;
-  el.innerHTML='<div class="feed-lbl"><span>'+label+'</span></div>'+inner+
+  var navHtml = (nav&&nav.n>1)
+    ? '<span class="feed-nav"><span class="feed-pos">'+(nav.i+1)+' / '+nav.n+'</span>'+
+      '<button type="button" class="feed-next" onclick="feedNext(\''+nav.key+'\')" aria-label="Next ('+(nav.i+1===nav.n?'back to the first':'item '+(nav.i+2)+' of '+nav.n)+')" title="Next">\u203a</button></span>'
+    : '';
+  el.innerHTML='<div class="feed-lbl"><span>'+label+'</span>'+navHtml+'</div>'+inner+
     '<div class="feed-meta"><span>'+(meta||'')+'</span>'+
     (openJs?'<button type="button" class="feed-open" onclick="'+openJs+'">'+openLabel+' \u203a</button>':'')+'</div>';
 }
@@ -4249,7 +4284,7 @@ function renderFeed(){
   // Video 2 — a saved post with a link, never the same as video 1
   var mine=(document.getElementById('vid-url')||{}).value||'';
   var vids=posts.filter(function(p){ return /^https?:\/\//i.test(p.url||'') && p.url.trim()!==mine.trim(); });
-  var p=feedPick(vids,'post',function(x){ return x.sheetId||x.url; });
+  var pa=feedAt(vids,'post',function(x){ return x.sheetId||x.url; }), p=pa.item;
   if(!p) feedEmpty('feed-post',L.post,'No saved posts with a link yet. Save one in Posts and it\u2019ll show up here.');
   else{
     var yt=ytThumb(p.url), img=(p.images||'').split('|')[0];
@@ -4262,48 +4297,50 @@ function renderFeed(){
         '<a class="vid-watch" href="'+escH(p.url)+'" target="_blank" rel="noopener">Watch \u2197</a></div></div>'+
       (p.desc?'<div class="feed-t feed-clamp">'+escH(p.desc)+'</div>':''),
       'All posts',"switchTab('posts')",
-      [p.dateISO?'Saved '+feedDate(p.dateISO):'', vids.length>1?'1 of '+vids.length+' saved':''].filter(Boolean).join(' \u00b7 '));
+      p.dateISO?'Saved '+feedDate(p.dateISO):'', pa);
   }
 
   // Small learning
   var learns=motEntries.filter(function(m){ return String(m.text||'').trim(); });
-  var m=feedPick(learns,'learn',function(x){ return x.sheetId||x.text; });
+  var ma=feedAt(learns,'learn',function(x){ return x.sheetId||x.text; }), m=ma.item;
   if(!m) feedEmpty('feed-learning',L.learn,'Nothing in Small learnings yet.');
   else{
     var st=feedSplitTitle(m.text);
     feedCard('feed-learning',L.learn,
       (st.h?'<div class="feed-h">'+escH(st.h)+'</div>':'')+'<div class="feed-t feed-clamp">'+escH(st.b)+'</div>',
       'All learnings',"switchTab('motivation')",
-      [m.category?m.category.charAt(0).toUpperCase()+m.category.slice(1):'', m.pinned?'Pinned':''].filter(Boolean).join(' \u00b7 '));
+      [m.category?m.category.charAt(0).toUpperCase()+m.category.slice(1):'', m.pinned?'Pinned':''].filter(Boolean).join(' \u00b7 '), ma);
   }
 
   // Kundali
   var kuns=kunEntries.filter(function(k){ return String(k.learning||'').trim(); });
-  var k=feedPick(kuns,'kun',function(x){ return x.sheetId||x.learning; });
+  var ka=feedAt(kuns,'kun',function(x){ return x.sheetId||x.learning; }), k=ka.item;
   if(!k) feedEmpty('feed-kundali',L.kun,'No Kundali learnings saved yet.');
   else feedCard('feed-kundali',L.kun,
       '<div class="feed-h">'+escH(k.learning)+'</div>'+(k.logic?'<div class="feed-t feed-clamp">'+escH(k.logic)+'</div>':''),
       'All Kundali',"switchTab('kundali')",
-      k.category?k.category.charAt(0).toUpperCase()+k.category.slice(1):'');
+      k.category?k.category.charAt(0).toUpperCase()+k.category.slice(1):'', ka);
 
   // Guide
-  var g=feedPick(guide,'guide',function(x){ return x.sheetId; });
+  var ga=feedAt(guide,'guide',function(x){ return x.sheetId; }), g=ga.item;
   if(!g) feedEmpty('feed-guide',L.guide,'Your Guide is empty.');
   else feedCard('feed-guide',L.guide,
       '<div class="feed-h">'+escH(g.situation)+'</div>'+
       '<div class="feed-do"><b>Do</b>'+escH(g.action)+'</div>',
       'Open in Guide',"switchTab('guide');showGdItem('"+escH(g.sheetId).replace(/'/g,'')+"')",
-      [escH(g.category||''), escH(g.planet||'')].filter(Boolean).join(' \u00b7 '));
+      [escH(g.category||''), escH(g.planet||'')].filter(Boolean).join(' \u00b7 '), ga);
 
   // Gratitude — one past day, with everything you wrote that day
   var grats=gratEntries.filter(function(e){ return e.items&&e.items.length; });
-  var e=feedPick(grats,'grat',function(x){ return x.sheetId||x.dateISO; });
+  var ea=feedAt(grats,'grat',function(x){ return x.sheetId||x.dateISO; }), e=ea.item;
   if(!e) feedEmpty('feed-gratitude',L.grat,'No gratitude entries yet.');
   else feedCard('feed-gratitude',L.grat,
       (e.dateISO?'<div class="feed-t" style="margin-bottom:3px">On '+feedDate(e.dateISO)+' you were grateful for</div>':'')+
       '<ul class="feed-list">'+e.items.map(function(t){ return '<li>'+escH(t)+'</li>'; }).join('')+'</ul>',
-      'All gratitude',"switchTab('gratitude')",'');
+      'All gratitude',"switchTab('gratitude')",'', ea);
 
+  if(feedBrowsed) return;   // the instant-load copy is always today's original picks
+  if(!(posts.length||motEntries.length||kunEntries.length||guide.length||gratEntries.length)) return;   // never save empty cards
   try{
     var html={}; FEED_IDS.forEach(function(id){ var el=document.getElementById(id); if(el) html[id]=el.innerHTML; });
     localStorage.setItem('snap_feed',JSON.stringify({date:isoToday(),html:html}));
