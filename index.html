@@ -50,6 +50,45 @@ body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:
 .mantra{background:var(--gold-glow);border:1px solid rgba(201,168,76,0.15);border-left:2px solid var(--gold);border-radius:0 var(--r) var(--r) 0;padding:.75rem 1rem;margin-bottom:1rem}
 .mantra-q{font-family:var(--fd);font-size:1rem;font-style:italic;color:var(--text-1);line-height:1.55}
 .mantra-src{font-size:11px;color:var(--text-3);margin-top:4px}
+/* ── Food habits ── */
+.fd-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:8px}
+.fd-day{font-size:13px;font-weight:600;color:var(--text-1)}
+.fd-prog{font-size:11px;color:var(--text-3)}
+.fd-prog b{color:#6BBF8E;font-weight:600}
+.fd-note{font-size:13px;color:var(--text-2);line-height:1.55;padding:4px 0 10px}
+.fd-list{list-style:none;margin:0;padding:0}
+.fd-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)}
+.fd-chk{flex:1;min-width:0;display:flex;align-items:center;gap:10px;background:none;border:none;padding:2px 0;cursor:pointer;text-align:left;font-family:var(--fb);color:inherit}
+.fd-box{width:22px;height:22px;flex-shrink:0;border-radius:6px;border:1.5px solid var(--border-md);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#0F1117;transition:all var(--tr)}
+.fd-row.on .fd-box{background:#6BBF8E;border-color:#6BBF8E}
+.fd-chk:hover .fd-box{border-color:#6BBF8E}
+.fd-txt{display:flex;flex-direction:column;min-width:0}
+.fd-name{font-size:13px;color:var(--text-1);line-height:1.4}
+.fd-row.on .fd-name{color:var(--text-2)}
+.fd-meta{font-size:11px;color:var(--text-3)}
+.fd-row.on .fd-meta{color:#6BBF8E}
+.fd-dots{display:flex;gap:4px;flex-shrink:0}
+.fd-dot{width:9px;height:9px;border-radius:50%;border:1.5px solid var(--border-md)}
+.fd-dot.on{background:#6BBF8E;border-color:#6BBF8E}
+.fd-dot.open{border-style:dashed}
+.fd-dot.na{border-color:transparent;background:var(--surface)}
+.fd-acts{display:flex;gap:3px;flex-shrink:0}
+.fd-chk:focus-visible,.fd-chip:focus-visible{outline:2px solid var(--gold);outline-offset:2px;border-radius:6px}
+.fd-add{display:flex;gap:6px;margin-top:10px}
+.fd-add .sin{flex:1}
+.fd-quick{display:flex;gap:5px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.fd-quick-l{font-size:11px;color:var(--text-3);margin-right:2px}
+.fd-chip{font-family:var(--fb);font-size:12px;padding:4px 10px;border-radius:20px;border:1px dashed var(--border-md);background:transparent;color:var(--text-2);cursor:pointer}
+.fd-chip:hover{color:#6BBF8E;border-color:#6BBF8E}
+.fd-chip.all{border-style:solid;color:#6BBF8E;border-color:rgba(107,191,142,.5)}
+.fd-arch{margin-top:12px;font-size:12px;color:var(--text-2)}
+.fd-arch summary{cursor:pointer;color:var(--text-3);font-size:11px}
+.fd-arch-row{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)}
+.fd-arch-row small{color:var(--text-3)}
+.fd-foot{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px}
+.fd-hint{font-size:11px;color:var(--text-3)}
+@media(max-width:640px){.fd-dots{display:none}.fd-hint{display:none}}
+
 /* ── Point thumbnails ── */
 .pt-tile{width:34px;height:34px;flex-shrink:0;border-radius:9px;display:flex;align-items:center;justify-content:center;
   color:var(--pt);background:rgba(255,255,255,.05);border:1px solid var(--border-md);background:color-mix(in srgb,var(--pt) 16%,transparent);border:1px solid color-mix(in srgb,var(--pt) 32%,transparent)}
@@ -446,7 +485,8 @@ body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:
 .sec-body > .q-wrap,.sec-body > .cl-block{background:transparent;border:none;padding:0}
 
 /* TODAY AT A GLANCE */
-.glance{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:1rem}
+.glance{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:1rem}
+@media(max-width:640px){.glance{grid-template-columns:repeat(2,1fr)}}
 .gl-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:10px 8px;text-align:center;cursor:pointer;transition:all var(--tr)}
 .gl-card:hover{border-color:var(--border-md)}
 .gl-n{font-family:var(--fd);font-size:1.35rem;line-height:1;color:var(--text-1)}
@@ -1114,6 +1154,15 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
 
   </div><!-- /sec-routine -->
 
+  <div class="sec-hd" id="hd-food" onclick="toggleSection('food')"><span class="sec-icon">&#129367;</span><span class="sec-title">Food habits</span><span class="lbl-line"></span><span class="sec-badge" id="badge-food"></span><span class="sec-caret open" id="caret-food">&#9662;</span></div>
+  <div class="sec-body" id="sec-food">
+    <div class="q-wrap">
+      <div class="fd-top"><span class="fd-day" id="fd-day"></span><span class="fd-prog" id="fd-prog"></span></div>
+      <div id="fd-body"><div class="fd-note">Loading your food habits&hellip;</div></div>
+      <div class="fd-foot"><span class="sync-txt" id="fd-sync"></span><span class="fd-hint">Pick a date in the calendar above to fill in a past day.</span></div>
+    </div>
+  </div><!-- /sec-food -->
+
   <!-- Completion history -->
   <div class="sec-hd" id="hd-rtstats" onclick="toggleSection('rtstats')"><span class="sec-icon">&#128200;</span><span class="sec-title">Routine completion</span><span class="lbl-line"></span><span class="sec-badge" id="badge-rtstats"></span><span class="sec-caret open" id="caret-rtstats">&#9662;</span></div>
   <div class="sec-body" id="sec-rtstats">
@@ -1580,6 +1629,8 @@ function init(){
       if(Array.isArray(d.routineDay))  replaceRoutineDayFromSheet(d.routineDay);
       // An older Code.gs doesn't send dailyRules — say so instead of offering a save it would misroute
       if(Array.isArray(d.dailyRules))  replaceDailyRulesFromSheet(d.dailyRules); else markDailyRulesUnsupported();
+      // Older Code.gs: no food data. Say so rather than offer saves it would misroute
+      if(Array.isArray(d.foodHabits))  replaceFoodFromSheet(d.foodHabits, d.foodLog||[]); else markFoodUnsupported();
       if(!selDate) selDate=isoToday();
       activeRoutine=routineForDate(selDate);
       _calNeedsScroll=true;
@@ -1623,7 +1674,9 @@ function init(){
         ['getAllKundali','kundali',replaceKundaliFromSheet],
         ['getAllGuide','guide',replaceGuideFromSheet],
         ['getAllHabitReasons','habitReasons',replaceHabitReasonsFromSheet],
-        ['getAllDailyRules','dailyRules',replaceDailyRulesFromSheet]
+        ['getAllDailyRules','dailyRules',replaceDailyRulesFromSheet],
+        ['getAllFoodHabits','foodHabits',function(h){ replaceFoodFromSheet(h,null); }],
+        ['getAllFoodLog','foodLog',function(l){ if(foodLoaded) replaceFoodFromSheet(null,l); else _foodLogEarly=l; }]
       ];
       if(skipArchives){
         var arcKeys={situations:1,thoughts:1,posts:1,motivation:1,gratitude:1,kundali:1,guide:1};
@@ -1640,6 +1693,8 @@ function init(){
       }
       await Promise.all([worker(),worker(),worker(),worker()]);
       if(!drLoaded) markDailyRulesFailed();
+      if(foodLoaded && _foodLogEarly){ replaceFoodFromSheet(null,_foodLogEarly); _foodLogEarly=null; }
+      if(!foodLoaded) markFoodFailed();
       // Only call the feed loaded if something for it actually arrived
       if(posts.length||motEntries.length||kunEntries.length||guide.length||gratEntries.length) feedReady=true;
       else feedFailed=true;
@@ -4372,6 +4427,199 @@ function renderFeed(){
   }catch(e){}
 }
 
+var _foodLogEarly=null;
+/* ═══════════════════════════════════════════════════
+   FOOD HABITS — a separate list on the Routine tab, ticked per day.
+   Follows the routine calendar's selected date, so past days can be
+   filled in. Habits are archived, never deleted, so history stays.
+   Sheets: FoodHabits (the list) and FoodLog (one row per day).
+═══════════════════════════════════════════════════ */
+var foodHabits=[];            // [{sheetId, habit, order, addedOn, archivedOn}]
+var foodLog={};               // dateISO -> [habit ids kept]
+var foodLoaded=false, foodUnsupported=false, foodFailed=false;
+var FOOD_STARTERS=['No outside food','No fried food','No packed food','No sweet food','Eat at least 1 fruit daily'];
+
+function replaceFoodFromSheet(habits,log){
+  foodLoaded=true; foodUnsupported=false; foodFailed=false;
+  if(Array.isArray(habits)){
+    foodHabits=habits.map(function(h){
+      return {sheetId:h.sheetId,habit:h.habit||'',order:h.order==null?9999:Number(h.order),addedOn:h.addedOn||'',archivedOn:h.archivedOn||''};
+    }).filter(function(h){ return h.sheetId; });
+  }
+  if(Array.isArray(log)){
+    var m={};
+    log.forEach(function(r){ if(r.dateISO && !(r.dateISO in foodPending)) m[r.dateISO]=(r.done||[]).slice(); });
+    // a tick still being saved wins over what the Sheet last had
+    Object.keys(foodPending).forEach(function(d){ m[d]=foodPending[d].slice(); });
+    foodLog=m;
+  }
+  renderFood();
+}
+function markFoodUnsupported(){ if(foodLoaded) return; foodUnsupported=true; renderFood(); }
+function markFoodFailed(){ if(foodLoaded||foodUnsupported) return; foodFailed=true; renderFood(); }
+
+function foodDay(){ return selDate||isoToday(); }
+/* A habit applies to a day from the day it was added until the day it was archived */
+function foodActiveOn(h,d){ return (!h.addedOn||h.addedOn<=d) && (!h.archivedOn||d<h.archivedOn); }
+function foodListOn(d){ return foodHabits.filter(function(h){ return foodActiveOn(h,d); }); }
+function foodKept(id,d){ return (foodLog[d]||[]).indexOf(id)>-1; }
+function foodShift(d,n){ var x=new Date(d+'T12:00:00'); x.setDate(x.getDate()+n); return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0'); }
+
+/* Days in a row kept, up to the selected day. An unticked *today* doesn't
+   break the streak yet: the day isn't over. */
+function foodStreak(h,d){
+  var n=0, cur=d;
+  if(!foodKept(h.sheetId,cur) && cur===isoToday()) cur=foodShift(cur,-1);
+  while(foodActiveOn(h,cur) && foodKept(h.sheetId,cur)){ n++; cur=foodShift(cur,-1); if(n>3650) break; }
+  return n;
+}
+
+/* Saving: one write per day in flight; a newer state waits and replaces any older queued one,
+   so ticks can never arrive at the Sheet out of order. */
+var foodPending={}, foodInFlight={};
+async function foodSave(d){
+  if(foodInFlight[d]) return;
+  foodInFlight[d]=true;
+  var sy=document.getElementById('fd-sync');
+  while(d in foodPending){
+    var send=foodPending[d].slice(); delete foodPending[d];
+    if(sy){ sy.textContent='Saving\u2026'; sy.className='sync-txt syncing'; }
+    var ok=await postToSheet({sheet:'FoodLog',dateISO:d,done:send.join(',')});
+    if(sy){ sy.textContent=ok?'Saved to Sheet \u2713':'Couldn\u2019t save. Tick again to retry.'; sy.className='sync-txt '+(ok?'ok':'err'); }
+    if(!ok && !(d in foodPending)) showToast(LAST_SHEET_ERROR||'Couldn\u2019t save your food habits.','error');
+  }
+  delete foodInFlight[d];
+}
+function toggleFood(id){
+  if(!foodLoaded||foodUnsupported) return;
+  var d=foodDay(), list=(foodLog[d]||[]).slice(), i=list.indexOf(id);
+  if(i>-1) list.splice(i,1); else list.push(id);
+  foodLog[d]=list; foodPending[d]=list.slice();
+  renderFood();
+  var b=document.querySelector('.fd-chk[data-id="'+id+'"]'); if(b) b.focus();
+  foodSave(d);
+}
+
+async function addFood(text){
+  if(!foodLoaded||foodUnsupported) return false;
+  var inp=document.getElementById('fd-new');
+  var name=String(text!=null?text:(inp&&inp.value)||'').trim();
+  if(!name){ showToast('Type a food habit first.','error'); return false; }
+  var dup=foodHabits.some(function(h){ return !h.archivedOn && h.habit.toLowerCase()===name.toLowerCase(); });
+  if(dup){ showToast('\u201c'+name+'\u201d is already on your list.','error'); return false; }
+  var d=foodDay(), today=isoToday();
+  var h={sheetId:'fh'+Date.now()+Math.floor(Math.random()*1000),habit:name,order:foodHabits.length,addedOn:d<today?d:today,archivedOn:''};
+  foodHabits.push(h);
+  if(text==null && inp) inp.value='';
+  renderFood();
+  var ok=await postToSheet({sheet:'FoodHabits',sheetId:h.sheetId,habit:h.habit,order:h.order,addedOn:h.addedOn});
+  if(!ok){
+    foodHabits=foodHabits.filter(function(x){ return x!==h; }); renderFood();
+    showToast('Couldn\u2019t add \u201c'+name+'\u201d. Check your connection and try again.','error');
+  }
+  return ok;
+}
+async function addFoodStarters(){
+  var have=foodHabits.filter(function(h){ return !h.archivedOn; }).map(function(h){ return h.habit.toLowerCase(); });
+  var todo=FOOD_STARTERS.filter(function(s){ return have.indexOf(s.toLowerCase())===-1; });
+  for(var i=0;i<todo.length;i++){ await addFood(todo[i]); }
+}
+async function renameFood(id){
+  var h=foodHabits.find(function(x){ return x.sheetId===id; }); if(!h) return;
+  var n=prompt('Rename this food habit:',h.habit);
+  if(n==null) return; n=n.trim(); if(!n||n===h.habit) return;
+  var old=h.habit; h.habit=n; renderFood();
+  var ok=await postToSheet({sheet:'FoodHabits',action:'edit_food',sheetId:id,habit:n});
+  if(!ok){ h.habit=old; renderFood(); showToast('Couldn\u2019t rename. Try again.','error'); }
+}
+async function archiveFood(id){
+  var h=foodHabits.find(function(x){ return x.sheetId===id; }); if(!h) return;
+  if(!confirm('Stop tracking \u201c'+h.habit+'\u201d from today? Its history is kept, and you can bring it back any time.')) return;
+  var on=isoToday(); h.archivedOn=on; renderFood();
+  var ok=await postToSheet({sheet:'FoodHabits',action:'archive_food',sheetId:id,archivedOn:on});
+  if(!ok){ h.archivedOn=''; renderFood(); showToast('Couldn\u2019t stop tracking it. Try again.','error'); }
+}
+async function restoreFood(id){
+  var h=foodHabits.find(function(x){ return x.sheetId===id; }); if(!h) return;
+  var was=h.archivedOn; h.archivedOn=''; renderFood();
+  var ok=await postToSheet({sheet:'FoodHabits',action:'restore_food',sheetId:id});
+  if(!ok){ h.archivedOn=was; renderFood(); showToast('Couldn\u2019t bring it back. Try again.','error'); }
+}
+
+function renderFood(){
+  var box=document.getElementById('fd-body'); if(!box) return;
+  var d=foodDay(), today=isoToday();
+  var dayLbl=document.getElementById('fd-day');
+  if(dayLbl){
+    var dt=new Date(d+'T12:00:00');
+    dayLbl.textContent=(d===today?'Today, ':'')+dt.toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short'});
+  }
+  var prog=document.getElementById('fd-prog'), badge=document.getElementById('badge-food');
+
+  if(foodUnsupported){
+    box.innerHTML='<div class="fd-note">Food habits need the updated <b>Code.gs</b>. Deploy it in Apps Script (Manage deployments \u2192 New version), then reload.</div>';
+    if(prog) prog.textContent=''; if(badge) badge.textContent=''; return;
+  }
+  if(!foodLoaded){
+    box.innerHTML='<div class="fd-note">'+(foodFailed?'Couldn\u2019t load your food habits. Reload the page to try again.':'Loading your food habits\u2026')+'</div>';
+    if(prog) prog.textContent=''; return;
+  }
+
+  var list=foodListOn(d), kept=list.filter(function(h){ return foodKept(h.sheetId,d); }).length;
+  if(prog) prog.innerHTML=list.length?'<b>'+kept+'</b> of '+list.length+' kept':'';
+  if(badge) badge.textContent=list.length?kept+'/'+list.length:'';
+
+  var rows='';
+  if(!list.length){
+    rows='<div class="fd-note">'+(foodHabits.some(function(h){ return !h.archivedOn; })
+      ? 'None of your food habits had started on this day.'
+      : 'Track what you eat with a few simple daily rules. Tick each one you kept today.')+'</div>';
+  }else{
+    rows='<ul class="fd-list">'+list.map(function(h){
+      var on=foodKept(h.sheetId,d), st=foodStreak(h,d), dots='';
+      for(var k=6;k>=0;k--){
+        var dd=foodShift(d,-k), cls='fd-dot';
+        if(!foodActiveOn(h,dd)) cls+=' na';
+        else if(foodKept(h.sheetId,dd)) cls+=' on';
+        else if(dd===today) cls+=' open';
+        var lbl=new Date(dd+'T12:00:00').toLocaleDateString('en-IN',{weekday:'short',day:'numeric'});
+        dots+='<span class="'+cls+'" title="'+lbl+(cls.indexOf(' on')>-1?': kept':cls.indexOf(' na')>-1?': not tracked yet':': not kept')+'"></span>';
+      }
+      return '<li class="fd-row'+(on?' on':'')+'">'+
+        '<button type="button" class="fd-chk" data-id="'+h.sheetId+'" role="checkbox" aria-checked="'+on+'" onclick="toggleFood(\''+h.sheetId+'\')">'+
+          '<span class="fd-box" aria-hidden="true">'+(on?'\u2713':'')+'</span>'+
+          '<span class="fd-txt"><span class="fd-name">'+escH(h.habit)+'</span>'+
+          '<span class="fd-meta">'+(st?st+'-day streak':'No streak yet')+'</span></span>'+
+        '</button>'+
+        '<span class="fd-dots" aria-label="Last 7 days">'+dots+'</span>'+
+        '<span class="fd-acts">'+
+          '<button type="button" class="rt-mini" title="Rename" aria-label="Rename '+escH(h.habit)+'" onclick="renameFood(\''+h.sheetId+'\')">\u270e</button>'+
+          '<button type="button" class="rt-mini del" title="Stop tracking" aria-label="Stop tracking '+escH(h.habit)+'" onclick="archiveFood(\''+h.sheetId+'\')">\u00d7</button>'+
+        '</span>'+
+      '</li>';
+    }).join('')+'</ul>';
+  }
+
+  // Quick add: your starter habits that aren't on the list yet
+  var have=foodHabits.filter(function(h){ return !h.archivedOn; }).map(function(h){ return h.habit.toLowerCase(); });
+  var missing=FOOD_STARTERS.filter(function(s){ return have.indexOf(s.toLowerCase())===-1; });
+  var quick=missing.length?'<div class="fd-quick"><span class="fd-quick-l">Quick add</span>'+
+    missing.map(function(s){ return '<button type="button" class="fd-chip" onclick="addFood(\''+s.replace(/'/g,"\\'")+'\')">+ '+escH(s)+'</button>'; }).join('')+
+    (missing.length>1?'<button type="button" class="fd-chip all" onclick="addFoodStarters()">Add all '+missing.length+'</button>':'')+'</div>':'';
+
+  var archived=foodHabits.filter(function(h){ return h.archivedOn; });
+  var arch=archived.length?'<details class="fd-arch"><summary>Stopped tracking ('+archived.length+')</summary>'+
+    archived.map(function(h){ return '<div class="fd-arch-row"><span>'+escH(h.habit)+' <small>since '+feedDate(h.archivedOn)+'</small></span>'+
+      '<button type="button" class="btn" onclick="restoreFood(\''+h.sheetId+'\')">Track again</button></div>'; }).join('')+'</details>':'';
+
+  box.innerHTML=rows+
+    '<div class="fd-add"><input class="sin" id="fd-new" type="text" placeholder="Add a food habit, e.g. No sugar in tea" '+
+      'onkeydown="if(event.key===\'Enter\'){addFood();event.preventDefault();}">'+
+      '<button class="btn gold" type="button" onclick="addFood()" style="white-space:nowrap">+ Add</button></div>'+
+    quick+arch;
+  if(typeof renderGlance==='function') renderGlance();   // keep the Morning "Food" tile in step
+}
+
 /* ═══════════════════════════════════════════════════
    POINT THUMBNAILS — a small emoji tile beside a point, chosen from
    its own words so it's recognisable at a glance. Emoji match the
@@ -5226,7 +5474,7 @@ async function importGuide(){
    Open/closed state is a display preference, so it lives in
    localStorage — no dashboard data is stored there.
 ──────────────────────────────────────────────────────── */
-var SEC_KEYS=['links','sitlib','master','routine','rtstats','habitperf','habits','checklist','pillars','anchors'];
+var SEC_KEYS=['links','sitlib','master','routine','food','rtstats','habitperf','habits','checklist','pillars','anchors'];
 
 function secOpen(key){
   var v=localStorage.getItem('sec_'+key);
@@ -5301,14 +5549,17 @@ function renderGlance(){
       '<div class="gl-l">'+label+'</div>'+
       '<div class="gl-bar"><div class="gl-fill" style="width:'+pct+'%"></div></div></div>';
   }
+  var fList=(typeof foodListOn==='function')?foodListOn(isoToday()):[];
+  var fDone=fList.filter(function(h){ return foodKept(h.sheetId,isoToday()); }).length;
   el.innerHTML=card(rdone,items.length,'Routine','routine')+
+    card(fDone,fList.length,'Food','food')+
     card(hDone,habitList.length,'Habits','habits')+
     card(cDone,CHECKLIST.length,'Checklist','checklist');
 }
 
 /* Sections now live on two tabs, so a glance card may need to
    switch tab before scrolling to its section. */
-var ROUTINE_TAB_SECTIONS=['master','routine','rtstats','habitperf'];   // sitlib lives on Home
+var ROUTINE_TAB_SECTIONS=['master','routine','food','rtstats','habitperf'];   // sitlib lives on Home
 
 function jumpToSection(key){
   if(!secOpen(key)){ localStorage.setItem('sec_'+key,'1'); applySection(key); }
@@ -5509,7 +5760,7 @@ function selectRoutine(name){
     dateISO:selDate,routine:name}));
 }
 
-function selectDate(iso){ selDate=iso; activeRoutine=routineForDate(iso); _calNeedsScroll=true; renderRoutine(); }
+function selectDate(iso){ selDate=iso; activeRoutine=routineForDate(iso); _calNeedsScroll=true; renderRoutine(); renderFood(); }
 
 function newRoutine(){
   var n=prompt('Name the new routine:','Routine '+(routineNames().length+1));
