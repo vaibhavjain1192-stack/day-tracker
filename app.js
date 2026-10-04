@@ -43,7 +43,7 @@ async function sheetFetch(url,opts,timeoutMs){
       var json=JSON.parse(text);
       if(json&&json.status==='locked'){
         LAST_SHEET_ERROR='This dashboard needs its key on this device.';
-        onLocked();
+        onLocked(json.reason||'');
       }
       if(json&&json.status==='error'){
         LAST_SHEET_ERROR='Script error: '+(json.message||'unknown');
@@ -3477,22 +3477,55 @@ var _ciFb={};
 var dashKeySet=null;          // from the Sheet: is a key configured there?
 var lastBackup='';
 var _keyPromptShown=false;
+var lastLockReason='';        // 'missing' (no key reached Apps Script) | 'mismatch' | ''
 function getDashKey(){ try{ return localStorage.getItem('dash_key')||''; }catch(e){ return ''; } }
 function withKey(url){
   if(url.indexOf(WORKER_URL)!==0) return url;
   var k=getDashKey(); if(!k) return url;
   return url+(url.indexOf('?')>-1?'&':'?')+'key='+encodeURIComponent(k);
 }
-function onLocked(){
+function onLocked(reason){
+  if(reason) lastLockReason=reason;
   if(_keyPromptShown) return; _keyPromptShown=true;
   openSettings('locked');
 }
-function saveDashKey(){
+var KEY_MSG={
+  missing:'The key isn\u2019t reaching your Sheet. Your Cloudflare Worker is passing the request on without it, so Apps Script never sees the key. See \u201cFix the Worker\u201d below.',
+  mismatch:'Your Sheet received this key, but it doesn\u2019t match the DASH_KEY in Apps Script. Check the spelling and capital letters (spaces and quotes don\u2019t matter).'
+};
+function keyMsg(text,kind){
+  var m=document.getElementById('set-key-msg'); if(!m) return;
+  m.textContent=text||''; m.className='set-key-msg '+(kind||'');
+  var w=document.getElementById('set-worker'); if(w) w.open = lastLockReason==='missing';
+}
+/* Check the key with the Sheet before saving, so a wrong key can't send you round a reload loop */
+async function saveDashKey(){
   var i=document.getElementById('set-key'), v=(i&&i.value||'').trim();
-  if(!v){ showToast('Type the key first.','error'); if(i) i.focus(); return; }
+  if(!v){ keyMsg('Type the key first.','err'); if(i) i.focus(); return; }
+  var btn=document.getElementById('set-key-save'); if(btn){ btn.disabled=true; btn.textContent='Checking\u2026'; }
+  keyMsg('Checking the key with your Sheet\u2026','');
+  var res=null;
+  try{
+    var ctrl=new AbortController(), t=setTimeout(function(){ ctrl.abort(); },20000);
+    var r=await fetch(WORKER_URL+'?action=getAllDayLog&key='+encodeURIComponent(v),{signal:ctrl.signal});
+    clearTimeout(t); res=JSON.parse(await r.text());
+  }catch(e){ res=null; }
+  if(btn){ btn.disabled=false; btn.textContent='Save'; }
+  if(res&&res.status==='ok'){
+    try{ localStorage.setItem('dash_key',v); }catch(e){}
+    keyMsg('Key accepted \u2713 Loading your data\u2026','ok');
+    setTimeout(function(){ location.reload(); },600);
+    return;
+  }
+  if(res&&res.status==='locked'){
+    lastLockReason=res.reason||'mismatch';
+    keyMsg(KEY_MSG[lastLockReason]||KEY_MSG.mismatch,'err');
+    if(i){ i.focus(); i.select(); }
+    return;
+  }
+  // Couldn't reach the Sheet at all: keep the key, it's checked again on load
   try{ localStorage.setItem('dash_key',v); }catch(e){}
-  showToast('Key saved on this device. Reloading\u2026','success');
-  setTimeout(function(){ location.reload(); },700);
+  keyMsg('Couldn\u2019t reach your Sheet to check the key. It\u2019s saved on this device; reload when you\u2019re back online.','err');
 }
 function forgetDashKey(){
   if(!confirm('Remove the key from this device? You\u2019ll need to enter it again to see your data here.')) return;
@@ -3518,13 +3551,19 @@ function openSettings(mode){
       dashKeySet===false?'<p class="set-alert">Not protected yet. Anyone who finds the page\u2019s address can read your data.</p>':'')+
     '<label class="sfl" for="set-key">Key on this device</label>'+
     '<div class="set-row"><input class="sin" id="set-key" type="password" autocomplete="off" value="'+escH(getDashKey())+'" placeholder="Your dashboard key" onkeydown="if(event.key===\'Enter\'){saveDashKey();}">'+
-    '<button class="btn gold" type="button" onclick="saveDashKey()">Save</button>'+
+    '<button class="btn gold" type="button" id="set-key-save" onclick="saveDashKey()">Save</button>'+
     (getDashKey()?'<button class="btn" type="button" onclick="forgetDashKey()">Forget</button>':'')+'</div>'+
     '<details class="set-how"'+(dashKeySet===false?' open':'')+'><summary>How to turn protection on</summary><ol>'+
       '<li>In Apps Script, open <b>Project Settings</b> (\u2699 on the left) \u2192 <b>Script Properties</b> \u2192 <b>Add script property</b>.</li>'+
       '<li>Property: <code>DASH_KEY</code>. Value: a phrase only you know, e.g. three random words.</li>'+
       '<li>Save. No redeploy needed. Then enter the same phrase above, on each device you use.</li>'+
-    '</ol></details></section>';
+    '</ol></details>'+
+    '<div class="set-key-msg'+(locked&&lastLockReason?' err':'')+'" id="set-key-msg" role="status">'+(locked&&getDashKey()&&KEY_MSG[lastLockReason]?KEY_MSG[lastLockReason]:'')+'</div>'+
+    '<details class="set-how" id="set-worker"'+(lastLockReason==='missing'?' open':'')+'><summary>Fix the Worker (if the key isn\u2019t reaching your Sheet)</summary>'+
+      '<p class="set-p">Your Worker must pass the whole address and body on to Apps Script. In Cloudflare: Workers &amp; Pages \u2192 your Worker \u2192 Edit code. Make sure the line that calls Apps Script uses the full query string, like this:</p>'+
+      '<pre class="set-code">const url = new URL(request.url);\nconst target = SCRIPT_URL + url.search;   // keeps action, date AND key\nconst init = request.method === \'POST\'\n  ? { method: \'POST\', body: await request.text(),\n      headers: { \'Content-Type\': request.headers.get(\'Content-Type\') || \'application/x-www-form-urlencoded\' } }\n  : { method: \'GET\' };\nconst res = await fetch(target, { ...init, redirect: \'follow\' });</pre>'+
+      '<p class="set-p">If you\u2019d rather, paste your Worker\u2019s code into the chat and I\u2019ll fix it for you.</p>'+
+    '</details></section>';
   if(locked){ document.getElementById('set-body').innerHTML=keyBlock; }
   else document.getElementById('set-body').innerHTML=keyBlock+
     '<section class="set-sec"><h3>&#128276; Reminders</h3>'+
