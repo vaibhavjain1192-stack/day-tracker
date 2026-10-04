@@ -67,6 +67,11 @@ body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:
 .set-row .sin{flex:1;min-width:180px}
 .set-how{margin-top:8px;font-size:13px;color:var(--text-2)}
 .set-how summary{cursor:pointer;font-size:12px;color:var(--gold)}
+.set-key-msg{font-size:13px;line-height:1.5;margin-top:8px}
+.set-key-msg:empty{display:none}
+.set-key-msg.err{color:#E07B7B}
+.set-key-msg.ok{color:#6BBF8E}
+.set-code{background:var(--surface);border:1px solid var(--border);border-radius:var(--rsm);padding:8px 10px;font-family:var(--fm);font-size:11px;line-height:1.55;color:var(--text-1);overflow-x:auto;white-space:pre;margin:6px 0}
 .set-how ol{padding-left:18px;line-height:1.6;margin:6px 0 0}
 .set-how code,.set-p code{background:var(--surface);padding:1px 5px;border-radius:4px;font-size:12px}
 .set-rem{display:grid;gap:6px;margin:6px 0 10px}
