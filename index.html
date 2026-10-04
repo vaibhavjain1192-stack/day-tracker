@@ -8,12 +8,13 @@
 <meta name="theme-color" content="#0F1117">
 <link rel="icon" type="image/png" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=20261003">
+<link rel="stylesheet" href="styles.css?v=20261004">
 </head>
 <body>
 <div class="toast" id="toast"></div>
@@ -21,15 +22,15 @@
 <button id="totop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#9650;</button>
 <nav class="nav">
   <div class="nav-inner">
-    <button class="tab on" onclick="switchTab('morning')"><span class="tab-icon">&#9728;&#65039;<span class="badge" id="mor-badge">0</span></span><span class="tab-label">Morning</span></button>
-    <button class="tab" onclick="switchTab('routine')"><span class="tab-icon">&#128197;<span class="badge" id="rt-badge">0</span></span><span class="tab-label">Routine</span></button>
-    <button class="tab" onclick="switchTab('situations')"><span class="tab-icon">&#128250;<span class="badge" id="sit-badge">0</span></span><span class="tab-label">Situations</span></button>
-    <button class="tab" onclick="switchTab('thoughts')"><span class="tab-icon">&#128161;<span class="badge" id="th-badge">0</span></span><span class="tab-label">Thoughts</span></button>
-    <button class="tab" onclick="switchTab('posts')"><span class="tab-icon">&#128204;<span class="badge" id="post-badge">0</span></span><span class="tab-label">Posts</span></button>
-    <button class="tab" onclick="switchTab('motivation')"><span class="tab-icon">&#128293;<span class="badge" id="mot-badge">0</span></span><span class="tab-label"><span class="tl-full">Small learnings</span><span class="tl-short">Learnings</span></span></button>
-    <button class="tab" onclick="switchTab('gratitude')"><span class="tab-icon">&#128591;<span class="badge" id="grat-badge">0</span></span><span class="tab-label">Gratitude</span></button>
-    <button class="tab" onclick="switchTab('kundali')"><span class="tab-icon">&#128337;<span class="badge" id="kun-badge">0</span></span><span class="tab-label">Kundali</span></button>
-    <button class="tab" onclick="switchTab('guide')"><span class="tab-icon">&#10024;<span class="badge" id="gd-badge">0</span></span><span class="tab-label">Guide</span></button>
+    <button class="tab on" onclick="switchTab('morning')"><span class="tab-icon">&#9728;&#65039;<span class="badge zero" id="mor-badge">0</span></span><span class="tab-label">Morning</span></button>
+    <button class="tab" onclick="switchTab('routine')"><span class="tab-icon">&#128197;<span class="badge zero" id="rt-badge">0</span></span><span class="tab-label">Routine</span></button>
+    <button class="tab" onclick="switchTab('situations')"><span class="tab-icon">&#128250;<span class="badge zero" id="sit-badge">0</span></span><span class="tab-label">Situations</span></button>
+    <button class="tab" onclick="switchTab('thoughts')"><span class="tab-icon">&#128161;<span class="badge zero" id="th-badge">0</span></span><span class="tab-label">Thoughts</span></button>
+    <button class="tab" onclick="switchTab('posts')"><span class="tab-icon">&#128204;<span class="badge zero" id="post-badge">0</span></span><span class="tab-label">Posts</span></button>
+    <button class="tab" onclick="switchTab('motivation')"><span class="tab-icon">&#128293;<span class="badge zero" id="mot-badge">0</span></span><span class="tab-label"><span class="tl-full">Small learnings</span><span class="tl-short">Learnings</span></span></button>
+    <button class="tab" onclick="switchTab('gratitude')"><span class="tab-icon">&#128591;<span class="badge zero" id="grat-badge">0</span></span><span class="tab-label">Gratitude</span></button>
+    <button class="tab" onclick="switchTab('kundali')"><span class="tab-icon">&#128337;<span class="badge zero" id="kun-badge">0</span></span><span class="tab-label">Kundali</span></button>
+    <button class="tab" onclick="switchTab('guide')"><span class="tab-icon">&#10024;<span class="badge zero" id="gd-badge">0</span></span><span class="tab-label">Guide</span></button>
   </div>
 </nav>
 
@@ -537,6 +538,6 @@
   <div class="set-panel"><div class="set-head"><h2 id="set-title">Settings</h2><button type="button" class="set-x" onclick="closeSettings()" aria-label="Close">&times;</button></div>
   <div id="set-body"></div></div>
 </div>
-<script src="app.js?v=20261003"></script>
+<script src="app.js?v=20261004"></script>
 </body>
 </html>
