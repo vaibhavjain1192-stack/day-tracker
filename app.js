@@ -3685,7 +3685,7 @@ function replaceCheckinFromSheet(checks,log){
   if(Array.isArray(log)){
     var d={}; log.forEach(function(r){ d[r.dateISO]={sleptAt:r.sleptAt||'',wokeAt:r.wokeAt||'',note:r.note||'',weekNote:r.weekNote||''}; });
     Object.keys(_sqPending).forEach(function(k){
-      var p=_sqPending[k].p; if(p.sheet!=='DayLog') return;
+      var p=_sqPending[k].p; if(p.sheet!=='DayLog'||p.field==='sleptAt'||p.field==='wokeAt') return;   // sleep shows its own pending state
       (d[p.dateISO]=d[p.dateISO]||{})[p.field]=p.value;
     });
     dayLog=d;
@@ -3701,10 +3701,33 @@ function dlSet(d,f,v){
   v=String(v||'').trim();
   if(dlGet(d,f)===v) return;
   (dayLog[d]=dayLog[d]||{})[f]=v;
-  var sleepField=(f==='sleptAt'||f==='wokeAt');
-  if(sleepField) slSync('Saving\u2026','');
-  queueSave('dl|'+d+'|'+f,{sheet:'DayLog',dateISO:d,field:f,value:v},function(ok){
-    if(sleepField) slSync(ok?'Saved \u2713':'Not saved',ok?'ok':'err');
+  queueSave('dl|'+d+'|'+f,{sheet:'DayLog',dateISO:d,field:f,value:v});
+}
+
+/* Sleep and wake times: what you see is always what the Sheet holds.
+   While saving, the typed time shows as pending; after the save the day is
+   read back from the Sheet, and "Saved to Sheet" only appears if it's there. */
+var slPending={};
+function slSave(field,val){
+  if(!ciLoaded||ciUnsupported) return;
+  var d=isoToday(); val=String(val||'').trim();
+  if(!(field in slPending) && dlGet(d,field)===val) return;
+  slPending[field]=val; slSync('Saving\u2026',''); renderSleep();
+  var key='dl|'+d+'|'+field;
+  queueSave(key,{sheet:'DayLog',dateISO:d,field:field,value:val},async function(ok){
+    if(key in _sqPending) return;            // a newer change is on its way; check that one instead
+    if(!ok){ delete slPending[field]; slSync('Not saved. Check your connection and try again.','err'); renderSleep(); return; }
+    var r=await sheetFetch(WORKER_URL+'?action=getAllDayLog',null,20000);
+    if(key in _sqPending) return;
+    delete slPending[field];
+    if(r&&r.status==='ok'){
+      replaceCheckinFromSheet(null,r.dayLog);
+      var got=dlGet(d,field);
+      slSync(got===val?'Saved to Sheet \u2713':'Not saved. Try again.',got===val?'ok':'err');
+    }else{
+      slSync('Saved, but couldn\u2019t re-check the Sheet.','');
+    }
+    renderSleep();
   });
 }
 var _slMsg=['',''];
@@ -3732,11 +3755,14 @@ function renderSleep(){
   var el=document.getElementById('sleep-row'); if(!el) return;
   if(ciUnsupported||(!ciLoaded&&ciFailed)){ el.hidden=true; return; }
   el.hidden=false;
-  var d=isoToday(), s=dlGet(d,'sleptAt'), w=dlGet(d,'wokeAt'), len=sleepLen(s,w);
+  var d=isoToday();
+  var s=('sleptAt' in slPending)?slPending.sleptAt:dlGet(d,'sleptAt');
+  var w=('wokeAt' in slPending)?slPending.wokeAt:dlGet(d,'wokeAt');
+  var len=sleepLen(s,w);
   var dis=ciLoaded?'':' disabled';
   el.innerHTML='<span class="sl-l">&#128564; Last night</span>'+
-    '<label class="sl-f">slept at <input type="time" id="sl-slept" value="'+escH(s)+'"'+dis+' onchange="dlSet(isoToday(),\'sleptAt\',this.value);renderSleep();"></label>'+
-    '<label class="sl-f">woke at <input type="time" id="sl-woke" value="'+escH(w)+'"'+dis+' onchange="dlSet(isoToday(),\'wokeAt\',this.value);renderSleep();"></label>'+
+    '<label class="sl-f">slept at <input type="time" id="sl-slept" value="'+escH(s)+'"'+dis+' onchange="slSave(\'sleptAt\',this.value)"></label>'+
+    '<label class="sl-f">woke at <input type="time" id="sl-woke" value="'+escH(w)+'"'+dis+' onchange="slSave(\'wokeAt\',this.value)"></label>'+
     (len!=null?'<span class="sl-len'+(len>=7*60?' good':'')+'">'+Math.floor(len/60)+'h '+String(len%60).padStart(2,'0')+'m</span>':'')+
     (s&&bedMins(s)<=23*60?'<span class="sl-ok">By 11 \u2713</span>':'')+
     '<span class="sl-sync '+_slMsg[1]+'" id="sl-sync" role="status">'+_slMsg[0]+'</span>';
