@@ -14,7 +14,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=20261004">
+<link rel="stylesheet" href="styles.css?v=20261007">
 </head>
 <body>
 <div class="toast" id="toast"></div>
@@ -77,11 +77,8 @@
     </div>
     <div class="feed-grid">
       <div class="feed-card" id="feed-learning"></div>
-      <div class="feed-card" id="feed-guide"></div>
-    </div>
-    <button type="button" class="feed-more-btn" id="feed-more-btn" aria-expanded="false" aria-controls="feed-more" onclick="toggleFeedMore()">More from your feed</button>
-    <div class="feed-grid" id="feed-more" hidden>
       <div class="feed-card" id="feed-kundali"></div>
+      <div class="feed-card" id="feed-guide"></div>
       <div class="feed-card" id="feed-gratitude"></div>
     </div>
   </section>
@@ -376,7 +373,7 @@
   <div class="pmeta" id="mot-meta"></div>
   <div class="mot-log" id="mot-log"></div>
   <div class="lbl" style="margin-top:1.5rem">Add an entry <span class="lbl-line"></span></div>
-  <div class="sit-block"><div style="margin-bottom:10px"><label class="sfl">Category</label><div class="mot-cat-pills"><button class="mcp" onclick="selMotCat(this)" data-val="habit">&#127775; Habit</button><button class="mcp" onclick="selMotCat(this)" data-val="practice">&#129490; Practice</button><button class="mcp" onclick="selMotCat(this)" data-val="principle">&#128214; Principle</button><button class="mcp" onclick="selMotCat(this)" data-val="mantra">&#128591; Mantra</button><button class="mcp" onclick="selMotCat(this)" data-val="reminder">&#128276; Reminder</button></div></div><div style="margin-bottom:10px"><label class="sfl">Habit / practice / principle</label><textarea class="sin" id="mot-text" rows="4" placeholder="e.g. Every morning before I touch my phone, I sit for 5 minutes in silence..."></textarea></div><div class="sit-foot"><span class="sync-txt" id="mot-sync">Ready to add</span><button class="btn gold" onclick="addMotEntry()">Add to morning read &#8599;</button></div></div>
+  <div class="sit-block"><div style="margin-bottom:10px"><label class="sfl">Category</label><div class="mot-cat-pills"><button class="mcp" onclick="selMotCat(this)" data-val="habit">&#127775; Habit</button><button class="mcp" onclick="selMotCat(this)" data-val="practice">&#129490; Practice</button><button class="mcp" onclick="selMotCat(this)" data-val="principle">&#128214; Principle</button><button class="mcp" onclick="selMotCat(this)" data-val="mantra">&#128591; Mantra</button><button class="mcp" onclick="selMotCat(this)" data-val="reminder">&#128276; Reminder</button></div></div><div style="margin-bottom:10px"><label class="sfl">Habit / practice / principle</label><textarea class="sin" id="mot-text" rows="4" placeholder="e.g. Every morning before I touch my phone, I sit for 5 minutes in silence..."></textarea></div><div style="margin-bottom:10px"><label class="sfl" for="mot-example">Real-life example <span style="color:var(--text-3);font-weight:400">(optional)</span></label><textarea class="sin" id="mot-example" rows="2" placeholder="When did this actually happen to you? e.g. I argued with my manager in March and regretted it for a week..."></textarea></div><div class="sit-foot"><span class="sync-txt" id="mot-sync">Ready to add</span><button class="btn gold" onclick="addMotEntry()">Add to morning read &#8599;</button></div></div>
   <div class="foot" style="margin-top:1.5rem"><span class="foot-note">Stored locally · synced to Google Sheets</span><button class="btn" onclick="switchTab('morning')">&#8592; Morning</button></div>
 </div>
 
@@ -538,6 +535,6 @@
   <div class="set-panel"><div class="set-head"><h2 id="set-title">Settings</h2><button type="button" class="set-x" onclick="closeSettings()" aria-label="Close">&times;</button></div>
   <div id="set-body"></div></div>
 </div>
-<script src="app.js?v=20261004"></script>
+<script src="app.js?v=20261007"></script>
 </body>
 </html>
