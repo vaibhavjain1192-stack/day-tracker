@@ -138,11 +138,13 @@ body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:
 .sm-k{display:inline-block;font-size:10px;font-weight:600;color:var(--gold);border:1px solid rgba(201,168,76,.35);border-radius:10px;padding:0 6px;margin-right:6px}
 .sm-foot{font-size:11px;color:var(--text-3);margin-top:4px}
 /* ── Feed "More" + Library ── */
-.feed-more-btn{display:block;margin:0 auto 8px;background:none;border:1px dashed var(--border-md);border-radius:20px;padding:5px 14px;font-family:var(--fb);font-size:12px;color:var(--text-2);cursor:pointer}
-.feed-more-btn:hover{color:var(--text-1)}
-.feed-more-btn:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
-#feed-more[hidden]{display:none}
+
 .lib-body{padding-left:10px;border-left:1px solid var(--border)}
+.mot-example{margin-top:8px;padding:7px 10px;background:var(--surface);border-left:2px solid #6BBF8E;border-radius:0 var(--rsm) var(--rsm) 0;font-size:13px;color:var(--text-1);line-height:1.55;white-space:pre-line}
+.mot-ex-l{display:block;font-size:11px;font-weight:600;color:#6BBF8E;margin-bottom:2px}
+.sl-sync{font-size:11px;color:var(--text-3)}
+.sec-badge:empty{display:none}
+.sl-sync.ok{color:#6BBF8E}.sl-sync.err{color:#E07B7B}
 @media(max-width:640px){
   .fs-stats.wk-stats{grid-template-columns:repeat(2,1fr)}
   .ci-row{flex-wrap:wrap}
@@ -321,7 +323,6 @@ body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:
 .feed-lbl{display:flex;justify-content:space-between;align-items:center;gap:6px;font-size:11px;font-weight:600;color:var(--fc,var(--gold));margin-bottom:8px}
 .feed-h{font-family:var(--fb);font-size:13px;font-weight:600;color:var(--text-1);line-height:1.45;margin-bottom:4px}
 .feed-t{font-size:13px;color:var(--text-2);line-height:1.55}
-.feed-clamp{display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
 .feed-do{margin-top:7px;padding:6px 9px;background:var(--surface);border-left:2px solid var(--gold);border-radius:var(--rsm);font-size:13px;color:var(--text-1);line-height:1.5}
 .feed-do b{color:var(--gold);font-weight:600;margin-right:4px}
 .feed-list{margin:2px 0 0;padding-left:18px;font-size:13px;color:var(--text-1);line-height:1.6}
