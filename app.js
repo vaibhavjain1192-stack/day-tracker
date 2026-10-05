@@ -195,7 +195,7 @@ function init(){
   renderFeed();
   drLoadSnap();
   renderCalm();
-  renderSleep(); renderCheckin(); renderWeekly(); applyFeedMore();
+  renderSleep(); renderCheckin(); renderWeekly();
 
   /* Two-stage load. The core request carries only what Home and
      Routine render, so the page is usable in a fraction of the time;
@@ -1034,9 +1034,10 @@ async function saveEditModal(){
     var selCatEl=document.querySelector('#edit-mot-cat-pills .mcp.on');
     if(selCatEl) e.category=selCatEl.dataset.val;
     e.text=document.getElementById('edit-mot-text').value.trim();
+    var exE=document.getElementById('edit-mot-example'); if(exE) e.example=exE.value.trim();
     saveMotivation();
     var okm=await postToSheet({sheet:'Motivation',action:'edit_motivation',
-      sheetId:e.sheetId||'',category:e.category,text:e.text,pinned:e.pinned?'yes':'no'});
+      sheetId:e.sheetId||'',category:e.category,text:e.text,pinned:e.pinned?'yes':'no',example:e.example||''});
     closeEditModal(); renderMotivation();
     showToast(okm?'Entry updated ✓':'Updated locally — Sheet sync pending.',okm?'success':'');
   }else if(_editCtx.type==='master'){
@@ -1233,13 +1234,15 @@ async function addMotEntry(){
   var now=new Date(), mid=String(Date.now());
   var e={id:Date.now(),timestamp:Date.now(),sheetId:mid,
     dateISO:isoDate(now),date:now.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}),
-    category:selMotCategory,text:text,pinned:false};
+    category:selMotCategory,text:text,pinned:false,
+    example:(document.getElementById('mot-example')||{value:''}).value.trim()};
   motEntries.unshift(e); saveMotivation();
   document.getElementById('mot-text').value=''; selMotCategory='';
+  var exEl=document.getElementById('mot-example'); if(exEl) exEl.value='';
   document.querySelectorAll('.mot-cat-pills .mcp').forEach(function(p){p.classList.remove('on');p.style.background='';p.style.borderColor='';p.style.color='';});
   var syncEl=document.getElementById('mot-sync');
   syncEl.textContent='Syncing…'; syncEl.className='sync-txt syncing';
-  var ok=await postToSheet({sheet:'Motivation',sheetId:mid,date:e.date,dateISO:e.dateISO,category:e.category,text:e.text,pinned:'no'});
+  var ok=await postToSheet({sheet:'Motivation',sheetId:mid,date:e.date,dateISO:e.dateISO,category:e.category,text:e.text,pinned:'no',example:e.example});
   syncEl.textContent=ok?'Synced to Sheet ✓':'Saved locally (Sheet unreachable)';
   syncEl.className='sync-txt '+(ok?'ok':'err');
   showToast(ok?'Added to morning read ✓':'Saved locally — sync failed.',ok?'success':'error');
@@ -1262,6 +1265,7 @@ function motCardHTML(e){
     '<span style="color:'+col+'">'+icon+' '+catLabel+'</span>'+
     (e.pinned?'<span style="margin-left:auto;font-size:10px;color:var(--gold)">&#128204; pinned</span>':'')+'</div>'+
     '<div class="pt-row">'+ptTile(e.text,'',{clearOnly:true,size:'md'})+'<div class="mot-card-text pt-fill">'+escH(e.text)+'</div></div>'+
+    (e.example?'<div class="mot-example"><span class="mot-ex-l">&#128221; From my life</span>'+escH(e.example)+'</div>':'')+
     '<div class="mot-card-foot">'+
       '<button class="del-btn" onclick="delMotEntry('+e.id+')">&#128465; Delete</button>'+
       '<div style="display:flex;gap:6px">'+
@@ -1281,7 +1285,7 @@ function renderMotivation(){
   var list=motEntries.slice();
   if(motView==='pinned') list=list.filter(function(e){return e.pinned;});
   if(motCatFilter!=='all') list=list.filter(function(e){return e.category===motCatFilter;});
-  if(search) list=list.filter(function(e){return(e.text+e.category).toLowerCase().includes(search);});
+  if(search) list=list.filter(function(e){return(e.text+' '+e.category+' '+(e.example||'')).toLowerCase().includes(search);});
   // Pinned always float to top
   list.sort(function(a,b){
     if(a.pinned&&!b.pinned)return -1; if(!a.pinned&&b.pinned)return 1;
@@ -1328,7 +1332,9 @@ function editMotEntry(id){
   var html='<div style="margin-bottom:10px"><label class="sfl">Category</label>'+
     '<div class="mot-cat-pills" id="edit-mot-cat-pills">'+catPills+'</div></div>'+
     '<div><label class="sfl">Habit / practice / principle</label>'+
-    '<textarea class="sin" id="edit-mot-text" rows="6">'+escH(e.text)+'</textarea></div>';
+    '<textarea class="sin" id="edit-mot-text" rows="6">'+escH(e.text)+'</textarea></div>'+
+    '<div style="margin-top:10px"><label class="sfl">Real-life example <span style="color:var(--text-3);font-weight:400">(optional)</span></label>'+
+    '<textarea class="sin" id="edit-mot-example" rows="3" placeholder="When did this actually happen to you?">'+escH(e.example||'')+'</textarea></div>';
   openEditModal('Edit entry',html,{type:'motivation',id:id});
 }
 
@@ -1346,7 +1352,7 @@ function replaceMotivationFromSheet(s){
       timestamp:x.dateISO?new Date(x.dateISO).getTime():Date.now(),
       dateISO:x.dateISO||'',date:x.date||'',
       sheetId:x.sheetId||'',category:x.category||'',
-      text:x.text||'',pinned:x.pinned==='yes'};
+      text:x.text||'',example:x.example||'',pinned:x.pinned==='yes'};
   });
   var sheetIds={};s.forEach(function(x){if(x.sheetId)sheetIds[x.sheetId]=true;});
   var pending=motEntries.filter(function(e){return e.sheetId&&!sheetIds[e.sheetId];});
@@ -2970,7 +2976,7 @@ function renderFeed(){
       '<div class="vid-prev">'+thumb+'<div style="min-width:0">'+
         '<div class="feed-h">'+escH(p.heading||'Saved post')+'</div>'+
         '<a class="vid-watch" href="'+escH(p.url)+'" target="_blank" rel="noopener">Watch \u2197</a></div></div>'+
-      (p.desc?'<div class="feed-t feed-clamp">'+escH(p.desc)+'</div>':''),
+      (p.desc?'<div class="feed-t">'+escH(p.desc)+'</div>':''),
       'All posts',"switchTab('posts')",
       p.dateISO?'Saved '+feedDate(p.dateISO):'', pa);
   }
@@ -2982,7 +2988,8 @@ function renderFeed(){
   else{
     var st=feedSplitTitle(m.text);
     feedCard('feed-learning',L.learn,
-      (st.h?'<div class="feed-h">'+escH(st.h)+'</div>':'')+'<div class="feed-t feed-clamp">'+escH(st.b)+'</div>',
+      (st.h?'<div class="feed-h">'+escH(st.h)+'</div>':'')+'<div class="feed-t">'+escH(st.b)+'</div>'+
+      (m.example?'<div class="mot-example"><span class="mot-ex-l">&#128221; From my life</span>'+escH(m.example)+'</div>':''),
       'All learnings',"switchTab('motivation')",
       [m.category?m.category.charAt(0).toUpperCase()+m.category.slice(1):'', m.pinned?'Pinned':''].filter(Boolean).join(' \u00b7 '), ma);
   }
@@ -2992,7 +2999,7 @@ function renderFeed(){
   var ka=feedAt(kuns,'kun',function(x){ return x.sheetId||x.learning; }), k=ka.item;
   if(!k) feedEmpty('feed-kundali',L.kun,'No Kundali learnings saved yet.');
   else feedCard('feed-kundali',L.kun,
-      '<div class="feed-h">'+escH(k.learning)+'</div>'+(k.logic?'<div class="feed-t feed-clamp">'+escH(k.logic)+'</div>':''),
+      '<div class="feed-h">'+escH(k.learning)+'</div>'+(k.logic?'<div class="feed-t">'+escH(k.logic)+'</div>':''),
       'All Kundali',"switchTab('kundali')",
       k.category?k.category.charAt(0).toUpperCase()+k.category.slice(1):'', ka);
 
@@ -3694,8 +3701,14 @@ function dlSet(d,f,v){
   v=String(v||'').trim();
   if(dlGet(d,f)===v) return;
   (dayLog[d]=dayLog[d]||{})[f]=v;
-  queueSave('dl|'+d+'|'+f,{sheet:'DayLog',dateISO:d,field:f,value:v});
+  var sleepField=(f==='sleptAt'||f==='wokeAt');
+  if(sleepField) slSync('Saving\u2026','');
+  queueSave('dl|'+d+'|'+f,{sheet:'DayLog',dateISO:d,field:f,value:v},function(ok){
+    if(sleepField) slSync(ok?'Saved \u2713':'Not saved',ok?'ok':'err');
+  });
 }
+var _slMsg=['',''];
+function slSync(t,c){ _slMsg=[t,c]; var el=document.getElementById('sl-sync'); if(el){ el.textContent=t; el.className='sl-sync '+(c||''); } }
 
 /* Minutes after noon-to-noon, so 00:30 counts as later than 23:30 */
 function bedMins(t){
@@ -3725,7 +3738,30 @@ function renderSleep(){
     '<label class="sl-f">slept at <input type="time" id="sl-slept" value="'+escH(s)+'"'+dis+' onchange="dlSet(isoToday(),\'sleptAt\',this.value);renderSleep();"></label>'+
     '<label class="sl-f">woke at <input type="time" id="sl-woke" value="'+escH(w)+'"'+dis+' onchange="dlSet(isoToday(),\'wokeAt\',this.value);renderSleep();"></label>'+
     (len!=null?'<span class="sl-len'+(len>=7*60?' good':'')+'">'+Math.floor(len/60)+'h '+String(len%60).padStart(2,'0')+'m</span>':'')+
-    (s&&bedMins(s)<=23*60?'<span class="sl-ok">By 11 \u2713</span>':'');
+    (s&&bedMins(s)<=23*60?'<span class="sl-ok">By 11 \u2713</span>':'')+
+    '<span class="sl-sync '+_slMsg[1]+'" id="sl-sync" role="status">'+_slMsg[0]+'</span>';
+}
+
+/* Coming back to the tab: pick up what you saved on another device (e.g. your
+   phone), and move to the new day if the date changed while it was open.
+   Light requests only; nothing you're typing is overwritten. */
+var _lastSync=Date.now(), _lastDay=isoToday();
+document.addEventListener('visibilitychange',function(){
+  if(document.visibilityState!=='visible') return;
+  var dayChanged=isoToday()!==_lastDay;
+  if(dayChanged){ _lastDay=isoToday(); try{ renderFeed(); renderFood(); }catch(e){} }
+  if(!dayChanged && Date.now()-_lastSync<60000) return;
+  _lastSync=Date.now();
+  refreshDayData();
+});
+async function refreshDayData(){
+  if(!ciLoaded||ciUnsupported) return;
+  var r=await Promise.all([sheetFetch(WORKER_URL+'?action=getAllDayLog',null,20000),sheetFetch(WORKER_URL+'?action=getAllRuleChecks',null,20000)]);
+  var log=r[0]&&r[0].status==='ok'?r[0].dayLog:null, chk=r[1]&&r[1].status==='ok'?r[1].ruleChecks:null;
+  if(!log&&!chk) return;
+  var a=document.activeElement, typing=a&&(a.id==='sl-slept'||a.id==='sl-woke'||a.id==='ci-note'||a.id==='wk-note');
+  if(typing) return;                       // try again next time rather than disturb you
+  replaceCheckinFromSheet(chk,log);
 }
 
 /* ── Evening check-in ── */
@@ -3922,20 +3958,6 @@ function renderSitMatch(){
     plans.map(function(p){ return '<div class="sm-i"><span class="sm-k">Your plan</span><b>'+escH(p.situation)+'</b> \u2192 '+escH(p.approach)+'</div>'; }).join('')+
     gds.map(function(x){ return '<div class="sm-i"><span class="sm-k">Guide</span><b>'+escH(x.situation)+'</b> \u2192 '+escH(x.action)+'</div>'; }).join('')+
     (rules.length?'<div class="sm-foot">Mark tonight\u2019s check-in to record whether you used it.</div>':'');
-}
-
-/* ═══════════════════════════════════════════════════
-   FEED: Kundali and Gratitude tucked under "More" (display preference)
-═══════════════════════════════════════════════════ */
-function feedMoreOpen(){ try{ return localStorage.getItem('feed_more')==='1'; }catch(e){ return false; } }
-function toggleFeedMore(){
-  try{ localStorage.setItem('feed_more',feedMoreOpen()?'0':'1'); }catch(e){}
-  applyFeedMore();
-}
-function applyFeedMore(){
-  var open=feedMoreOpen(), m=document.getElementById('feed-more'), b=document.getElementById('feed-more-btn');
-  if(m) m.hidden=!open;
-  if(b){ b.setAttribute('aria-expanded',open); b.innerHTML=(open?'Less':'More from your feed: Kundali &amp; Gratitude')+' <span aria-hidden="true">'+(open?'\u25B4':'\u25BE')+'</span>'; }
 }
 
 /* ═══════════════════════════════════════════════════
