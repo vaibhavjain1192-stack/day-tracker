@@ -154,6 +154,62 @@ body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:
   .wk-rule-n{margin-left:34px}
 }
 
+/* ── Habit focus ── */
+.fc-card{background:linear-gradient(135deg,rgba(201,168,76,.09),var(--card) 60%);border:1px solid rgba(201,168,76,.35);border-radius:var(--rlg);padding:.9rem 1rem;margin-bottom:1rem}
+.fc-card[hidden]{display:none}
+.fc-top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.fc-l{font-size:11px;font-weight:600;color:var(--gold);letter-spacing:.2px}
+.fc-streak{font-size:11px;color:var(--text-2)}
+.fc-h{font-size:15px;font-weight:600;color:var(--text-1);margin:4px 0 8px;line-height:1.4}
+.fc-sub{font-size:13px;color:var(--text-2);line-height:1.5;margin:4px 0 10px}
+.fc-warn{font-size:13px;color:#E07B7B;background:rgba(224,123,123,.08);border-left:2px solid #E07B7B;padding:6px 9px;border-radius:0 var(--rsm) var(--rsm) 0;margin-bottom:8px}
+.fc-yn{display:inline-flex;border:1px solid var(--border-md);border-radius:20px;overflow:hidden}
+.fc-yn button{font-family:var(--fb);font-size:13px;font-weight:600;padding:6px 16px;background:transparent;border:none;color:var(--text-2);cursor:pointer}
+.fc-yn button+button{border-left:1px solid var(--border-md)}
+.fc-yes[aria-pressed="true"]{background:#6BBF8E;color:#0F1117}
+.fc-no[aria-pressed="true"]{background:#E07B7B;color:#0F1117}
+.fc-yn button:focus-visible,.fc-opt:focus-visible{outline:2px solid var(--gold);outline-offset:-2px}
+.fc-bar{height:6px;border-radius:3px;background:var(--surface);overflow:hidden;margin:12px 0 6px}
+.fc-bar span{display:block;height:100%;background:var(--gold);border-radius:3px}
+.fc-crit{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:4px 14px;font-size:11px;color:var(--text-3)}
+.fc-crit li.ok{color:#6BBF8E}
+.fc-grad{margin-top:10px}
+.fc-next{font-size:11px;color:var(--text-3);margin-top:10px}
+.fc-intro{font-size:13px;color:var(--text-2);line-height:1.55;margin-bottom:10px}
+.fc-intro b{color:var(--text-1)}
+.fc-hint{font-size:11px;color:var(--text-3);margin-top:8px;line-height:1.5}
+.fc-build{padding-bottom:4px}
+.fc-dots{display:flex;gap:3px;flex-wrap:wrap;margin-top:10px}
+.fc-dot{width:12px;height:12px;border-radius:3px;background:var(--surface);border:1px solid var(--border-md)}
+.fc-dot.y{background:#6BBF8E;border-color:#6BBF8E}.fc-dot.n{background:#E07B7B;border-color:#E07B7B}
+.fc-dot.na{background:transparent;border-color:transparent}.fc-dot.open{border-style:dashed}
+.fc-acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+.fc-acts .btn:disabled{opacity:.45;cursor:default}
+.fc-list{list-style:none;margin:0;padding:0}
+.fc-list li{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border)}
+.fc-name{flex:1;min-width:0;font-size:13px;color:var(--text-1);line-height:1.4}
+.fc-name small{color:var(--text-3);font-size:11px}
+.fc-row-acts{display:flex;gap:3px;align-items:center;flex-shrink:0}
+.fc-row-acts .rt-mini:disabled{opacity:.3}
+.fc-slip{font-size:11px;padding:3px 9px}
+.fc-count{font-weight:400;color:var(--text-3);font-size:11px;margin-left:4px}
+.fc-su-t{flex:1;min-width:0;display:flex;gap:10px;align-items:center}
+.fc-su-t small{display:block;font-size:11px;color:var(--text-3)}
+.fc-opts{display:inline-flex;border:1px solid var(--border-md);border-radius:20px;overflow:hidden;flex-shrink:0}
+.fc-opt{font-family:var(--fb);font-size:12px;font-weight:600;padding:5px 10px;background:transparent;border:none;color:var(--text-2);cursor:pointer}
+.fc-opt+.fc-opt{border-left:1px solid var(--border-md)}
+.fc-opt.keeping[aria-checked="true"]{background:#6BBF8E;color:#0F1117}
+.fc-opt.building[aria-checked="true"]{background:var(--gold);color:#0F1117}
+.fc-opt.waiting[aria-checked="true"]{background:var(--surface);color:var(--text-1)}
+.fc-foot{display:flex;justify-content:flex-end;gap:6px;margin-top:12px}
+@media(max-width:640px){
+  .fc-su{flex-wrap:wrap}
+  .fc-opts{order:3;width:100%}
+  .fc-opt{flex:1}
+  .fc-w,.fc-k{flex-wrap:wrap}
+  .fc-row-acts{width:100%;justify-content:flex-end}
+}
+
 /* ── Food habits ── */
 .fd-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:8px}
 .fd-day{font-size:13px;font-weight:600;color:var(--text-1)}
