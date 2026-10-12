@@ -218,6 +218,7 @@ function init(){
       // Older Code.gs: no food data. Say so rather than offer saves it would misroute
       if(Array.isArray(d.foodHabits)&&Array.isArray(d.foodTrack)) replaceFoodFromSheet(d.foodHabits, d.foodLog||[], d.foodTrack); else markFoodUnsupported();
       if(Array.isArray(d.ruleChecks)&&Array.isArray(d.dayLog)) replaceCheckinFromSheet(d.ruleChecks, d.dayLog); else markCheckinUnsupported();
+      if(Array.isArray(d.focus)&&Array.isArray(d.focusLog)) replaceFocusFromSheet(d.focus, d.focusLog); else markFocusUnsupported();
       dashKeySet = d.keySet===true ? true : d.keySet===false ? false : null;
       lastBackup = d.lastBackup||'';
       renderKeyWarning();
@@ -269,7 +270,9 @@ function init(){
         ['getAllFoodLog','foodLog',function(l){ _foodFb.log=l; }],
         ['getAllFoodTrack','foodTrack',function(t){ _foodFb.track=t; }],
         ['getAllRuleChecks','ruleChecks',function(c){ _ciFb.checks=c; }],
-        ['getAllDayLog','dayLog',function(l){ _ciFb.log=l; }]
+        ['getAllDayLog','dayLog',function(l){ _ciFb.log=l; }],
+        ['getAllFocus','focus',function(f){ _fcFb.list=f; }],
+        ['getAllFocusLog','focusLog',function(l){ _fcFb.log=l; }]
       ];
       if(skipArchives){
         var arcKeys={situations:1,thoughts:1,posts:1,motivation:1,gratitude:1,kundali:1,guide:1};
@@ -290,6 +293,8 @@ function init(){
       if(!foodLoaded) markFoodFailed();
       if(_ciFb.checks && _ciFb.log) replaceCheckinFromSheet(_ciFb.checks,_ciFb.log);
       if(!ciLoaded) markCheckinFailed();
+      if(_fcFb.list && _fcFb.log) replaceFocusFromSheet(_fcFb.list,_fcFb.log);
+      if(!fcLoaded) markFocusFailed();
       // Only call the feed loaded if something for it actually arrived
       if(posts.length||motEntries.length||kunEntries.length||guide.length||gratEntries.length) feedReady=true;
       else feedFailed=true;
@@ -1817,6 +1822,7 @@ function addTodayHabit(){
   }
   var archived=habitArchive.filter(function(t){return t.toLowerCase()===text.toLowerCase();})[0];
   if(archived){ restoreHabit(archived); inp.value=''; return; }
+  if(fcNudge(text)){ inp.value=''; return; }
   habitList.push(text);
   saveTodayHabits(); renderTodayHabits();
   inp.value=''; inp.focus();
@@ -3166,6 +3172,7 @@ async function addFood(text){
   if(!name){ showToast('Type a food habit first.','error'); return false; }
   var dup=foodHabits.some(function(h){ return !h.archivedOn && h.habit.toLowerCase()===name.toLowerCase(); });
   if(dup){ showToast('\u201c'+name+'\u201d is already on your list.','error'); return false; }
+  if(text==null && fcNudge(name)){ if(inp) inp.value=''; return false; }
   var d=foodDay(), today=isoToday();
   var h={sheetId:'fh'+Date.now()+Math.floor(Math.random()*1000),habit:name,order:foodHabits.length,addedOn:d<today?d:today,archivedOn:''};
   foodHabits.push(h);
@@ -3642,6 +3649,310 @@ if('serviceWorker' in navigator && location.protocol==='https:'){
 }
 
 /* ═══════════════════════════════════════════════════
+   HABIT FOCUS — Building (one at a time) · Keeping · Waiting list.
+   A habit graduates from Building to Keeping only when, over the last
+   30 days, it was done on ≥ 90% of days with never two misses in a row
+   (an unmarked day counts as a miss; today isn't judged until it's over).
+   Sheets: HabitFocus (the lists) and HabitFocusLog (Yes/No per day).
+═══════════════════════════════════════════════════ */
+var focusList=[];            // [{sheetId, habit, list, order, startedOn, graduatedOn}]
+var focusLog={};             // date -> {habitId: 'yes'|'no'}
+var fcLoaded=false, fcUnsupported=false, fcFailed=false;
+var fcSetup=null;            // triage rows while setting up: [{key, habit, list}]
+var FC_WINDOW=30, FC_TARGET=0.9;
+var FC_SUGGEST='Phone away at 10:30 PM, in bed by 11';
+var _fcFb={};
+
+function replaceFocusFromSheet(list,log){
+  fcLoaded=true; fcUnsupported=false; fcFailed=false;
+  if(Array.isArray(list)) focusList=list.map(function(f){
+    return {sheetId:f.sheetId,habit:f.habit||'',list:f.list||'waiting',order:f.order==null?9999:Number(f.order),startedOn:f.startedOn||'',graduatedOn:f.graduatedOn||''};
+  });
+  if(Array.isArray(log)){
+    var m={}; log.forEach(function(r){ (m[r.dateISO]=m[r.dateISO]||{})[r.habitId]=r.status; });
+    Object.keys(_sqPending).forEach(function(k){            // unsaved marks win
+      var p=_sqPending[k].p; if(p.sheet!=='HabitFocusLog') return;
+      m[p.dateISO]=m[p.dateISO]||{}; if(p.status) m[p.dateISO][p.habitId]=p.status; else delete m[p.dateISO][p.habitId];
+    });
+    focusLog=m;
+  }
+  renderFocus();
+}
+function markFocusUnsupported(){ if(fcLoaded) return; fcUnsupported=true; renderFocus(); }
+function markFocusFailed(){ if(fcLoaded||fcUnsupported) return; fcFailed=true; renderFocus(); }
+
+function fcBuilding(){ return focusList.find(function(f){ return f.list==='building'; })||null; }
+function fcOf(list){ return focusList.filter(function(f){ return f.list===list; }).sort(function(a,b){ return a.order-b.order; }); }
+function fcMark(id,d){ return (focusLog[d]||{})[id]||''; }
+function fcNewId(){ return 'hf'+Date.now()+Math.floor(Math.random()*1000); }
+function fcDaysBetween(a,b){ return Math.round((new Date(b+'T12:00:00')-new Date(a+'T12:00:00'))/864e5); }
+
+/* Progress of the habit being built */
+function fcStats(f){
+  var today=isoToday(), start=f.startedOn||today;
+  var dayN=fcDaysBetween(start,today)+1;
+  // Judge complete days only: today counts once it's marked
+  var end=fcMark(f.sheetId,today)?today:foodShift(today,-1);
+  var days=[]; for(var d=end; d>=start && days.length<FC_WINDOW; d=foodShift(d,-1)) days.unshift(d);
+  var done=days.filter(function(d){ return fcMark(f.sheetId,d)==='yes'; }).length;
+  var run=0, worst=0;
+  days.forEach(function(d){ if(fcMark(f.sheetId,d)==='yes') run=0; else { run++; if(run>worst) worst=run; } });
+  var streak=0; for(var s=end; s>=start; s=foodShift(s,-1)){ if(fcMark(f.sheetId,s)==='yes') streak++; else break; }
+  var full=days.length>=FC_WINDOW, pctOk=days.length?done/days.length>=FC_TARGET:false;
+  var y=foodShift(today,-1);
+  var missedYesterday = y>=start && fcMark(f.sheetId,y)!=='yes' && fcMark(f.sheetId,today)!=='yes';
+  return {dayN:dayN,days:days,done:done,judged:days.length,worst:worst,streak:streak,
+    full:full,pctOk:pctOk,noDouble:worst<2,ready:full&&pctOk&&worst<2,missedYesterday:missedYesterday,
+    toGo:Math.max(0,FC_WINDOW-days.length)};
+}
+
+/* ── Writes ── */
+async function fcUpdate(f,changes,undo){
+  Object.assign(f,changes); renderFocus();
+  var ok=await postToSheet(Object.assign({sheet:'HabitFocus',action:'update',sheetId:f.sheetId},changes));
+  if(!ok){ Object.assign(f,undo); renderFocus(); showToast(LAST_SHEET_ERROR||'Couldn’t save. Try again.','error'); }
+  return ok;
+}
+function setFocusAnswer(ans){
+  var f=fcBuilding(); if(!f||!fcLoaded) return;
+  var d=isoToday(), cur=fcMark(f.sheetId,d), next=cur===ans?'':ans;
+  focusLog[d]=focusLog[d]||{};
+  if(next) focusLog[d][f.sheetId]=next; else delete focusLog[d][f.sheetId];
+  queueSave('fc|'+d+'|'+f.sheetId,{sheet:'HabitFocusLog',dateISO:d,habitId:f.sheetId,habit:f.habit,status:next});
+  renderFocus();
+  var b=document.querySelector('#fc-card .fc-'+ans); if(b) b.focus();
+}
+async function addToWaiting(text){
+  var inp=document.getElementById('fc-new');
+  var name=String(text!=null?text:(inp&&inp.value)||'').trim();
+  if(!name){ showToast('Type a habit first.','error'); return false; }
+  if(focusList.some(function(f){ return f.habit.toLowerCase()===name.toLowerCase(); })){ showToast('“'+name+'” is already in your focus lists.','error'); return false; }
+  var f={sheetId:fcNewId(),habit:name,list:'waiting',order:Math.max(0,...focusList.map(function(x){ return x.order+1; })),startedOn:'',graduatedOn:''};
+  focusList.push(f); if(text==null&&inp) inp.value=''; renderFocus();
+  var ok=await postToSheet({sheet:'HabitFocus',sheetId:f.sheetId,habit:f.habit,list:'waiting',order:f.order});
+  if(!ok){ focusList=focusList.filter(function(x){ return x!==f; }); renderFocus(); showToast('Couldn’t add it. Try again.','error'); }
+  else showToast('Added to your waiting list ✓','success');
+  return ok;
+}
+async function startBuilding(id){
+  if(fcBuilding()){ showToast('Graduate or set aside the habit you’re building first.','error'); return; }
+  var f=focusList.find(function(x){ return x.sheetId===id; }); if(!f) return;
+  await fcUpdate(f,{list:'building',startedOn:isoToday(),graduatedOn:''},{list:f.list,startedOn:f.startedOn,graduatedOn:f.graduatedOn});
+}
+async function graduateFocus(){
+  var f=fcBuilding(); if(!f) return;
+  var st=fcStats(f); if(!st.ready) return;
+  if(!confirm('Does “'+f.habit+'” feel automatic now, so skipping it would feel strange?\n\nOK moves it to Keeping and frees you to start the next habit.')) return;
+  var ok=await fcUpdate(f,{list:'keeping',graduatedOn:isoToday()},{list:'building',graduatedOn:''});
+  if(ok) showToast('🎓 Graduated after '+st.dayN+' days. Pick your next habit when you’re ready.','success');
+}
+async function setAsideFocus(){
+  var f=fcBuilding(); if(!f) return;
+  if(!confirm('Set “'+f.habit+'” aside and put it back at the top of your waiting list?\n\nIf it’s too hard right now, consider making it smaller instead (rename it).')) return;
+  var top=Math.min(0,...fcOf('waiting').map(function(x){ return x.order; }))-1;
+  await fcUpdate(f,{list:'waiting',order:top,startedOn:''},{list:'building',order:f.order,startedOn:f.startedOn});
+}
+async function renameFocus(id){
+  var f=focusList.find(function(x){ return x.sheetId===id; }); if(!f) return;
+  var n=prompt('Rename (making a habit smaller often helps it stick):',f.habit); if(n==null) return; n=n.trim(); if(!n||n===f.habit) return;
+  await fcUpdate(f,{habit:n},{habit:f.habit});
+}
+async function slippedBack(id){
+  var f=focusList.find(function(x){ return x.sheetId===id; }); if(!f) return;
+  if(!confirm('Has “'+f.habit+'” slipped? It moves to the top of your waiting list so you can rebuild it next.')) return;
+  var top=Math.min(0,...fcOf('waiting').map(function(x){ return x.order; }))-1;
+  await fcUpdate(f,{list:'waiting',order:top,graduatedOn:''},{list:'keeping',order:f.order,graduatedOn:f.graduatedOn});
+}
+async function moveWaiting(id,dir){
+  var w=fcOf('waiting'), i=w.findIndex(function(x){ return x.sheetId===id; }), j=i+dir;
+  if(i<0||j<0||j>=w.length) return;
+  var a=w[i], b=w[j], ao=a.order, bo=b.order===ao?ao+dir:b.order;
+  a.order=bo; b.order=ao; renderFocus();
+  var r=await Promise.all([postToSheet({sheet:'HabitFocus',action:'update',sheetId:a.sheetId,order:a.order}),
+                           postToSheet({sheet:'HabitFocus',action:'update',sheetId:b.sheetId,order:b.order})]);
+  if(!r[0]||!r[1]) showToast('Couldn’t save the new order. Try again.','error');
+  var btn=document.querySelector('.fc-w[data-id="'+id+'"] .fc-mv'+(dir<0?'u':'d')); if(btn&&!btn.disabled) btn.focus();
+}
+async function removeFocus(id){
+  var f=focusList.find(function(x){ return x.sheetId===id; }); if(!f) return;
+  if(!confirm('Remove “'+f.habit+'” from your focus lists? Its daily history stays in the Sheet.')) return;
+  focusList=focusList.filter(function(x){ return x!==f; }); renderFocus();
+  var ok=await postToSheet({sheet:'HabitFocus',action:'delete',sheetId:id});
+  if(!ok){ focusList.push(f); renderFocus(); showToast('Couldn’t remove it. Try again.','error'); }
+}
+
+/* ── One-time setup: sort your current habits into the three lists ── */
+function fcCandidates(){
+  var seen={}, out=[];
+  function add(h,src){ h=String(h||'').trim(); if(!h) return; var k=h.toLowerCase(); if(seen[k]) return; seen[k]=1; out.push({habit:h,src:src}); }
+  add(FC_SUGGEST,'Suggested first habit');
+  (typeof habitList!=='undefined'?habitList:[]).forEach(function(h){ add(h,'Habits I’m following'); });
+  (typeof habitMaster!=='undefined'?habitMaster:[]).forEach(function(h){ add(h.habit,'Routine'); });
+  (typeof foodHabits!=='undefined'?foodHabits:[]).filter(function(h){ return !h.archivedOn; }).forEach(function(h){ add(h.habit,'Food'); });
+  return out;
+}
+function startFocusSetup(){
+  fcSetup=fcCandidates().map(function(c,i){ return {key:'c'+i,habit:c.habit,src:c.src,list:i===0?'building':'waiting'}; });
+  renderFocus();
+  var sec=document.getElementById('sec-focus'); if(sec&&sec.classList.contains('closed')) toggleSection('focus');
+  var h=document.getElementById('hd-focus'); if(h) h.scrollIntoView({behavior:'smooth',block:'start'});
+}
+function setupPick(key,list){
+  if(list==='building') fcSetup.forEach(function(r){ if(r.list==='building') r.list='waiting'; });
+  var r=fcSetup.find(function(x){ return x.key===key; }); if(r) r.list=list;
+  renderFocus();
+  var b=document.querySelector('.fc-su[data-k="'+key+'"] .fc-opt[data-l="'+list+'"]'); if(b) b.focus();
+}
+function setupAdd(){
+  var i=document.getElementById('fc-su-new'), v=(i&&i.value||'').trim(); if(!v) return;
+  if(fcSetup.some(function(r){ return r.habit.toLowerCase()===v.toLowerCase(); })){ showToast('Already in the list.','error'); return; }
+  fcSetup.push({key:'n'+Date.now(),habit:v,src:'Added now',list:'waiting'}); renderFocus();
+  var n=document.getElementById('fc-su-new'); if(n) n.focus();
+}
+function setupRemove(key){ fcSetup=fcSetup.filter(function(r){ return r.key!==key; }); renderFocus(); }
+async function saveFocusSetup(){
+  var b=document.getElementById('fc-su-save'); if(b){ b.disabled=true; b.textContent='Saving…'; }
+  var today=isoToday();
+  var items=fcSetup.map(function(r,i){ return {sheetId:fcNewId()+i,habit:r.habit,list:r.list,order:i,startedOn:r.list==='building'?today:''}; });
+  var ok=await postToSheet({sheet:'HabitFocus',action:'bulk_add',items:JSON.stringify(items)});
+  if(!ok){ if(b){ b.disabled=false; b.textContent='Save my focus'; } showToast(LAST_SHEET_ERROR||'Couldn’t save. Try again.','error'); return; }
+  focusList=items.map(function(it){ return {sheetId:it.sheetId,habit:it.habit,list:it.list,order:it.order,startedOn:it.startedOn,graduatedOn:''}; });
+  fcSetup=null; renderFocus();
+  showToast('Your focus is set ✓','success');
+}
+
+/* A gentle stop when adding a new habit elsewhere while one is being built */
+function fcNudge(name){
+  var f=fcBuilding(); if(!f||!fcLoaded||fcUnsupported) return false;
+  if(focusList.some(function(x){ return x.habit.toLowerCase()===String(name).toLowerCase(); })) return false;
+  if(!confirm('You’re building “'+f.habit+'” right now.\n\nOK: put “'+name+'” on your waiting list instead.\nCancel: add it now anyway.')) return false;
+  addToWaiting(name); return true;
+}
+
+/* ── Rendering ── */
+function fcYN(f){
+  var m=fcMark(f.sheetId,isoToday());
+  return '<div class="fc-yn" role="group" aria-label="Did you do it today?">'+
+    '<button type="button" class="fc-yes" aria-pressed="'+(m==='yes')+'" onclick="setFocusAnswer(\'yes\')">Done today</button>'+
+    '<button type="button" class="fc-no" aria-pressed="'+(m==='no')+'" onclick="setFocusAnswer(\'no\')">Not today</button></div>';
+}
+function fcProgress(st){
+  var pct=st.judged?Math.round(st.done/st.judged*100):0;
+  var items=[
+    [st.full, st.full?'30 days in':'Day '+st.judged+' of 30 judged'+(st.toGo?' ('+st.toGo+' to go)':'')],
+    [st.pctOk, (st.judged?pct+'%':'–')+' done (need 90%)'],
+    [st.noDouble, st.noDouble?'Never missed twice':'Missed '+st.worst+' days in a row']
+  ];
+  return '<div class="fc-bar" aria-hidden="true"><span style="width:'+Math.min(100,st.judged/FC_WINDOW*100)+'%"></span></div>'+
+    '<ul class="fc-crit">'+items.map(function(x){ return '<li class="'+(x[0]?'ok':'')+'">'+(x[0]?'✓':'○')+' '+x[1]+'</li>'; }).join('')+'</ul>';
+}
+function renderFocus(){ renderFocusCard(); renderFocusSection(); }
+
+function renderFocusCard(){
+  var el=document.getElementById('fc-card'); if(!el) return;
+  if(fcUnsupported||!fcLoaded){ el.hidden=true; return; }
+  el.hidden=false;
+  var f=fcBuilding(), next=fcOf('waiting')[0];
+  if(!focusList.length){
+    el.innerHTML='<div class="fc-l">🎯 Focus on one habit at a time</div>'+
+      '<div class="fc-sub">Too many habits at once is overwhelming. Pick one to build, keep the ones you already do, and queue the rest.</div>'+
+      '<button type="button" class="btn gold" onclick="switchTab(\'routine\');startFocusSetup()">Set up my focus</button>';
+    return;
+  }
+  if(!f){
+    el.innerHTML='<div class="fc-l">🎯 Ready for your next habit</div>'+
+      (next?'<div class="fc-h">'+escH(next.habit)+'</div><div class="fc-sub">First on your waiting list.</div>'+
+        '<button type="button" class="btn gold" onclick="startBuilding(\''+next.sheetId+'\')">Start building it today</button>'
+        :'<div class="fc-sub">Your waiting list is empty. Add a habit on the Routine tab.</div>');
+    return;
+  }
+  var st=fcStats(f), m=fcMark(f.sheetId,isoToday());
+  el.innerHTML='<div class="fc-top"><span class="fc-l">🎯 Building now · day '+st.dayN+'</span>'+
+      (st.streak?'<span class="fc-streak">🔥 '+st.streak+'-day streak</span>':'')+'</div>'+
+    '<div class="fc-h">'+escH(f.habit)+'</div>'+
+    (st.missedYesterday&&!m?'<div class="fc-warn">You missed yesterday. Never miss twice: today is the one that counts.</div>':'')+
+    fcYN(f)+fcProgress(st)+
+    (st.ready?'<button type="button" class="btn gold fc-grad" onclick="graduateFocus()">🎓 Ready to graduate</button>':'')+
+    (next?'<div class="fc-next">Next up: '+escH(next.habit)+'</div>':'');
+}
+
+function renderFocusSection(){
+  var box=document.getElementById('fc-body'); if(!box) return;
+  var badge=document.getElementById('badge-focus');
+  if(fcUnsupported){ box.innerHTML='<div class="fd-note">Habit focus needs the updated <b>Code.gs</b>. Deploy it (Manage deployments → New version), then reload.</div>'; return; }
+  if(!fcLoaded){ box.innerHTML='<div class="fd-note">'+(fcFailed?'Couldn’t load. Reload the page to try again.':'Loading…')+'</div>'; return; }
+  var f=fcBuilding();
+  if(badge) badge.textContent=f?'Day '+fcStats(f).dayN:'';
+
+  if(fcSetup){
+    var nb=fcSetup.filter(function(r){ return r.list==='building'; }).length;
+    box.innerHTML='<div class="fc-intro">Sort what you’re working on. <b>Keeping</b>: you already do it almost daily without thinking. '+
+      '<b>Building</b>: the one habit to focus on now. <b>Waiting</b>: everything else, for later.</div>'+
+      '<ul class="fc-list">'+fcSetup.map(function(r){
+        return '<li class="fc-su" data-k="'+r.key+'"><span class="fc-su-t">'+ptTile(r.habit,'',{size:'sm'})+'<span><span class="fc-name">'+escH(r.habit)+'</span><small>'+escH(r.src)+'</small></span></span>'+
+          '<span class="fc-opts" role="radiogroup" aria-label="List for '+escH(r.habit)+'">'+[['keeping','Keeping'],['building','Building'],['waiting','Waiting']].map(function(o){
+            return '<button type="button" role="radio" class="fc-opt '+o[0]+'" data-l="'+o[0]+'" aria-checked="'+(r.list===o[0])+'" onclick="setupPick(\''+r.key+'\',\''+o[0]+'\')">'+o[1]+'</button>';
+          }).join('')+'</span>'+
+          '<button type="button" class="rt-mini del" aria-label="Leave out '+escH(r.habit)+'" title="Leave out" onclick="setupRemove(\''+r.key+'\')">×</button></li>';
+      }).join('')+'</ul>'+
+      '<div class="fd-add"><input class="sin" id="fc-su-new" type="text" placeholder="Another habit you want to build someday" onkeydown="if(event.key===\'Enter\'){setupAdd();event.preventDefault();}">'+
+        '<button class="btn" type="button" onclick="setupAdd()">+ Add</button></div>'+
+      (nb?'':'<div class="fc-hint">Pick one habit as <b>Building</b> to start.</div>')+
+      '<div class="fc-foot"><button class="btn" type="button" onclick="fcSetup=null;renderFocus()">Cancel</button>'+
+        '<button class="btn gold" id="fc-su-save" type="button" onclick="saveFocusSetup()"'+(fcSetup.length?'':' disabled')+'>Save my focus</button></div>';
+    return;
+  }
+
+  if(!focusList.length){
+    box.innerHTML='<div class="fc-intro">Build one habit at a time. Each one graduates when it’s automatic: done on 90% of the last 30 days, never missed twice in a row. Then the next one starts.</div>'+
+      '<button class="btn gold" type="button" onclick="startFocusSetup()">Sort my current habits</button>';
+    return;
+  }
+
+  var html='<h3 class="fs-h" style="margin-top:0">🎯 Building</h3>';
+  if(f){
+    var st=fcStats(f), dots='';
+    for(var i=FC_WINDOW-1;i>=0;i--){
+      var d=foodShift(isoToday(),-i), mk=fcMark(f.sheetId,d), cls='fc-dot';
+      if(d<f.startedOn) continue; else if(mk==='yes') cls+=' y'; else if(mk==='no') cls+=' n'; else if(d===isoToday()) cls+=' open';
+      dots+='<span class="'+cls+'" title="'+escH(feedDate(d)+': '+(cls.indexOf(' na')>-1?'before you started':mk==='yes'?'done':mk==='no'?'not done':'not marked'))+'"></span>';
+    }
+    html+='<div class="fc-build"><div class="fc-h">'+escH(f.habit)+'</div>'+
+      '<div class="fc-sub">Started '+feedDate(f.startedOn)+' · day '+st.dayN+(st.streak?' · 🔥 '+st.streak+'-day streak':'')+'</div>'+
+      fcYN(f)+'<div class="fc-dots" aria-label="Last 30 days">'+dots+'</div>'+fcProgress(st)+
+      '<div class="fc-acts">'+(st.ready?'<button type="button" class="btn gold" onclick="graduateFocus()">🎓 Graduate to Keeping</button>':
+        '<button type="button" class="btn" disabled title="Unlocks when all three are ticked">🎓 Graduate</button>')+
+        '<button type="button" class="btn" onclick="renameFocus(\''+f.sheetId+'\')">✎ Make it smaller</button>'+
+        '<button type="button" class="btn" onclick="setAsideFocus()">Set aside</button></div>'+
+      '<div class="fc-hint">Most habits take about 2 months to feel automatic (the median in research is 66 days), so don’t worry if it takes longer than 30.</div></div>';
+  }else html+='<div class="fd-note">Nothing in progress. Start the first habit on your waiting list below.</div>';
+
+  var w=fcOf('waiting');
+  html+='<h3 class="fs-h">⏳ Waiting list <small class="fc-count">'+w.length+'</small></h3>'+
+    (w.length?'<ul class="fc-list">'+w.map(function(x,i){
+      return '<li class="fc-w" data-id="'+x.sheetId+'">'+ptTile(x.habit,'',{size:'sm'})+'<span class="fc-name">'+escH(x.habit)+'</span>'+
+        '<span class="fc-row-acts">'+
+          (!f&&i===0?'<button type="button" class="btn gold" onclick="startBuilding(\''+x.sheetId+'\')">Start building</button>':'')+
+          '<button type="button" class="rt-mini fc-mvu" aria-label="Move up" onclick="moveWaiting(\''+x.sheetId+'\',-1)"'+(i===0?' disabled':'')+'>↑</button>'+
+          '<button type="button" class="rt-mini fc-mvd" aria-label="Move down" onclick="moveWaiting(\''+x.sheetId+'\',1)"'+(i===w.length-1?' disabled':'')+'>↓</button>'+
+          '<button type="button" class="rt-mini" aria-label="Rename" onclick="renameFocus(\''+x.sheetId+'\')">✎</button>'+
+          '<button type="button" class="rt-mini del" aria-label="Remove" onclick="removeFocus(\''+x.sheetId+'\')">×</button></span></li>';
+    }).join('')+'</ul>':'<div class="fd-note">Empty. New habit ideas go here, not straight onto your tracker.</div>')+
+    '<div class="fd-add"><input class="sin" id="fc-new" type="text" placeholder="A habit for later, e.g. Read 10 pages" onkeydown="if(event.key===\'Enter\'){addToWaiting();event.preventDefault();}">'+
+      '<button class="btn" type="button" onclick="addToWaiting()">+ Add to waiting list</button></div>';
+
+  var k=fcOf('keeping');
+  html+='<h3 class="fs-h">✅ Keeping <small class="fc-count">'+k.length+'</small></h3>'+
+    (k.length?'<ul class="fc-list">'+k.map(function(x){
+      return '<li class="fc-k">'+ptTile(x.habit,'',{size:'sm'})+'<span class="fc-name">'+escH(x.habit)+
+        (x.graduatedOn?' <small>graduated '+feedDate(x.graduatedOn)+'</small>':'')+'</span>'+
+        '<span class="fc-row-acts"><button type="button" class="btn fc-slip" onclick="slippedBack(\''+x.sheetId+'\')">Slipping?</button>'+
+        '<button type="button" class="rt-mini del" aria-label="Remove" onclick="removeFocus(\''+x.sheetId+'\')">×</button></span></li>';
+    }).join('')+'</ul>':'<div class="fd-note">Habits you’ve built land here.</div>');
+  box.innerHTML=html;
+}
+
+/* ═══════════════════════════════════════════════════
    SAVE QUEUE — one write per key in flight; only the newest state
    waits behind it, so changes can never reach the Sheet out of order.
 ═══════════════════════════════════════════════════ */
@@ -3782,7 +4093,9 @@ document.addEventListener('visibilitychange',function(){
 });
 async function refreshDayData(){
   if(!ciLoaded||ciUnsupported) return;
-  var r=await Promise.all([sheetFetch(WORKER_URL+'?action=getAllDayLog',null,20000),sheetFetch(WORKER_URL+'?action=getAllRuleChecks',null,20000)]);
+  var r=await Promise.all([sheetFetch(WORKER_URL+'?action=getAllDayLog',null,20000),sheetFetch(WORKER_URL+'?action=getAllRuleChecks',null,20000),
+    fcLoaded?sheetFetch(WORKER_URL+'?action=getAllFocusLog',null,20000):null]);
+  if(r[2]&&r[2].status==='ok') replaceFocusFromSheet(null,r[2].focusLog);
   var log=r[0]&&r[0].status==='ok'?r[0].dayLog:null, chk=r[1]&&r[1].status==='ok'?r[1].ruleChecks:null;
   if(!log&&!chk) return;
   var a=document.activeElement, typing=a&&(a.id==='sl-slept'||a.id==='sl-woke'||a.id==='ci-note'||a.id==='wk-note');
@@ -4840,7 +5153,7 @@ async function importGuide(){
    Open/closed state is a display preference, so it lives in
    localStorage — no dashboard data is stored there.
 ──────────────────────────────────────────────────────── */
-var SEC_KEYS=['links','sitlib','master','routine','food','foodsum','weekly','library','rtstats','habitperf','habits','checklist','pillars','anchors'];
+var SEC_KEYS=['links','sitlib','focus','master','routine','food','foodsum','weekly','library','rtstats','habitperf','habits','checklist','pillars','anchors'];
 
 function secOpen(key){
   var v=localStorage.getItem('sec_'+key);
@@ -4925,7 +5238,7 @@ function renderGlance(){
 
 /* Sections now live on two tabs, so a glance card may need to
    switch tab before scrolling to its section. */
-var ROUTINE_TAB_SECTIONS=['master','routine','food','foodsum','rtstats','habitperf'];   // sitlib lives on Home
+var ROUTINE_TAB_SECTIONS=['focus','master','routine','food','foodsum','rtstats','habitperf'];   // sitlib lives on Home
 
 function jumpToSection(key){
   if(!secOpen(key)){ localStorage.setItem('sec_'+key,'1'); applySection(key); }
