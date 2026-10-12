@@ -14,7 +14,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=20261008">
+<link rel="stylesheet" href="styles.css?v=20261009">
 </head>
 <body>
 <div class="toast" id="toast"></div>
@@ -40,6 +40,7 @@
   <div class="key-warn" id="key-warn" hidden role="status">&#9888;&#65039; <span>Your data isn't protected yet: anyone with this page's address can read it.</span><button type="button" class="btn gold" onclick="openSettings()">Set up a key</button><button type="button" class="btn" onclick="dismissKeyWarning()">Later</button></div>
   <div class="mantra"><div class="mantra-q" id="mantra-text">"..."</div><div class="mantra-src" id="mantra-source"></div></div>
   <div class="sleep-row" id="sleep-row" hidden></div>
+  <section class="fc-card" id="fc-card" hidden aria-label="Habit you're building"></section>
   <section class="dr" id="dr-box" aria-labelledby="dr-title">
     <div class="dr-top">
       <h2 class="dr-title" id="dr-title">My rules for every day</h2>
@@ -216,6 +217,9 @@
     <div class="past-title">Routine</div>
     <div class="past-sub">Your habit library, today's schedule and how it's tracking.</div>
   </div>
+
+  <div class="sec-hd" id="hd-focus" onclick="toggleSection('focus')"><span class="sec-icon">&#127919;</span><span class="sec-title">Habit focus</span><span class="lbl-line"></span><span class="sec-badge" id="badge-focus"></span><span class="sec-caret open" id="caret-focus">&#9662;</span></div>
+  <div class="sec-body" id="sec-focus"><div class="q-wrap"><div id="fc-body"><div class="fd-note">Loading&hellip;</div></div></div></div><!-- /sec-focus -->
 
   <div class="sec-hd" id="hd-master" onclick="toggleSection('master')"><span class="sec-icon">&#128203;</span><span class="sec-title">Master habit list</span><span class="lbl-line"></span><span class="sec-badge" id="badge-master"></span><span class="sec-caret" id="caret-master">&#9662;</span></div>
   <div class="sec-body closed" id="sec-master">
@@ -535,6 +539,6 @@
   <div class="set-panel"><div class="set-head"><h2 id="set-title">Settings</h2><button type="button" class="set-x" onclick="closeSettings()" aria-label="Close">&times;</button></div>
   <div id="set-body"></div></div>
 </div>
-<script src="app.js?v=20261008"></script>
+<script src="app.js?v=20261009"></script>
 </body>
 </html>
