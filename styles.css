@@ -193,6 +193,33 @@ body{background:var(--bg);color:var(--text-1);font-family:var(--fb);line-height:
 .fc-row-acts .rt-mini:disabled{opacity:.3}
 .fc-slip{font-size:11px;padding:3px 9px}
 .fc-count{font-weight:400;color:var(--text-3);font-size:11px;margin-left:4px}
+.fc-wh{margin-bottom:0}
+.fc-wtog{display:flex;align-items:center;gap:10px;width:100%;background:none;border:none;border-bottom:1px solid var(--border);padding:6px 0 8px;font-family:var(--fb);font-size:13px;font-weight:600;color:var(--text-1);cursor:pointer;text-align:left}
+.fc-wtog:disabled{cursor:default}
+.fc-wtog:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.fc-wnext{flex:1;min-width:0;font-size:11px;font-weight:400;color:var(--text-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fc-wcaret{margin-left:auto;color:var(--text-3);font-size:11px}
+#fc-wbody[hidden]{display:none}
+#fc-wbody{padding-top:4px}
+.fc-kmeta{display:block;margin-top:1px}
+.fc-kwarn{display:block;color:#E07B7B!important}
+.fc-k.slip .fc-name{color:var(--text-1)}
+.fc-kdots{margin-top:0;flex-shrink:0}
+.fc-kdots .fc-dot{width:10px;height:10px}
+.fc-yn-sm{flex-shrink:0}
+.fc-yn-sm button{font-size:11.5px;padding:4px 10px}
+.fc-keep{margin-top:12px;padding-top:10px;border-top:1px solid var(--border)}
+.fc-keep-l{font-size:11px;font-weight:600;color:#6BBF8E;margin-bottom:6px}
+.fc-keep-l span{font-weight:400;color:var(--text-3);margin-left:4px}
+.fc-chips{display:flex;flex-wrap:wrap;gap:6px}
+.fc-chip{display:inline-flex;align-items:center;gap:6px;font-family:var(--fb);font-size:12.5px;color:var(--text-2);background:transparent;border:1px solid var(--border-md);border-radius:20px;padding:4px 11px 4px 5px;cursor:pointer}
+.fc-chip:hover{color:var(--text-1)}
+.fc-chip-b{width:16px;height:16px;border-radius:50%;border:1.5px solid var(--border-md);display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#0F1117}
+.fc-chip.on{color:var(--text-1);border-color:rgba(107,191,142,.5);background:rgba(107,191,142,.1)}
+.fc-chip.on .fc-chip-b{background:#6BBF8E;border-color:#6BBF8E}
+.fc-chip.slip:not(.on){border-color:rgba(224,123,123,.45)}
+.fc-chip:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+@media(max-width:640px){.fc-kdots{display:none}.fc-yn-sm{margin-left:34px}}
 .fc-su-t{flex:1;min-width:0;display:flex;gap:10px;align-items:center}
 .fc-su-t small{display:block;font-size:11px;color:var(--text-3)}
 .fc-opts{display:inline-flex;border:1px solid var(--border-md);border-radius:20px;overflow:hidden;flex-shrink:0}
