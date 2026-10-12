@@ -3713,14 +3713,32 @@ async function fcUpdate(f,changes,undo){
   if(!ok){ Object.assign(f,undo); renderFocus(); showToast(LAST_SHEET_ERROR||'Couldn’t save. Try again.','error'); }
   return ok;
 }
-function setFocusAnswer(ans){
-  var f=fcBuilding(); if(!f||!fcLoaded) return;
-  var d=isoToday(), cur=fcMark(f.sheetId,d), next=cur===ans?'':ans;
+/* Mark any habit for today; tapping the chosen answer again clears it */
+function setFocusMark(id,ans,focusSel){
+  var f=focusList.find(function(x){ return x.sheetId===id; }); if(!f||!fcLoaded) return;
+  var d=isoToday(), cur=fcMark(id,d), next=cur===ans?'':ans;
   focusLog[d]=focusLog[d]||{};
-  if(next) focusLog[d][f.sheetId]=next; else delete focusLog[d][f.sheetId];
-  queueSave('fc|'+d+'|'+f.sheetId,{sheet:'HabitFocusLog',dateISO:d,habitId:f.sheetId,habit:f.habit,status:next});
+  if(next) focusLog[d][id]=next; else delete focusLog[d][id];
+  queueSave('fc|'+d+'|'+id,{sheet:'HabitFocusLog',dateISO:d,habitId:id,habit:f.habit,status:next});
   renderFocus();
-  var b=document.querySelector('#fc-card .fc-'+ans); if(b) b.focus();
+  var b=focusSel&&document.querySelector(focusSel); if(b) b.focus();
+}
+function setFocusAnswer(ans){
+  var f=fcBuilding(); if(!f) return;
+  setFocusMark(f.sheetId,ans,'#fc-card .fc-'+ans);
+}
+/* Morning chips: one tap = done today, tap again = clear */
+function tickKeeping(id){ setFocusMark(id,'yes','.fc-chip[data-id="'+id+'"]'); }
+
+/* A kept habit's last 7 complete days (today counts once marked).
+   It only warns once you've started tracking it, so untracked habits stay quiet. */
+function fcKeepStats(x){
+  var today=isoToday(), end=fcMark(x.sheetId,today)?today:foodShift(today,-1), days=[];
+  var from=x.graduatedOn||'';
+  for(var d=end; days.length<7; d=foodShift(d,-1)){ if(from&&d<from) break; days.unshift(d); }
+  var done=days.filter(function(d){ return fcMark(x.sheetId,d)==='yes'; }).length;
+  var tracked=Object.keys(focusLog).some(function(d){ return focusLog[d][x.sheetId]; });
+  return {days:days,done:done,slipping:tracked&&days.length>=5&&done/days.length<0.6};
 }
 async function addToWaiting(text){
   var inp=document.getElementById('fc-new');
@@ -3847,6 +3865,12 @@ function fcProgress(st){
     '<ul class="fc-crit">'+items.map(function(x){ return '<li class="'+(x[0]?'ok':'')+'">'+(x[0]?'✓':'○')+' '+x[1]+'</li>'; }).join('')+'</ul>';
 }
 function renderFocus(){ renderFocusCard(); renderFocusSection(); }
+function fcWaitOpen(){ try{ return localStorage.getItem('fc_wait_open')==='1'; }catch(e){ return false; } }
+function toggleWaiting(){
+  try{ localStorage.setItem('fc_wait_open',fcWaitOpen()?'0':'1'); }catch(e){}
+  renderFocusSection();
+  var b=document.querySelector('.fc-wtog'); if(b) b.focus();
+}
 
 function renderFocusCard(){
   var el=document.getElementById('fc-card'); if(!el) return;
@@ -3863,7 +3887,7 @@ function renderFocusCard(){
     el.innerHTML='<div class="fc-l">🎯 Ready for your next habit</div>'+
       (next?'<div class="fc-h">'+escH(next.habit)+'</div><div class="fc-sub">First on your waiting list.</div>'+
         '<button type="button" class="btn gold" onclick="startBuilding(\''+next.sheetId+'\')">Start building it today</button>'
-        :'<div class="fc-sub">Your waiting list is empty. Add a habit on the Routine tab.</div>');
+        :'<div class="fc-sub">Your waiting list is empty. Add a habit on the Routine tab.</div>')+fcKeepChips();
     return;
   }
   var st=fcStats(f), m=fcMark(f.sheetId,isoToday());
@@ -3873,7 +3897,18 @@ function renderFocusCard(){
     (st.missedYesterday&&!m?'<div class="fc-warn">You missed yesterday. Never miss twice: today is the one that counts.</div>':'')+
     fcYN(f)+fcProgress(st)+
     (st.ready?'<button type="button" class="btn gold fc-grad" onclick="graduateFocus()">🎓 Ready to graduate</button>':'')+
-    (next?'<div class="fc-next">Next up: '+escH(next.habit)+'</div>':'');
+    (next?'<div class="fc-next">Next up: '+escH(next.habit)+'</div>':'')+fcKeepChips();
+}
+function fcKeepChips(){
+  var k=fcOf('keeping'); if(!k.length) return '';
+  var t=isoToday(), n=k.filter(function(x){ return fcMark(x.sheetId,t)==='yes'; }).length;
+  return '<div class="fc-keep"><div class="fc-keep-l">\u2705 Keeping <span>'+n+' of '+k.length+' today</span></div>'+
+    '<div class="fc-chips">'+k.map(function(x){
+      var on=fcMark(x.sheetId,t)==='yes', slip=fcKeepStats(x).slipping;
+      return '<button type="button" class="fc-chip'+(on?' on':'')+(slip?' slip':'')+'" data-id="'+x.sheetId+'" aria-pressed="'+on+'" '+
+        'title="'+(slip?'Slipping: done on few of the last 7 days':'Tap when done today')+'" onclick="tickKeeping(\''+x.sheetId+'\')">'+
+        '<span class="fc-chip-b" aria-hidden="true">'+(on?'\u2713':'')+'</span>'+escH(x.habit)+'</button>';
+    }).join('')+'</div></div>';
 }
 
 function renderFocusSection(){
@@ -3927,8 +3962,34 @@ function renderFocusSection(){
       '<div class="fc-hint">Most habits take about 2 months to feel automatic (the median in research is 66 days), so don’t worry if it takes longer than 30.</div></div>';
   }else html+='<div class="fd-note">Nothing in progress. Start the first habit on your waiting list below.</div>';
 
+  var k=fcOf('keeping'), tday=isoToday();
+  html+='<h3 class="fs-h">✅ Keeping <small class="fc-count">'+k.length+'</small></h3>'+
+    (k.length?'<ul class="fc-list">'+k.map(function(x){
+      var ks=fcKeepStats(x), m=fcMark(x.sheetId,tday), dots='';
+      ks.days.forEach(function(d){ var v=fcMark(x.sheetId,d);
+        dots+='<span class="fc-dot'+(v==='yes'?' y':v==='no'?' n':'')+'" title="'+escH(feedDate(d)+': '+(v==='yes'?'done':v==='no'?'not done':'not marked'))+'"></span>'; });
+      return '<li class="fc-k'+(ks.slipping?' slip':'')+'">'+ptTile(x.habit,'',{size:'sm'})+
+        '<span class="fc-name">'+escH(x.habit)+
+          '<small class="fc-kmeta">'+(ks.days.length?ks.done+' of last '+ks.days.length+' days':'Tracking starts today')+
+          (x.graduatedOn?' \u00b7 graduated '+feedDate(x.graduatedOn):'')+'</small>'+
+          (ks.slipping?'<small class="fc-kwarn">Slipping. Tap \u201cSlipping?\u201d to rebuild it next.</small>':'')+'</span>'+
+        (ks.days.length?'<span class="fc-dots fc-kdots" aria-label="Last 7 days">'+dots+'</span>':'')+
+        '<span class="fc-yn fc-yn-sm" role="group" aria-label="Done today?">'+
+          '<button type="button" class="fc-yes" data-id="'+x.sheetId+'" aria-pressed="'+(m==='yes')+'" onclick="setFocusMark(\''+x.sheetId+'\',\'yes\',\'.fc-k .fc-yes[data-id=&quot;'+x.sheetId+'&quot;]\')">Done</button>'+
+          '<button type="button" class="fc-no" data-id="'+x.sheetId+'" aria-pressed="'+(m==='no')+'" onclick="setFocusMark(\''+x.sheetId+'\',\'no\',\'.fc-k .fc-no[data-id=&quot;'+x.sheetId+'&quot;]\')">Not today</button></span>'+
+        '<span class="fc-row-acts"><button type="button" class="btn fc-slip" onclick="slippedBack(\''+x.sheetId+'\')">Slipping?</button>'+
+        '<button type="button" class="rt-mini del" aria-label="Remove" onclick="removeFocus(\''+x.sheetId+'\')">\u00d7</button></span></li>';
+    }).join('')+'</ul>':'<div class="fd-note">Habits you\u2019ve built land here. Keep ticking them so you notice if one starts to slip.</div>');
+
   var w=fcOf('waiting');
-  html+='<h3 class="fs-h">⏳ Waiting list <small class="fc-count">'+w.length+'</small></h3>'+
+  // Collapsed by default (remembered per device); open while nothing is being built, so you can start the next one
+  var wOpen=!f||fcWaitOpen();
+  html+='<h3 class="fs-h fc-wh"><button type="button" class="fc-wtog" aria-expanded="'+wOpen+'" aria-controls="fc-wbody"'+(f?' onclick="toggleWaiting()"':' disabled')+'>'+
+      '<span>⏳ Waiting list <small class="fc-count">'+w.length+'</small></span>'+
+      (!wOpen&&w.length?'<span class="fc-wnext">Next up: '+escH(w[0].habit)+'</span>':'')+
+      (f?'<span class="fc-wcaret" aria-hidden="true">'+(wOpen?'▴':'▾')+'</span>':'')+
+    '</button></h3>'+
+    '<div id="fc-wbody"'+(wOpen?'':' hidden')+'>'+
     (w.length?'<ul class="fc-list">'+w.map(function(x,i){
       return '<li class="fc-w" data-id="'+x.sheetId+'">'+ptTile(x.habit,'',{size:'sm'})+'<span class="fc-name">'+escH(x.habit)+'</span>'+
         '<span class="fc-row-acts">'+
@@ -3939,16 +4000,8 @@ function renderFocusSection(){
           '<button type="button" class="rt-mini del" aria-label="Remove" onclick="removeFocus(\''+x.sheetId+'\')">×</button></span></li>';
     }).join('')+'</ul>':'<div class="fd-note">Empty. New habit ideas go here, not straight onto your tracker.</div>')+
     '<div class="fd-add"><input class="sin" id="fc-new" type="text" placeholder="A habit for later, e.g. Read 10 pages" onkeydown="if(event.key===\'Enter\'){addToWaiting();event.preventDefault();}">'+
-      '<button class="btn" type="button" onclick="addToWaiting()">+ Add to waiting list</button></div>';
+      '<button class="btn" type="button" onclick="addToWaiting()">+ Add to waiting list</button></div></div>';
 
-  var k=fcOf('keeping');
-  html+='<h3 class="fs-h">✅ Keeping <small class="fc-count">'+k.length+'</small></h3>'+
-    (k.length?'<ul class="fc-list">'+k.map(function(x){
-      return '<li class="fc-k">'+ptTile(x.habit,'',{size:'sm'})+'<span class="fc-name">'+escH(x.habit)+
-        (x.graduatedOn?' <small>graduated '+feedDate(x.graduatedOn)+'</small>':'')+'</span>'+
-        '<span class="fc-row-acts"><button type="button" class="btn fc-slip" onclick="slippedBack(\''+x.sheetId+'\')">Slipping?</button>'+
-        '<button type="button" class="rt-mini del" aria-label="Remove" onclick="removeFocus(\''+x.sheetId+'\')">×</button></span></li>';
-    }).join('')+'</ul>':'<div class="fd-note">Habits you’ve built land here.</div>');
   box.innerHTML=html;
 }
 
