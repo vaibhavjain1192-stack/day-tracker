@@ -14,7 +14,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=20261011">
+<link rel="stylesheet" href="styles.css?v=20261012">
 </head>
 <body>
 <div class="toast" id="toast"></div>
@@ -44,7 +44,8 @@
   <section class="dr" id="dr-box" aria-labelledby="dr-title">
     <div class="dr-top">
       <h2 class="dr-title" id="dr-title">My rules for every day</h2>
-      <button class="dr-edit" id="dr-edit-btn" type="button" onclick="editDailyRules()" style="display:none">Edit</button>
+      <span class="dr-btns"><button class="dr-edit" id="dr-choose-btn" type="button" onclick="chooseRules()" style="display:none">Choose</button>
+      <button class="dr-edit" id="dr-edit-btn" type="button" onclick="editDailyRules()" style="display:none">Edit</button></span>
     </div>
     <div id="dr-body"><div class="dr-note">Loading your rules…</div></div>
   </section>
@@ -539,6 +540,6 @@
   <div class="set-panel"><div class="set-head"><h2 id="set-title">Settings</h2><button type="button" class="set-x" onclick="closeSettings()" aria-label="Close">&times;</button></div>
   <div id="set-body"></div></div>
 </div>
-<script src="app.js?v=20261011"></script>
+<script src="app.js?v=20261012"></script>
 </body>
 </html>
