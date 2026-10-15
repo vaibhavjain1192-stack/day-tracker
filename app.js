@@ -3714,9 +3714,12 @@ async function fcUpdate(f,changes,undo){
   return ok;
 }
 /* Mark any habit for today; tapping the chosen answer again clears it */
-function setFocusMark(id,ans,focusSel){
+function setFocusMark(id,ans,focusSel,day){
   var f=focusList.find(function(x){ return x.sheetId===id; }); if(!f||!fcLoaded) return;
-  var d=isoToday(), cur=fcMark(id,d), next=cur===ans?'':ans;
+  var d=day||isoToday();
+  if(d>isoToday()) return;
+  var st=fcStartOf(f); if(st&&d<st){ showToast('That day is before tracking started for this habit.','error'); return; }
+  var cur=fcMark(id,d), next=cur===ans?'':ans;
   focusLog[d]=focusLog[d]||{};
   if(next) focusLog[d][id]=next; else delete focusLog[d][id];
   queueSave('fc|'+d+'|'+id,{sheet:'HabitFocusLog',dateISO:d,habitId:id,habit:f.habit,status:next});
@@ -3730,14 +3733,60 @@ function setFocusAnswer(ans){
 /* Morning chips: one tap = done today, tap again = clear */
 function tickKeeping(id){ setFocusMark(id,'yes','.fc-chip[data-id="'+id+'"]'); }
 
+/* When tracking counts from. Building: the day it started. Keeping: the later of
+   graduation and the last "start fresh" (both stored, so nothing extra in the Sheet). */
+function fcStartOf(x){
+  if(x.list==='building') return x.startedOn||'';
+  var a=x.graduatedOn||'', b=x.startedOn||''; return a>b?a:b;
+}
+
+/* Section day picker: Done / Not done buttons there apply to this day */
+var fcDay='';
+function fcDayMin(){
+  var t=isoToday(), m=foodShift(t,-90);
+  var starts=focusList.filter(function(x){ return x.list!=='waiting'; }).map(fcStartOf);
+  if(starts.length&&starts.every(Boolean)){ var e=starts.sort()[0]; if(e>m) m=e; }
+  return m;
+}
+function fcSelDay(){
+  var t=isoToday(), d=fcDay||t;
+  if(d>t) d=t; var mn=fcDayMin(); if(d<mn) d=mn;
+  return d;
+}
+function setFcDay(d){ fcDay=(d===isoToday())?'':d; renderFocusSection(); var n=document.getElementById('fc-daylbl'); if(n) n.focus(); }
+function shiftFcDay(n){ var d=foodShift(fcSelDay(),n); if(d>isoToday()||d<fcDayMin()) return; setFcDay(d); }
+function markOnDay(id,ans){
+  setFocusMark(id,ans,'.fc-sec-yn .fc-'+(ans==='yes'?'yes':'no')+'[data-id="'+id+'"]',fcSelDay());
+}
+
+/* Start fresh: tracking counts from today. Earlier marks stay in the Sheet but no longer count. */
+async function resetFocus(id){
+  var x=focusList.find(function(f){ return f.sheetId===id; }); if(!x) return;
+  if(!confirm('Start tracking \u201c'+x.habit+'\u201d fresh from today?\n\nEarlier days stay in your Sheet but no longer count toward its progress or streak.')) return;
+  var ok=await fcUpdate(x,{startedOn:isoToday()},{startedOn:x.startedOn});
+  if(ok){ fcDay=''; renderFocus(); showToast('Tracking for \u201c'+x.habit+'\u201d starts from today \u2713','success'); }
+}
+async function resetAllFocus(){
+  var list=focusList.filter(function(f){ return f.list==='building'||f.list==='keeping'; });
+  if(!list.length) return;
+  if(!confirm('Start tracking all '+list.length+' Building and Keeping habits fresh from today?\n\nEarlier days stay in your Sheet but no longer count toward progress or streaks.')) return;
+  var t=isoToday(), undo=list.map(function(f){ return f.startedOn; });
+  list.forEach(function(f){ f.startedOn=t; }); fcDay=''; renderFocus();
+  var res=await Promise.all(list.map(function(f){ return postToSheet({sheet:'HabitFocus',action:'update',sheetId:f.sheetId,startedOn:t}); }));
+  var bad=0; res.forEach(function(ok,i){ if(!ok){ list[i].startedOn=undo[i]; bad++; } });
+  renderFocus();
+  if(bad) showToast(bad+' habit'+(bad!==1?'s':'')+' couldn\u2019t be reset. Try again.','error');
+  else showToast('All your habits start fresh from today \u2713','success');
+}
+
 /* A kept habit's last 7 complete days (today counts once marked).
    It only warns once you've started tracking it, so untracked habits stay quiet. */
 function fcKeepStats(x){
   var today=isoToday(), end=fcMark(x.sheetId,today)?today:foodShift(today,-1), days=[];
-  var from=x.graduatedOn||'';
+  var from=fcStartOf(x);
   for(var d=end; days.length<7; d=foodShift(d,-1)){ if(from&&d<from) break; days.unshift(d); }
   var done=days.filter(function(d){ return fcMark(x.sheetId,d)==='yes'; }).length;
-  var tracked=Object.keys(focusLog).some(function(d){ return focusLog[d][x.sheetId]; });
+  var tracked=Object.keys(focusLog).some(function(d){ return (!from||d>=from)&&focusLog[d][x.sheetId]; });
   return {days:days,done:done,slipping:tracked&&days.length>=5&&done/days.length<0.6};
 }
 async function addToWaiting(text){
@@ -3944,42 +3993,68 @@ function renderFocusSection(){
     return;
   }
 
-  var html='<h3 class="fs-h" style="margin-top:0">🎯 Building</h3>';
-  if(f){
-    var st=fcStats(f), dots='';
-    for(var i=FC_WINDOW-1;i>=0;i--){
-      var d=foodShift(isoToday(),-i), mk=fcMark(f.sheetId,d), cls='fc-dot';
-      if(d<f.startedOn) continue; else if(mk==='yes') cls+=' y'; else if(mk==='no') cls+=' n'; else if(d===isoToday()) cls+=' open';
-      dots+='<span class="'+cls+'" title="'+escH(feedDate(d)+': '+(cls.indexOf(' na')>-1?'before you started':mk==='yes'?'done':mk==='no'?'not done':'not marked'))+'"></span>';
+  var sel=fcSelDay(), tday=isoToday(), isToday=sel===tday;
+  var k=fcOf('keeping');
+  // Strip of days a habit can be marked for; each square opens that day
+  function strip(x,count,label){
+    var st=fcStartOf(x), out='';
+    for(var i=count-1;i>=0;i--){
+      var d=foodShift(tday,-i); if(st&&d<st) continue;
+      var mk=fcMark(x.sheetId,d), cls='fc-dot';
+      if(mk==='yes') cls+=' y'; else if(mk==='no') cls+=' n'; else if(d===tday) cls+=' open';
+      if(d===sel) cls+=' sel';
+      out+='<button type="button" class="'+cls+'" aria-label="'+escH(feedDate(d)+': '+(mk==='yes'?'done':mk==='no'?'not done':'not marked')+'. Mark this day')+'"'+
+        ' aria-pressed="'+(d===sel)+'" onclick="setFcDay(\''+d+'\')"></button>';
     }
+    return '<div class="fc-dots'+(label?'':' fc-kdots')+'" role="group" aria-label="'+(label||'Last 7 days')+'">'+out+'</div>';
+  }
+  // Done / Not done for the picked day
+  function yn(x){
+    var st=fcStartOf(x), before=st&&sel<st, m=fcMark(x.sheetId,sel);
+    if(before) return '<span class="fc-before">Not tracked yet on '+feedDate(sel)+'</span>';
+    return '<span class="fc-yn fc-sec-yn'+(x.list==='keeping'?' fc-yn-sm':'')+'" role="group" aria-label="'+escH(x.habit)+' on '+feedDate(sel)+'">'+
+      '<button type="button" class="fc-yes" data-id="'+x.sheetId+'" aria-pressed="'+(m==='yes')+'" onclick="markOnDay(\''+x.sheetId+'\',\'yes\')">'+(isToday?'Done today':'Done')+'</button>'+
+      '<button type="button" class="fc-no" data-id="'+x.sheetId+'" aria-pressed="'+(m==='no')+'" onclick="markOnDay(\''+x.sheetId+'\',\'no\')">'+(isToday?'Not today':'Not done')+'</button></span>';
+  }
+
+  var html='';
+  if(f||k.length){
+    var dl=new Date(sel+'T12:00:00').toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short'});
+    html+='<div class="fc-daynav'+(isToday?'':' past')+'"><span class="fc-dn-l">Marking</span>'+
+      '<button type="button" class="feed-step" aria-label="Previous day" onclick="shiftFcDay(-1)"'+(sel<=fcDayMin()?' disabled':'')+'>‹</button>'+
+      '<b id="fc-daylbl" tabindex="-1">'+(isToday?'Today, ':'')+dl+'</b>'+
+      '<button type="button" class="feed-step" aria-label="Next day" onclick="shiftFcDay(1)"'+(isToday?' disabled':'')+'>›</button>'+
+      (isToday?'':'<button type="button" class="btn fc-today" onclick="setFcDay(\''+tday+'\')">Back to today</button>')+
+      '<button type="button" class="btn fc-resetall" onclick="resetAllFocus()" title="Building and Keeping habits start counting from today">↺ Start all fresh from today</button></div>'+
+      (isToday?'':'<div class="fc-hint" style="margin:0 0 10px">Changing an earlier day. Tap a square in a habit’s strip to jump to that day.</div>');
+  }
+  html+='<h3 class="fs-h" style="margin-top:0">🎯 Building</h3>';
+  if(f){
+    var st=fcStats(f);
     html+='<div class="fc-build"><div class="fc-h">'+escH(f.habit)+'</div>'+
-      '<div class="fc-sub">Started '+feedDate(f.startedOn)+' · day '+st.dayN+(st.streak?' · 🔥 '+st.streak+'-day streak':'')+'</div>'+
-      fcYN(f)+'<div class="fc-dots" aria-label="Last 30 days">'+dots+'</div>'+fcProgress(st)+
+      '<div class="fc-sub">Tracking since '+feedDate(f.startedOn)+' · day '+st.dayN+(st.streak?' · 🔥 '+st.streak+'-day streak':'')+'</div>'+
+      yn(f)+strip(f,FC_WINDOW,'Days since you started (up to 30). Tap one to mark it')+fcProgress(st)+
       '<div class="fc-acts">'+(st.ready?'<button type="button" class="btn gold" onclick="graduateFocus()">🎓 Graduate to Keeping</button>':
         '<button type="button" class="btn" disabled title="Unlocks when all three are ticked">🎓 Graduate</button>')+
         '<button type="button" class="btn" onclick="renameFocus(\''+f.sheetId+'\')">✎ Make it smaller</button>'+
+        '<button type="button" class="btn" onclick="resetFocus(\''+f.sheetId+'\')">↺ Restart from today</button>'+
         '<button type="button" class="btn" onclick="setAsideFocus()">Set aside</button></div>'+
       '<div class="fc-hint">Most habits take about 2 months to feel automatic (the median in research is 66 days), so don’t worry if it takes longer than 30.</div></div>';
   }else html+='<div class="fd-note">Nothing in progress. Start the first habit on your waiting list below.</div>';
 
-  var k=fcOf('keeping'), tday=isoToday();
   html+='<h3 class="fs-h">✅ Keeping <small class="fc-count">'+k.length+'</small></h3>'+
     (k.length?'<ul class="fc-list">'+k.map(function(x){
-      var ks=fcKeepStats(x), m=fcMark(x.sheetId,tday), dots='';
-      ks.days.forEach(function(d){ var v=fcMark(x.sheetId,d);
-        dots+='<span class="fc-dot'+(v==='yes'?' y':v==='no'?' n':'')+'" title="'+escH(feedDate(d)+': '+(v==='yes'?'done':v==='no'?'not done':'not marked'))+'"></span>'; });
+      var ks=fcKeepStats(x), from=fcStartOf(x);
       return '<li class="fc-k'+(ks.slipping?' slip':'')+'">'+ptTile(x.habit,'',{size:'sm'})+
         '<span class="fc-name">'+escH(x.habit)+
           '<small class="fc-kmeta">'+(ks.days.length?ks.done+' of last '+ks.days.length+' days':'Tracking starts today')+
-          (x.graduatedOn?' \u00b7 graduated '+feedDate(x.graduatedOn):'')+'</small>'+
-          (ks.slipping?'<small class="fc-kwarn">Slipping. Tap \u201cSlipping?\u201d to rebuild it next.</small>':'')+'</span>'+
-        (ks.days.length?'<span class="fc-dots fc-kdots" aria-label="Last 7 days">'+dots+'</span>':'')+
-        '<span class="fc-yn fc-yn-sm" role="group" aria-label="Done today?">'+
-          '<button type="button" class="fc-yes" data-id="'+x.sheetId+'" aria-pressed="'+(m==='yes')+'" onclick="setFocusMark(\''+x.sheetId+'\',\'yes\',\'.fc-k .fc-yes[data-id=&quot;'+x.sheetId+'&quot;]\')">Done</button>'+
-          '<button type="button" class="fc-no" data-id="'+x.sheetId+'" aria-pressed="'+(m==='no')+'" onclick="setFocusMark(\''+x.sheetId+'\',\'no\',\'.fc-k .fc-no[data-id=&quot;'+x.sheetId+'&quot;]\')">Not today</button></span>'+
-        '<span class="fc-row-acts"><button type="button" class="btn fc-slip" onclick="slippedBack(\''+x.sheetId+'\')">Slipping?</button>'+
-        '<button type="button" class="rt-mini del" aria-label="Remove" onclick="removeFocus(\''+x.sheetId+'\')">\u00d7</button></span></li>';
-    }).join('')+'</ul>':'<div class="fd-note">Habits you\u2019ve built land here. Keep ticking them so you notice if one starts to slip.</div>');
+          (from?' · since '+feedDate(from):'')+'</small>'+
+          (ks.slipping?'<small class="fc-kwarn">Slipping. Tap “Slipping?” to rebuild it next.</small>':'')+'</span>'+
+        strip(x,7,'')+yn(x)+
+        '<span class="fc-row-acts"><button type="button" class="rt-mini" aria-label="Restart tracking from today" title="Restart from today" onclick="resetFocus(\''+x.sheetId+'\')">↺</button>'+
+        '<button type="button" class="btn fc-slip" onclick="slippedBack(\''+x.sheetId+'\')">Slipping?</button>'+
+        '<button type="button" class="rt-mini del" aria-label="Remove" onclick="removeFocus(\''+x.sheetId+'\')">×</button></span></li>';
+    }).join('')+'</ul>':'<div class="fd-note">Habits you’ve built land here. Keep ticking them so you notice if one starts to slip.</div>');
 
   var w=fcOf('waiting');
   // Collapsed by default (remembered per device); open while nothing is being built, so you can start the next one
@@ -4181,7 +4256,7 @@ function renderCheckin(){
   var body=document.getElementById('ci-body'), meta=document.getElementById('ci-meta');
   if(ciUnsupported){ body.innerHTML='<div class="dr-note">The evening check-in needs the updated <b>Code.gs</b>. Deploy it (Manage deployments \u2192 New version), then reload.</div>'; meta.textContent=''; return; }
   if(!ciLoaded){ body.innerHTML='<div class="dr-note">'+(ciFailed?'Couldn\u2019t load your check-in. Reload to try again.':'Loading\u2026')+'</div>'; meta.textContent=''; return; }
-  var rules=dailyRules.filter(function(r){ return r.when&&r.do; });
+  var rules=drShown().filter(function(r){ return r.when&&r.do; });
   if(!rules.length){ body.innerHTML='<div class="dr-note">Add your rules above, and each evening you can mark how they went.</div>'; meta.textContent=''; return; }
 
   var today=isoToday(), y=foodShift(today,-1), d=ciDay(), hr=new Date().getHours();
@@ -4401,7 +4476,10 @@ function ptTile(trigger,response,opts){
    it's edited. Saved to the DailyRules sheet as a whole list in a
    single write (action=replace_all), so edits can't land out of order.
 ═══════════════════════════════════════════════════ */
-var dailyRules=[];          // [{sheetId, when, do}]
+var dailyRules=[];          // [{sheetId, when, do, show}]  show=false hides it from Morning
+var drChoosing=false, drPick={};   // "Choose what to show" mode: sheetId -> true/false
+var drShowSupported=true;          // false when an older Code.gs doesn't return the Show column
+function drShown(){ return dailyRules.filter(function(r){ return r.show!==false; }); }
 var drChangedOn='';         // yyyy-mm-dd the list last changed
 var drLoaded=false, drUnsupported=false, drFailed=false, drEditing=false, drSaving=false;
 var drDraft=[];             // working copy while editing
@@ -4441,11 +4519,12 @@ function drFmtDate(iso){
 function replaceDailyRulesFromSheet(rows){
   drLoaded=true; drUnsupported=false; drFailed=false;
   if(drSaving) return;                 // a save in flight wins over a stale read
-  dailyRules=rows.map(function(r){ return {sheetId:r.sheetId||'', when:drClean(r.when), do:String(r['do']||'').trim()}; })
+  drShowSupported = !rows.length || rows.some(function(r){ return 'show' in r; });
+  dailyRules=rows.map(function(r){ return {sheetId:r.sheetId||'', when:drClean(r.when), do:String(r['do']||'').trim(), show:r.show!==false}; })
     .filter(function(r){ return r.when||r.do; });
   drChangedOn=rows.reduce(function(m,r){ return (r.changedOn||'')>m ? r.changedOn : m; },'');
   drSnapshot=false; drSaveSnap();
-  if(!drEditing) renderDailyRules();
+  if(!drEditing&&!drChoosing) renderDailyRules();
 }
 function markDailyRulesUnsupported(){
   if(drLoaded) return;
@@ -4457,7 +4536,7 @@ function markDailyRulesFailed(){
 }
 
 function drListHTML(){
-  return '<ul class="dr-list">'+dailyRules.map(function(r){
+  return '<ul class="dr-list">'+drShown().map(function(r){
     return '<li class="dr-row">'+ptTile(r.when,r.do)+
       '<span class="dr-pair"><span class="dr-when"><b>When</b> '+escH(r.when)+'</span><span class="dr-do">'+escH(r.do)+'</span></span></li>';
   }).join('')+'</ul>';
@@ -4466,7 +4545,9 @@ function renderDailyRules(){
   var body=document.getElementById('dr-body'), btn=document.getElementById('dr-edit-btn');
   if(!body) return;
   if(drEditing){ renderDailyRulesEditor(); return; }
+  if(drChoosing){ renderRuleChooser(); return; }
   if(btn) btn.style.display=(drLoaded&&dailyRules.length)?'':'none';
+  var cb=document.getElementById('dr-choose-btn'); if(cb) cb.style.display=(drLoaded&&dailyRules.length>1)?'':'none';
 
   if(!drLoaded && drSnapshot && dailyRules.length){
     body.innerHTML=drListHTML()+'<div class="dr-foot"><span>'+
@@ -4489,15 +4570,72 @@ function renderDailyRules(){
       '</div>';
     return;
   }
+  var shown=drShown();
+  if(!shown.length){
+    body.innerHTML='<div class="dr-note">You\u2019ve hidden all '+dailyRules.length+' rules.</div>'+
+      '<div class="dr-empty-acts"><button class="btn gold" type="button" onclick="chooseRules()">Choose what to show</button></div>';
+    return;
+  }
+  var hidden=dailyRules.length-shown.length;
   body.innerHTML=drListHTML()+
-    '<div class="dr-foot"><span>'+(drChangedOn?'Same since '+drFmtDate(drChangedOn)+'. ':'')+'Carries forward until you edit it.</span></div>';
+    '<div class="dr-foot"><span>'+(hidden?'Showing '+shown.length+' of '+dailyRules.length+' rules. ':'')+
+      (drChangedOn?'Same since '+drFmtDate(drChangedOn)+'. ':'')+'Carries forward until you edit it.</span>'+
+      (hidden?'<button type="button" class="dr-link" onclick="chooseRules()">Change</button>':'')+'</div>';
+}
+
+/* ── Choose which rules show on Morning ── */
+function chooseRules(){
+  if(drUnsupported||!drLoaded||!dailyRules.length) return;
+  if(!drShowSupported){ showToast('Choosing rules needs the updated Code.gs. Deploy it first (New version), then reload.','error'); return; }
+  drChoosing=true; drPick={};
+  dailyRules.forEach(function(r){ drPick[r.sheetId]=r.show!==false; });
+  renderRuleChooser();
+  var f=document.querySelector('#dr-body .dr-pick'); if(f) f.focus();
+}
+function togglePick(id){
+  drPick[id]=!drPick[id]; renderRuleChooser();
+  var b=document.querySelector('.dr-pick[data-id="'+id+'"]'); if(b) b.focus();
+}
+function pickAllRules(on){ dailyRules.forEach(function(r){ drPick[r.sheetId]=on; }); renderRuleChooser(); }
+function cancelChooseRules(){ if(drSaving) return; drChoosing=false; renderDailyRules(); var b=document.getElementById('dr-choose-btn'); if(b) b.focus(); }
+function renderRuleChooser(){
+  var body=document.getElementById('dr-body'); if(!body) return;
+  ['dr-edit-btn','dr-choose-btn'].forEach(function(id){ var b=document.getElementById(id); if(b) b.style.display='none'; });
+  var n=dailyRules.filter(function(r){ return drPick[r.sheetId]; }).length;
+  body.innerHTML='<div class="dr-pick-h"><span>Tick the rules to see on your Morning page. The rest stay saved.</span>'+
+      '<span class="dr-pick-all"><button type="button" class="dr-link" onclick="pickAllRules(true)">All</button>'+
+      '<button type="button" class="dr-link" onclick="pickAllRules(false)">None</button></span></div>'+
+    '<ul class="dr-list">'+dailyRules.map(function(r){
+      var on=!!drPick[r.sheetId];
+      return '<li class="dr-row dr-pickrow'+(on?' on':'')+'"><button type="button" class="dr-pick" role="checkbox" aria-checked="'+on+'" data-id="'+r.sheetId+'" onclick="togglePick(\''+r.sheetId+'\')">'+
+        '<span class="dr-box" aria-hidden="true">'+(on?'\u2713':'')+'</span>'+ptTile(r.when,r.do)+
+        '<span class="dr-pair"><span class="dr-when"><b>When</b> '+escH(r.when)+'</span><span class="dr-do">'+escH(r.do)+'</span></span></button></li>';
+    }).join('')+'</ul>'+
+    '<div class="dr-ed-foot"><span class="dr-pick-n">'+n+' of '+dailyRules.length+' selected</span><span class="acts">'+
+      '<button class="btn" type="button" onclick="cancelChooseRules()"'+(drSaving?' disabled':'')+'>Cancel</button>'+
+      '<button class="btn gold" type="button" onclick="saveRuleChoice()"'+(drSaving||!n?' disabled':'')+'>'+(drSaving?'Saving\u2026':'Show '+n+' rule'+(n!==1?'s':''))+'</button>'+
+    '</span></div>';
+}
+async function saveRuleChoice(){
+  if(drSaving) return;
+  var next=dailyRules.map(function(r){ return {sheetId:r.sheetId,when:r.when,do:r.do,show:!!drPick[r.sheetId]}; });
+  if(next.every(function(r,i){ return r.show===(dailyRules[i].show!==false); })){ drChoosing=false; renderDailyRules(); return; }
+  drSaving=true; renderRuleChooser();
+  var ok=await postToSheet({sheet:'DailyRules',action:'replace_all',changedOn:drChangedOn||isoToday(),
+    rules:JSON.stringify(next.map(function(r){ return {sheetId:r.sheetId,when:r.when,'do':r.do,show:r.show}; }))});
+  drSaving=false;
+  if(!ok){ renderRuleChooser(); showToast('Couldn\u2019t save your choice to the Sheet. Try again.','error'); return; }
+  dailyRules=next; drChoosing=false; drSaveSnap();
+  renderDailyRules(); renderCheckin(); updateAllBadges();
+  var shown=drShown().length;
+  showToast('Showing '+shown+' rule'+(shown!==1?'s':'')+' on your Morning page \u2713','success');
 }
 
 /* ── Editing ── */
 function editDailyRules(addBlank){
   if(drUnsupported||!drLoaded) return;
   drEditing=true;
-  drDraft=dailyRules.map(function(r){ return {sheetId:r.sheetId, when:r.when, do:r.do}; });
+  drDraft=dailyRules.map(function(r){ return {sheetId:r.sheetId, when:r.when, do:r.do, show:r.show!==false}; });
   if(addBlank||!drDraft.length) drDraft.push({sheetId:'', when:'', do:''});
   renderDailyRulesEditor(true);
 }
@@ -4573,18 +4711,18 @@ async function saveDailyRules(){
   var half=drDraft.filter(function(r){ var w=drClean(r.when), d=String(r.do||'').trim(); return (w&&!d)||(!w&&d); });
   if(half.length){ showToast('Each rule needs both a \u201cWhen\u201d and an \u201cI will\u201d. Fill it in or remove it.','error'); return; }
   var next=drDraft.map(function(r,i){
-    return {sheetId:r.sheetId||('dr'+Date.now()+'_'+i), when:drClean(r.when), do:String(r.do||'').trim()};
+    return {sheetId:r.sheetId||('dr'+Date.now()+'_'+i), when:drClean(r.when), do:String(r.do||'').trim(), show:r.show!==false};
   }).filter(function(r){ return r.when&&r.do; });
 
   var sameAsBefore = next.length===dailyRules.length && next.every(function(r,i){
-    return r.when===dailyRules[i].when && r.do===dailyRules[i].do;
+    return r.when===dailyRules[i].when && r.do===dailyRules[i].do && r.show===(dailyRules[i].show!==false);
   });
   if(sameAsBefore){ drEditing=false; renderDailyRules(); return; }
 
   drSaving=true; renderDailyRulesEditor();
   var today=isoToday();
   var ok=await postToSheet({sheet:'DailyRules',action:'replace_all',changedOn:today,
-    rules:JSON.stringify(next.map(function(r){ return {sheetId:r.sheetId,when:r.when,'do':r.do}; }))});
+    rules:JSON.stringify(next.map(function(r){ return {sheetId:r.sheetId,when:r.when,'do':r.do,show:r.show}; }))});
   drSaving=false;
   if(!ok){
     renderDailyRulesEditor();   // keep the edits on screen so nothing is lost
@@ -6263,7 +6401,7 @@ setInterval(function(){document.getElementById('time-now').textContent=new Date(
 ═══════════════════════════════════════════════════ */
 function updateAllBadges(){
   try{
-    setBadge('mor-badge',dailyRules.length);
+    setBadge('mor-badge',drShown().length);
     setBadge('mot-badge',motEntries.length);
     setBadge('grat-badge',gratEntries.length);
     setBadge('kun-badge',kunEntries.length);
