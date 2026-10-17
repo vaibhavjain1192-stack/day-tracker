@@ -219,6 +219,7 @@ function init(){
       if(Array.isArray(d.foodHabits)&&Array.isArray(d.foodTrack)) replaceFoodFromSheet(d.foodHabits, d.foodLog||[], d.foodTrack); else markFoodUnsupported();
       if(Array.isArray(d.ruleChecks)&&Array.isArray(d.dayLog)) replaceCheckinFromSheet(d.ruleChecks, d.dayLog); else markCheckinUnsupported();
       if(Array.isArray(d.focus)&&Array.isArray(d.focusLog)) replaceFocusFromSheet(d.focus, d.focusLog); else markFocusUnsupported();
+      if(Array.isArray(d.tyag)) replaceTyagFromSheet(d.tyag); else markTyagUnsupported();
       dashKeySet = d.keySet===true ? true : d.keySet===false ? false : null;
       lastBackup = d.lastBackup||'';
       renderKeyWarning();
@@ -272,7 +273,8 @@ function init(){
         ['getAllRuleChecks','ruleChecks',function(c){ _ciFb.checks=c; }],
         ['getAllDayLog','dayLog',function(l){ _ciFb.log=l; }],
         ['getAllFocus','focus',function(f){ _fcFb.list=f; }],
-        ['getAllFocusLog','focusLog',function(l){ _fcFb.log=l; }]
+        ['getAllFocusLog','focusLog',function(l){ _fcFb.log=l; }],
+        ['getAllTyag','tyag',replaceTyagFromSheet]
       ];
       if(skipArchives){
         var arcKeys={situations:1,thoughts:1,posts:1,motivation:1,gratitude:1,kundali:1,guide:1};
@@ -295,6 +297,7 @@ function init(){
       if(!ciLoaded) markCheckinFailed();
       if(_fcFb.list && _fcFb.log) replaceFocusFromSheet(_fcFb.list,_fcFb.log);
       if(!fcLoaded) markFocusFailed();
+      if(!tyLoaded) markTyagFailed();
       // Only call the feed loaded if something for it actually arrived
       if(posts.length||motEntries.length||kunEntries.length||guide.length||gratEntries.length) feedReady=true;
       else feedFailed=true;
@@ -4081,6 +4084,229 @@ function renderFocusSection(){
 }
 
 /* ═══════════════════════════════════════════════════
+   TYAG — things given up for a period (Routine tab).
+   Status is worked out from the dates, never stored by hand:
+   Broken (has a broken-on date) · Yet to start (no start, or it's
+   in the future) · Completed (end date passed) · WIP (otherwise).
+   Sheet: Tyag (its Status column is a matching live formula).
+═══════════════════════════════════════════════════ */
+var tyagList=[];             // [{sheetId, tyag, startDate, duration, unit, endDate, brokenOn}]
+var tyLoaded=false, tyUnsupported=false, tyFailed=false;
+var tyFilter='all', tyEditId='', tyBreakId='', tyAdding=false;
+var TY_UNITS=[['days','days'],['months','months'],['years','years'],['lifelong','lifelong']];
+var TY_STATUS={wip:['WIP','#C9A84C'],todo:['Yet to start','#7fb3d5'],done:['Completed','#6BBF8E'],broken:['Broken','#E07B7B']};
+
+function replaceTyagFromSheet(rows){
+  tyLoaded=true; tyUnsupported=false; tyFailed=false;
+  tyagList=(rows||[]).map(function(r){ return {sheetId:r.sheetId,tyag:r.tyag||'',startDate:r.startDate||'',
+    duration:Number(r.duration)||0,unit:r.unit||'days',endDate:r.endDate||'',brokenOn:r.brokenOn||''}; });
+  renderTyag();
+}
+function markTyagUnsupported(){ if(tyLoaded) return; tyUnsupported=true; renderTyag(); }
+function markTyagFailed(){ if(tyLoaded||tyUnsupported) return; tyFailed=true; renderTyag(); }
+
+/* End date, inclusive: 30 days from 1 Oct ends 30 Oct; 1 month from 1 Oct ends 31 Oct */
+function tyEnd(start,n,unit){
+  if(!start||unit==='lifelong'||!(n>0)) return '';
+  if(unit==='days') return foodShift(start,n-1);
+  var p=start.split('-').map(Number), months=unit==='years'?n*12:n;
+  var y=p[0], m=p[1]-1+months, last=new Date(y,m+1,0).getDate();
+  if(p[2]>last){ var e=new Date(y,m,last); return e.getFullYear()+'-'+String(e.getMonth()+1).padStart(2,'0')+'-'+String(e.getDate()).padStart(2,'0'); }   // 31 Jan + 1 month ends 28 Feb
+  var d=new Date(y,m,p[2]);
+  var iso=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  return foodShift(iso,-1);
+}
+function tyStatus(t){
+  var today=isoToday();
+  if(t.brokenOn) return 'broken';
+  if(!t.startDate||t.startDate>today) return 'todo';
+  if(t.endDate&&t.endDate<today) return 'done';
+  return 'wip';
+}
+function tyDurLabel(t){
+  if(t.unit==='lifelong') return 'Lifelong';
+  if(!(t.duration>0)) return '';
+  var u=t.unit.replace(/s$/,''); return t.duration+' '+u+(t.duration!==1?'s':'');
+}
+function tySpan(a,b){ return fcDaysBetween(a,b)+1; }   // inclusive day count
+
+/* ── Writes ── */
+async function tySave(t,changes,undo){
+  Object.assign(t,changes); renderTyag();
+  var ok=await postToSheet(Object.assign({sheet:'Tyag',action:'update',sheetId:t.sheetId},changes));
+  if(!ok){ Object.assign(t,undo); renderTyag(); showToast(LAST_SHEET_ERROR||'Couldn\u2019t save. Try again.','error'); }
+  return ok;
+}
+function tyReadForm(prefix){
+  var g=function(id){ var e=document.getElementById(prefix+id); return e?e.value.trim():''; };
+  var unit=g('unit')||'days', dur=unit==='lifelong'?0:parseInt(g('dur'),10);
+  return {tyag:g('name'),startDate:g('start'),duration:dur,unit:unit,brokenOn:g('broke')};
+}
+function tyCheck(v,isEdit){
+  if(!v.tyag) return 'Write what you\u2019re giving up.';
+  if(v.unit!=='lifelong'&&!(v.duration>0)) return 'Set how long, or choose lifelong.';
+  if(v.brokenOn){
+    if(!v.startDate) return 'Add the start date before a broken-on date.';
+    if(v.brokenOn<v.startDate) return 'The broken-on date can\u2019t be before the start date.';
+    if(v.brokenOn>isoToday()) return 'The broken-on date can\u2019t be in the future.';
+  }
+  return '';
+}
+async function addTyag(prefill){
+  if(!tyLoaded||tyUnsupported) return;
+  var v=prefill||tyReadForm('ty-new-'), err=tyCheck(v);
+  if(err){ showToast(err,'error'); return; }
+  if(tyagList.some(function(t){ return t.tyag.toLowerCase()===v.tyag.toLowerCase() && (tyStatus(t)==='wip'||tyStatus(t)==='todo'); })){
+    showToast('\u201c'+v.tyag+'\u201d is already on your list.','error'); return;
+  }
+  var t={sheetId:'ty'+Date.now()+Math.floor(Math.random()*1000),tyag:v.tyag,startDate:v.startDate,duration:v.duration,unit:v.unit,
+    endDate:tyEnd(v.startDate,v.duration,v.unit),brokenOn:''};
+  tyagList.push(t); tyAdding=false; renderTyag();
+  var ok=await postToSheet({sheet:'Tyag',sheetId:t.sheetId,tyag:t.tyag,startDate:t.startDate,duration:t.duration,unit:t.unit,endDate:t.endDate});
+  if(!ok){ tyagList=tyagList.filter(function(x){ return x!==t; }); renderTyag(); showToast('Couldn\u2019t add it. Try again.','error'); return; }
+  showToast(t.startDate&&t.startDate<=isoToday()?'Tyag started \u2713':'Added to your tyag list \u2713','success');
+}
+function quickTyag(name){
+  var s=document.getElementById('ty-new-name'); tyAdding=true; renderTyag();
+  var n=document.getElementById('ty-new-name'); if(n){ n.value=name; document.getElementById('ty-new-dur').focus(); }
+}
+async function startTyagToday(id){
+  var t=tyagList.find(function(x){ return x.sheetId===id; }); if(!t) return;
+  var s=isoToday();
+  await tySave(t,{startDate:s,endDate:tyEnd(s,t.duration,t.unit)},{startDate:t.startDate,endDate:t.endDate});
+}
+async function saveTyagBreak(id){
+  var t=tyagList.find(function(x){ return x.sheetId===id; }); if(!t) return;
+  var d=(document.getElementById('ty-brk-'+id)||{}).value||'';
+  var err=tyCheck({tyag:t.tyag,startDate:t.startDate,duration:t.duration||1,unit:t.unit,brokenOn:d});
+  if(!d) err='Pick the day it broke.';
+  if(err){ showToast(err,'error'); return; }
+  tyBreakId='';
+  var ok=await tySave(t,{brokenOn:d},{brokenOn:''});
+  if(ok) showToast('Noted. Kept for '+tySpan(t.startDate,d)+' day'+(tySpan(t.startDate,d)!==1?'s':'')+' before it broke.','');
+}
+async function saveTyagEdit(id){
+  var t=tyagList.find(function(x){ return x.sheetId===id; }); if(!t) return;
+  var v=tyReadForm('ty-ed-'), err=tyCheck(v,true);
+  if(err){ showToast(err,'error'); return; }
+  var ch={tyag:v.tyag,startDate:v.startDate,duration:v.duration,unit:v.unit,endDate:tyEnd(v.startDate,v.duration,v.unit),brokenOn:v.brokenOn};
+  var undo={}; Object.keys(ch).forEach(function(k){ undo[k]=t[k]; });
+  tyEditId='';
+  await tySave(t,ch,undo);
+}
+async function retryTyag(id){
+  var t=tyagList.find(function(x){ return x.sheetId===id; }); if(!t) return;
+  if(!confirm('Start \u201c'+t.tyag+'\u201d again from today ('+(tyDurLabel(t)||'same duration')+')?\n\nThis attempt stays in your list as a record.')) return;
+  await addTyag({tyag:t.tyag,startDate:isoToday(),duration:t.duration,unit:t.unit,brokenOn:''});
+}
+async function deleteTyag(id){
+  var t=tyagList.find(function(x){ return x.sheetId===id; }); if(!t) return;
+  if(!confirm('Delete \u201c'+t.tyag+'\u201d from your tyag list?')) return;
+  tyagList=tyagList.filter(function(x){ return x!==t; }); renderTyag();
+  var ok=await postToSheet({sheet:'Tyag',action:'delete',sheetId:id});
+  if(!ok){ tyagList.push(t); renderTyag(); showToast('Couldn\u2019t delete it. Try again.','error'); }
+}
+function setTyFilter(f){ tyFilter=f; renderTyag(); var b=document.querySelector('.ty-chip[data-f="'+f+'"]'); if(b) b.focus(); }
+function openTyBreak(id){ tyBreakId=id; tyEditId=''; renderTyag(); var i=document.getElementById('ty-brk-'+id); if(i) i.focus(); }
+function openTyEdit(id){ tyEditId=id; tyBreakId=''; renderTyag(); var i=document.getElementById('ty-ed-name'); if(i) i.focus(); }
+function tyUnitChange(prefix){
+  var u=document.getElementById(prefix+'unit'), d=document.getElementById(prefix+'dur');
+  if(u&&d){ d.disabled=u.value==='lifelong'; if(d.disabled) d.value=''; }
+}
+
+/* ── Rendering ── */
+function tyFormHTML(prefix,v,showBroke){
+  var today=isoToday(), lifelong=v.unit==='lifelong';
+  return '<div class="ty-form">'+
+    '<label class="ty-f ty-f-name"><span>Tyag</span><input class="sin" id="'+prefix+'name" type="text" value="'+escH(v.tyag||'')+'" placeholder="e.g. No outside food"></label>'+
+    '<label class="ty-f"><span>Start date</span><input class="sin" id="'+prefix+'start" type="date" value="'+escH(v.startDate||'')+'"></label>'+
+    '<label class="ty-f ty-f-dur"><span>Duration</span><span class="ty-dur">'+
+      '<input class="sin" id="'+prefix+'dur" type="number" min="1" inputmode="numeric" value="'+(lifelong?'':(v.duration||''))+'"'+(lifelong?' disabled':'')+' placeholder="30">'+
+      '<select class="sin" id="'+prefix+'unit" onchange="tyUnitChange(\''+prefix+'\')">'+TY_UNITS.map(function(u){
+        return '<option value="'+u[0]+'"'+((v.unit||'days')===u[0]?' selected':'')+'>'+u[1]+'</option>'; }).join('')+'</select></span></label>'+
+    (showBroke?'<label class="ty-f"><span>Broken on <small>(leave empty if not)</small></span><input class="sin" id="'+prefix+'broke" type="date" max="'+today+'" value="'+escH(v.brokenOn||'')+'"></label>':'')+
+  '</div>';
+}
+function tyRowHTML(t){
+  var st=tyStatus(t), lab=TY_STATUS[st], today=isoToday(), id=t.sheetId, dur=tyDurLabel(t), meta='', bar='';
+  if(st==='wip'){
+    var day=tySpan(t.startDate,today);
+    if(t.unit==='lifelong') meta='Day '+day+' \u00b7 lifelong \u00b7 since '+feedDate(t.startDate);
+    else{
+      var tot=tySpan(t.startDate,t.endDate), left=tot-day;
+      meta='Day '+day+' of '+tot+' \u00b7 '+(left?left+' day'+(left!==1?'s':'')+' to go, ends '+feedDate(t.endDate):'last day today');
+      bar='<div class="ty-bar" aria-hidden="true"><span style="width:'+Math.min(100,day/tot*100)+'%"></span></div>';
+    }
+  }else if(st==='todo') meta=(t.startDate?'Starts '+feedDate(t.startDate):'No start date yet')+(dur?' \u00b7 '+dur:'');
+  else if(st==='done') meta='Completed '+feedDate(t.endDate)+' \u00b7 '+dur+' from '+feedDate(t.startDate);
+  else{ var kept=tySpan(t.startDate,t.brokenOn); meta='Broken on '+feedDate(t.brokenOn)+' \u00b7 kept '+kept+' day'+(kept!==1?'s':'')+(dur?' of '+dur:''); }
+
+  var acts='';
+  if(st==='wip') acts+='<button type="button" class="btn ty-brk-btn" onclick="openTyBreak(\''+id+'\')">Mark broken</button>';
+  if(st==='todo') acts+='<button type="button" class="btn gold" onclick="startTyagToday(\''+id+'\')">Start today</button>';
+  if(st==='broken') acts+='<button type="button" class="btn" onclick="retryTyag(\''+id+'\')">\u21ba Start again</button>';
+  acts+='<button type="button" class="rt-mini" aria-label="Edit '+escH(t.tyag)+'" title="Edit" onclick="openTyEdit(\''+id+'\')">\u270e</button>'+
+        '<button type="button" class="rt-mini del" aria-label="Delete '+escH(t.tyag)+'" title="Delete" onclick="deleteTyag(\''+id+'\')">\u00d7</button>';
+
+  var extra='';
+  if(tyEditId===id){
+    extra='<div class="ty-inline">'+tyFormHTML('ty-ed-',t,true)+
+      '<div class="ty-foot"><button type="button" class="btn" onclick="tyEditId=\'\';renderTyag()">Cancel</button>'+
+      '<button type="button" class="btn gold" onclick="saveTyagEdit(\''+id+'\')">Save</button></div></div>';
+  }else if(tyBreakId===id){
+    extra='<div class="ty-inline ty-inline-brk"><label class="ty-f"><span>When did it break?</span>'+
+      '<input class="sin" id="ty-brk-'+id+'" type="date" min="'+t.startDate+'" max="'+today+'" value="'+today+'"></label>'+
+      '<div class="ty-foot"><button type="button" class="btn" onclick="tyBreakId=\'\';renderTyag()">Cancel</button>'+
+      '<button type="button" class="btn ty-brk-save" onclick="saveTyagBreak(\''+id+'\')">Save broken date</button></div></div>';
+  }
+  return '<li class="ty-row ty-'+st+'">'+
+    '<div class="ty-main">'+ptTile(t.tyag,'',{size:'sm'})+
+      '<div class="ty-txt"><div class="ty-name">'+escH(t.tyag)+'<span class="ty-badge" style="--tc:'+lab[1]+'">'+lab[0]+'</span></div>'+
+      '<div class="ty-meta">'+meta+'</div>'+bar+'</div>'+
+      '<div class="ty-acts">'+acts+'</div></div>'+extra+'</li>';
+}
+function renderTyag(){
+  var box=document.getElementById('ty-body'); if(!box) return;
+  var badge=document.getElementById('badge-tyag');
+  if(tyUnsupported){ box.innerHTML='<div class="fd-note">Tyag needs the updated <b>Code.gs</b>. Deploy it (Manage deployments \u2192 New version), then reload.</div>'; return; }
+  if(!tyLoaded){ box.innerHTML='<div class="fd-note">'+(tyFailed?'Couldn\u2019t load. Reload the page to try again.':'Loading\u2026')+'</div>'; return; }
+
+  var order={wip:0,todo:1,broken:2,done:3}, counts={wip:0,todo:0,done:0,broken:0};
+  tyagList.forEach(function(t){ counts[tyStatus(t)]++; });
+  if(badge) badge.textContent=counts.wip?counts.wip+' WIP':'';
+  var list=tyagList.filter(function(t){ return tyFilter==='all'||tyStatus(t)===tyFilter; }).sort(function(a,b){
+    var sa=order[tyStatus(a)], sb=order[tyStatus(b)]; if(sa!==sb) return sa-sb;
+    return (b.startDate||'9999').localeCompare(a.startDate||'9999');
+  });
+
+  var chips=tyagList.length?'<div class="ty-chips" role="group" aria-label="Filter by status">'+
+    [['all','All',tyagList.length],['wip','WIP',counts.wip],['todo','Yet to start',counts.todo],['done','Completed',counts.done],['broken','Broken',counts.broken]].map(function(c){
+      return '<button type="button" class="ty-chip'+(tyFilter===c[0]?' on':'')+'" data-f="'+c[0]+'" aria-pressed="'+(tyFilter===c[0])+'" onclick="setTyFilter(\''+c[0]+'\')">'+c[1]+' <span>'+c[2]+'</span></button>';
+    }).join('')+'</div>':'';
+
+  var rows=list.length?'<ul class="ty-list">'+list.map(tyRowHTML).join('')+'</ul>'
+    :'<div class="fd-note">'+(tyagList.length?'Nothing here with this status.':'List what you want to give up and for how long. Leave the start date empty for ones you plan to start later.')+'</div>';
+
+  // Quick add from your routine's "Tyag" habits that aren't on the list yet
+  var have=tyagList.map(function(t){ return t.tyag.toLowerCase(); }), seen={};
+  var sugg=(typeof habitMaster!=='undefined'?habitMaster:[]).filter(function(h){
+    var k=String(h.habit||'').trim().toLowerCase();
+    if(!k||seen[k]||have.indexOf(k)>-1||String(h.time||'').trim().toLowerCase()!=='tyag') return false;
+    seen[k]=1; return true;
+  }).map(function(h){ return h.habit.trim(); });
+
+  var add=tyAdding
+    ? '<div class="ty-inline ty-add">'+tyFormHTML('ty-new-',{startDate:isoToday(),duration:30,unit:'days'},false)+
+        '<div class="ty-foot"><button type="button" class="btn" onclick="tyAdding=false;renderTyag()">Cancel</button>'+
+        '<button type="button" class="btn gold" onclick="addTyag()">Add tyag</button></div></div>'
+    : '<button type="button" class="btn gold ty-addbtn" onclick="tyAdding=true;renderTyag();document.getElementById(\'ty-new-name\').focus()">+ Add a tyag</button>'+
+      (sugg.length?'<div class="fd-quick"><span class="fd-quick-l">From your routine</span>'+sugg.map(function(n){
+        return '<button type="button" class="fd-chip" onclick="quickTyag(\''+escH(n).replace(/'/g,"\\'")+'\')">+ '+escH(n)+'</button>'; }).join('')+'</div>':'');
+
+  box.innerHTML=chips+rows+add;
+}
+
+/* ═══════════════════════════════════════════════════
    SAVE QUEUE — one write per key in flight; only the newest state
    waits behind it, so changes can never reach the Sheet out of order.
 ═══════════════════════════════════════════════════ */
@@ -5344,7 +5570,7 @@ async function importGuide(){
    Open/closed state is a display preference, so it lives in
    localStorage — no dashboard data is stored there.
 ──────────────────────────────────────────────────────── */
-var SEC_KEYS=['links','sitlib','focus','master','routine','food','foodsum','weekly','library','rtstats','habitperf','habits','checklist','pillars','anchors'];
+var SEC_KEYS=['links','sitlib','focus','tyag','master','routine','food','foodsum','weekly','library','rtstats','habitperf','habits','checklist','pillars','anchors'];
 
 function secOpen(key){
   var v=localStorage.getItem('sec_'+key);
@@ -5429,7 +5655,7 @@ function renderGlance(){
 
 /* Sections now live on two tabs, so a glance card may need to
    switch tab before scrolling to its section. */
-var ROUTINE_TAB_SECTIONS=['focus','master','routine','food','foodsum','rtstats','habitperf'];   // sitlib lives on Home
+var ROUTINE_TAB_SECTIONS=['focus','tyag','master','routine','food','foodsum','rtstats','habitperf'];   // sitlib lives on Home
 
 function jumpToSection(key){
   if(!secOpen(key)){ localStorage.setItem('sec_'+key,'1'); applySection(key); }
@@ -6313,6 +6539,7 @@ function rtSync(promise){
 
 /* ── Sheet loaders ──────────────────────────────────────── */
 function replaceHabitMasterFromSheet(rows){
+  setTimeout(function(){ if(typeof renderTyag==='function'&&tyLoaded) renderTyag(); },0);
   habitMaster=rows.map(function(r){
     return {sheetId:r.sheetId||'',time:cleanTime(r.time||''),habit:r.habit||''};
   });
