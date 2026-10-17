@@ -252,6 +252,47 @@ button.fc-dot:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
   .fc-row-acts{width:100%;justify-content:flex-end}
 }
 
+/* ── Tyag ── */
+.ty-chips{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px}
+.ty-chip{font-family:var(--fb);font-size:12px;padding:4px 11px;border-radius:20px;border:1px solid var(--border-md);background:transparent;color:var(--text-2);cursor:pointer}
+.ty-chip span{color:var(--text-3);margin-left:2px}
+.ty-chip.on{border-color:var(--gold);color:var(--text-1);background:var(--gold-dim)}
+.ty-chip:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.ty-list{list-style:none;margin:0 0 10px;padding:0}
+.ty-row{padding:9px 0;border-bottom:1px solid var(--border)}
+.ty-main{display:flex;align-items:flex-start;gap:10px}
+.ty-txt{flex:1;min-width:0}
+.ty-name{font-size:13px;color:var(--text-1);line-height:1.4;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.ty-broken .ty-name,.ty-done .ty-name{color:var(--text-2)}
+.ty-badge{font-size:10.5px;font-weight:600;color:var(--tc);border:1px solid var(--tc);border-radius:10px;padding:0 7px;line-height:17px;background:color-mix(in srgb,var(--tc) 12%,transparent)}
+.ty-meta{font-size:11px;color:var(--text-3);margin-top:2px;line-height:1.5}
+.ty-bar{height:5px;border-radius:3px;background:var(--surface);overflow:hidden;margin-top:6px;max-width:320px}
+.ty-bar span{display:block;height:100%;background:var(--gold)}
+.ty-acts{display:flex;gap:4px;align-items:center;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end}
+.ty-acts .btn{font-size:11.5px;padding:4px 10px}
+.ty-brk-btn{color:#E07B7B;border-color:rgba(224,123,123,.4)}
+.ty-inline{margin:10px 0 2px 34px;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r)}
+.ty-inline-brk{border-color:rgba(224,123,123,.4)}
+.ty-add{margin-left:0}
+.ty-form{display:grid;grid-template-columns:2fr 1fr 1.2fr;gap:8px 10px}
+.ty-form .ty-f-name{grid-column:1/-1}
+.ty-f{display:flex;flex-direction:column;gap:4px;font-size:11px;color:var(--text-3)}
+.ty-f small{color:var(--text-3);font-weight:400}
+.ty-f .sin{font-size:13px;color-scheme:dark}
+.ty-dur{display:flex;gap:6px}
+.ty-dur input{width:70px;flex-shrink:0}
+.ty-dur select{flex:1;min-width:0}
+.ty-dur input:disabled{opacity:.4}
+.ty-foot{display:flex;justify-content:flex-end;gap:6px;margin-top:10px}
+.ty-brk-save{color:#E07B7B;border-color:rgba(224,123,123,.5)}
+.ty-addbtn{margin-top:2px}
+@media(max-width:640px){
+  .ty-main{flex-wrap:wrap}
+  .ty-acts{width:100%;margin-left:34px;justify-content:flex-start}
+  .ty-form{grid-template-columns:1fr}
+  .ty-inline{margin-left:0}
+}
+
 /* ── Food habits ── */
 .fd-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:8px}
 .fd-day{font-size:13px;font-weight:600;color:var(--text-1)}
