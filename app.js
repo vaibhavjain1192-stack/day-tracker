@@ -139,8 +139,8 @@ function switchTab(tab){
   document.querySelectorAll('.pg').forEach(function(p){p.classList.remove('on');});
   document.querySelectorAll('.tab').forEach(function(b){b.classList.remove('on');});
   document.getElementById('pg-'+tab).classList.add('on');
-  var idx=tab==='morning'?0:tab==='routine'?1:tab==='situations'?2:tab==='thoughts'?3:tab==='posts'?4:tab==='motivation'?5:tab==='gratitude'?6:tab==='kundali'?7:8;
-  document.querySelectorAll('.tab')[idx].classList.add('on');
+  var tb=document.querySelector('.tab[onclick="switchTab(\''+tab+'\')"]'); if(tb) tb.classList.add('on');
+  if(tab==='plans'){ renderSitRows(); renderPlanLibrary(); renderStepsEditor('spl'); }
   if(tab==='routine'){_calNeedsScroll=true;renderMaster();renderRoutine();}
   if(tab==='situations'){renderStats();renderPast();}
   if(tab==='thoughts')renderThoughts();
@@ -194,7 +194,6 @@ function init(){
   setIntentionsState('loading');
   renderFeed();
   drLoadSnap();
-  renderCalm();
   renderSleep(); renderCheckin(); renderWeekly();
 
   /* Two-stage load. The core request carries only what Home and
@@ -1076,8 +1075,8 @@ async function saveEditModal(){
   }else if(_editCtx.type==='sitplan'){
     var sp=planById(_editCtx.id); if(!sp){closeEditModal();return;}
     var ns=document.getElementById('edit-spl-sit').value.trim();
-    var na=document.getElementById('edit-spl-app').value.trim();
-    if(!ns||!na){showToast('Both halves are needed.','error');btn.textContent='Save changes \u2197';btn.disabled=false;return;}
+    var na=stepsValue('edit-spl').join('\n');
+    if(!ns||!na){showToast('Add the situation and at least one step.','error');btn.textContent='Save changes \u2197';btn.disabled=false;return;}
     sp.situation=ns; sp.approach=na;
     renderPlanLibrary(); renderSitRows();
     var oksp=await postToSheet({sheet:'SituationPlans',action:'edit_plan',sheetId:sp.sheetId,situation:ns,approach:na});
@@ -2243,7 +2242,7 @@ function activePlans(){
   return sitPlans.filter(function(p){ return p.status==='active'; })
                  .sort(function(a,b){ return a.order-b.order; });
 }
-function homePlans(){ return activePlans().slice(0,HOME_PLAN_SLOTS); }
+function homePlans(){ return activePlans(); }
 function planById(id){ return sitPlans.find(function(p){ return p.sheetId===id; }); }
 
 function marksFor(iso){ return sitLog[iso]||{}; }
@@ -2272,7 +2271,7 @@ function renderSitRows(){
   var iso=isoToday();
 
   if(!plans.length){
-    box.innerHTML='<div class="sp-empty">No plans yet. Add a few in <strong>Situation plans</strong> below &#8212; the first five show here.</div>';
+    box.innerHTML='<div class="sp-empty">No plans yet. Add one in <strong>Add &amp; edit plans</strong> below.</div>';
     var sy0=document.getElementById('sit-sync'); if(sy0) sy0.textContent='';
     var cy0=document.getElementById('sit-carry'); if(cy0) cy0.textContent='';
     return;
@@ -2284,7 +2283,7 @@ function renderSitRows(){
     var rate = st.pct===null ? '' : '<span class="sp-rate">'+st.did+'/'+st.came+' followed \u00b7 14d</span>';
     return '<div class="sp-item">'+ptTile(p.situation,p.approach)+'<div class="sp-body">'+
       '<div class="sp-when">'+escH(p.situation)+'</div>'+
-      '<div class="sp-then">'+escH(p.approach)+'</div>'+
+      stepsHTML(p,'sp-then')+
       '<div class="sp-marks">'+
         '<button class="sp-mk came'+(m.c?' on':'')+'" onclick="markPlan(\''+p.sheetId+'\',\'c\')">'+
           (m.c?'\u2713 Came up':'Came up?')+'</button>'+
@@ -2297,6 +2296,7 @@ function renderSitRows(){
     '</div></div>';
   }).join('');
 
+  setBadge('plan-badge',plans.length);
   var marked=plans.filter(function(p){ return markOf(iso,p.sheetId).c!==undefined; }).length;
   var sy=document.getElementById('sit-sync');
   if(sy){ sy.textContent=marked?marked+' of '+plans.length+' marked':''; sy.className='focus-sync'+(marked===plans.length?' ok':''); }
@@ -2340,7 +2340,7 @@ function saveSitLog(){
 /* ── Library ───────────────────────────────────────────── */
 /* Open the library, expand it if collapsed, and scroll to it */
 function openPlanLibrary(){
-  if(!document.getElementById('pg-morning').classList.contains('on')) switchTab('morning');
+  if(!document.getElementById('pg-plans').classList.contains('on')) switchTab('plans');
   localStorage.setItem('sec_sitlib','1');
   applySection('sitlib');
   renderPlanLibrary();
@@ -2407,6 +2407,7 @@ function renderPlanLibrary(){
   var act=sitPlans.filter(function(p){return p.status==='active';}).length;
   var ret=sitPlans.filter(function(p){return p.status==='retired';}).length;
   var ca=document.getElementById('spl-ct-active');  if(ca) ca.textContent=act;
+  var bsl=document.getElementById('badge-sitlib'); if(bsl) bsl.textContent=act||'';
   var cr=document.getElementById('spl-ct-retired'); if(cr) cr.textContent=ret;
 
   var imp=document.getElementById('spl-import');
@@ -2429,14 +2430,14 @@ function renderPlanLibrary(){
       ? 'Came up <b>'+sAll.came+'</b>\u00d7 \u00b7 followed <b>'+(sAll.pct)+'%</b>'+
         (s14.came?' \u00b7 last 14d <b>'+(s14.pct===null?'\u2013':s14.pct+'%')+'</b>':'')
       : 'Not yet marked on any day';
-    var onHome = homeIds.indexOf(p.sheetId)>-1 ? '<span class="spl-onhome">on home</span>' : '';
+    var onHome = '';
     return '<div class="spl-row" data-idx="'+idx+'">'+
       (planView==='active'
         ? '<span class="spl-grip" onpointerdown="startPlanDrag(event,'+idx+')" title="Drag to reorder">\u2630</span>'
         : '<span></span>')+
       '<div class="spl-body pt-row">'+ptTile(p.situation,p.approach)+'<div class="pt-fill">'+
         '<div class="spl-when">'+escH(p.situation)+onHome+'</div>'+
-        '<div class="spl-then">\u2192 '+escH(p.approach)+'</div>'+
+        stepsHTML(p,'spl-then')+
         '<div class="spl-stat">'+stat+'</div>'+
       '</div></div>'+
       '<div class="spl-acts">'+
@@ -2447,6 +2448,60 @@ function renderPlanLibrary(){
       '</div>'+
     '</div>';
   }).join('');
+}
+
+/* ═══════════════════════════════════════════════════
+   PLAN STEPS — each plan's response is a list of points (up to
+   PLAN_MAX_STEPS), stored one per line in the Approach cell.
+   Older single-paragraph plans are split into sentences for display.
+═══════════════════════════════════════════════════ */
+var PLAN_MAX_STEPS=5;
+var _stepDraft={};           // editor prefix -> [step text]
+function planSteps(p){
+  var a=String((p&&p.approach)||'').trim(); if(!a) return [];
+  var lines=a.split(/\r?\n/).map(function(l){ return l.replace(/^\s*(?:[-•*]|\d+[.)])\s*/,'').trim(); }).filter(Boolean);
+  if(lines.length>1) return lines;
+  var parts=a.split(/(?<=[.!?])\s+(?=[A-Z0-9"“])/).map(function(x){ return x.trim(); }).filter(Boolean);
+  return (parts.length>1&&parts.length<=PLAN_MAX_STEPS)?parts:[a];
+}
+function stepsHTML(p,cls){
+  var st=planSteps(p); if(!st.length) return '';
+  if(st.length===1) return '<div class="'+cls+'">'+escH(st[0])+'</div>';
+  return '<ol class="'+cls+' sp-steps">'+st.map(function(x){ return '<li>'+escH(x)+'</li>'; }).join('')+'</ol>';
+}
+function stepsRead(prefix){
+  var box=document.getElementById(prefix+'-steps'); if(!box) return _stepDraft[prefix]||[];
+  _stepDraft[prefix]=[].map.call(box.querySelectorAll('.st-in'),function(i){ return i.value; });
+  return _stepDraft[prefix];
+}
+function renderStepsEditor(prefix,steps,focusIdx){
+  var box=document.getElementById(prefix+'-steps'); if(!box) return;
+  if(steps) _stepDraft[prefix]=steps.slice();
+  var list=_stepDraft[prefix]; if(!list||!list.length) list=_stepDraft[prefix]=[''];
+  box.innerHTML=list.map(function(v,i){
+    return '<div class="st-row"><span class="st-n">'+(i+1)+'.</span>'+
+      '<input class="sin st-in" id="'+prefix+'-st-'+i+'" type="text" value="'+escH(v)+'" placeholder="'+(i===0?'e.g. Stay silent':'Next step')+'" '+
+        'onkeydown="stepKey(event,\''+prefix+'\','+i+')">'+
+      (list.length>1?'<button type="button" class="rt-mini del" aria-label="Remove step '+(i+1)+'" onclick="removeStep(\''+prefix+'\','+i+')">×</button>':'')+'</div>';
+  }).join('')+
+  (list.length<PLAN_MAX_STEPS
+    ?'<button type="button" class="btn st-add" onclick="addStep(\''+prefix+'\')">+ Add a step</button>'
+    :'<div class="st-max">That’s the maximum of '+PLAN_MAX_STEPS+' steps. Fewer steps are easier to remember in the moment.</div>');
+  if(focusIdx!=null){ var f=document.getElementById(prefix+'-st-'+focusIdx); if(f) f.focus(); }
+}
+function addStep(prefix){
+  var l=stepsRead(prefix); if(l.length>=PLAN_MAX_STEPS) return;
+  l.push(''); renderStepsEditor(prefix,null,l.length-1);
+}
+function removeStep(prefix,i){ var l=stepsRead(prefix); l.splice(i,1); renderStepsEditor(prefix,null,Math.max(0,i-1)); }
+function stepKey(e,prefix,i){
+  if(e.key!=='Enter') return; e.preventDefault();
+  var l=stepsRead(prefix);
+  if(i===l.length-1&&l.length<PLAN_MAX_STEPS&&l[i].trim()) addStep(prefix);
+  else { var n=document.getElementById(prefix+'-st-'+(i+1)); if(n) n.focus(); }
+}
+function stepsValue(prefix){
+  return stepsRead(prefix).map(function(x){ return x.trim(); }).filter(Boolean).slice(0,PLAN_MAX_STEPS);
 }
 
 /* A trigger you cannot observe from outside rarely fires. This is a
@@ -2464,29 +2519,30 @@ function checkTrigger(el){
 
 async function addSitPlan(){
   var s=document.getElementById('spl-sit').value.trim();
-  var a=document.getElementById('spl-app').value.trim();
-  if(!s||!a){ showToast('Both the trigger and the response are needed.','error'); return; }
+  var st=stepsValue('spl'), a=st.join('\n');
+  if(!s||!st.length){ showToast('Add the situation and at least one step.','error'); return; }
   var id='p'+Date.now();
   var order=activePlans().length;
   sitPlans.push({sheetId:id,situation:s,approach:a,status:'active',order:order});
   document.getElementById('spl-sit').value='';
-  document.getElementById('spl-app').value='';
+  renderStepsEditor('spl',['']);
   checkTrigger({value:''});
   renderPlanLibrary(); renderSitRows();
   var sy=document.getElementById('spl-sync'); if(sy){sy.textContent='Syncing\u2026';sy.className='sync-txt syncing';}
   var ok=await postToSheet({sheet:'SituationPlans',sheetId:id,situation:s,approach:a,status:'active',order:order});
   if(sy){ sy.textContent=ok?'Saved to Sheet \u2713':'Sheet sync failed'; sy.className='sync-txt '+(ok?'ok':'err'); }
-  if(activePlans().length>HOME_PLAN_SLOTS) showToast('Added \u2014 beyond the first 5, so not on home yet.','');
+  showToast('Plan added \u2713','success');
 }
 
 function editSitPlan(id){
   var p=planById(id); if(!p) return;
   var html='<div style="margin-bottom:10px"><label class="sfl">When this happens</label>'+
     '<textarea class="sin" id="edit-spl-sit" rows="2">'+escH(p.situation)+'</textarea></div>'+
-    '<div><label class="sfl">I will do this</label>'+
-    '<textarea class="sin" id="edit-spl-app" rows="2">'+escH(p.approach)+'</textarea></div>'+
+    '<div><label class="sfl">My steps <span style="color:var(--text-3);font-weight:400">(up to '+PLAN_MAX_STEPS+')</span></label>'+
+    '<div id="edit-spl-steps"></div></div>'+
     '<div style="font-size:11px;color:var(--text-3);margin-top:8px;line-height:1.6">Outcome history stays attached to this plan.</div>';
   openEditModal('Edit plan',html,{type:'sitplan',id:id});
+  renderStepsEditor('edit-spl',planSteps(p).slice(0,PLAN_MAX_STEPS));
 }
 
 async function togglePlanStatus(id){
@@ -2640,231 +2696,6 @@ function replaceDailyFocusFromSheet(rows){
     dailyFocus[r.dateISO]={focus:r.focus||'',videoUrl:r.videoUrl||'',videoNote:r.videoNote||'',situations:r.situations||''};
   });
   renderDailyFocus();
-}
-
-/* ═══════════════════════════════════════════════════
-   CALM PLAYER — sound generated live with the Web Audio API.
-   Nothing is downloaded, so it works offline and never runs out.
-   Sound choice and volume are display preferences (localStorage).
-═══════════════════════════════════════════════════ */
-var calm={ctx:null, master:null, verb:null, sess:null, sound:'pads', vol:60, playing:false,
-          timer:null, fadeT:null, timerMin:0, breathT:null, ends:0, tick:null};
-try{
-  var _cp=JSON.parse(localStorage.getItem('calm_prefs')||'{}');
-  if(['pads','ocean','rain','hum'].indexOf(_cp.sound)>-1) calm.sound=_cp.sound;
-  if(_cp.vol!=null && !isNaN(+_cp.vol)) calm.vol=Math.max(0,Math.min(100,+_cp.vol));
-}catch(e){}
-function calmSavePrefs(){ try{ localStorage.setItem('calm_prefs',JSON.stringify({sound:calm.sound,vol:calm.vol})); }catch(e){} }
-
-function calmInit(){
-  if(calm.ctx) return true;
-  var AC=window.AudioContext||window.webkitAudioContext;
-  if(!AC){ showToast('This browser can\u2019t play generated sound.','error'); return false; }
-  var c=new AC();
-  calm.ctx=c;
-  calm.master=c.createGain(); calm.master.gain.value=0;
-  var comp=c.createDynamicsCompressor(); comp.threshold.value=-18; comp.ratio.value=3;
-  calm.master.connect(comp); comp.connect(c.destination);
-  // Soft room reverb from a decaying-noise impulse
-  var len=Math.floor(c.sampleRate*3.5), ir=c.createBuffer(2,len,c.sampleRate);
-  for(var ch=0;ch<2;ch++){ var d=ir.getChannelData(ch); for(var i=0;i<len;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/len,3); }
-  calm.verb=c.createConvolver(); calm.verb.buffer=ir;
-  var vg=c.createGain(); vg.gain.value=0.6; calm.verb.connect(vg); vg.connect(calm.master);
-  return true;
-}
-function calmLevel(){ var v=calm.vol/100; return v*v*0.9; }
-
-function calmNoise(kind,seconds){
-  var c=calm.ctx, n=Math.floor(c.sampleRate*seconds), buf=c.createBuffer(2,n,c.sampleRate);
-  for(var ch=0;ch<2;ch++){
-    var d=buf.getChannelData(ch), last=0, b0=0,b1=0,b2=0,b3=0,b4=0,b5=0,b6=0;
-    for(var i=0;i<n;i++){
-      var w=Math.random()*2-1;
-      if(kind==='brown'){ last=(last+0.02*w)/1.02; d[i]=last*3.5; }
-      else{ b0=.99886*b0+w*.0555179; b1=.99332*b1+w*.0750759; b2=.969*b2+w*.153852; b3=.8665*b3+w*.3104856;
-            b4=.55*b4+w*.5329522; b5=-.7616*b5-w*.016898; d[i]=(b0+b1+b2+b3+b4+b5+b6+w*.5362)*.11; b6=w*.115926; }
-    }
-    // short crossfade so the loop point has no click
-    var xf=Math.floor(c.sampleRate*0.05);
-    for(var k=0;k<xf;k++){ var a=k/xf; d[k]=d[k]*a+d[n-xf+k]*(1-a); }
-  }
-  return buf;
-}
-
-/* Each sound is a "session" with its own bus, nodes and timers,
-   so one can fade out while the next fades in. */
-function calmStartSession(kind){
-  var c=calm.ctx, t=c.currentTime, bus=c.createGain(), s={bus:bus,nodes:[],timers:[]};
-  bus.gain.value=0; bus.connect(calm.master);
-  bus.gain.setTargetAtTime(1,t,1.2);
-  function keep(n){ s.nodes.push(n); return n; }
-  function lfo(freq,depth,param,base){
-    if(base!=null) param.value=base;
-    var o=keep(c.createOscillator()), g=c.createGain(); o.frequency.value=freq; g.gain.value=depth;
-    o.connect(g); g.connect(param); o.start(); return o;
-  }
-
-  if(kind==='pads'){
-    // Slow, warm chords: Cmaj7 → Am9 → Fmaj7 → G6, about 11s each
-    var chords=[[130.81,164.81,196.00,246.94],[110.00,130.81,164.81,196.00,246.94],
-                [87.31,110.00,130.81,164.81],[98.00,123.47,146.83,164.81]];
-    var lp=c.createBiquadFilter(); lp.type='lowpass'; lp.Q.value=0.4;
-    var dry=c.createGain(); dry.gain.value=0.55;
-    lp.connect(dry); dry.connect(bus); lp.connect(calm.verb);
-    lfo(0.05,250,lp.frequency,900);
-    var idx=0, dur=11;
-    var chord=function(){
-      var now=c.currentTime;
-      chords[idx%chords.length].forEach(function(f,vi){
-        [0,1].forEach(function(k){
-          var o=c.createOscillator(), g=c.createGain();
-          o.type=k?'triangle':'sine'; o.frequency.value=f*(vi===0?1:2)*(k?1.004:0.998);
-          g.gain.value=0;
-          g.gain.setTargetAtTime(k?0.06:0.12,now,1.6);
-          g.gain.setTargetAtTime(0,now+dur-1,1.8);
-          o.connect(g); g.connect(lp); o.start(now); o.stop(now+dur+8);
-          s.nodes.push(o);
-          o.onended=function(){ var i=s.nodes.indexOf(o); if(i>-1) s.nodes.splice(i,1); try{ g.disconnect(); }catch(e){} };
-        });
-      });
-      idx++;
-    };
-    chord(); s.timers.push(setInterval(chord,(dur-2)*1000));
-  }
-  else if(kind==='ocean'){
-    var src=keep(c.createBufferSource()); src.buffer=calmNoise('brown',6); src.loop=true;
-    var f=c.createBiquadFilter(); f.type='lowpass'; f.Q.value=0.3;
-    var g=c.createGain();
-    src.connect(f); f.connect(g); g.connect(bus); g.connect(calm.verb);
-    lfo(0.085,0.38,g.gain,0.5);       // a swell about every 12 seconds
-    lfo(0.085,420,f.frequency,650);   // brighter at the crest
-    src.start();
-  }
-  else if(kind==='rain'){
-    var src2=keep(c.createBufferSource()); src2.buffer=calmNoise('pink',5); src2.loop=true;
-    var hp=c.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=500;
-    var lp2=c.createBiquadFilter(); lp2.type='lowpass'; lp2.frequency.value=5200;
-    var g2=c.createGain();
-    src2.connect(hp); hp.connect(lp2); lp2.connect(g2); g2.connect(bus);
-    lfo(0.13,0.1,g2.gain,0.8);
-    var src3=keep(c.createBufferSource()); src3.buffer=calmNoise('brown',6); src3.loop=true;   // low, distant bed
-    var g3=c.createGain(); g3.gain.value=0.35; src3.connect(g3); g3.connect(bus);
-    src2.start(); src3.start();
-  }
-  else{ // Deep hum: 136.1 Hz ("Om") with an octave below and a soft fifth
-    var lp3=c.createBiquadFilter(); lp3.type='lowpass'; lp3.frequency.value=700;
-    var g4=c.createGain();
-    lp3.connect(g4); g4.connect(bus); g4.connect(calm.verb);
-    [[136.1,0.22,'sine'],[68.05,0.18,'sine'],[204.15,0.05,'triangle'],[136.6,0.12,'sine']].forEach(function(v){
-      var o=keep(c.createOscillator()), og=c.createGain(); o.type=v[2]; o.frequency.value=v[0]; og.gain.value=v[1];
-      o.connect(og); og.connect(lp3); o.start();
-    });
-    lfo(0.07,0.12,g4.gain,0.42);
-  }
-  return s;
-}
-function calmStopSession(s,fade){
-  if(!s) return;
-  var c=calm.ctx; fade=fade||1.5;
-  s.timers.forEach(clearInterval);
-  try{ s.bus.gain.cancelScheduledValues(c.currentTime); s.bus.gain.setTargetAtTime(0,c.currentTime,fade/4); }catch(e){}
-  setTimeout(function(){
-    s.nodes.slice().forEach(function(n){ try{ n.stop(); }catch(e){} try{ n.disconnect(); }catch(e){} });
-    try{ s.bus.disconnect(); }catch(e){}
-  },fade*1000+300);
-}
-
-async function toggleCalm(){ if(calm.playing) stopCalm(); else await playCalm(); }
-async function playCalm(){
-  if(!calmInit()) return;
-  try{ await calm.ctx.resume(); }catch(e){}
-  clearTimeout(calm.fadeT); calm.fadeT=null;
-  calm.sess=calmStartSession(calm.sound);
-  calm.master.gain.cancelScheduledValues(calm.ctx.currentTime);
-  calm.master.gain.setTargetAtTime(calmLevel(),calm.ctx.currentTime,0.8);
-  calm.playing=true;
-  if(calm.timerMin) calmArmTimer();
-  calmBreathStart();
-  renderCalm();
-}
-function stopCalm(fade){
-  if(!calm.playing) return;
-  calm.playing=false;
-  calmStopSession(calm.sess,fade||1.5); calm.sess=null;
-  clearTimeout(calm.timer); clearTimeout(calm.fadeT); calm.timer=calm.fadeT=null; calm.ends=0;
-  calmBreathStop();
-  renderCalm();
-}
-function setCalmSound(k){
-  if(k===calm.sound) return;
-  calm.sound=k; calmSavePrefs();
-  if(calm.playing){ calmStopSession(calm.sess,2.5); calm.sess=calmStartSession(k); }
-  renderCalm();
-}
-function setCalmVolume(v){
-  calm.vol=+v; calmSavePrefs();
-  if(calm.ctx&&calm.playing) calm.master.gain.setTargetAtTime(calmLevel(),calm.ctx.currentTime,0.1);
-}
-function setCalmTimer(m){
-  calm.timerMin=+m;
-  clearTimeout(calm.timer); clearTimeout(calm.fadeT); calm.timer=calm.fadeT=null; calm.ends=0;
-  if(calm.playing&&calm.timerMin){
-    calm.master.gain.setTargetAtTime(calmLevel(),calm.ctx.currentTime,0.3);   // undo any fade already started
-    calmArmTimer();
-  }
-  renderCalm();
-}
-/* Fades out gently over the last 9 seconds, then stops */
-function calmArmTimer(){
-  clearTimeout(calm.timer); clearTimeout(calm.fadeT);
-  calm.ends=Date.now()+calm.timerMin*60000;
-  calm.timer=setTimeout(function(){
-    if(calm.ctx) calm.master.gain.setTargetAtTime(0,calm.ctx.currentTime,2.5);
-    calm.fadeT=setTimeout(function(){
-      stopCalm(0.5);
-      calm.timerMin=0; var t=document.getElementById('calm-timer'); if(t) t.value='0';
-      renderCalm();
-    },9000);
-  },Math.max(0,calm.timerMin*60000-9000));
-}
-
-/* Breathing guide: in 4 · hold 4 · out 6, the pattern from your Guide */
-function calmBreathStart(){
-  var box=document.getElementById('calm-breath'), orb=document.getElementById('calm-orb'), cue=document.getElementById('calm-cue');
-  if(!box||!orb||!cue) return;
-  calmBreathStop(); box.hidden=false;
-  var steps=[['in','Breathe in',4000],['hold','Hold',4000],['out','Breathe out',6000]], i=0;
-  var step=function(){
-    var st=steps[i%3]; orb.className='calm-orb '+st[0]; cue.textContent=st[1]; i++;
-    calm.breathT=setTimeout(step,st[2]);
-  };
-  // let the orb render small first so the first "in" grows
-  calm.breathT=setTimeout(step,60);
-}
-function calmBreathStop(){
-  clearTimeout(calm.breathT); calm.breathT=null;
-  var box=document.getElementById('calm-breath'), orb=document.getElementById('calm-orb');
-  if(orb) orb.className='calm-orb';
-  if(box) box.hidden=true;
-}
-
-function renderCalm(){
-  document.querySelectorAll('.calm-chip').forEach(function(b){
-    var on=b.getAttribute('data-s')===calm.sound; b.classList.toggle('on',on); b.setAttribute('aria-checked',on);
-  });
-  var p=document.getElementById('calm-play');
-  if(p){ p.innerHTML=calm.playing?'&#10074;&#10074; Pause':'&#9654; Play'; p.setAttribute('aria-pressed',calm.playing); }
-  var v=document.getElementById('calm-vol'); if(v&&+v.value!==calm.vol) v.value=calm.vol;
-  var st=document.getElementById('calm-state');
-  clearInterval(calm.tick); calm.tick=null;
-  if(!st) return;
-  var paint=function(){
-    if(!calm.playing){ st.textContent=''; st.className='calm-state'; return; }
-    st.className='calm-state on';
-    if(calm.ends){ var left=Math.max(1,Math.ceil((calm.ends-Date.now())/60000)); st.textContent='Playing \u00b7 '+left+' min left'; }
-    else st.textContent='Playing';
-  };
-  paint(); if(calm.playing&&calm.ends) calm.tick=setInterval(paint,15000);
 }
 
 /* ═══════════════════════════════════════════════════
@@ -4647,8 +4478,8 @@ function renderSitMatch(){
   var gds=guide.filter(function(x){ return ptTheme(x.situation,x.action)===th; }).slice(0,1);
   if(!rules.length&&!plans.length&&!gds.length){ el.innerHTML=''; return; }
   el.innerHTML='<div class="sm-h">'+th[0]+' Sounds like <b>'+th[2].toLowerCase()+'</b>. What you planned for this:</div>'+
-    rules.map(function(r){ return '<div class="sm-i"><span class="sm-k">Your rule</span><b>When '+escH(r.when)+'</b> \u2192 '+escH(r.do)+'</div>'; }).join('')+
-    plans.map(function(p){ return '<div class="sm-i"><span class="sm-k">Your plan</span><b>'+escH(p.situation)+'</b> \u2192 '+escH(p.approach)+'</div>'; }).join('')+
+    rules.map(function(r){ return '<div class="sm-i"><span class="sm-k">Your rule</span><b>When '+escH(r.when)+'</b> \u2192 '+escH(r.act?r.act+(r.do?' ('+r.do+')':''):r.do)+'</div>'; }).join('')+
+    plans.map(function(p){ return '<div class="sm-i"><span class="sm-k">Your plan</span><b>'+escH(p.situation)+'</b> \u2192 '+escH(planSteps(p).join(' \u00b7 '))+'</div>'; }).join('')+
     gds.map(function(x){ return '<div class="sm-i"><span class="sm-k">Guide</span><b>'+escH(x.situation)+'</b> \u2192 '+escH(x.action)+'</div>'; }).join('')+
     (rules.length?'<div class="sm-foot">Mark tonight\u2019s check-in to record whether you used it.</div>':'');
 }
@@ -4726,14 +4557,21 @@ function drLoadSnap(){
 /* Drawn from the patterns that repeat most across your Situations,
    Situation plans, Daily focus, Motivation and Kundali notes. */
 var DR_SUGGESTED=[
-  {when:'angry, on a call, mail or in a conversation', do:'Stay quiet. Step away for 10 minutes, then reply.'},
-  {when:'an argument starts', do:'Ask: does winning this help what I want? If not, let it go.'},
-  {when:'preparing for a meeting or interview', do:'Over-prepare: 10\u201320 minutes on my points and likely questions.'},
-  {when:'someone complains or wants me to step in', do:'Ask: does this really need me? Not everything does.'},
-  {when:'something goes wrong', do:'Own my part, not the whole. Fix it, don\u2019t blame myself.'},
-  {when:'a plan is in progress', do:'Don\u2019t announce it. Stay alert until it\u2019s done.'},
-  {when:'it\u2019s 10:30 PM', do:'Phone away, sleep by 11. Tomorrow\u2019s 6:30 depends on it.'}
+  {when:'angry, on a call, mail or in a conversation', act:'Stay quiet, step away', do:'Step away for 10 minutes, then reply.'},
+  {when:'an argument starts', act:'Let it go', do:'Ask: does winning this help what I want? If not, let it go.'},
+  {when:'preparing for a meeting or interview', act:'Over-prepare', do:'10\u201320 minutes on my points and likely questions.'},
+  {when:'someone complains or wants me to step in', act:'Check if needed', do:'Ask: does this really need me? Not everything does.'},
+  {when:'something goes wrong', act:'Own my part', do:'Own my part, not the whole. Fix it, don\u2019t blame myself.'},
+  {when:'a plan is in progress', act:'Stay quiet till done', do:'Don\u2019t announce it. Stay alert until it\u2019s done.'},
+  {when:'it\u2019s 10:30 PM', act:'Phone away', do:'Sleep by 11. Tomorrow\u2019s 6:30 depends on it.'}
 ];
+var DR_ACT_MAX_WORDS=4;
+var drOpen={};                // rule id -> details expanded (in memory only)
+function drWords(t){ return String(t||'').trim().split(/\s+/).filter(Boolean).length; }
+function toggleRule(id){
+  drOpen[id]=!drOpen[id]; renderDailyRules();
+  var b=document.querySelector('.dr-tog[data-id="'+id+'"]'); if(b) b.focus();
+}
 
 function drClean(w){ return String(w||'').trim().replace(/^when\s+/i,'').trim(); }
 function drFmtDate(iso){
@@ -4746,7 +4584,7 @@ function replaceDailyRulesFromSheet(rows){
   drLoaded=true; drUnsupported=false; drFailed=false;
   if(drSaving) return;                 // a save in flight wins over a stale read
   drShowSupported = !rows.length || rows.some(function(r){ return 'show' in r; });
-  dailyRules=rows.map(function(r){ return {sheetId:r.sheetId||'', when:drClean(r.when), do:String(r['do']||'').trim(), show:r.show!==false}; })
+  dailyRules=rows.map(function(r){ return {sheetId:r.sheetId||'', when:drClean(r.when), act:String(r.act||'').trim(), do:String(r['do']||'').trim(), show:r.show!==false}; })
     .filter(function(r){ return r.when||r.do; });
   drChangedOn=rows.reduce(function(m,r){ return (r.changedOn||'')>m ? r.changedOn : m; },'');
   drSnapshot=false; drSaveSnap();
@@ -4763,8 +4601,12 @@ function markDailyRulesFailed(){
 
 function drListHTML(){
   return '<ul class="dr-list">'+drShown().map(function(r){
-    return '<li class="dr-row">'+ptTile(r.when,r.do)+
-      '<span class="dr-pair"><span class="dr-when"><b>When</b> '+escH(r.when)+'</span><span class="dr-do">'+escH(r.do)+'</span></span></li>';
+    var head=r.act||r.do, more=r.act&&r.do&&r.do!==r.act?r.do:'', open=!!(more&&drOpen[r.sheetId]);
+    var pair='<span class="dr-pair"><span class="dr-when"><b>When</b> '+escH(r.when)+'</span>'+
+      '<span class="dr-do'+(r.act?' dr-act':'')+'">'+escH(head)+(more?'<span class="dr-chev" aria-hidden="true">'+(open?'\u25b4':'\u25be')+'</span>':'')+'</span></span>';
+    return '<li class="dr-row'+(open?' open':'')+'">'+ptTile(r.when,head)+
+      (more?'<div class="dr-fill"><button type="button" class="dr-tog" data-id="'+r.sheetId+'" aria-expanded="'+open+'" onclick="toggleRule(\''+r.sheetId+'\')">'+pair+'</button>'+
+        (open?'<div class="dr-more">'+escH(more)+'</div>':'')+'</div>':pair)+'</li>';
   }).join('')+'</ul>';
 }
 function renderDailyRules(){
@@ -4803,7 +4645,9 @@ function renderDailyRules(){
     return;
   }
   var hidden=dailyRules.length-shown.length;
+  var noAct=shown.filter(function(r){ return !r.act; }).length;
   body.innerHTML=drListHTML()+
+    (noAct?'<div class="dr-tip">'+noAct+' rule'+(noAct!==1?'s don\u2019t':' doesn\u2019t')+' have a short action yet. <button type="button" class="dr-link" onclick="editDailyRules()">Edit</button> to give '+(noAct!==1?'each':'it')+' 2\u20133 words; the rest becomes the details you see when you tap it.</div>':'')+
     '<div class="dr-foot"><span>'+(hidden?'Showing '+shown.length+' of '+dailyRules.length+' rules. ':'')+
       (drChangedOn?'Same since '+drFmtDate(drChangedOn)+'. ':'')+'Carries forward until you edit it.</span>'+
       (hidden?'<button type="button" class="dr-link" onclick="chooseRules()">Change</button>':'')+'</div>';
@@ -4834,8 +4678,8 @@ function renderRuleChooser(){
     '<ul class="dr-list">'+dailyRules.map(function(r){
       var on=!!drPick[r.sheetId];
       return '<li class="dr-row dr-pickrow'+(on?' on':'')+'"><button type="button" class="dr-pick" role="checkbox" aria-checked="'+on+'" data-id="'+r.sheetId+'" onclick="togglePick(\''+r.sheetId+'\')">'+
-        '<span class="dr-box" aria-hidden="true">'+(on?'\u2713':'')+'</span>'+ptTile(r.when,r.do)+
-        '<span class="dr-pair"><span class="dr-when"><b>When</b> '+escH(r.when)+'</span><span class="dr-do">'+escH(r.do)+'</span></span></button></li>';
+        '<span class="dr-box" aria-hidden="true">'+(on?'\u2713':'')+'</span>'+ptTile(r.when,r.act||r.do)+
+        '<span class="dr-pair"><span class="dr-when"><b>When</b> '+escH(r.when)+'</span><span class="dr-do">'+escH(r.act||r.do)+'</span></span></button></li>';
     }).join('')+'</ul>'+
     '<div class="dr-ed-foot"><span class="dr-pick-n">'+n+' of '+dailyRules.length+' selected</span><span class="acts">'+
       '<button class="btn" type="button" onclick="cancelChooseRules()"'+(drSaving?' disabled':'')+'>Cancel</button>'+
@@ -4844,11 +4688,11 @@ function renderRuleChooser(){
 }
 async function saveRuleChoice(){
   if(drSaving) return;
-  var next=dailyRules.map(function(r){ return {sheetId:r.sheetId,when:r.when,do:r.do,show:!!drPick[r.sheetId]}; });
+  var next=dailyRules.map(function(r){ return {sheetId:r.sheetId,when:r.when,act:r.act||'',do:r.do,show:!!drPick[r.sheetId]}; });
   if(next.every(function(r,i){ return r.show===(dailyRules[i].show!==false); })){ drChoosing=false; renderDailyRules(); return; }
   drSaving=true; renderRuleChooser();
   var ok=await postToSheet({sheet:'DailyRules',action:'replace_all',changedOn:drChangedOn||isoToday(),
-    rules:JSON.stringify(next.map(function(r){ return {sheetId:r.sheetId,when:r.when,'do':r.do,show:r.show}; }))});
+    rules:JSON.stringify(next.map(function(r){ return {sheetId:r.sheetId,when:r.when,act:r.act,'do':r.do,show:r.show}; }))});
   drSaving=false;
   if(!ok){ renderRuleChooser(); showToast('Couldn\u2019t save your choice to the Sheet. Try again.','error'); return; }
   dailyRules=next; drChoosing=false; drSaveSnap();
@@ -4861,14 +4705,14 @@ async function saveRuleChoice(){
 function editDailyRules(addBlank){
   if(drUnsupported||!drLoaded) return;
   drEditing=true;
-  drDraft=dailyRules.map(function(r){ return {sheetId:r.sheetId, when:r.when, do:r.do, show:r.show!==false}; });
+  drDraft=dailyRules.map(function(r){ return {sheetId:r.sheetId, when:r.when, act:r.act||'', do:r.do, show:r.show!==false}; });
   if(addBlank||!drDraft.length) drDraft.push({sheetId:'', when:'', do:''});
   renderDailyRulesEditor(true);
 }
 function useSuggestedRules(){
   if(drUnsupported||!drLoaded) return;
   drEditing=true;
-  drDraft=DR_SUGGESTED.map(function(r){ return {sheetId:'', when:r.when, do:r.do}; });
+  drDraft=DR_SUGGESTED.map(function(r){ return {sheetId:'', when:r.when, act:r.act, do:r.do}; });
   renderDailyRulesEditor();
   showToast('Suggested rules loaded. Edit anything, then save.','');
 }
@@ -4876,6 +4720,7 @@ function drReadInputs(){
   document.querySelectorAll('#dr-body .dr-ed-row').forEach(function(row){
     var i=+row.getAttribute('data-i'); if(!drDraft[i]) return;
     drDraft[i].when=row.querySelector('.dr-in-when').value;
+    drDraft[i].act=row.querySelector('.dr-in-act').value;
     drDraft[i].do=row.querySelector('.dr-in-do').value;
   });
 }
@@ -4889,8 +4734,12 @@ function renderDailyRulesEditor(focusLast){
         '<div><label class="dr-ed-lbl" for="dr-w-'+i+'">When\u2026</label>'+
           '<input class="sin dr-in-when" id="dr-w-'+i+'" type="text" value="'+escH(r.when)+'" placeholder="I\u2019m angry" '+
             'onkeydown="drKey(event,'+i+',\'when\')"></div>'+
-        '<div class="dr-ed-do"><label class="dr-ed-lbl" for="dr-d-'+i+'">I will\u2026</label>'+
-          '<textarea class="sin dr-in-do" id="dr-d-'+i+'" rows="2" placeholder="Stay quiet and move away" '+
+        '<div><label class="dr-ed-lbl" for="dr-a-'+i+'">I will\u2026 <small>(2\u20133 words)</small></label>'+
+          '<input class="sin dr-in-act" id="dr-a-'+i+'" type="text" maxlength="40" value="'+escH(r.act||'')+'" placeholder="Stay quiet, step away" '+
+            'oninput="drActHint(this)" onkeydown="drKey(event,'+i+',\'act\')">'+
+          '<span class="dr-act-hint" id="dr-ah-'+i+'">'+(drWords(r.act)>DR_ACT_MAX_WORDS?'Keep it to 2\u20133 words':'')+'</span></div>'+
+        '<div class="dr-ed-do"><label class="dr-ed-lbl" for="dr-d-'+i+'">Details <small>(shown when you tap it)</small></label>'+
+          '<textarea class="sin dr-in-do" id="dr-d-'+i+'" rows="2" placeholder="Step away for 10 minutes, then reply. Don\u2019t take it personally." '+
             'onkeydown="drKey(event,'+i+',\'do\')">'+escH(r.do)+'</textarea></div>'+
         '<div class="dr-ed-tools">'+
           '<button type="button" title="Move up" aria-label="Move rule up" onclick="drMove('+i+',-1)"'+(i===0?' disabled':'')+'>\u2191</button>'+
@@ -4915,11 +4764,16 @@ function drKey(e,i,field){
   if(e.key==='Escape'){ e.preventDefault(); cancelDailyRules(); return; }
   if(e.key!=='Enter') return;
   e.preventDefault();
-  if(field==='when'){ var d=document.getElementById('dr-d-'+i); if(d) d.focus(); }
+  if(field==='when'){ var a=document.getElementById('dr-a-'+i); if(a) a.focus(); }
+  else if(field==='act'){ var d=document.getElementById('dr-d-'+i); if(d) d.focus(); }
   else if(i===drDraft.length-1) drAdd();
   else { var w=document.getElementById('dr-w-'+(i+1)); if(w) w.focus(); }
 }
-function drAdd(){ drReadInputs(); drDraft.push({sheetId:'',when:'',do:''}); renderDailyRulesEditor(true); }
+function drAdd(){ drReadInputs(); drDraft.push({sheetId:'',when:'',act:'',do:''}); renderDailyRulesEditor(true); }
+function drActHint(el){
+  var h=document.getElementById(el.id.replace('dr-a-','dr-ah-'));
+  if(h) h.textContent=drWords(el.value)>DR_ACT_MAX_WORDS?'Keep it to 2\u20133 words; put the rest in Details':'';
+}
 function drRemove(i){ drReadInputs(); drDraft.splice(i,1); renderDailyRulesEditor(); }
 function drMove(i,dir){
   drReadInputs();
@@ -4934,21 +4788,23 @@ function cancelDailyRules(){ if(drSaving) return; drEditing=false; drDraft=[]; r
 async function saveDailyRules(){
   if(drSaving) return;
   drReadInputs();
-  var half=drDraft.filter(function(r){ var w=drClean(r.when), d=String(r.do||'').trim(); return (w&&!d)||(!w&&d); });
+  var half=drDraft.filter(function(r){ var w=drClean(r.when), d=String(r.act||'').trim()||String(r.do||'').trim(); return (w&&!d)||(!w&&d); });
   if(half.length){ showToast('Each rule needs both a \u201cWhen\u201d and an \u201cI will\u201d. Fill it in or remove it.','error'); return; }
+  var long=drDraft.filter(function(r){ return drWords(r.act)>DR_ACT_MAX_WORDS; });
+  if(long.length){ showToast('Keep each \u201cI will\u201d to 2\u20133 words. Put the rest in Details.','error'); return; }
   var next=drDraft.map(function(r,i){
-    return {sheetId:r.sheetId||('dr'+Date.now()+'_'+i), when:drClean(r.when), do:String(r.do||'').trim(), show:r.show!==false};
-  }).filter(function(r){ return r.when&&r.do; });
+    return {sheetId:r.sheetId||('dr'+Date.now()+'_'+i), when:drClean(r.when), act:String(r.act||'').trim(), do:String(r.do||'').trim(), show:r.show!==false};
+  }).filter(function(r){ return r.when&&(r.act||r.do); });
 
   var sameAsBefore = next.length===dailyRules.length && next.every(function(r,i){
-    return r.when===dailyRules[i].when && r.do===dailyRules[i].do && r.show===(dailyRules[i].show!==false);
+    return r.when===dailyRules[i].when && r.act===(dailyRules[i].act||'') && r.do===dailyRules[i].do && r.show===(dailyRules[i].show!==false);
   });
   if(sameAsBefore){ drEditing=false; renderDailyRules(); return; }
 
   drSaving=true; renderDailyRulesEditor();
   var today=isoToday();
   var ok=await postToSheet({sheet:'DailyRules',action:'replace_all',changedOn:today,
-    rules:JSON.stringify(next.map(function(r){ return {sheetId:r.sheetId,when:r.when,'do':r.do,show:r.show}; }))});
+    rules:JSON.stringify(next.map(function(r){ return {sheetId:r.sheetId,when:r.when,act:r.act,'do':r.do,show:r.show}; }))});
   drSaving=false;
   if(!ok){
     renderDailyRulesEditor();   // keep the edits on screen so nothing is lost
@@ -5659,10 +5515,8 @@ var ROUTINE_TAB_SECTIONS=['focus','tyag','master','routine','food','foodsum','rt
 
 function jumpToSection(key){
   if(!secOpen(key)){ localStorage.setItem('sec_'+key,'1'); applySection(key); }
-  var needsRoutineTab = ROUTINE_TAB_SECTIONS.indexOf(key)>-1;
-  var onRoutineTab = document.getElementById('pg-routine').classList.contains('on');
-  if(needsRoutineTab && !onRoutineTab){ switchTab('routine'); }
-  else if(!needsRoutineTab && onRoutineTab){ switchTab('morning'); }
+  var sec=document.getElementById('sec-'+key), pg=sec&&sec.closest('.pg');
+  if(pg && !pg.classList.contains('on')) switchTab(pg.id.replace('pg-',''));
   setTimeout(function(){
     var hd=document.getElementById('hd-'+key);
     if(hd) hd.scrollIntoView({behavior:'smooth',block:'start'});
