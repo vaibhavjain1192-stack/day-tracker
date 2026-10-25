@@ -219,6 +219,7 @@ function init(){
       if(Array.isArray(d.ruleChecks)&&Array.isArray(d.dayLog)) replaceCheckinFromSheet(d.ruleChecks, d.dayLog); else markCheckinUnsupported();
       if(Array.isArray(d.focus)&&Array.isArray(d.focusLog)) replaceFocusFromSheet(d.focus, d.focusLog); else markFocusUnsupported();
       if(Array.isArray(d.tyag)) replaceTyagFromSheet(d.tyag); else markTyagUnsupported();
+      if(Array.isArray(d.masterList)) replaceMlFromSheet(d.masterList); else loadMlDirect();
       dashKeySet = d.keySet===true ? true : d.keySet===false ? false : null;
       lastBackup = d.lastBackup||'';
       renderKeyWarning();
@@ -273,7 +274,8 @@ function init(){
         ['getAllDayLog','dayLog',function(l){ _ciFb.log=l; }],
         ['getAllFocus','focus',function(f){ _fcFb.list=f; }],
         ['getAllFocusLog','focusLog',function(l){ _fcFb.log=l; }],
-        ['getAllTyag','tyag',replaceTyagFromSheet]
+        ['getAllTyag','tyag',replaceTyagFromSheet],
+        ['getAllMasterList','masterList',replaceMlFromSheet]
       ];
       if(skipArchives){
         var arcKeys={situations:1,thoughts:1,posts:1,motivation:1,gratitude:1,kundali:1,guide:1};
@@ -297,6 +299,7 @@ function init(){
       if(_fcFb.list && _fcFb.log) replaceFocusFromSheet(_fcFb.list,_fcFb.log);
       if(!fcLoaded) markFocusFailed();
       if(!tyLoaded) markTyagFailed();
+      if(!mlLoaded) markMlFailed();
       // Only call the feed loaded if something for it actually arrived
       if(posts.length||motEntries.length||kunEntries.length||guide.length||gratEntries.length) feedReady=true;
       else feedFailed=true;
@@ -4138,6 +4141,157 @@ function renderTyag(){
 }
 
 /* ═══════════════════════════════════════════════════
+   MASTER LIST — everything I want to do, prioritised.
+   Sheet: MasterList. Priority groups Now / Next / Later / Someday;
+   ↑ ↓ reorder within a group; one 'reorder' write saves all positions.
+═══════════════════════════════════════════════════ */
+var mlList=[];               // [{sheetId,item,priority,order,notes,status,addedOn,doneOn}]
+var mlLoaded=false, mlUnsupported=false, mlFailed=false;
+var mlNewPri='next', mlEditId='', mlDoneOpen=false;
+var ML_PRIS=[['now','Now','#E07B7B'],['next','Next','#C9A84C'],['later','Later','#7fb3d5'],['someday','Someday','#9a9aa6']];
+function mlPriOk(p){ return ML_PRIS.some(function(x){ return x[0]===p; })?p:'next'; }
+
+function replaceMlFromSheet(rows){
+  mlLoaded=true; mlUnsupported=false; mlFailed=false;
+  mlList=(rows||[]).map(function(r){ return {sheetId:r.sheetId,item:r.item||'',priority:mlPriOk(r.priority),order:Number(r.order)||0,
+    notes:r.notes||'',status:r.status==='done'?'done':'open',addedOn:r.addedOn||'',doneOn:r.doneOn||''}; });
+  renderMasterList();
+}
+/* Core payload came from an older (or still-cached) Code.gs: ask for the list on its own before giving up */
+async function loadMlDirect(){
+  if(mlLoaded) return;
+  var r=await sheetFetch(WORKER_URL+'?action=getAllMasterList',null,20000);
+  if(r&&r.status==='ok'&&Array.isArray(r.masterList)){ replaceMlFromSheet(r.masterList); return; }
+  if(!mlLoaded){ mlUnsupported=true; renderMasterList(); }
+}
+function markMlFailed(){ if(mlLoaded||mlUnsupported) return; mlFailed=true; renderMasterList(); }
+
+function mlFind(id){ return mlList.find(function(x){ return x.sheetId===id; }); }
+function mlGroup(p){ return mlList.filter(function(x){ return x.status==='open'&&x.priority===p; }).sort(function(a,b){ return a.order-b.order; }); }
+function mlSaveOrder(){
+  var items=[];
+  ML_PRIS.forEach(function(p){ mlGroup(p[0]).forEach(function(x,i){ x.order=i; items.push([x.sheetId,x.priority,i]); }); });
+  queueSave('ml-order',{sheet:'MasterList',action:'reorder',items:JSON.stringify(items)});
+}
+
+function setMlNewPri(p){ mlNewPri=mlPriOk(p); document.querySelectorAll('#ml-body .ml-seg button').forEach(function(b){
+  var on=b.getAttribute('data-p')===mlNewPri; b.classList.toggle('on',on); b.setAttribute('aria-pressed',on); }); }
+
+async function addMl(){
+  var inp=document.getElementById('ml-new'); var v=inp?inp.value.trim():'';
+  if(!v){ if(inp) inp.focus(); showToast('Write what you want to do.','error'); return; }
+  if(mlList.some(function(x){ return x.status==='open'&&x.item.toLowerCase()===v.toLowerCase(); })){ showToast('“'+v+'” is already on your list.','error'); return; }
+  var g=mlGroup(mlNewPri);
+  var x={sheetId:'ml'+Date.now()+Math.floor(Math.random()*1000),item:v,priority:mlNewPri,order:g.length?g[g.length-1].order+1:0,
+    notes:'',status:'open',addedOn:isoToday(),doneOn:''};
+  mlList.push(x); renderMasterList();
+  var ni=document.getElementById('ml-new'); if(ni) ni.focus();
+  var ok=await postToSheet({sheet:'MasterList',sheetId:x.sheetId,item:x.item,priority:x.priority,order:x.order,notes:'',addedOn:x.addedOn});
+  if(!ok){ mlList=mlList.filter(function(y){ return y!==x; }); renderMasterList(); showToast(LAST_SHEET_ERROR||'Couldn’t add it. Try again.','error'); return; }
+  showToast('Added to '+ML_PRIS.filter(function(p){ return p[0]===x.priority; })[0][1]+' ✓','success');
+}
+
+async function mlUpdate(x,changes,undo){
+  Object.assign(x,changes); renderMasterList();
+  var ok=await postToSheet(Object.assign({sheet:'MasterList',action:'update',sheetId:x.sheetId},changes));
+  if(!ok){ Object.assign(x,undo); renderMasterList(); showToast(LAST_SHEET_ERROR||'Couldn’t save. Try again.','error'); }
+  return ok;
+}
+function toggleMlDone(id){
+  var x=mlFind(id); if(!x) return;
+  if(x.status==='open'){
+    mlUpdate(x,{status:'done',doneOn:isoToday()},{status:'open',doneOn:''});
+    showToast('Done ✓','success');
+  } else {
+    var g=mlGroup(x.priority);
+    mlUpdate(x,{status:'open',doneOn:'',order:g.length?g[g.length-1].order+1:0},{status:'done',doneOn:x.doneOn,order:x.order});
+  }
+}
+function setMlPri(id,p){
+  var x=mlFind(id); if(!x) return; p=mlPriOk(p); if(p===x.priority) return;
+  var g=mlGroup(p); x.priority=p; x.order=g.length?g[g.length-1].order+1:0;
+  renderMasterList(); mlSaveOrder();
+}
+function moveMl(id,dir){
+  var x=mlFind(id); if(!x) return;
+  var g=mlGroup(x.priority), i=g.indexOf(x), k=i+dir;
+  if(k<0||k>=g.length) return;
+  g.splice(i,1); g.splice(k,0,x); g.forEach(function(y,n){ y.order=n; });
+  renderMasterList(); mlSaveOrder();
+  var b=document.querySelector('#ml-body .ml-row[data-id="'+id+'"] .ml-mv'+(dir<0?'-up':'-dn'));
+  if(b&&!b.disabled) b.focus();
+}
+function editMl(id){ mlEditId=id; renderMasterList(); var t=document.getElementById('ml-ed-item'); if(t){ t.focus(); t.select(); } }
+async function saveMlEdit(id){
+  var x=mlFind(id); if(!x) return;
+  var item=(document.getElementById('ml-ed-item')||{}).value||''; item=item.trim();
+  var notes=((document.getElementById('ml-ed-notes')||{}).value||'').trim();
+  if(!item){ showToast('The item can’t be empty.','error'); return; }
+  mlEditId='';
+  if(item===x.item&&notes===x.notes){ renderMasterList(); return; }
+  if(await mlUpdate(x,{item:item,notes:notes},{item:x.item,notes:x.notes})) showToast('Saved ✓','success');
+}
+async function deleteMl(id){
+  var x=mlFind(id); if(!x) return;
+  if(!confirm('Delete “'+x.item+'” from your master list?')) return;
+  mlList=mlList.filter(function(y){ return y!==x; }); renderMasterList();
+  var ok=await postToSheet({sheet:'MasterList',action:'delete',sheetId:x.sheetId});
+  if(!ok){ mlList.push(x); renderMasterList(); showToast(LAST_SHEET_ERROR||'Couldn’t delete it. Try again.','error'); }
+}
+
+function mlRowHTML(x,i,n){
+  var id=x.sheetId, done=x.status==='done';
+  if(mlEditId===id) return '<li class="ml-row ml-editing" data-id="'+id+'"><div class="ml-ed">'+
+    '<label class="ty-f"><span>Item</span><input class="sin" id="ml-ed-item" type="text" maxlength="200" value="'+escH(x.item)+'" onkeydown="if(event.key===\'Enter\')saveMlEdit(\''+id+'\');if(event.key===\'Escape\'){mlEditId=\'\';renderMasterList();}"></label>'+
+    '<label class="ty-f"><span>Notes <small>(optional)</small></span><textarea class="sin" id="ml-ed-notes" rows="2" placeholder="Why it matters, first step, deadline…">'+escH(x.notes)+'</textarea></label>'+
+    '<div class="ty-foot"><button type="button" class="btn" onclick="mlEditId=\'\';renderMasterList()">Cancel</button>'+
+    '<button type="button" class="btn gold" onclick="saveMlEdit(\''+id+'\')">Save</button></div></div></li>';
+  var acts=done
+    ? '<span class="ml-when">'+(x.doneOn?fmtShortDate(x.doneOn):'')+'</span>'
+    : '<select class="ml-pri-sel" aria-label="Priority of '+escH(x.item)+'" onchange="setMlPri(\''+id+'\',this.value)">'+
+        ML_PRIS.map(function(p){ return '<option value="'+p[0]+'"'+(p[0]===x.priority?' selected':'')+'>'+p[1]+'</option>'; }).join('')+'</select>'+
+      '<button type="button" class="rt-mini ml-mv-up" aria-label="Move up" title="Move up"'+(i===0?' disabled':'')+' onclick="moveMl(\''+id+'\',-1)">↑</button>'+
+      '<button type="button" class="rt-mini ml-mv-dn" aria-label="Move down" title="Move down"'+(i===n-1?' disabled':'')+' onclick="moveMl(\''+id+'\',1)">↓</button>'+
+      '<button type="button" class="rt-mini" aria-label="Edit '+escH(x.item)+'" title="Edit" onclick="editMl(\''+id+'\')">✎</button>';
+  acts+='<button type="button" class="rt-mini del" aria-label="Delete '+escH(x.item)+'" title="Delete" onclick="deleteMl(\''+id+'\')">×</button>';
+  return '<li class="ml-row'+(done?' ml-isdone':'')+'" data-id="'+id+'">'+
+    '<button type="button" class="ml-chk'+(done?' on':'')+'" role="checkbox" aria-checked="'+done+'" aria-label="'+(done?'Mark not done: ':'Mark done: ')+escH(x.item)+'" onclick="toggleMlDone(\''+id+'\')">'+(done?'✓':'')+'</button>'+
+    '<div class="ml-txt"><div class="ml-item">'+escH(x.item)+'</div>'+(x.notes?'<div class="ml-note">'+escH(x.notes)+'</div>':'')+'</div>'+
+    '<div class="ml-acts">'+acts+'</div></li>';
+}
+function fmtShortDate(iso){ var p=String(iso).split('-'); if(p.length<3) return iso;
+  return Number(p[2])+' '+['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][Number(p[1])-1]; }
+
+function renderMasterList(){
+  var box=document.getElementById('ml-body'); if(!box) return;
+  var badge=document.getElementById('badge-mlist');
+  if(mlUnsupported){ box.innerHTML='<div class="fd-note">Master list needs the updated <b>Code.gs</b>. Deploy it (Manage deployments → New version), then reload.</div>'; if(badge) badge.textContent=''; return; }
+  if(!mlLoaded){ box.innerHTML='<div class="fd-note">'+(mlFailed?'Couldn’t load. Reload the page to try again.':'Loading…')+'</div>'; return; }
+
+  var open=mlList.filter(function(x){ return x.status==='open'; });
+  var done=mlList.filter(function(x){ return x.status==='done'; }).sort(function(a,b){ return (b.doneOn||'').localeCompare(a.doneOn||''); });
+  var nNow=mlGroup('now').length;
+  if(badge) badge.textContent=open.length?(nNow?nNow+' now · ':'')+open.length+' open':'';
+
+  var add='<div class="ml-add"><input class="sin" id="ml-new" type="text" maxlength="200" placeholder="Something I want to do…" onkeydown="if(event.key===\'Enter\')addMl()">'+
+    '<div class="ml-seg" role="group" aria-label="Priority for the new item">'+ML_PRIS.map(function(p){
+      return '<button type="button" data-p="'+p[0]+'" style="--pc:'+p[2]+'" class="'+(p[0]===mlNewPri?'on':'')+'" aria-pressed="'+(p[0]===mlNewPri)+'" onclick="setMlNewPri(\''+p[0]+'\')">'+p[1]+'</button>';
+    }).join('')+'</div><button type="button" class="btn gold" onclick="addMl()">Add</button></div>';
+
+  var groups=ML_PRIS.map(function(p){
+    var g=mlGroup(p[0]); if(!g.length) return '';
+    return '<div class="ml-grp" style="--pc:'+p[2]+'"><div class="ml-gh"><span class="ml-dot"></span>'+p[1]+' <span class="ml-ct">'+g.length+'</span></div>'+
+      '<ul class="ml-list">'+g.map(function(x,i){ return mlRowHTML(x,i,g.length); }).join('')+'</ul></div>';
+  }).join('');
+  if(!open.length) groups='<div class="fd-note">'+(done.length?'Everything on your list is done. Add what’s next.':'List everything you want to do, big or small. Put what matters most under <b>Now</b>; reorder with ↑ ↓.')+'</div>';
+
+  var doneHTML=done.length?'<details class="ml-done"'+(mlDoneOpen?' open':'')+' ontoggle="mlDoneOpen=this.open"><summary>Done <span class="ml-ct">'+done.length+'</span></summary>'+
+    '<ul class="ml-list">'+done.map(function(x,i){ return mlRowHTML(x,i,done.length); }).join('')+'</ul></details>':'';
+
+  box.innerHTML=add+groups+doneHTML;
+}
+
+/* ═══════════════════════════════════════════════════
    SAVE QUEUE — one write per key in flight; only the newest state
    waits behind it, so changes can never reach the Sheet out of order.
 ═══════════════════════════════════════════════════ */
@@ -5426,7 +5580,7 @@ async function importGuide(){
    Open/closed state is a display preference, so it lives in
    localStorage — no dashboard data is stored there.
 ──────────────────────────────────────────────────────── */
-var SEC_KEYS=['links','sitlib','focus','tyag','master','routine','food','foodsum','weekly','library','rtstats','habitperf','habits','checklist','pillars','anchors'];
+var SEC_KEYS=['links','sitlib','mlist','tyag','master','routine','food','foodsum','weekly','library','rtstats','habitperf','habits','checklist','pillars','anchors'];
 
 function secOpen(key){
   var v=localStorage.getItem('sec_'+key);
@@ -5511,7 +5665,7 @@ function renderGlance(){
 
 /* Sections now live on two tabs, so a glance card may need to
    switch tab before scrolling to its section. */
-var ROUTINE_TAB_SECTIONS=['focus','tyag','master','routine','food','foodsum','rtstats','habitperf'];   // sitlib lives on Home
+var ROUTINE_TAB_SECTIONS=['mlist','tyag','master','routine','food','foodsum','rtstats','habitperf'];   // sitlib lives on Home
 
 function jumpToSection(key){
   if(!secOpen(key)){ localStorage.setItem('sec_'+key,'1'); applySection(key); }
