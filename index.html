@@ -14,7 +14,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=20261013">
+<link rel="stylesheet" href="styles.css?v=20261014">
 </head>
 <body>
 <div class="toast" id="toast"></div>
@@ -24,6 +24,7 @@
   <div class="nav-inner">
     <button class="tab on" onclick="switchTab('morning')"><span class="tab-icon">&#9728;&#65039;<span class="badge zero" id="mor-badge">0</span></span><span class="tab-label">Morning</span></button>
     <button class="tab" onclick="switchTab('routine')"><span class="tab-icon">&#128197;<span class="badge zero" id="rt-badge">0</span></span><span class="tab-label">Routine</span></button>
+    <button class="tab" onclick="switchTab('plans')"><span class="tab-icon">&#129504;<span class="badge zero" id="plan-badge">0</span></span><span class="tab-label">Plans</span></button>
     <button class="tab" onclick="switchTab('situations')"><span class="tab-icon">&#128250;<span class="badge zero" id="sit-badge">0</span></span><span class="tab-label">Situations</span></button>
     <button class="tab" onclick="switchTab('thoughts')"><span class="tab-icon">&#128161;<span class="badge zero" id="th-badge">0</span></span><span class="tab-label">Thoughts</span></button>
     <button class="tab" onclick="switchTab('posts')"><span class="tab-icon">&#128204;<span class="badge zero" id="post-badge">0</span></span><span class="tab-label">Posts</span></button>
@@ -40,7 +41,6 @@
   <div class="key-warn" id="key-warn" hidden role="status">&#9888;&#65039; <span>Your data isn't protected yet: anyone with this page's address can read it.</span><button type="button" class="btn gold" onclick="openSettings()">Set up a key</button><button type="button" class="btn" onclick="dismissKeyWarning()">Later</button></div>
   <div class="mantra"><div class="mantra-q" id="mantra-text">"..."</div><div class="mantra-src" id="mantra-source"></div></div>
   <div class="sleep-row" id="sleep-row" hidden></div>
-  <section class="fc-card" id="fc-card" hidden aria-label="Habit you're building"></section>
   <section class="dr" id="dr-box" aria-labelledby="dr-title">
     <div class="dr-top">
       <h2 class="dr-title" id="dr-title">My rules for every day</h2>
@@ -84,44 +84,6 @@
       <div class="feed-card" id="feed-gratitude"></div>
     </div>
   </section>
-  <section class="calm" id="calm" aria-labelledby="calm-title">
-    <div class="calm-top">
-      <h2 class="calm-title" id="calm-title">&#127911; Feeling tense? Play something calm</h2>
-      <span class="calm-state" id="calm-state" aria-live="polite"></span>
-    </div>
-    <div class="calm-sounds" role="radiogroup" aria-label="Choose a sound">
-      <button type="button" class="calm-chip" data-s="pads"  role="radio" onclick="setCalmSound('pads')">Soft pads</button>
-      <button type="button" class="calm-chip" data-s="ocean" role="radio" onclick="setCalmSound('ocean')">Ocean waves</button>
-      <button type="button" class="calm-chip" data-s="rain"  role="radio" onclick="setCalmSound('rain')">Gentle rain</button>
-      <button type="button" class="calm-chip" data-s="hum"   role="radio" onclick="setCalmSound('hum')">Deep hum</button>
-    </div>
-    <div class="calm-ctrl">
-      <button type="button" class="calm-play" id="calm-play" onclick="toggleCalm()" aria-pressed="false">&#9654; Play</button>
-      <label class="calm-vol"><span>Volume</span><input type="range" id="calm-vol" min="0" max="100" value="60" oninput="setCalmVolume(this.value)"></label>
-      <label class="calm-tm"><span>Stop</span>
-        <select class="calm-sel" id="calm-timer" onchange="setCalmTimer(this.value)">
-          <option value="0">When I stop it</option><option value="5">After 5 min</option>
-          <option value="10">After 10 min</option><option value="20">After 20 min</option>
-        </select></label>
-    </div>
-    <div class="calm-breath" id="calm-breath" hidden>
-      <div class="calm-orb" id="calm-orb" aria-hidden="true"></div>
-      <div><div class="calm-cue" id="calm-cue">Breathe in</div><div class="calm-sub">In for 4, hold for 4, out for 6</div></div>
-    </div>
-  </section>
-
-  <div class="focus-box sit-pairs">
-    <div class="focus-top">
-      <div class="focus-lbl">&#129504; Situations &amp; how I'll handle them</div>
-      <span class="focus-sync" id="sit-sync"></span>
-    </div>
-    <div class="sp-hint">When <em>this</em> happens, I will do <em>that</em>. Mark each one at day's end.</div>
-    <div id="sit-rows"></div>
-    <div class="sp-foot">
-      <span class="focus-carry" id="sit-carry"></span>
-      <button class="btn" onclick="openPlanLibrary()">&#9881; Manage plans</button>
-    </div>
-  </div>
 
   <div id="sync-banner" style="display:none;font-size:11px;padding:8px 12px;border-radius:var(--rsm);margin-bottom:1rem;font-family:var(--fm)"></div>
   <div class="glance" id="glance"></div>
@@ -151,7 +113,7 @@
     <div class="cl-block" id="cl-block"><div id="cl-list"></div><div class="prog-wrap"><div class="prog-meta"><span>Practices</span><span class="prog-ct" id="prog-txt">0/8</span></div><div class="prog-track"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div></div></div>
   </div><!-- /sec-checklist -->
 
-  <div class="sec-hd" id="hd-library" onclick="toggleSection('library')"><span class="sec-icon">&#128218;</span><span class="sec-title">Library</span><span class="lbl-line"></span><span class="sec-badge" id="badge-library">trackers, plans, pillars, anchors</span><span class="sec-caret" id="caret-library">&#9662;</span></div>
+  <div class="sec-hd" id="hd-library" onclick="toggleSection('library')"><span class="sec-icon">&#128218;</span><span class="sec-title">Library</span><span class="lbl-line"></span><span class="sec-badge" id="badge-library">trackers, pillars, anchors</span><span class="sec-caret" id="caret-library">&#9662;</span></div>
   <div class="sec-body closed lib-body" id="sec-library">
   <div class="sec-hd" id="hd-links" onclick="toggleSection('links')"><span class="sec-icon">&#128279;</span><span class="sec-title">My trackers</span><span class="lbl-line"></span><span class="sec-badge" id="badge-links"></span><span class="sec-caret" id="caret-links">&#9662;</span></div>
   <div class="sec-body" id="sec-links">
@@ -166,36 +128,6 @@
     </div>
   </div><!-- /sec-links -->
 
-  <div class="sec-hd" id="hd-sitlib" onclick="toggleSection('sitlib')"><span class="sec-icon">&#129504;</span><span class="sec-title">Situation plans</span><span class="lbl-line"></span><span class="sec-badge" id="badge-sitlib"></span><span class="sec-caret" id="caret-sitlib">&#9662;</span></div>
-  <div class="sec-body closed" id="sec-sitlib">
-    <div class="spl-tabs">
-      <button class="pst-tab on" id="spl-tab-active" onclick="setPlanView('active')">Active <span class="pst-ct" id="spl-ct-active">0</span></button>
-      <button class="pst-tab" id="spl-tab-retired" onclick="setPlanView('retired')">Retired <span class="pst-ct" id="spl-ct-retired">0</span></button>
-    </div>
-    <div style="font-size:11px;color:var(--text-2);margin-bottom:10px">The first <strong>5 active</strong> plans show on your home page. Drag &#9776; to choose which. Retiring keeps the history.</div>
-    <div id="spl-list"></div>
-    <div id="spl-import" style="display:none;margin-top:10px">
-      <button class="btn" onclick="importStarterPlans()">&#8681; Import 10 plans from my habit list</button>
-      <div style="font-size:10.5px;color:var(--text-3);margin-top:6px;line-height:1.6">Splits your existing anger and reaction habits into one plan per situation, so each can be tracked separately.</div>
-    </div>
-
-    <div class="lbl" style="margin-top:1.25rem">Add a plan <span class="lbl-line"></span></div>
-    <div class="sit-block">
-      <div style="margin-bottom:8px">
-        <label class="sfl">When this happens <span style="color:var(--text-3);font-weight:400">(the trigger)</span></label>
-        <textarea class="sin" id="spl-sit" rows="2" placeholder="e.g. When I open my laptop before 9am" oninput="checkTrigger(this)"></textarea>
-        <div class="spl-tip" id="spl-tip">A trigger works best when you could <strong>see it from outside</strong> &#8212; a time, a place, or an action. &ldquo;When I feel rushed&rdquo; rarely fires; &ldquo;when I sit down at my desk&rdquo; does.</div>
-      </div>
-      <div style="margin-bottom:8px">
-        <label class="sfl">I will do this <span style="color:var(--text-3);font-weight:400">(the response)</span></label>
-        <textarea class="sin" id="spl-app" rows="2" placeholder="e.g. Write the one next action before opening email"></textarea>
-      </div>
-      <div class="sit-foot">
-        <span class="sync-txt" id="spl-sync">Ready</span>
-        <button class="btn gold" onclick="addSitPlan()">Add plan &#8599;</button>
-      </div>
-    </div>
-  </div><!-- /sec-sitlib -->
 
   <div class="sec-hd" id="hd-pillars" onclick="toggleSection('pillars')"><span class="sec-icon">&#127963;</span><span class="sec-title">Five pillars</span><span class="lbl-line"></span><span class="sec-badge" id="badge-pillars"></span><span class="sec-caret" id="caret-pillars">&#9662;</span></div>
   <div class="sec-body closed" id="sec-pillars">
@@ -211,6 +143,60 @@
 
   <div class="foot"><span class="foot-note" id="streak-txt"></span><div class="foot-btns"><button class="btn" onclick="switchTab('situations')">&#128250; Situations</button><button class="btn" onclick="resetDay()">&#8635; Reset day</button></div></div>
 </div>
+
+<!-- TAB: PLANS (situations & how I'll handle them) -->
+<div class="pg" id="pg-plans">
+  <div class="past-hdr">
+    <div class="past-title">Situations &amp; how I'll handle them</div>
+    <div class="past-sub">When <em>this</em> happens, I'll follow <em>these steps</em>.</div>
+  </div>
+  <div class="focus-box sit-pairs">
+    <div class="focus-top">
+      <div class="focus-lbl">&#129504; Today</div>
+      <span class="focus-sync" id="sit-sync"></span>
+    </div>
+    <div class="sp-hint">Mark each one at day's end: did it come up, and did you follow your steps?</div>
+    <div id="sit-rows"></div>
+    <div class="sp-foot">
+      <span class="focus-carry" id="sit-carry"></span>
+      <button class="btn" onclick="openPlanLibrary()">&#9881; Add or edit plans</button>
+    </div>
+  </div>
+
+
+  <div class="sec-hd" id="hd-sitlib" onclick="toggleSection('sitlib')"><span class="sec-icon">&#129504;</span><span class="sec-title">Add &amp; edit plans</span><span class="lbl-line"></span><span class="sec-badge" id="badge-sitlib"></span><span class="sec-caret" id="caret-sitlib">&#9662;</span></div>
+  <div class="sec-body closed" id="sec-sitlib">
+    <div class="spl-tabs">
+      <button class="pst-tab on" id="spl-tab-active" onclick="setPlanView('active')">Active <span class="pst-ct" id="spl-ct-active">0</span></button>
+      <button class="pst-tab" id="spl-tab-retired" onclick="setPlanView('retired')">Retired <span class="pst-ct" id="spl-ct-retired">0</span></button>
+    </div>
+    <div style="font-size:11px;color:var(--text-2);margin-bottom:10px">Drag &#9776; to reorder. Retiring a plan hides it from Today but keeps its history.</div>
+    <div id="spl-list"></div>
+    <div id="spl-import" style="display:none;margin-top:10px">
+      <button class="btn" onclick="importStarterPlans()">&#8681; Import 10 plans from my habit list</button>
+      <div style="font-size:10.5px;color:var(--text-3);margin-top:6px;line-height:1.6">Splits your existing anger and reaction habits into one plan per situation, so each can be tracked separately.</div>
+    </div>
+
+    <div class="lbl" style="margin-top:1.25rem">Add a plan <span class="lbl-line"></span></div>
+    <div class="sit-block">
+      <div style="margin-bottom:8px">
+        <label class="sfl">When this happens <span style="color:var(--text-3);font-weight:400">(the trigger)</span></label>
+        <textarea class="sin" id="spl-sit" rows="2" placeholder="e.g. When I open my laptop before 9am" oninput="checkTrigger(this)"></textarea>
+        <div class="spl-tip" id="spl-tip">A trigger works best when you could <strong>see it from outside</strong> &#8212; a time, a place, or an action. &ldquo;When I feel rushed&rdquo; rarely fires; &ldquo;when I sit down at my desk&rdquo; does.</div>
+      </div>
+      <div style="margin-bottom:8px">
+        <label class="sfl">My steps <span style="color:var(--text-3);font-weight:400">(one per point, up to 5)</span></label>
+        <div id="spl-steps"></div>
+      </div>
+      <div class="sit-foot">
+        <span class="sync-txt" id="spl-sync">Ready</span>
+        <button class="btn gold" onclick="addSitPlan()">Add plan &#8599;</button>
+      </div>
+    </div>
+  </div><!-- /sec-sitlib -->
+
+  <div class="foot" style="margin-top:1.5rem"><span class="foot-note">Synced to Google Sheets</span><button class="btn" onclick="switchTab('morning')">&#8592; Morning</button></div>
+</div><!-- /pg-plans -->
 
 <!-- TAB 2: ROUTINE -->
 <div class="pg" id="pg-routine">
@@ -543,6 +529,6 @@
   <div class="set-panel"><div class="set-head"><h2 id="set-title">Settings</h2><button type="button" class="set-x" onclick="closeSettings()" aria-label="Close">&times;</button></div>
   <div id="set-body"></div></div>
 </div>
-<script src="app.js?v=20261013"></script>
+<script src="app.js?v=20261014"></script>
 </body>
 </html>
