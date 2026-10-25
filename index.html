@@ -14,7 +14,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=20261025b">
+<link rel="stylesheet" href="styles.css?v=20261025c">
 </head>
 <body>
 <div class="toast" id="toast"></div>
@@ -529,6 +529,17 @@
   <div class="set-panel"><div class="set-head"><h2 id="set-title">Settings</h2><button type="button" class="set-x" onclick="closeSettings()" aria-label="Close">&times;</button></div>
   <div id="set-body"></div></div>
 </div>
-<script src="app.js?v=20261025b"></script>
+<script src="app.js?v=20261025c"></script>
+<script>
+/* If GitHub served an older app.js than this page expects (one file went live before the other,
+   or the browser cached it), fetch fresh copies and reload once. */
+(function(){
+  var want='20261025c';
+  if(window.APP_VER===want) { try{ sessionStorage.removeItem('ver_retry'); }catch(e){} return; }
+  try{ if(sessionStorage.getItem('ver_retry')===want) return; sessionStorage.setItem('ver_retry',want); }catch(e){ return; }
+  Promise.all(['app.js?v='+want,'styles.css?v='+want,'app.js','index.html'].map(function(u){ return fetch(u,{cache:'reload'}).catch(function(){}); }))
+    .then(function(){ location.reload(); });
+})();
+</script>
 </body>
 </html>
