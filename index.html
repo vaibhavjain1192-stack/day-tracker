@@ -14,7 +14,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=20261025c">
+<link rel="stylesheet" href="styles.css?v=20261027">
 </head>
 <body>
 <div class="toast" id="toast"></div>
@@ -256,19 +256,10 @@
 
   </div><!-- /sec-routine -->
 
-  <div class="sec-hd" id="hd-food" onclick="toggleSection('food')"><span class="sec-icon">&#129367;</span><span class="sec-title">Food habits</span><span class="lbl-line"></span><span class="sec-badge" id="badge-food"></span><span class="sec-caret open" id="caret-food">&#9662;</span></div>
+  <div class="sec-hd" id="hd-food" onclick="toggleSection('food')"><span class="sec-icon">&#129367;</span><span class="sec-title">Food tracker</span><span class="lbl-line"></span><span class="sec-badge" id="badge-food"></span><span class="sec-caret open" id="caret-food">&#9662;</span></div>
   <div class="sec-body" id="sec-food">
-    <div class="q-wrap">
-      <div class="fd-top"><span class="fd-day" id="fd-day"></span><span class="fd-prog" id="fd-prog"></span></div>
-      <div id="fd-body"><div class="fd-note">Loading your food habits&hellip;</div></div>
-      <div class="fd-foot"><span class="sync-txt" id="fd-sync"></span><span class="fd-hint">Pick a date in the calendar above to fill in a past day.</span></div>
-    </div>
+    <div class="q-wrap"><div id="fg-body"><div class="fd-note">Loading&hellip;</div></div></div>
   </div><!-- /sec-food -->
-
-  <div class="sec-hd" id="hd-foodsum" onclick="toggleSection('foodsum')"><span class="sec-icon">&#128202;</span><span class="sec-title">Food summary</span><span class="lbl-line"></span><span class="sec-badge" id="badge-foodsum"></span><span class="sec-caret" id="caret-foodsum">&#9662;</span></div>
-  <div class="sec-body closed" id="sec-foodsum">
-    <div class="q-wrap"><div id="fs-body"><div class="fd-note">Loading&hellip;</div></div></div>
-  </div><!-- /sec-foodsum -->
 
   <!-- Completion history -->
   <div class="sec-hd" id="hd-rtstats" onclick="toggleSection('rtstats')"><span class="sec-icon">&#128200;</span><span class="sec-title">Routine completion</span><span class="lbl-line"></span><span class="sec-badge" id="badge-rtstats"></span><span class="sec-caret open" id="caret-rtstats">&#9662;</span></div>
@@ -529,12 +520,12 @@
   <div class="set-panel"><div class="set-head"><h2 id="set-title">Settings</h2><button type="button" class="set-x" onclick="closeSettings()" aria-label="Close">&times;</button></div>
   <div id="set-body"></div></div>
 </div>
-<script src="app.js?v=20261025c"></script>
+<script src="app.js?v=20261027"></script>
 <script>
 /* If GitHub served an older app.js than this page expects (one file went live before the other,
    or the browser cached it), fetch fresh copies and reload once. */
 (function(){
-  var want='20261025c';
+  var want='20261027';
   if(window.APP_VER===want) { try{ sessionStorage.removeItem('ver_retry'); }catch(e){} return; }
   try{ if(sessionStorage.getItem('ver_retry')===want) return; sessionStorage.setItem('ver_retry',want); }catch(e){ return; }
   Promise.all(['app.js?v='+want,'styles.css?v='+want,'app.js','index.html'].map(function(u){ return fetch(u,{cache:'reload'}).catch(function(){}); }))
