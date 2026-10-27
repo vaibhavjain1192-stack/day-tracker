@@ -1,6 +1,6 @@
 /* Morning Dashboard app. Linked from index.html; bump ?v= there when this changes. */
 'use strict';
-window.APP_VER='20261025c';   // must match the ?v= in index.html (checked there)
+window.APP_VER='20261027';   // must match the ?v= in index.html (checked there)
 const WORKER_URL='https://muddy-shadow-1aa7.vaibhavjain-1192.workers.dev';
 const FETCH_TIMEOUT=45000;   // default; page loads pass shorter ones
 var DIAG={};  // diagnostics collected during fetch
@@ -221,6 +221,7 @@ function init(){
       if(Array.isArray(d.focus)&&Array.isArray(d.focusLog)) replaceFocusFromSheet(d.focus, d.focusLog); else markFocusUnsupported();
       if(Array.isArray(d.tyag)) replaceTyagFromSheet(d.tyag); else markTyagUnsupported();
       if(Array.isArray(d.masterList)) replaceMlFromSheet(d.masterList); else loadMlDirect();
+      if(d.foodGrid&&Array.isArray(d.foodGrid.headers)) replaceFoodGridFromSheet(d.foodGrid); else loadFoodGridDirect();
       dashKeySet = d.keySet===true ? true : d.keySet===false ? false : null;
       lastBackup = d.lastBackup||'';
       renderKeyWarning();
@@ -276,7 +277,8 @@ function init(){
         ['getAllFocus','focus',function(f){ _fcFb.list=f; }],
         ['getAllFocusLog','focusLog',function(l){ _fcFb.log=l; }],
         ['getAllTyag','tyag',replaceTyagFromSheet],
-        ['getAllMasterList','masterList',replaceMlFromSheet]
+        ['getAllMasterList','masterList',replaceMlFromSheet],
+        ['getFoodGrid','foodGrid',replaceFoodGridFromSheet]
       ];
       if(skipArchives){
         var arcKeys={situations:1,thoughts:1,posts:1,motivation:1,gratitude:1,kundali:1,guide:1};
@@ -288,7 +290,7 @@ function init(){
         while(next<jobs.length){
           var j=jobs[next++];
           var r=await sheetFetch(WORKER_URL+'?action='+j[0],null,20000);
-          if(r&&r.status==='ok'&&Array.isArray(r[j[1]])){ try{ j[2](r[j[1]]); got++; }catch(er){ console.error(er); } }
+          if(r&&r.status==='ok'&&(Array.isArray(r[j[1]])||(j[1]==='foodGrid'&&r.foodGrid))){ try{ j[2](r[j[1]]); got++; }catch(er){ console.error(er); } }
         }
       }
       await Promise.all([worker(),worker(),worker(),worker()]);
@@ -301,6 +303,7 @@ function init(){
       if(!fcLoaded) markFocusFailed();
       if(!tyLoaded) markTyagFailed();
       if(!mlLoaded) markMlFailed();
+      if(!fgLoaded) markFoodGridFailed();
       // Only call the feed loaded if something for it actually arrived
       if(posts.length||motEntries.length||kunEntries.length||guide.length||gratEntries.length) feedReady=true;
       else feedFailed=true;
@@ -4293,6 +4296,168 @@ function renderMasterList(){
 }
 
 /* ═══════════════════════════════════════════════════
+   FOOD TRACKER — same layout as the Food sheet: one row per day,
+   one column per food type; a cell = what I ate, blank = avoided.
+   Weeks counted from the start date; a week row shows % of days clean.
+═══════════════════════════════════════════════════ */
+var fgHeads=[], fgRows={}, fgStart='';
+var fgLoaded=false, fgUnsupported=false, fgFailed=false;
+var fgOpen={}, fgNewFor='', fgAddingCat=false, fgEditStart=false;
+
+function replaceFoodGridFromSheet(g){
+  if(!g||!Array.isArray(g.headers)) return;
+  fgLoaded=true; fgUnsupported=false; fgFailed=false;
+  fgHeads=g.headers.slice(); fgStart=g.start||''; fgRows={};
+  (g.rows||[]).forEach(function(r){ fgRows[r.date]=Object.assign({},r.v||{}); });
+  Object.keys(_sqPending).forEach(function(k){            // unsaved edits win
+    if(k.indexOf('fg:')!==0) return; var p=_sqPending[k].p; (fgRows[p.date]=fgRows[p.date]||{})[p.cat]=p.value; });
+  renderFoodGrid();
+}
+async function loadFoodGridDirect(){
+  if(fgLoaded) return;
+  var r=await sheetFetch(WORKER_URL+'?action=getFoodGrid',null,20000);
+  if(r&&r.status==='ok'&&r.foodGrid){ replaceFoodGridFromSheet(r.foodGrid); return; }
+  if(!fgLoaded){ fgUnsupported=true; renderFoodGrid(); }
+}
+function markFoodGridFailed(){ if(fgLoaded||fgUnsupported) return; fgFailed=true; renderFoodGrid(); }
+
+function fgVal(d,c){ var r=fgRows[d]; return r&&r[c]?String(r[c]):''; }
+function fgSlips(d){ return fgHeads.filter(function(c){ return !!fgVal(d,c); }).length; }
+function fgFirstDate(){ var ks=Object.keys(fgRows).filter(function(d){ return fgSlips(d)>0; }).sort(); return ks[0]||''; }
+function fgStartDate(){ return fgStart||fgFirstDate()||isoToday(); }
+function fgDays(){ var out=[], d=fgStartDate(), t=isoToday(), n=0; while(d<=t&&n<4000){ out.push(d); d=foodShift(d,1); n++; } return out; }
+/* A day counts once it's over; today counts early only if something was eaten */
+function fgCounts(d){ return d<isoToday()||fgSlips(d)>0; }
+function fgFmt(d,opt){ var x=parseISO(d); return x.toLocaleDateString('en-IN',opt||{day:'numeric',month:'short'}); }
+function fgEsc(s){ return escH(s).replace(/'/g,'&#39;'); }
+
+/* Past entries for a column, most used first */
+function fgOptions(c){
+  var n={};
+  Object.keys(fgRows).forEach(function(d){ var v=fgVal(d,c); if(v) n[v]=(n[v]||0)+1; });
+  return Object.keys(n).sort(function(a,b){ return n[b]-n[a]||a.localeCompare(b); });
+}
+
+function fgSet(d,c,v){
+  v=String(v||'').trim();
+  (fgRows[d]=fgRows[d]||{})[c]=v; if(!v) delete fgRows[d][c];
+  fgNewFor=''; renderFoodGrid();
+  queueSave('fg:'+d+':'+c,{sheet:'Food',action:'cell',date:d,cat:c,value:v});
+}
+function fgPick(el){
+  var d=el.getAttribute('data-d'), c=el.getAttribute('data-c'), v=el.value;
+  if(v==='__new'){ fgNewFor=d+'|'+c; renderFoodGrid(); var i=document.getElementById('fg-new-in'); if(i) i.focus(); return; }
+  fgSet(d,c,v);
+}
+function fgSaveNew(){
+  var i=document.getElementById('fg-new-in'); if(!i) return;
+  var d=i.getAttribute('data-d'), c=i.getAttribute('data-c'), v=i.value.trim();
+  if(!v){ i.focus(); return; }
+  fgSet(d,c,v); showToast('Added “'+v+'”','success');
+}
+function fgCancelNew(){ fgNewFor=''; renderFoodGrid(); }
+
+async function fgSetStart(v){
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(v||'')) return;
+  if(v>isoToday()){ showToast('Pick today or an earlier date.','error'); return; }
+  var old=fgStart; fgStart=v; fgOpen={}; fgEditStart=false; renderFoodGrid();
+  var ok=await postToSheet({sheet:'Food',action:'start',start:v});
+  if(!ok){ fgStart=old; renderFoodGrid(); showToast(LAST_SHEET_ERROR||'Couldn’t save the start date.','error'); return; }
+  showToast('Tracking from '+fgFmt(v,{day:'numeric',month:'short',year:'numeric'})+' ✓','success');
+}
+function fgStartFresh(){
+  if(!confirm('Start fresh from today?\n\nYour past entries stay in the Sheet. Weeks and percentages will count from today.')) return;
+  fgSetStart(isoToday());
+}
+async function fgAddCat(){
+  var i=document.getElementById('fg-cat-in'); var v=i?i.value.trim():'';
+  if(!v){ if(i) i.focus(); return; }
+  if(fgHeads.some(function(h){ return h.toLowerCase()===v.toLowerCase(); })){ showToast('“'+v+'” is already a column.','error'); return; }
+  fgHeads.push(v); fgAddingCat=false; renderFoodGrid();
+  var ok=await postToSheet({sheet:'Food',action:'addcat',cat:v});
+  if(!ok){ fgHeads=fgHeads.filter(function(h){ return h!==v; }); renderFoodGrid(); showToast(LAST_SHEET_ERROR||'Couldn’t add it.','error'); return; }
+  showToast('Added “'+v+'” as a new column ✓','success');
+}
+function fgToggleWeek(n){ fgOpen[n]=!fgWeekOpen(n); renderFoodGrid();
+  var b=document.querySelector('#fg-body .fg-wk-h[data-w="'+n+'"]'); if(b) b.focus(); }
+var _fgCurWeek=0;
+function fgWeekOpen(n){ return (n in fgOpen)?fgOpen[n]:n===_fgCurWeek; }
+
+function fgCellHTML(d,c){
+  var v=fgVal(d,c);
+  if(fgNewFor===d+'|'+c) return '<div class="fg-cell fg-newbox" data-l="'+fgEsc(c)+'"><input class="sin" id="fg-new-in" maxlength="60" placeholder="What did you have?" data-d="'+d+'" data-c="'+fgEsc(c)+'" onkeydown="if(event.key===\'Enter\')fgSaveNew();if(event.key===\'Escape\')fgCancelNew()">'+
+    '<button type="button" class="rt-mini" title="Save" aria-label="Save" onclick="fgSaveNew()">✓</button><button type="button" class="rt-mini" title="Cancel" aria-label="Cancel" onclick="fgCancelNew()">×</button></div>';
+  var opts=fgOptions(c); if(v&&opts.indexOf(v)<0) opts.unshift(v);
+  return '<div class="fg-cell" data-l="'+fgEsc(c)+'"><select class="fg-sel'+(v?' had':'')+'" data-d="'+d+'" data-c="'+fgEsc(c)+'" aria-label="'+fgEsc(c)+' on '+fgFmt(d)+'" onchange="fgPick(this)">'+
+    '<option value=""'+(v?'':' selected')+'>—</option>'+
+    opts.map(function(o){ return '<option value="'+fgEsc(o)+'"'+(o===v?' selected':'')+'>'+escH(o)+'</option>'; }).join('')+
+    '<option value="__new">+ Add new…</option></select></div>';
+}
+function fgDayHTML(d){
+  var s=fgSlips(d), today=d===isoToday(), st=!fgCounts(d)?['fg-open','•','Today, still going']:(s?['fg-no','✗',s+' slipped']:['fg-ok','✓','Clean day']);
+  return '<div class="fg-row fg-day'+(today?' fg-today':'')+'">'+
+    '<div class="fg-date">'+fgFmt(d,{weekday:'short'})+' <b>'+fgFmt(d)+'</b>'+(today?' <span class="fg-tag">Today</span>':'')+'</div>'+
+    fgHeads.map(function(c){ return fgCellHTML(d,c); }).join('')+
+    '<div class="fg-st '+st[0]+'" title="'+st[2]+'" aria-label="'+st[2]+'">'+st[1]+'</div></div>';
+}
+
+function renderFoodGrid(){
+  var box=document.getElementById('fg-body'); if(!box) return;
+  var badge=document.getElementById('badge-food');
+  if(fgUnsupported){ box.innerHTML='<div class="fd-note">The food tracker needs the updated <b>Code.gs</b>. Deploy it (Manage deployments → New version), then reload.</div>'; return; }
+  if(!fgLoaded){ box.innerHTML='<div class="fd-note">'+(fgFailed?'Couldn’t load. Reload the page to try again.':'Loading…')+'</div>'; return; }
+
+  var start=fgStartDate(), days=fgDays();
+  var weeks=[]; days.forEach(function(d,i){ var w=Math.floor(i/7); (weeks[w]=weeks[w]||[]).push(d); });
+  _fgCurWeek=weeks.length;
+  var counted=days.filter(fgCounts), clean=counted.filter(function(d){ return !fgSlips(d); });
+  var pct=counted.length?Math.round(clean.length/counted.length*100):null;
+  var streak=0; for(var k=days.length-1;k>=0;k--){ var d=days[k]; if(!fgCounts(d)) continue; if(fgSlips(d)) break; streak++; }
+  if(badge) badge.textContent=pct==null?'':pct+'% clean';
+
+  var cols='150px repeat('+fgHeads.length+',minmax(0,1fr)) 26px';
+
+  var startCtl=fgEditStart
+    ? '<input class="sin fg-start-in" type="date" id="fg-start-in" max="'+isoToday()+'" value="'+start+'" onchange="fgSetStart(this.value)" onblur="setTimeout(function(){ if(fgEditStart){ fgEditStart=false; renderFoodGrid(); } },200)">'
+    : '<button type="button" class="fg-link" onclick="fgEditStart=true;renderFoodGrid();var i=document.getElementById(\'fg-start-in\');if(i){i.focus();try{i.showPicker()}catch(e){}}" title="Change start date">'+fgFmt(start,{day:'numeric',month:'short',year:'numeric'})+' ✎</button>';
+  var top='<div class="fg-top"><div class="fg-since">Tracking since '+startCtl+'</div>'+
+    '<button type="button" class="btn fg-fresh" onclick="fgStartFresh()" title="Start counting again from today">↻ Start fresh</button></div>'+
+    '<div class="fg-stats">'+
+      '<div class="fg-stat"><b>'+(pct==null?'—':pct+'%')+'</b><span>days clean</span></div>'+
+      '<div class="fg-stat"><b>'+clean.length+'<small>/'+counted.length+'</small></b><span>clean days</span></div>'+
+      '<div class="fg-stat"><b>'+streak+'</b><span>day streak</span></div></div>';
+
+  if(!fgHeads.length){ box.innerHTML=top+'<div class="fd-note">Add a food type to start (e.g. Fried Food).</div>'+fgCatAdd(); return; }
+
+  var head='<div class="fg-row fg-head"><div>Date</div>'+fgHeads.map(function(c){ return '<div title="'+fgEsc(c)+'">'+escH(c)+'</div>'; }).join('')+'<div></div></div>';
+
+  var body=weeks.map(function(wd,i){ return {n:i+1,days:wd}; }).reverse().map(function(w){
+    var cnt=w.days.filter(fgCounts), cl=cnt.filter(function(d){ return !fgSlips(d); }).length;
+    var p=cnt.length?Math.round(cl/cnt.length*100):null, open=fgWeekOpen(w.n);
+    var tone=p==null?'':p>=80?'good':p>=50?'mid':'low';
+    var range=fgFmt(w.days[0])+' – '+fgFmt(w.days[w.days.length-1]);
+    var perCat=fgHeads.map(function(c){ var n=w.days.filter(function(d){ return !!fgVal(d,c); }).length;
+      return '<div class="fg-wc'+(n?' had':'')+'" data-l="'+fgEsc(c)+'">'+(n?n+'×':'✓')+'</div>'; }).join('');
+    return '<div class="fg-wk'+(open?' open':'')+'">'+
+      '<button type="button" class="fg-row fg-wk-h" data-w="'+w.n+'" aria-expanded="'+open+'" onclick="fgToggleWeek('+w.n+')">'+
+        '<div class="fg-wl"><div class="fg-wl1"><span class="fg-car">▸</span><b>Week '+w.n+'</b>'+
+          '<span class="fg-pct '+tone+'">'+(p==null?'—':p+'%')+'</span></div><div class="fg-wl2">'+range+' · '+cl+'/'+cnt.length+' days clean</div></div>'+
+        perCat+'<div></div></button>'+
+      (open?'<div class="fg-days">'+w.days.map(fgDayHTML).join('')+'</div>':'')+'</div>';
+  }).join('');
+
+  box.innerHTML=top+'<div class="fg-grid" style="--fgcols:'+cols+'">'+head+body+'</div>'+
+    '<div class="fg-foot"><span class="fd-hint">Blank (—) = avoided. Pick what you had, or “+ Add new…”.</span>'+fgCatAdd()+'</div>';
+  if(typeof renderGlance==='function') renderGlance();
+}
+function fgCatAdd(){
+  return fgAddingCat
+    ? '<span class="fg-catadd"><input class="sin" id="fg-cat-in" maxlength="40" placeholder="New food type" onkeydown="if(event.key===\'Enter\')fgAddCat();if(event.key===\'Escape\'){fgAddingCat=false;renderFoodGrid();}">'+
+      '<button type="button" class="btn gold" onclick="fgAddCat()">Add</button><button type="button" class="btn" onclick="fgAddingCat=false;renderFoodGrid()">Cancel</button></span>'
+    : '<button type="button" class="btn fg-addcat" onclick="fgAddingCat=true;renderFoodGrid();document.getElementById(\'fg-cat-in\').focus()">+ Food type</button>';
+}
+
+/* ═══════════════════════════════════════════════════
    SAVE QUEUE — one write per key in flight; only the newest state
    waits behind it, so changes can never reach the Sheet out of order.
 ═══════════════════════════════════════════════════ */
@@ -5581,7 +5746,7 @@ async function importGuide(){
    Open/closed state is a display preference, so it lives in
    localStorage — no dashboard data is stored there.
 ──────────────────────────────────────────────────────── */
-var SEC_KEYS=['links','sitlib','mlist','tyag','master','routine','food','foodsum','weekly','library','rtstats','habitperf','habits','checklist','pillars','anchors'];
+var SEC_KEYS=['links','sitlib','mlist','tyag','master','routine','food','weekly','library','rtstats','habitperf','habits','checklist','pillars','anchors'];
 
 function secOpen(key){
   var v=localStorage.getItem('sec_'+key);
@@ -5656,8 +5821,7 @@ function renderGlance(){
       '<div class="gl-l">'+label+'</div>'+
       '<div class="gl-bar"><div class="gl-fill" style="width:'+pct+'%"></div></div></div>';
   }
-  var fList=(typeof foodListOn==='function')?foodListOn(isoToday()):[];
-  var fDone=fList.filter(function(h){ return foodKept(h.sheetId,isoToday()); }).length;
+  var fList=fgHeads, fDone=fgHeads.filter(function(c){ return !fgVal(isoToday(),c); }).length;
   el.innerHTML=card(rdone,items.length,'Routine','routine')+
     card(fDone,fList.length,'Food','food')+
     card(hDone,habitList.length,'Habits','habits')+
@@ -5666,7 +5830,7 @@ function renderGlance(){
 
 /* Sections now live on two tabs, so a glance card may need to
    switch tab before scrolling to its section. */
-var ROUTINE_TAB_SECTIONS=['mlist','tyag','master','routine','food','foodsum','rtstats','habitperf'];   // sitlib lives on Home
+var ROUTINE_TAB_SECTIONS=['mlist','tyag','master','routine','food','rtstats','habitperf'];   // sitlib lives on Home
 
 function jumpToSection(key){
   if(!secOpen(key)){ localStorage.setItem('sec_'+key,'1'); applySection(key); }
