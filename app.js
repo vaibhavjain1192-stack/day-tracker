@@ -1,6 +1,6 @@
 /* Morning Dashboard app. Linked from index.html; bump ?v= there when this changes. */
 'use strict';
-window.APP_VER='20261027';   // must match the ?v= in index.html (checked there)
+window.APP_VER='20261107b';   // must match the ?v= in index.html (checked there)
 const WORKER_URL='https://muddy-shadow-1aa7.vaibhavjain-1192.workers.dev';
 const FETCH_TIMEOUT=45000;   // default; page loads pass shorter ones
 var DIAG={};  // diagnostics collected during fetch
@@ -222,6 +222,8 @@ function init(){
       if(Array.isArray(d.tyag)) replaceTyagFromSheet(d.tyag); else markTyagUnsupported();
       if(Array.isArray(d.masterList)) replaceMlFromSheet(d.masterList); else loadMlDirect();
       if(d.foodGrid&&Array.isArray(d.foodGrid.headers)) replaceFoodGridFromSheet(d.foodGrid); else loadFoodGridDirect();
+      if(d.timeGrid&&Array.isArray(d.timeGrid.rows)) replaceTimeGridFromSheet(d.timeGrid); else loadTimeGridDirect();
+      if(Array.isArray(d.principles)) replacePrinciplesFromSheet(d.principles); else loadPrinciplesDirect();
       dashKeySet = d.keySet===true ? true : d.keySet===false ? false : null;
       lastBackup = d.lastBackup||'';
       renderKeyWarning();
@@ -278,7 +280,9 @@ function init(){
         ['getAllFocusLog','focusLog',function(l){ _fcFb.log=l; }],
         ['getAllTyag','tyag',replaceTyagFromSheet],
         ['getAllMasterList','masterList',replaceMlFromSheet],
-        ['getFoodGrid','foodGrid',replaceFoodGridFromSheet]
+        ['getFoodGrid','foodGrid',replaceFoodGridFromSheet],
+        ['getTimeGrid','timeGrid',replaceTimeGridFromSheet],
+        ['getAllPrinciples','principles',replacePrinciplesFromSheet]
       ];
       if(skipArchives){
         var arcKeys={situations:1,thoughts:1,posts:1,motivation:1,gratitude:1,kundali:1,guide:1};
@@ -290,7 +294,7 @@ function init(){
         while(next<jobs.length){
           var j=jobs[next++];
           var r=await sheetFetch(WORKER_URL+'?action='+j[0],null,20000);
-          if(r&&r.status==='ok'&&(Array.isArray(r[j[1]])||(j[1]==='foodGrid'&&r.foodGrid))){ try{ j[2](r[j[1]]); got++; }catch(er){ console.error(er); } }
+          if(r&&r.status==='ok'&&(Array.isArray(r[j[1]])||((j[1]==='foodGrid'||j[1]==='timeGrid')&&r[j[1]]))){ try{ j[2](r[j[1]]); got++; }catch(er){ console.error(er); } }
         }
       }
       await Promise.all([worker(),worker(),worker(),worker()]);
@@ -304,6 +308,8 @@ function init(){
       if(!tyLoaded) markTyagFailed();
       if(!mlLoaded) markMlFailed();
       if(!fgLoaded) markFoodGridFailed();
+      if(!tgLoaded) markTimeGridFailed();
+      if(!prLoaded) markPrinciplesFailed();
       // Only call the feed loaded if something for it actually arrived
       if(posts.length||motEntries.length||kunEntries.length||guide.length||gratEntries.length) feedReady=true;
       else feedFailed=true;
@@ -4458,6 +4464,381 @@ function fgCatAdd(){
 }
 
 /* ═══════════════════════════════════════════════════
+   TIME TRACKER — the actual time each timed habit happened, next to
+   its target. Same shape as the food tracker: days in rows, a column
+   per habit, weeks collapsed. Get up / Sleep read & write DayLog (the
+   Morning sleep row), so they're never entered twice; the rest live
+   in the HabitTimes sheet.
+═══════════════════════════════════════════════════ */
+var tgRows={}, tgPick=null, tgStart='';
+var tgLoaded=false, tgUnsupported=false, tgFailed=false;
+var tgOpen={}, tgChoosing=false, tgEditStart=false, _tgCurWeek=0;
+var TG_GRACE=15;                         // minutes late that still count as "close"
+
+function replaceTimeGridFromSheet(g){
+  if(!g||!Array.isArray(g.rows)) return;
+  tgLoaded=true; tgUnsupported=false; tgFailed=false;
+  tgPick=Array.isArray(g.pick)?g.pick.map(String):null; tgStart=g.start||''; tgRows={};
+  g.rows.forEach(function(r){ tgRows[r.date]=Object.assign({},r.v||{}); });
+  Object.keys(_sqPending).forEach(function(k){
+    if(k.indexOf('tg:')!==0) return; var p=_sqPending[k].p; (tgRows[p.date]=tgRows[p.date]||{})[p.habit]=p.value; });
+  renderTimeGrid();
+}
+async function loadTimeGridDirect(){
+  if(tgLoaded) return;
+  var r=await sheetFetch(WORKER_URL+'?action=getTimeGrid',null,20000);
+  if(r&&r.status==='ok'&&r.timeGrid){ replaceTimeGridFromSheet(r.timeGrid); return; }
+  if(!tgLoaded){ tgUnsupported=true; renderTimeGrid(); }
+}
+function markTimeGridFailed(){ if(tgLoaded||tgUnsupported) return; tgFailed=true; renderTimeGrid(); }
+
+/* "6 30 AM", "10:00 PM", "7 AM", "21:15" → minutes after midnight */
+function tgParse(t){
+  var m=String(t||'').match(/\b(\d{1,2})(?:[:. ](\d{2}))?\s*([AaPp])\.?\s*[Mm]\b/);
+  if(m){ var h=+m[1]%12, mi=+(m[2]||0); if(h>12||mi>59) return null; if(/p/i.test(m[3])) h+=12; return h*60+mi; }
+  m=String(t||'').match(/^\s*(\d{1,2}):(\d{2})\s*$/);
+  if(m&&+m[1]<24&&+m[2]<60) return (+m[1])*60+(+m[2]);
+  return null;
+}
+function tgFmt(m){ if(m==null) return ''; m=((Math.round(m)%1440)+1440)%1440; var h=Math.floor(m/60), mi=m%60;
+  return (h%12||12)+':'+String(mi).padStart(2,'0')+' '+(h>=12?'PM':'AM'); }
+function tgHHMM(m){ return m==null?'':String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0'); }
+/* Minutes late (+) or early (−), wrapped so 12:30 AM vs an 11 PM target reads +90 */
+function tgDiff(a,t){ return ((a-t+720)%1440+1440)%1440-720; }
+function tgDiffTxt(d){ if(d===0) return '\u00b10'; var a=Math.abs(d), s=a>=60?Math.floor(a/60)+'h'+(a%60?String(a%60).padStart(2,'0'):''):a+'m'; return (d>0?'+':'−')+s; }
+function tgTone(d){ return d<=0?'ok':d<=TG_GRACE?'mid':'late'; }
+
+function tgKind(name){
+  if(/\b(get(ting)? up|wake|woke|rise)\b/i.test(name)) return 'wake';
+  if(/^\s*(sleep|go to bed|in bed|bed)\b|\bsleep (at|by|before)\b/i.test(name)) return 'sleep';
+  return 'sheet';
+}
+function tgTarget(h){ var t=tgParse(h.time); return t!=null?t:tgParse(h.habit); }
+function tgCandidates(){
+  return (habitMaster||[]).filter(function(h){ return h.sheetId&&h.habit&&tgTarget(h)!=null; })
+    .sort(function(a,b){ return tgTarget(a)-tgTarget(b)||a.habit.localeCompare(b.habit); });
+}
+/* Default until you choose: habits with a time in their name (Get up at 7 AM, No food after 8 30 PM…),
+   one Get up and one Sleep, preferring the ones in today's routine */
+function tgDefaultPick(){
+  var named=tgCandidates().filter(function(h){ return /\d\s*[AaPp]\.?\s*[Mm]\b/.test(h.habit); });
+  var inR={}; try{ itemsFor(activeRoutine).forEach(function(i){ inR[i.habitId]=1; }); }catch(e){}
+  var seen={}, out=[];
+  named.sort(function(a,b){ return (inR[b.sheetId]?1:0)-(inR[a.sheetId]?1:0)||String(b.sheetId).localeCompare(String(a.sheetId)); })
+    .forEach(function(h){ var k=tgKind(h.habit); if(k!=='sheet'){ if(seen[k]) return; seen[k]=1; } out.push(h.sheetId); });
+  return out;
+}
+function tgCols(){
+  var ids=tgPick||tgDefaultPick(), byId={};
+  tgCandidates().forEach(function(h){ byId[h.sheetId]=h; });
+  return ids.map(function(id){ return byId[id]; }).filter(Boolean)
+    .map(function(h){ return {id:h.sheetId,name:h.habit,target:tgTarget(h),kind:tgKind(h.habit)}; })
+    .sort(function(a,b){ return a.target-b.target; });
+}
+
+function tgGet(d,c){
+  if(c.kind==='wake') return tgParse(dlGet(d,'wokeAt'));
+  if(c.kind==='sleep') return tgParse(dlGet(foodShift(d,1),'sleptAt'));      // the night of d is logged on d+1
+  return tgParse((tgRows[d]||{})[c.name]);
+}
+function tgSet(el){
+  var d=el.getAttribute('data-d'), id=el.getAttribute('data-id');
+  var c=tgCols().find(function(x){ return x.id===id; }); if(!c) return;
+  var m=tgParse(el.value);
+  if(c.kind!=='sheet'){
+    if(!ciLoaded||ciUnsupported){ showToast('Sleep times aren’t loaded yet. Try again in a moment.','error'); renderTimeGrid(); return; }
+    dlSet(c.kind==='wake'?d:foodShift(d,1), c.kind==='wake'?'wokeAt':'sleptAt', tgHHMM(m));
+    renderSleep(); renderTimeGrid(); return;
+  }
+  var v=m==null?'':tgFmt(m);
+  (tgRows[d]=tgRows[d]||{})[c.name]=v; if(!v) delete tgRows[d][c.name];
+  renderTimeGrid();
+  queueSave('tg:'+d+':'+c.name,{sheet:'HabitTimes',action:'cell',date:d,habit:c.name,value:v});
+}
+
+function tgFirstDate(cols){
+  var ds=Object.keys(tgRows).filter(function(d){ return Object.keys(tgRows[d]).length; });
+  Object.keys(dayLog||{}).forEach(function(d){ if(dlGet(d,'wokeAt')) ds.push(d); if(dlGet(d,'sleptAt')) ds.push(foodShift(d,-1)); });
+  ds.sort(); return ds[0]||'';
+}
+function tgStartDate(){ var s=tgStart||tgFirstDate()||isoToday(); var floor=foodShift(isoToday(),-120); return s<floor&&!tgStart?floor:s; }
+function tgDays(){ var out=[], d=tgStartDate(), t=isoToday(), n=0; while(d<=t&&n<4000){ out.push(d); d=foodShift(d,1); n++; } return out; }
+
+async function tgSetStart(v){
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(v||'')) return;
+  if(v>isoToday()){ showToast('Pick today or an earlier date.','error'); return; }
+  var old=tgStart; tgStart=v; tgOpen={}; tgEditStart=false; renderTimeGrid();
+  var ok=await postToSheet({sheet:'HabitTimes',action:'start',start:v});
+  if(!ok){ tgStart=old; renderTimeGrid(); showToast(LAST_SHEET_ERROR||'Couldn’t save the start date.','error'); return; }
+  showToast('Tracking from '+fgFmt(v,{day:'numeric',month:'short',year:'numeric'})+' ✓','success');
+}
+function tgStartFresh(){
+  if(!confirm('Start fresh from today?\n\nYour past times stay in the Sheet. Weeks and averages will count from today.')) return;
+  tgSetStart(isoToday());
+}
+async function tgSavePick(){
+  var ids=[].slice.call(document.querySelectorAll('#tg-body .tg-pick input:checked')).map(function(i){ return i.value; });
+  if(!ids.length){ showToast('Pick at least one habit.','error'); return; }
+  var old=tgPick; tgPick=ids; tgChoosing=false; tgOpen={}; renderTimeGrid();
+  var ok=await postToSheet({sheet:'HabitTimes',action:'pick',ids:JSON.stringify(ids)});
+  if(!ok){ tgPick=old; renderTimeGrid(); showToast(LAST_SHEET_ERROR||'Couldn’t save your choice.','error'); return; }
+  showToast('Tracking '+ids.length+' habit'+(ids.length>1?'s':'')+' ✓','success');
+}
+function tgToggleWeek(n){ tgOpen[n]=!tgWeekOpen(n); renderTimeGrid();
+  var b=document.querySelector('#tg-body .fg-wk-h[data-w="'+n+'"]'); if(b) b.focus(); }
+function tgWeekOpen(n){ return (n in tgOpen)?tgOpen[n]:n===_tgCurWeek; }
+
+/* Stats for one habit over some days: average time, on-time count */
+function tgStats(c,days){
+  var diffs=[]; days.forEach(function(d){ var a=tgGet(d,c); if(a!=null) diffs.push(tgDiff(a,c.target)); });
+  if(!diffs.length) return {n:0};
+  var avg=diffs.reduce(function(s,x){ return s+x; },0)/diffs.length;
+  return {n:diffs.length, avgDiff:Math.round(avg), avg:c.target+Math.round(avg), ok:diffs.filter(function(x){ return x<=0; }).length};
+}
+
+/* 14-day sparkline: actual vs target (dashed). Dots by status, each with a tooltip. */
+function tgSpark(c){
+  var W=220,H=56,pad=6, days=[], t=isoToday();
+  for(var i=13;i>=0;i--) days.push(foodShift(t,-i));
+  var pts=days.map(function(d,i){ var a=tgGet(d,c); return a==null?null:{i:i,d:d,v:tgDiff(a,c.target)}; });
+  var vals=pts.filter(Boolean).map(function(p){ return p.v; });
+  if(vals.length<2) return '<div class="tg-spark-empty">Log a few days to see the trend</div>';
+  var lo=Math.min(0,Math.min.apply(null,vals)), hi=Math.max(0,Math.max.apply(null,vals)); if(hi-lo<30){ var mid=(hi+lo)/2; lo=mid-15; hi=mid+15; }
+  var x=function(i){ return pad+i*(W-2*pad)/13; }, y=function(v){ return pad+(v-lo)/(hi-lo)*(H-2*pad); };   // later = lower
+  var path='', prev=false;
+  pts.forEach(function(p){ if(!p){ prev=false; return; } path+=(prev?'L':'M')+x(p.i).toFixed(1)+' '+y(p.v).toFixed(1); prev=true; });
+  var dots=pts.filter(Boolean).map(function(p){ var tone=tgTone(p.v);
+    return '<g class="tg-pt"><circle cx="'+x(p.i).toFixed(1)+'" cy="'+y(p.v).toFixed(1)+'" r="7" fill="transparent"/>'+
+      '<circle class="tg-dot '+tone+'" cx="'+x(p.i).toFixed(1)+'" cy="'+y(p.v).toFixed(1)+'" r="3.5"/>'+
+      '<title>'+fgFmt(p.d,{weekday:'short',day:'numeric',month:'short'})+': '+tgFmt(c.target+p.v)+' ('+tgDiffTxt(p.v)+')</title></g>'; }).join('');
+  return '<svg class="tg-spark" viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none" role="img" aria-label="'+escH(c.name)+': last 14 days against the '+tgFmt(c.target)+' target. Lower on the chart is later.">'+
+    '<line class="tg-tline" x1="'+pad+'" x2="'+(W-pad)+'" y1="'+y(0).toFixed(1)+'" y2="'+y(0).toFixed(1)+'"/>'+
+    '<path class="tg-line" d="'+path+'"/>'+dots+'</svg>';
+}
+
+function tgCellHTML(d,c){
+  var a=tgGet(d,c), df=a==null?null:tgDiff(a,c.target);
+  return '<div class="fg-cell tg-cell" data-l="'+fgEsc(c.name)+'"><input type="time" class="tg-in'+(df==null?'':' '+tgTone(df))+'" data-d="'+d+'" data-id="'+c.id+'" value="'+tgHHMM(a)+'" aria-label="'+fgEsc(c.name)+' on '+fgFmt(d)+'" onchange="tgSet(this)">'+
+    (df==null?'':'<span class="tg-df '+tgTone(df)+'">'+tgDiffTxt(df)+'</span>')+'</div>';
+}
+
+function renderTimeGrid(){
+  var box=document.getElementById('tg-body'); if(!box) return;
+  var badge=document.getElementById('badge-times');
+  if(tgUnsupported){ box.innerHTML='<div class="fd-note">The time tracker needs the updated <b>Code.gs</b>. Deploy it (Manage deployments → New version), then reload.</div>'; return; }
+  if(!tgLoaded||!habitMaster.length&&!tgFailed){ box.innerHTML='<div class="fd-note">'+(tgFailed?'Couldn’t load. Reload the page to try again.':'Loading…')+'</div>'; return; }
+
+  if(tgChoosing){
+    var on={}; (tgPick||tgDefaultPick()).forEach(function(id){ on[id]=1; });
+    box.innerHTML='<div class="tg-pick"><div class="fd-note">Pick the habits whose actual time you want to log. Times come from your Master habit list.</div>'+
+      '<div class="tg-pick-list">'+tgCandidates().map(function(h){ var k=tgKind(h.habit);
+        return '<label class="tg-pick-row"><input type="checkbox" value="'+escH(h.sheetId)+'"'+(on[h.sheetId]?' checked':'')+'>'+
+          '<span class="tg-pick-t">'+tgFmt(tgTarget(h))+'</span><span>'+escH(h.habit)+(k!=='sheet'?' <small>(linked to Morning '+(k==='wake'?'woke at':'slept at')+')</small>':'')+'</span></label>'; }).join('')+
+      '</div><div class="ty-foot"><button type="button" class="btn" onclick="tgChoosing=false;renderTimeGrid()">Cancel</button><button type="button" class="btn gold" onclick="tgSavePick()">Save</button></div></div>';
+    return;
+  }
+
+  var cols=tgCols();
+  var start=tgStartDate(), days=tgDays();
+  var weeks=[]; days.forEach(function(d,i){ var w=Math.floor(i/7); (weeks[w]=weeks[w]||[]).push(d); });
+  _tgCurWeek=weeks.length;
+
+  var startCtl=tgEditStart
+    ? '<input class="sin fg-start-in" type="date" id="tg-start-in" max="'+isoToday()+'" value="'+start+'" onchange="tgSetStart(this.value)" onblur="setTimeout(function(){ if(tgEditStart){ tgEditStart=false; renderTimeGrid(); } },200)">'
+    : '<button type="button" class="fg-link" onclick="tgEditStart=true;renderTimeGrid();var i=document.getElementById(\'tg-start-in\');if(i){i.focus();try{i.showPicker()}catch(e){}}" title="Change start date">'+fgFmt(start,{day:'numeric',month:'short',year:'numeric'})+' ✎</button>';
+  var top='<div class="fg-top"><div class="fg-since">Tracking since '+startCtl+'</div><div class="tg-btns">'+
+    '<button type="button" class="btn fg-fresh" onclick="tgChoosing=true;renderTimeGrid()">Choose habits</button>'+
+    '<button type="button" class="btn fg-fresh" onclick="tgStartFresh()" title="Start counting again from today">↻ Start fresh</button></div></div>';
+
+  if(!cols.length){ box.innerHTML=top+'<div class="fd-note">No timed habits picked yet. Tap <b>Choose habits</b>.</div>'; if(badge) badge.textContent=''; return; }
+
+  // Trend cards: last 7 days vs the 7 before
+  var last7=[], prev7=[]; for(var i=0;i<14;i++){ var dd=foodShift(isoToday(),-i); if(dd<start) continue; (i<7?last7:prev7).push(dd); }
+  var totOk=0, totN=0;
+  var cards='<div class="tg-cards">'+cols.map(function(c){
+    var s=tgStats(c,last7), p=tgStats(c,prev7); totOk+=s.ok||0; totN+=s.n;
+    var chg='';
+    if(s.n&&p.n){ var dd=s.avgDiff-p.avgDiff; chg=Math.abs(dd)<3?'<span class="tg-chg">same as the week before</span>':
+      '<span class="tg-chg '+(dd<0?'ok':'late')+'">'+(dd<0?'▲ ':'▼ ')+Math.abs(dd)+'m '+(dd<0?'earlier':'later')+' than the week before</span>'; }
+    return '<div class="tg-card"><div class="tg-ch"><span class="tg-cn">'+escH(c.name)+'</span><span class="tg-tg">target '+tgFmt(c.target)+'</span></div>'+
+      '<div class="tg-cv">'+(s.n?'<b>'+tgFmt(s.avg)+'</b><span class="tg-df '+tgTone(s.avgDiff)+'">'+tgDiffTxt(s.avgDiff)+'</span>':'<b class="tg-none">—</b>')+
+        '<span class="tg-sub">'+(s.n?'avg, last 7 days · '+s.ok+'/'+s.n+' on time':'nothing logged in the last 7 days')+'</span></div>'+
+      tgSpark(c)+chg+'</div>';
+  }).join('')+'</div>';
+  if(badge) badge.textContent=totN?Math.round(totOk/totN*100)+'% on time':'';
+
+  var gcols='150px repeat('+cols.length+',minmax(0,1fr))';
+  var head='<div class="fg-row fg-head"><div>Date</div>'+cols.map(function(c){ return '<div title="'+fgEsc(c.name)+'">'+escH(c.name)+'<small>'+tgFmt(c.target)+'</small></div>'; }).join('')+'</div>';
+  var body=weeks.map(function(wd,i){ return {n:i+1,days:wd}; }).reverse().map(function(w){
+    var ok=0,n=0, open=tgWeekOpen(w.n);
+    var per=cols.map(function(c){ var s=tgStats(c,w.days); ok+=s.ok||0; n+=s.n;
+      return '<div class="tg-wc" data-l="'+fgEsc(c.name)+'">'+(s.n?'<b>'+tgFmt(s.avg)+'</b><span>'+s.ok+'/'+s.n+' on time</span>':'<span>—</span>')+'</div>'; }).join('');
+    var p=n?Math.round(ok/n*100):null, tone=p==null?'':p>=80?'good':p>=50?'mid':'low';
+    var range=fgFmt(w.days[0])+' – '+fgFmt(w.days[w.days.length-1]);
+    return '<div class="fg-wk'+(open?' open':'')+'">'+
+      '<button type="button" class="fg-row fg-wk-h" data-w="'+w.n+'" aria-expanded="'+open+'" onclick="tgToggleWeek('+w.n+')">'+
+        '<div class="fg-wl"><div class="fg-wl1"><span class="fg-car">▸</span><b>Week '+w.n+'</b><span class="fg-pct '+tone+'">'+(p==null?'—':p+'%')+'</span></div>'+
+        '<div class="fg-wl2">'+range+' · '+ok+'/'+n+' on time</div></div>'+per+'</button>'+
+      (open?'<div class="fg-days">'+w.days.map(function(d){ var today=d===isoToday();
+        return '<div class="fg-row fg-day tg-day'+(today?' fg-today':'')+'"><div class="fg-date">'+fgFmt(d,{weekday:'short'})+' <b>'+fgFmt(d)+'</b>'+(today?' <span class="fg-tag">Today</span>':'')+'</div>'+
+          cols.map(function(c){ return tgCellHTML(d,c); }).join('')+'</div>'; }).join('')+'</div>':'')+'</div>';
+  }).join('');
+
+  box.innerHTML=top+cards+'<div class="fg-grid tg-grid" style="--fgcols:'+gcols+'">'+head+body+'</div>'+
+    '<div class="fg-foot"><span class="fd-hint">On time = at or before the target. Up to '+TG_GRACE+' min late shows amber. In the trend lines the dashed line is your target and lower means later. Get up and Sleep are the same times as the Morning sleep row.</span></div>';
+}
+
+/* ═══════════════════════════════════════════════════
+   MORNING READ — 5 minutes: the 7 core principles every day, plus 4 of
+   the rest in rotation (the whole list comes round about once a week).
+   Principles live in the Principles sheet; "Done reading" → DayLog col G.
+═══════════════════════════════════════════════════ */
+var principles=[], prLoaded=false, prUnsupported=false, prFailed=false, mrOpen=false;
+var MR_ROTATE=4;
+
+function replacePrinciplesFromSheet(rows){
+  if(!Array.isArray(rows)) return;
+  prLoaded=true; prUnsupported=false; prFailed=false;
+  principles=rows.slice().sort(function(a,b){ return a.order-b.order; });
+  renderMorningRead();
+}
+async function loadPrinciplesDirect(){
+  if(prLoaded) return;
+  var r=await sheetFetch(WORKER_URL+'?action=getAllPrinciples',null,20000);
+  if(r&&r.status==='ok'&&Array.isArray(r.principles)){ replacePrinciplesFromSheet(r.principles); return; }
+  if(!prLoaded){ prUnsupported=true; renderMorningRead(); }
+}
+function markPrinciplesFailed(){ if(prLoaded||prUnsupported) return; prFailed=true; renderMorningRead(); }
+
+function mrDayNo(d){ var p=String(d).split('-'); return Math.floor(Date.UTC(+p[0],+p[1]-1,+p[2])/864e5); }
+function mrToday(){
+  var core=principles.filter(function(p){ return p.core; });
+  var rest=principles.filter(function(p){ return !p.core; });
+  var pick=[];
+  if(rest.length){ var n=Math.min(MR_ROTATE,rest.length), s=(mrDayNo(isoToday())*n)%rest.length;
+    for(var i=0;i<n;i++) pick.push(rest[(s+i)%rest.length]); }
+  return {core:core,pick:pick};
+}
+function mrRead(d){ return /^(y|yes|1|true)$/i.test(dlGet(d,'read')); }
+function mrStreak(){
+  var d=isoToday(), n=0;
+  if(!mrRead(d)) d=foodShift(d,-1);
+  while(mrRead(d)&&n<3660){ n++; d=foodShift(d,-1); }
+  return n;
+}
+function mrDone(){
+  if(!ciLoaded||ciUnsupported){ showToast('Still loading. Try again in a moment.','error'); return; }
+  dlSet(isoToday(),'read','yes'); mrOpen=false; renderMorningRead();
+  var s=mrStreak(); showToast(s>1?'Read ✓ · '+s+'-day streak':'Read ✓ See you tomorrow','success');
+  var b=document.getElementById('mr-box'); if(b) b.scrollIntoView({block:'nearest',behavior:'smooth'});
+}
+function mrUndo(){ if(!ciLoaded) return; dlSet(isoToday(),'read',''); mrOpen=true; renderMorningRead(); }
+
+/* Principle popup: everything across the dashboard that matches the principle's
+   Keywords (Principles col H; falls back to words from its title) */
+var PR_STOP={the:1,and:1,not:1,you:1,your:1,before:1,what:1,with:1,that:1,this:1,from:1,only:1,ever:1,don:1,need:1,things:1};
+var _prLastFocus=null, _prMore={};
+function prTerms(p){
+  var raw=(p.keywords||'').split(',').map(function(s){ return s.trim().toLowerCase(); }).filter(Boolean);
+  if(!raw.length) raw=String(p.title).toLowerCase().replace(/[^a-z\s]/g,' ').split(/\s+/).filter(function(w){ return w.length>3&&!PR_STOP[w]; });
+  return raw.map(function(t){ var e=t.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+    return /\s/.test(t)?new RegExp(e,'i'):new RegExp('\\b'+e,'i'); });
+}
+function prScore(terms,text){ var n=0; text=String(text||''); terms.forEach(function(r){ if(r.test(text)) n++; }); return n; }
+function prSources(){
+  var cut=function(s,n){ s=String(s||'').replace(/\s+/g,' ').trim(); return s.length>n?s.slice(0,n-1)+'…':s; };
+  return [
+    {key:'rules',label:'My rules',icon:'📌',items:(dailyRules||[]).map(function(r){ return {text:[r.when,r.act,r['do']].join(' '),
+      html:'<b>When '+escH(r.when)+'</b> → '+escH(r.act||r['do'])+(r.act&&r['do']?'<div class="pr-sub">'+escH(r['do'])+'</div>':'')}; })},
+    {key:'plans',label:'My plans',icon:'🧠',items:(sitPlans||[]).filter(function(p){ return p.status!=='retired'; }).map(function(p){ return {text:p.situation+' '+p.approach,
+      html:'<b>'+escH(p.situation)+'</b><div class="pr-sub">'+escH(cut(p.approach,240))+'</div>'}; })},
+    {key:'sits',label:'My real moments',icon:'📝',items:(situations||[]).map(function(s){ return {text:[s.title,s.trigger,s.reaction,s.strategy].join(' '),
+      html:'<b>'+escH(cut(s.title,160))+'</b>'+(s.reaction?'<div class="pr-sub">'+escH(cut(s.reaction,220))+'</div>':'')+(s.strategy?'<div class="pr-sub pr-lesson">→ '+escH(cut(s.strategy,200))+'</div>':'')+
+        (s.dateISO?'<div class="pr-date">'+escH(s.date||s.dateISO)+(s.emotion?' · '+escH(s.emotion):'')+'</div>':'')}; })},
+    {key:'kun',label:'Kundali',icon:'✨',items:(kunEntries||[]).map(function(k){ return {text:k.learning+' '+k.logic,
+      html:'<b>'+escH(k.learning)+'</b>'+(k.logic?'<div class="pr-sub">'+escH(cut(k.logic,220))+'</div>':'')}; })},
+    {key:'mot',label:'Small learnings',icon:'🌱',items:(motEntries||[]).map(function(m){ var t=String(m.text||''), first=t.split(/\n/)[0];
+      return {text:t+' '+(m.example||''), html:'<b>'+escH(cut(first,160))+'</b>'+(t.length>first.length?'<div class="pr-sub">'+escH(cut(t.slice(first.length),220))+'</div>':'')+
+        (m.example?'<div class="pr-sub pr-lesson">e.g. '+escH(cut(m.example,180))+'</div>':'')}; })},
+    {key:'guide',label:'Guide',icon:'🧭',items:(guide||[]).map(function(g){ return {text:[g.situation,g.action,g.why].join(' '),
+      html:'<b>'+escH(g.situation)+'</b> → '+escH(g.action)+(g.why?'<div class="pr-sub">'+escH(cut(g.why,200))+'</div>':'')}; })},
+    {key:'th',label:'Thoughts',icon:'💡',items:(thoughts||[]).map(function(t){ return {text:t.heading+' '+t.text,
+      html:'<b>'+escH(t.heading)+'</b>'+(t.text?'<div class="pr-sub">'+escH(cut(t.text,240))+'</div>':'')}; })},
+    {key:'posts',label:'Posts',icon:'📌',items:(posts||[]).map(function(p){ var safe=/^https?:\/\//i.test(p.url||'');
+      return {text:p.heading+' '+p.desc, html:'<b>'+escH(p.heading)+'</b>'+(p.desc?'<div class="pr-sub">'+escH(cut(p.desc,200))+'</div>':'')+
+        (safe?'<a class="pr-link" href="'+escH(p.url)+'" target="_blank" rel="noopener">Open ↗</a>':'')}; })}
+  ];
+}
+function openPrinciple(id,btn){
+  var p=principles.find(function(x){ return x.sheetId===id; }); if(!p) return;
+  _prLastFocus=btn||document.activeElement; _prMore={};
+  var m=document.getElementById('pr-modal');
+  if(!m){ m=document.createElement('div'); m.id='pr-modal'; m.className='pr-modal';
+    m.setAttribute('role','dialog'); m.setAttribute('aria-modal','true'); m.setAttribute('aria-labelledby','pr-m-title');
+    m.addEventListener('click',function(e){ if(e.target===m) closePrinciple(); });
+    document.body.appendChild(m); }
+  m._pid=id; renderPrinciplePopup();
+  m.hidden=false; document.body.style.overflow='hidden';
+  var c=m.querySelector('.pr-x'); if(c) c.focus();
+}
+function renderPrinciplePopup(){
+  var m=document.getElementById('pr-modal'); if(!m) return;
+  var p=principles.find(function(x){ return x.sheetId===m._pid; }); if(!p) return;
+  var terms=prTerms(p), total=0;
+  var secs=prSources().map(function(src){
+    var hits=src.items.map(function(it){ return {it:it,s:prScore(terms,it.text)}; }).filter(function(h){ return h.s>0; })
+      .sort(function(a,b){ return b.s-a.s; });
+    total+=hits.length; if(!hits.length) return '';
+    var lim=_prMore[src.key]?hits.length:3;
+    return '<section class="pr-sec"><h3 class="pr-h">'+src.icon+' '+src.label+' <span>'+hits.length+'</span></h3><ul class="pr-list">'+
+      hits.slice(0,lim).map(function(h){ return '<li>'+h.it.html+'</li>'; }).join('')+'</ul>'+
+      (hits.length>lim?'<button type="button" class="pr-more" onclick="_prMore[\''+src.key+'\']=1;renderPrinciplePopup()">Show all '+hits.length+'</button>':'')+'</section>';
+  }).join('');
+  m.innerHTML='<div class="pr-card">'+
+    '<div class="pr-top"><div><div class="pr-grp">'+escH(p.group||'Principle')+(p.core?' · every day':'')+'</div><h2 class="pr-title" id="pr-m-title">'+escH(p.title)+'</h2></div>'+
+      '<button type="button" class="pr-x" aria-label="Close" onclick="closePrinciple()">×</button></div>'+
+    (p.details?'<p class="pr-det">'+escH(p.details)+'</p>':'')+
+    '<div class="pr-body">'+(secs||'<div class="fd-note">Nothing in your other tabs matches yet. Add words to this principle’s <b>Keywords</b> column in the Principles tab to link it up.</div>')+'</div>'+
+    '<div class="pr-foot">'+(total?total+' related entries':'')+(p.from?' · from '+escH(p.from):'')+'</div></div>';
+}
+function closePrinciple(){
+  var m=document.getElementById('pr-modal'); if(!m||m.hidden) return;
+  m.hidden=true; document.body.style.overflow='';
+  if(_prLastFocus&&_prLastFocus.focus) _prLastFocus.focus();
+}
+document.addEventListener('keydown',function(e){ if(e.key==='Escape') closePrinciple(); });
+
+function mrItem(p,i,showGroup){
+  return '<li><button type="button" class="mr-it" onclick="openPrinciple(\''+escH(p.sheetId)+'\',this)" title="See what else you\u2019ve written about this">'+(i!=null?'<span class="mr-n">'+(i+1)+'</span>':'')+
+    '<div class="mr-tx"><div class="mr-t">'+escH(p.title)+(showGroup&&p.group?' <span class="mr-g">'+escH(p.group)+'</span>':'')+'</div>'+
+    (p.details?'<div class="mr-d">'+escH(p.details)+'</div>':'')+'</div><span class="mr-go" aria-hidden="true">\u203a</span></button></li>';
+}
+function renderMorningRead(){
+  var box=document.getElementById('mr-box'); if(!box) return;
+  var body=document.getElementById('mr-body'), meta=document.getElementById('mr-meta');
+  if(prUnsupported){ body.innerHTML='<div class="fd-note">The morning read needs the updated <b>Code.gs</b>. Deploy it (Manage deployments → New version), then reload.</div>'; meta.textContent=''; return; }
+  if(!prLoaded){ body.innerHTML='<div class="fd-note">'+(prFailed?'Couldn’t load. Reload the page to try again.':'Loading…')+'</div>'; return; }
+  if(!principles.length){ body.innerHTML='<div class="fd-note">Your Principles tab is empty. Add a few rows there (mark the daily ones <b>yes</b> under Core).</div>'; return; }
+
+  var read=ciLoaded&&mrRead(isoToday()), streak=ciLoaded?mrStreak():0, t=mrToday();
+  meta.innerHTML=(streak?'<span class="mr-streak">🔥 '+streak+'-day streak</span>':'<span class="mr-time">~5 min</span>');
+  box.classList.toggle('done',read&&!mrOpen);
+
+  if(read&&!mrOpen){
+    body.innerHTML='<div class="mr-donebar"><span class="mr-ok">✓ Read today</span>'+
+      '<span class="mr-core-line">'+t.core.map(function(p){ return escH(p.title); }).join(' · ')+'</span>'+
+      '<button type="button" class="btn mr-again" onclick="mrOpen=true;renderMorningRead()">Read again</button></div>';
+    return;
+  }
+  body.innerHTML=
+    (t.core.length?'<div class="mr-sec"><div class="mr-h">Every day</div><ol class="mr-list">'+t.core.map(function(p,i){ return mrItem(p,i,false); }).join('')+'</ol></div>':'')+
+    (t.pick.length?'<div class="mr-sec"><div class="mr-h">Today’s reflections</div><ul class="mr-list mr-rot">'+t.pick.map(function(p){ return mrItem(p,null,true); }).join('')+'</ul></div>':'')+
+    '<div class="mr-foot"><span class="fd-hint">Edit these in the <b>Principles</b> tab of your Sheet. Core = yes shows them every day.</span>'+
+    (read?'<button type="button" class="btn" onclick="mrOpen=false;renderMorningRead()">Close</button><button type="button" class="btn" onclick="mrUndo()">Not read yet</button>'
+         :'<button type="button" class="btn gold mr-donebtn" onclick="mrDone()"'+(ciLoaded?'':' disabled')+'>✓ Done reading</button>')+'</div>';
+}
+
+/* ═══════════════════════════════════════════════════
    SAVE QUEUE — one write per key in flight; only the newest state
    waits behind it, so changes can never reach the Sheet out of order.
 ═══════════════════════════════════════════════════ */
@@ -4499,14 +4880,14 @@ function replaceCheckinFromSheet(checks,log){
     ruleChecks=m;
   }
   if(Array.isArray(log)){
-    var d={}; log.forEach(function(r){ d[r.dateISO]={sleptAt:r.sleptAt||'',wokeAt:r.wokeAt||'',note:r.note||'',weekNote:r.weekNote||''}; });
+    var d={}; log.forEach(function(r){ d[r.dateISO]={sleptAt:r.sleptAt||'',wokeAt:r.wokeAt||'',note:r.note||'',weekNote:r.weekNote||'',read:r.read||''}; });
     Object.keys(_sqPending).forEach(function(k){
       var p=_sqPending[k].p; if(p.sheet!=='DayLog'||p.field==='sleptAt'||p.field==='wokeAt') return;   // sleep shows its own pending state
       (d[p.dateISO]=d[p.dateISO]||{})[p.field]=p.value;
     });
     dayLog=d;
   }
-  renderSleep(); renderCheckin(); renderWeekly();
+  renderSleep(); renderCheckin(); renderWeekly(); renderMorningRead();
 }
 function markCheckinUnsupported(){ if(ciLoaded) return; ciUnsupported=true; renderSleep(); renderCheckin(); renderWeekly(); }
 function markCheckinFailed(){ if(ciLoaded||ciUnsupported) return; ciFailed=true; renderSleep(); renderCheckin(); renderWeekly(); }
@@ -4568,6 +4949,7 @@ function sleepLen(slept,woke){
 
 /* ── Sleep row (Morning) ── */
 function renderSleep(){
+  if(typeof renderTimeGrid==='function') setTimeout(renderTimeGrid,0);
   var el=document.getElementById('sleep-row'); if(!el) return;
   if(ciUnsupported||(!ciLoaded&&ciFailed)){ el.hidden=true; return; }
   el.hidden=false;
@@ -5746,7 +6128,7 @@ async function importGuide(){
    Open/closed state is a display preference, so it lives in
    localStorage — no dashboard data is stored there.
 ──────────────────────────────────────────────────────── */
-var SEC_KEYS=['links','sitlib','mlist','tyag','master','routine','food','weekly','library','rtstats','habitperf','habits','checklist','pillars','anchors'];
+var SEC_KEYS=['links','sitlib','mlist','tyag','master','routine','food','times','weekly','library','rtstats','habitperf','habits','checklist','pillars','anchors'];
 
 function secOpen(key){
   var v=localStorage.getItem('sec_'+key);
@@ -5830,7 +6212,7 @@ function renderGlance(){
 
 /* Sections now live on two tabs, so a glance card may need to
    switch tab before scrolling to its section. */
-var ROUTINE_TAB_SECTIONS=['mlist','tyag','master','routine','food','rtstats','habitperf'];   // sitlib lives on Home
+var ROUTINE_TAB_SECTIONS=['mlist','tyag','master','routine','food','times','rtstats','habitperf'];   // sitlib lives on Home
 
 function jumpToSection(key){
   if(!secOpen(key)){ localStorage.setItem('sec_'+key,'1'); applySection(key); }
@@ -6717,6 +7099,7 @@ function replaceHabitMasterFromSheet(rows){
     return {sheetId:r.sheetId||'',time:cleanTime(r.time||''),habit:r.habit||''};
   });
   renderMaster(); renderRoutine();
+  if(typeof renderTimeGrid==='function') renderTimeGrid();
 }
 
 function replaceRoutineItemsFromSheet(rows){
