@@ -14,7 +14,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=20261107b">
+<link rel="stylesheet" href="styles.css?v=20261107c">
 </head>
 <body>
 <div class="toast" id="toast"></div>
@@ -44,18 +44,23 @@
   <section class="mr" id="mr-box" aria-labelledby="mr-title">
     <div class="mr-top"><h2 class="mr-title" id="mr-title">&#127749; Morning read</h2><span class="mr-meta" id="mr-meta"></span></div>
     <div id="mr-body"><div class="fd-note">Loading&hellip;</div></div>
-  </section>
-  <section class="dr" id="dr-box" aria-labelledby="dr-title">
-    <div class="dr-top">
-      <h2 class="dr-title" id="dr-title">My rules for every day</h2>
-      <span class="dr-btns"><button class="dr-edit" id="dr-choose-btn" type="button" onclick="chooseRules()" style="display:none">Choose</button>
-      <button class="dr-edit" id="dr-edit-btn" type="button" onclick="editDailyRules()" style="display:none">Edit</button></span>
+    <div class="mr-hab">
+      <div class="mr-hab-hd" id="hd-habits"><span class="mr-h">&#127775; Habits I&#8217;m following</span><span class="sec-badge" id="badge-habits"></span></div>
+      <div id="sec-habits">
+      <div style="font-size:11px;color:var(--text-2);margin-bottom:10px">Tick them off as you go; ticks reset each morning. Drag &#9776; to reorder.</div>
+      <div id="today-habits-list"></div>
+      <div id="habit-archive-box" style="display:none"></div>
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <input class="sin" id="today-habit-input" type="text" placeholder="e.g. Pause for 3 breaths before reacting..." style="flex:1" onkeydown="if(event.key==='Enter'){addTodayHabit();event.preventDefault();}">
+        <button class="btn gold" onclick="addTodayHabit()" style="white-space:nowrap">+ Add</button>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;flex-wrap:wrap;gap:6px">
+        <span class="sync-txt" id="hab-day-sync"></span>
+        <button class="btn" onclick="clearTodayHabits()">Untick all</button>
+      </div>
     </div>
-    <div id="dr-body"><div class="dr-note">Loading your rules…</div></div>
-  </section>
-  <section class="ci" id="ci-box" aria-labelledby="ci-title">
-    <div class="dr-top"><h2 class="dr-title" id="ci-title">&#127769; Evening check-in</h2><span class="ci-meta" id="ci-meta"></span></div>
-    <div id="ci-body"><div class="dr-note">Loading&hellip;</div></div>
+    </div>
+    <div id="mr-foot"></div>
   </section>
   <section class="feed" id="feed" aria-labelledby="feed-title">
     <div class="feed-hd">
@@ -95,22 +100,6 @@
   <div class="sec-body" id="sec-weekly"><div class="q-wrap"><div id="wk-body"></div></div></div><!-- /sec-weekly -->
   <hr class="d">
   <!-- TODAY'S ROUTINE -->
-  <div class="sec-hd" id="hd-habits" onclick="toggleSection('habits')"><span class="sec-icon">&#127775;</span><span class="sec-title">Habits I'm following</span><span class="lbl-line"></span><span class="sec-badge" id="badge-habits"></span><span class="sec-caret open" id="caret-habits">&#9662;</span></div>
-  <div class="sec-body" id="sec-habits">
-    <div class="q-wrap">
-      <div style="font-size:11px;color:var(--text-2);margin-bottom:10px">These stay on your list every day until you remove them. Tick them off as you go &#8212; the ticks reset each morning. Drag &#9776; to reorder.</div>
-      <div id="today-habits-list"></div>
-      <div id="habit-archive-box" style="display:none"></div>
-      <div style="display:flex;gap:8px;margin-top:10px">
-        <input class="sin" id="today-habit-input" type="text" placeholder="e.g. Pause for 3 breaths before reacting..." style="flex:1" onkeydown="if(event.key==='Enter'){addTodayHabit();event.preventDefault();}">
-        <button class="btn gold" onclick="addTodayHabit()" style="white-space:nowrap">+ Add</button>
-      </div>
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;flex-wrap:wrap;gap:6px">
-        <span class="sync-txt" id="hab-day-sync"></span>
-        <button class="btn" onclick="clearTodayHabits()">Untick all</button>
-      </div>
-    </div>
-  </div><!-- /sec-habits -->
 
   <div class="sec-hd" id="hd-checklist" onclick="toggleSection('checklist')"><span class="sec-icon">&#9989;</span><span class="sec-title">Daily checklist</span><span class="lbl-line"></span><span class="sec-badge" id="badge-checklist"></span><span class="sec-caret" id="caret-checklist">&#9662;</span></div>
   <div class="sec-body closed" id="sec-checklist">
@@ -529,12 +518,12 @@
   <div class="set-panel"><div class="set-head"><h2 id="set-title">Settings</h2><button type="button" class="set-x" onclick="closeSettings()" aria-label="Close">&times;</button></div>
   <div id="set-body"></div></div>
 </div>
-<script src="app.js?v=20261107b"></script>
+<script src="app.js?v=20261107c"></script>
 <script>
 /* If GitHub served an older app.js than this page expects (one file went live before the other,
    or the browser cached it), fetch fresh copies and reload once. */
 (function(){
-  var want='20261107b';
+  var want='20261107c';
   if(window.APP_VER===want) { try{ sessionStorage.removeItem('ver_retry'); }catch(e){} return; }
   try{ if(sessionStorage.getItem('ver_retry')===want) return; sessionStorage.setItem('ver_retry',want); }catch(e){ return; }
   Promise.all(['app.js?v='+want,'styles.css?v='+want,'app.js','index.html'].map(function(u){ return fetch(u,{cache:'reload'}).catch(function(){}); }))
