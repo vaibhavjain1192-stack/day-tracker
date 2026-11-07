@@ -1,6 +1,6 @@
 /* Morning Dashboard app. Linked from index.html; bump ?v= there when this changes. */
 'use strict';
-window.APP_VER='20261107b';   // must match the ?v= in index.html (checked there)
+window.APP_VER='20261107c';   // must match the ?v= in index.html (checked there)
 const WORKER_URL='https://muddy-shadow-1aa7.vaibhavjain-1192.workers.dev';
 const FETCH_TIMEOUT=45000;   // default; page loads pass shorter ones
 var DIAG={};  // diagnostics collected during fetch
@@ -2817,18 +2817,18 @@ function renderFeed(){
 
   // Video 2 — a saved post with a link, never the same as video 1
   var mine=(document.getElementById('vid-url')||{}).value||'';
-  var vids=posts.filter(function(p){ return /^https?:\/\//i.test(p.url||'') && p.url.trim()!==mine.trim(); });
+  var vids=posts.filter(function(p){ return String(p.heading||p.desc||p.url||'').trim(); });   // every saved post, link or not
   var pa=feedAt(vids,'post',function(x){ return x.sheetId||x.url; }), p=pa.item;
-  if(!p) feedEmpty('feed-post',L.post,'No saved posts with a link yet. Save one in Posts and it\u2019ll show up here.');
+  if(!p) feedEmpty('feed-post',L.post,'No saved posts yet. Save one in Posts and it\u2019ll show up here.');
   else{
     var yt=ytThumb(p.url), img=(p.images||'').split('|')[0];
     var thumb = yt ? '<img class="vid-thumb" src="'+escH(yt)+'" alt="" onerror="this.style.opacity=.3">'
               : (/^https?:\/\//i.test(img) ? '<img class="feed-thumb-img" src="'+escH(img)+'" alt="" onerror="this.style.opacity=.3">'
-              : '<div class="vid-thumb-ph">\ud83c\udfac</div>');
+              : '<div class="vid-thumb-ph">'+(/^https?:\/\//i.test(p.url||'')?'\ud83c\udfac':'\ud83d\udccc')+'</div>');
     feedCard('feed-post',L.post,
       '<div class="vid-prev">'+thumb+'<div style="min-width:0">'+
         '<div class="feed-h">'+escH(p.heading||'Saved post')+'</div>'+
-        '<a class="vid-watch" href="'+escH(p.url)+'" target="_blank" rel="noopener">Watch \u2197</a></div></div>'+
+        (/^https?:\/\//i.test(p.url||'')?'<a class="vid-watch" href="'+escH(p.url)+'" target="_blank" rel="noopener">Watch \u2197</a>':'')+'</div></div>'+
       (p.desc?'<div class="feed-t">'+escH(p.desc)+'</div>':''),
       'All posts',"switchTab('posts')",
       p.dateISO?'Saved '+feedDate(p.dateISO):'', pa);
@@ -4071,6 +4071,39 @@ function tyFormHTML(prefix,v,showBroke){
     (showBroke?'<label class="ty-f"><span>Broken on <small>(leave empty if not)</small></span><input class="sin" id="'+prefix+'broke" type="date" max="'+today+'" value="'+escH(v.brokenOn||'')+'"></label>':'')+
   '</div>';
 }
+/* Repeat attempts of the same tyag (same name) show as one row: the current or latest
+   attempt, with the earlier attempts and their broken dates one tap away. */
+var tyHistOpen={};
+function tyKey(t){ return String(t.tyag||'').trim().toLowerCase(); }
+function tyGroups(){
+  var by={}, out=[];
+  tyagList.forEach(function(t){ var k=tyKey(t); (by[k]=by[k]||[]).push(t); });
+  Object.keys(by).forEach(function(k){
+    var all=by[k].slice().sort(function(a,b){ return (b.startDate||'9999').localeCompare(a.startDate||'9999'); });
+    var live=all.filter(function(t){ var s=tyStatus(t); return s==='wip'||s==='todo'; });
+    var head=live[0]||all[0];
+    head._attempts=all; out.push(head);
+  });
+  return out;
+}
+function tyToggleHist(k){ tyHistOpen[k]=!tyHistOpen[k]; renderTyag(); }
+function tyHistHTML(t){
+  var all=t._attempts||[t]; if(all.length<2) return '';
+  var nb=all.filter(function(x){ return x.brokenOn; }).length, k=tyKey(t), open=!!tyHistOpen[k];
+  var lbl=nb?'Broken '+nb+' time'+(nb!==1?'s':'')+' \u00b7 '+all.length+' attempts':all.length+' attempts';
+  var list=open?'<ol class="ty-hist">'+all.map(function(x,i){
+    var s=tyStatus(x), d;
+    if(s==='broken'){ var kept=tySpan(x.startDate,x.brokenOn); d='<span class="ty-hb">Broken '+feedDate(x.brokenOn)+'</span> \u00b7 kept '+kept+' day'+(kept!==1?'s':''); }
+    else if(s==='wip') d='<span class="ty-hw">Going now</span> \u00b7 day '+tySpan(x.startDate,isoToday());
+    else if(s==='done') d='<span class="ty-hd">Completed '+feedDate(x.endDate)+'</span>';
+    else d='Not started';
+    return '<li><span class="ty-hn">#'+(all.length-i)+'</span><span class="ty-hx">Started '+(x.startDate?feedDate(x.startDate):'\u2014')+' \u00b7 '+d+'</span>'+
+      (x!==t?'<button type="button" class="rt-mini del" aria-label="Delete this attempt" title="Delete this attempt" onclick="deleteTyag(\''+x.sheetId+'\')">\u00d7</button>':'')+'</li>';
+  }).join('')+'</ol>':'';
+  return '<button type="button" class="ty-histbtn" data-k="'+escH(k)+'" aria-expanded="'+open+'" onclick="tyToggleHist(this.getAttribute(\'data-k\'))">'+
+    '<span class="ty-hcar">\u25b8</span> '+lbl+'</button>'+list;
+}
+
 function tyRowHTML(t){
   var st=tyStatus(t), lab=TY_STATUS[st], today=isoToday(), id=t.sheetId, dur=tyDurLabel(t), meta='', bar='';
   if(st==='wip'){
@@ -4106,7 +4139,7 @@ function tyRowHTML(t){
   return '<li class="ty-row ty-'+st+'">'+
     '<div class="ty-main">'+ptTile(t.tyag,'',{size:'sm'})+
       '<div class="ty-txt"><div class="ty-name">'+escH(t.tyag)+'<span class="ty-badge" style="--tc:'+lab[1]+'">'+lab[0]+'</span></div>'+
-      '<div class="ty-meta">'+meta+'</div>'+bar+'</div>'+
+      '<div class="ty-meta">'+meta+'</div>'+bar+tyHistHTML(t)+'</div>'+
       '<div class="ty-acts">'+acts+'</div></div>'+extra+'</li>';
 }
 function renderTyag(){
@@ -4116,15 +4149,16 @@ function renderTyag(){
   if(!tyLoaded){ box.innerHTML='<div class="fd-note">'+(tyFailed?'Couldn\u2019t load. Reload the page to try again.':'Loading\u2026')+'</div>'; return; }
 
   var order={wip:0,todo:1,broken:2,done:3}, counts={wip:0,todo:0,done:0,broken:0};
-  tyagList.forEach(function(t){ counts[tyStatus(t)]++; });
+  var groups=tyGroups();
+  groups.forEach(function(t){ counts[tyStatus(t)]++; });
   if(badge) badge.textContent=counts.wip?counts.wip+' WIP':'';
-  var list=tyagList.filter(function(t){ return tyFilter==='all'||tyStatus(t)===tyFilter; }).sort(function(a,b){
+  var list=groups.filter(function(t){ return tyFilter==='all'||tyStatus(t)===tyFilter; }).sort(function(a,b){
     var sa=order[tyStatus(a)], sb=order[tyStatus(b)]; if(sa!==sb) return sa-sb;
     return (b.startDate||'9999').localeCompare(a.startDate||'9999');
   });
 
   var chips=tyagList.length?'<div class="ty-chips" role="group" aria-label="Filter by status">'+
-    [['all','All',tyagList.length],['wip','WIP',counts.wip],['todo','Yet to start',counts.todo],['done','Completed',counts.done],['broken','Broken',counts.broken]].map(function(c){
+    [['all','All',groups.length],['wip','WIP',counts.wip],['todo','Yet to start',counts.todo],['done','Completed',counts.done],['broken','Broken',counts.broken]].map(function(c){
       return '<button type="button" class="ty-chip'+(tyFilter===c[0]?' on':'')+'" data-f="'+c[0]+'" aria-pressed="'+(tyFilter===c[0])+'" onclick="setTyFilter(\''+c[0]+'\')">'+c[1]+' <span>'+c[2]+'</span></button>';
     }).join('')+'</div>':'';
 
@@ -4824,7 +4858,9 @@ function renderMorningRead(){
   meta.innerHTML=(streak?'<span class="mr-streak">🔥 '+streak+'-day streak</span>':'<span class="mr-time">~5 min</span>');
   box.classList.toggle('done',read&&!mrOpen);
 
+  var foot=document.getElementById('mr-foot');
   if(read&&!mrOpen){
+    if(foot) foot.innerHTML='';
     body.innerHTML='<div class="mr-donebar"><span class="mr-ok">✓ Read today</span>'+
       '<span class="mr-core-line">'+t.core.map(function(p){ return escH(p.title); }).join(' · ')+'</span>'+
       '<button type="button" class="btn mr-again" onclick="mrOpen=true;renderMorningRead()">Read again</button></div>';
@@ -4832,8 +4868,8 @@ function renderMorningRead(){
   }
   body.innerHTML=
     (t.core.length?'<div class="mr-sec"><div class="mr-h">Every day</div><ol class="mr-list">'+t.core.map(function(p,i){ return mrItem(p,i,false); }).join('')+'</ol></div>':'')+
-    (t.pick.length?'<div class="mr-sec"><div class="mr-h">Today’s reflections</div><ul class="mr-list mr-rot">'+t.pick.map(function(p){ return mrItem(p,null,true); }).join('')+'</ul></div>':'')+
-    '<div class="mr-foot"><span class="fd-hint">Edit these in the <b>Principles</b> tab of your Sheet. Core = yes shows them every day.</span>'+
+    (t.pick.length?'<div class="mr-sec"><div class="mr-h">Today’s reflections</div><ul class="mr-list mr-rot">'+t.pick.map(function(p){ return mrItem(p,null,true); }).join('')+'</ul></div>':'');
+  if(foot) foot.innerHTML='<div class="mr-foot"><span class="fd-hint">Edit these in the <b>Principles</b> tab of your Sheet. Core = yes shows them every day.</span>'+
     (read?'<button type="button" class="btn" onclick="mrOpen=false;renderMorningRead()">Close</button><button type="button" class="btn" onclick="mrUndo()">Not read yet</button>'
          :'<button type="button" class="btn gold mr-donebtn" onclick="mrDone()"'+(ciLoaded?'':' disabled')+'>✓ Done reading</button>')+'</div>';
 }
@@ -6128,7 +6164,7 @@ async function importGuide(){
    Open/closed state is a display preference, so it lives in
    localStorage — no dashboard data is stored there.
 ──────────────────────────────────────────────────────── */
-var SEC_KEYS=['links','sitlib','mlist','tyag','master','routine','food','times','weekly','library','rtstats','habitperf','habits','checklist','pillars','anchors'];
+var SEC_KEYS=['links','sitlib','mlist','tyag','master','routine','food','times','weekly','library','rtstats','habitperf','checklist','pillars','anchors'];
 
 function secOpen(key){
   var v=localStorage.getItem('sec_'+key);
