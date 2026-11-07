@@ -1454,3 +1454,22 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
 .pr-more:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 .pr-foot{font-size:11px;color:var(--text-3);margin-top:14px;padding-top:10px;border-top:1px solid var(--border)}
 @media (max-width:640px){ .pr-modal{padding:1rem .5rem} .pr-card{padding:16px} .pr-title{font-size:19px} }
+
+/* Habits inside the Morning read */
+.mr-hab{margin-top:14px;padding-top:12px;border-top:1px solid var(--border)}
+.mr-hab-hd{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px}
+.mr-hab-hd .mr-h{margin-bottom:0}
+.mr-hab .sync-txt{font-size:11px}
+.mr.done .mr-hab{margin-top:10px}
+/* Tyag attempt history */
+.ty-histbtn{background:none;border:0;padding:4px 0 0;font-family:var(--fb);font-size:11.5px;color:#E9A3A3;cursor:pointer;display:inline-flex;align-items:center;gap:4px}
+.ty-histbtn:hover{color:#F1B5B5;text-decoration:underline}
+.ty-histbtn:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.ty-hcar{display:inline-block;font-size:9px;transition:transform var(--tr)}
+.ty-histbtn[aria-expanded="true"] .ty-hcar{transform:rotate(90deg)}
+.ty-hist{list-style:none;margin:6px 0 2px;padding:6px 10px;border-left:2px solid rgba(224,123,123,.35);background:var(--surface);border-radius:0 8px 8px 0;display:flex;flex-direction:column;gap:4px}
+.ty-hist li{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--text-2)}
+.ty-hn{color:var(--text-3);min-width:22px}
+.ty-hx{flex:1}
+.ty-hb{color:#E07B7B}.ty-hw{color:var(--gold)}.ty-hd{color:#6BBF8E}
+.ty-hist .rt-mini{font-size:12px;padding:0 4px}
