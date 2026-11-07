@@ -14,7 +14,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=20261027">
+<link rel="stylesheet" href="styles.css?v=20261107b">
 </head>
 <body>
 <div class="toast" id="toast"></div>
@@ -41,6 +41,10 @@
   <div class="key-warn" id="key-warn" hidden role="status">&#9888;&#65039; <span>Your data isn't protected yet: anyone with this page's address can read it.</span><button type="button" class="btn gold" onclick="openSettings()">Set up a key</button><button type="button" class="btn" onclick="dismissKeyWarning()">Later</button></div>
   <div class="mantra"><div class="mantra-q" id="mantra-text">"..."</div><div class="mantra-src" id="mantra-source"></div></div>
   <div class="sleep-row" id="sleep-row" hidden></div>
+  <section class="mr" id="mr-box" aria-labelledby="mr-title">
+    <div class="mr-top"><h2 class="mr-title" id="mr-title">&#127749; Morning read</h2><span class="mr-meta" id="mr-meta"></span></div>
+    <div id="mr-body"><div class="fd-note">Loading&hellip;</div></div>
+  </section>
   <section class="dr" id="dr-box" aria-labelledby="dr-title">
     <div class="dr-top">
       <h2 class="dr-title" id="dr-title">My rules for every day</h2>
@@ -260,6 +264,11 @@
   <div class="sec-body" id="sec-food">
     <div class="q-wrap"><div id="fg-body"><div class="fd-note">Loading&hellip;</div></div></div>
   </div><!-- /sec-food -->
+
+  <div class="sec-hd" id="hd-times" onclick="toggleSection('times')"><span class="sec-icon">&#9200;</span><span class="sec-title">Time tracker</span><span class="lbl-line"></span><span class="sec-badge" id="badge-times"></span><span class="sec-caret open" id="caret-times">&#9662;</span></div>
+  <div class="sec-body" id="sec-times">
+    <div class="q-wrap"><div id="tg-body"><div class="fd-note">Loading&hellip;</div></div></div>
+  </div><!-- /sec-times -->
 
   <!-- Completion history -->
   <div class="sec-hd" id="hd-rtstats" onclick="toggleSection('rtstats')"><span class="sec-icon">&#128200;</span><span class="sec-title">Routine completion</span><span class="lbl-line"></span><span class="sec-badge" id="badge-rtstats"></span><span class="sec-caret open" id="caret-rtstats">&#9662;</span></div>
@@ -520,12 +529,12 @@
   <div class="set-panel"><div class="set-head"><h2 id="set-title">Settings</h2><button type="button" class="set-x" onclick="closeSettings()" aria-label="Close">&times;</button></div>
   <div id="set-body"></div></div>
 </div>
-<script src="app.js?v=20261027"></script>
+<script src="app.js?v=20261107b"></script>
 <script>
 /* If GitHub served an older app.js than this page expects (one file went live before the other,
    or the browser cached it), fetch fresh copies and reload once. */
 (function(){
-  var want='20261027';
+  var want='20261107b';
   if(window.APP_VER===want) { try{ sessionStorage.removeItem('ver_retry'); }catch(e){} return; }
   try{ if(sessionStorage.getItem('ver_retry')===want) return; sessionStorage.setItem('ver_retry',want); }catch(e){ return; }
   Promise.all(['app.js?v='+want,'styles.css?v='+want,'app.js','index.html'].map(function(u){ return fetch(u,{cache:'reload'}).catch(function(){}); }))
