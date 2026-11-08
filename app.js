@@ -1,6 +1,6 @@
 /* Morning Dashboard app. Linked from index.html; bump ?v= there when this changes. */
 'use strict';
-window.APP_VER='20261107c';   // must match the ?v= in index.html (checked there)
+window.APP_VER='20261108';   // must match the ?v= in index.html (checked there)
 const WORKER_URL='https://muddy-shadow-1aa7.vaibhavjain-1192.workers.dev';
 const FETCH_TIMEOUT=45000;   // default; page loads pass shorter ones
 var DIAG={};  // diagnostics collected during fetch
@@ -3491,8 +3491,28 @@ async function installApp(){
   try{ await _installEvt.userChoice; }catch(e){}
   _installEvt=null; closeSettings();
 }
+/* Always run the newest version. On open, and whenever the tab comes back into view
+   after 5+ minutes, fetch index.html past every cache; if it names a newer version
+   than the one running, reload. (One reload per version, so it can't loop.) */
+var _verCheckedAt=0;
+function checkForNewVersion(){
+  if(location.protocol!=='https:'&&location.protocol!=='http:') return;
+  _verCheckedAt=Date.now();
+  fetch('index.html?_='+Date.now(),{cache:'no-store'}).then(function(r){ return r.ok?r.text():''; }).then(function(t){
+    var m=t.match(/app\.js\?v=([0-9a-z]+)/); if(!m||m[1]===window.APP_VER) return;
+    try{ if(sessionStorage.getItem('ver_reload')===m[1]) return; sessionStorage.setItem('ver_reload',m[1]); }catch(e){ return; }
+    Promise.all(['index.html','app.js?v='+m[1],'styles.css?v='+m[1]].map(function(u){ return fetch(u,{cache:'reload'}).catch(function(){}); }))
+      .then(function(){ location.reload(); });
+  }).catch(function(){});
+}
+window.addEventListener('load',function(){ setTimeout(checkForNewVersion,1500); });
+document.addEventListener('visibilitychange',function(){
+  if(document.visibilityState==='visible'&&Date.now()-_verCheckedAt>5*60*1000) checkForNewVersion();
+});
+window.addEventListener('pageshow',function(e){ if(e.persisted) checkForNewVersion(); });   // restored from the back/forward cache
+
 if('serviceWorker' in navigator && location.protocol==='https:'){
-  window.addEventListener('load',function(){ navigator.serviceWorker.register('sw.js').catch(function(e){ console.warn('[sw]',e); }); });
+  window.addEventListener('load',function(){ navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(function(r){ r.update(); }).catch(function(e){ console.warn('[sw]',e); }); });
 }
 
 /* ═══════════════════════════════════════════════════
@@ -4803,6 +4823,14 @@ function prSources(){
         (safe?'<a class="pr-link" href="'+escH(p.url)+'" target="_blank" rel="noopener">Open ↗</a>':'')}; })}
   ];
 }
+function prSummaryHTML(p){
+  var pts=String(p.keyPoints||'').split(/\n+/).map(function(s){ return s.replace(/^[-•*\s]+/,'').trim(); }).filter(Boolean);
+  if(!pts.length&&!p.habit) return '';
+  return '<div class="pr-sum">'+
+    (pts.length?'<div class="pr-sum-h">In short</div><ul class="pr-pts">'+pts.map(function(s){ return '<li>'+escH(s)+'</li>'; }).join('')+'</ul>':'')+
+    (p.habit?'<div class="pr-habit"><span class="pr-habit-l">✅ One easy habit</span><span class="pr-habit-t">'+escH(p.habit)+'</span></div>':'')+
+  '</div>';
+}
 function openPrinciple(id,btn){
   var p=principles.find(function(x){ return x.sheetId===id; }); if(!p) return;
   _prLastFocus=btn||document.activeElement; _prMore={};
@@ -4831,7 +4859,7 @@ function renderPrinciplePopup(){
   m.innerHTML='<div class="pr-card">'+
     '<div class="pr-top"><div><div class="pr-grp">'+escH(p.group||'Principle')+(p.core?' · every day':'')+'</div><h2 class="pr-title" id="pr-m-title">'+escH(p.title)+'</h2></div>'+
       '<button type="button" class="pr-x" aria-label="Close" onclick="closePrinciple()">×</button></div>'+
-    (p.details?'<p class="pr-det">'+escH(p.details)+'</p>':'')+
+    (p.details?'<p class="pr-det">'+escH(p.details)+'</p>':'')+prSummaryHTML(p)+
     '<div class="pr-body">'+(secs||'<div class="fd-note">Nothing in your other tabs matches yet. Add words to this principle’s <b>Keywords</b> column in the Principles tab to link it up.</div>')+'</div>'+
     '<div class="pr-foot">'+(total?total+' related entries':'')+(p.from?' · from '+escH(p.from):'')+'</div></div>';
 }
