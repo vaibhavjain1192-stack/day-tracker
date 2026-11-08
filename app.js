@@ -1,6 +1,6 @@
 /* Morning Dashboard app. Linked from index.html; bump ?v= there when this changes. */
 'use strict';
-window.APP_VER='20261108';   // must match the ?v= in index.html (checked there)
+window.APP_VER='20261108b';   // must match the ?v= in index.html (checked there)
 const WORKER_URL='https://muddy-shadow-1aa7.vaibhavjain-1192.workers.dev';
 const FETCH_TIMEOUT=45000;   // default; page loads pass shorter ones
 var DIAG={};  // diagnostics collected during fetch
@@ -631,6 +631,7 @@ function thoughtCardHTML(t){
   return '<div class="th-card">'+(t.heading?(thTile?'<div class="pt-row mid">'+thTile+'<div class="th-card-heading pt-fill">'+escH(t.heading)+'</div></div>':'<div class="th-card-heading">'+escH(t.heading)+'</div>'):'')+(bodyHtml?'<div class="th-card-body">'+bodyHtml+'</div>':'')+'<div class="th-card-meta">'+catBadge+emoBadge+'<span class="th-date">'+t.date+'</span></div>'+(urlHtml?'<div style="margin-top:6px">'+urlHtml+'</div>':'')+'<div class="th-card-foot"><button class="del-btn" onclick="delThought('+t.id+')">&#128465; Delete</button><button class="btn" style="font-size:11px;padding:4px 12px" onclick="editThought('+t.id+')">\u270f Edit</button></div></div>';
 }
 function renderThoughts(){
+  if(!document.getElementById('th-search')) return;          // Thoughts now live in My Learnings
   var search=(document.getElementById('th-search').value||'').toLowerCase().trim(),sort=document.getElementById('th-sort').value;
   var list=thoughts.slice();
   if(thCatFilter!=='all')list=list.filter(function(t){return t.category===thCatFilter;});
@@ -651,7 +652,7 @@ async function fetchAllThoughts(){
 }
 function replaceThoughtsFromSheet(s){
   localStorage.removeItem('morning_thoughts');
-  var fromSheet=s.map(function(x,i){return{id:x.sheetId?parseInt(x.sheetId,10):Date.now()+i,timestamp:x.dateISO?new Date(x.dateISO).getTime():Date.now(),dateISO:x.dateISO||'',date:x.date||'',heading:x.heading||'',text:x.text||'',url:x.url||'',category:x.category||'',emotion:x.emotion||'',sheetId:x.sheetId||''};});var sheetIds={};s.forEach(function(x){if(x.sheetId)sheetIds[x.sheetId]=true;});var pending=thoughts.filter(function(t){return t.sheetId&&!sheetIds[t.sheetId];});thoughts=fromSheet.concat(pending);thoughts.sort(function(a,b){return b.timestamp-a.timestamp;});updateThBadge();if(document.getElementById('pg-thoughts').classList.contains('on'))renderThoughts();}
+  var fromSheet=s.map(function(x,i){return{id:x.sheetId?parseInt(x.sheetId,10):Date.now()+i,timestamp:x.dateISO?new Date(x.dateISO).getTime():Date.now(),dateISO:x.dateISO||'',date:x.date||'',heading:x.heading||'',text:x.text||'',url:x.url||'',category:x.category||'',emotion:x.emotion||'',sheetId:x.sheetId||''};});var sheetIds={};s.forEach(function(x){if(x.sheetId)sheetIds[x.sheetId]=true;});var pending=thoughts.filter(function(t){return t.sheetId&&!sheetIds[t.sheetId];});thoughts=fromSheet.concat(pending);thoughts.sort(function(a,b){return b.timestamp-a.timestamp;});updateThBadge();var thPg=document.getElementById('pg-thoughts');if(thPg&&thPg.classList.contains('on'))renderThoughts();}
 
 /* ═══════════════════════════════════════════════════
    POSTS — Sheet-sourced, with Pinned / All views
@@ -1217,8 +1218,8 @@ var motView='pinned';   // 'all' | 'pinned' — Pinned opens first
 var selMotCategory = '';
 var motCatFilter = 'all';
 
-var MOT_CAT_COLORS = {habit:'#C9A84C', practice:'#4ECDC4', principle:'#6BBF8E', mantra:'#E07B7B', reminder:'#9A97A0'};
-var MOT_CAT_ICONS  = {habit:'&#127775;', practice:'&#129490;', principle:'&#128214;', mantra:'&#128591;', reminder:'&#128276;'};
+var MOT_CAT_COLORS = {habit:'#C9A84C', practice:'#4ECDC4', principle:'#6BBF8E', mantra:'#E07B7B', reminder:'#9A97A0', thought:'#B39DDB'};
+var MOT_CAT_ICONS  = {habit:'&#127775;', practice:'&#129490;', principle:'&#128214;', mantra:'&#128591;', reminder:'&#128276;', thought:'&#128161;'};
 
 function loadMotivation(){try{var r=localStorage.getItem('morning_motivation');if(r)motEntries=JSON.parse(r);}catch(e){motEntries=[];}}
 function saveMotivation(){localStorage.setItem('morning_motivation',JSON.stringify(motEntries));}
@@ -1276,6 +1277,12 @@ async function togglePin(id){
     sheetId:e.sheetId||'',category:e.category,text:e.text,pinned:e.pinned?'yes':'no'});
 }
 
+/* Merged thoughts start with their heading: show that line bold */
+function motTextHTML(e){
+  var t=String(e.text||'');
+  if(e.category!=='thought'||t.indexOf('\n')<0) return escH(t);
+  var i=t.indexOf('\n'); return '<b class="mot-head">'+escH(t.slice(0,i))+'</b>'+escH(t.slice(i));
+}
 function motCardHTML(e){
   var col=MOT_CAT_COLORS[e.category]||'#9A97A0';
   var icon=MOT_CAT_ICONS[e.category]||'';
@@ -1284,7 +1291,7 @@ function motCardHTML(e){
     '<div class="mot-card-cat"><div class="mot-cat-dot" style="background:'+col+'"></div>'+
     '<span style="color:'+col+'">'+icon+' '+catLabel+'</span>'+
     (e.pinned?'<span style="margin-left:auto;font-size:10px;color:var(--gold)">&#128204; pinned</span>':'')+'</div>'+
-    '<div class="pt-row">'+ptTile(e.text,'',{clearOnly:true,size:'md'})+'<div class="mot-card-text pt-fill">'+escH(e.text)+'</div></div>'+
+    '<div class="pt-row">'+ptTile(e.text,'',{clearOnly:true,size:'md'})+'<div class="mot-card-text pt-fill">'+motTextHTML(e)+'</div></div>'+
     (e.example?'<div class="mot-example"><span class="mot-ex-l">&#128221; From my life</span>'+escH(e.example)+'</div>':'')+
     '<div class="mot-card-foot">'+
       '<button class="del-btn" onclick="delMotEntry('+e.id+')">&#128465; Delete</button>'+
@@ -1341,7 +1348,7 @@ function pickMotCat(el){
 
 function editMotEntry(id){
   var e=motEntries.find(function(x){return x.id===id;}); if(!e)return;
-  var catOpts=['habit','practice','principle','mantra','reminder'];
+  var catOpts=['habit','practice','principle','mantra','reminder','thought'];
   var catPills=catOpts.map(function(c){
     var col=MOT_CAT_COLORS[c]||'#9A97A0';
     var icon=MOT_CAT_ICONS[c]||'';
@@ -2797,7 +2804,7 @@ function feedSplitTitle(t){
 }
 
 function renderFeed(){
-  var L={post:'\ud83c\udfac From your saved posts', learn:'\ud83c\udf31 Small learning', kun:'\u2728 From your Kundali',
+  var L={post:'\ud83c\udfac From your saved posts', learn:'\ud83c\udf31 My learning', kun:'\u2728 From your Kundali',
          guide:'\ud83e\udded From your Guide', grat:'\ud83d\ude4f From your Gratitude'};
   var FEED_IDS=['feed-post','feed-learning','feed-kundali','feed-guide','feed-gratitude'];
   if(!feedReady){
@@ -2837,7 +2844,7 @@ function renderFeed(){
   // Small learning
   var learns=motEntries.filter(function(m){ return String(m.text||'').trim(); });
   var ma=feedAt(learns,'learn',function(x){ return x.sheetId||x.text; }), m=ma.item;
-  if(!m) feedEmpty('feed-learning',L.learn,'Nothing in Small learnings yet.');
+  if(!m) feedEmpty('feed-learning',L.learn,'Nothing in My Learnings yet.');
   else{
     var st=feedSplitTitle(m.text);
     feedCard('feed-learning',L.learn,
@@ -4811,12 +4818,12 @@ function prSources(){
         (s.dateISO?'<div class="pr-date">'+escH(s.date||s.dateISO)+(s.emotion?' · '+escH(s.emotion):'')+'</div>':'')}; })},
     {key:'kun',label:'Kundali',icon:'✨',items:(kunEntries||[]).map(function(k){ return {text:k.learning+' '+k.logic,
       html:'<b>'+escH(k.learning)+'</b>'+(k.logic?'<div class="pr-sub">'+escH(cut(k.logic,220))+'</div>':'')}; })},
-    {key:'mot',label:'Small learnings',icon:'🌱',items:(motEntries||[]).map(function(m){ var t=String(m.text||''), first=t.split(/\n/)[0];
+    {key:'mot',label:'My learnings',icon:'🌱',items:(motEntries||[]).map(function(m){ var t=String(m.text||''), first=t.split(/\n/)[0];
       return {text:t+' '+(m.example||''), html:'<b>'+escH(cut(first,160))+'</b>'+(t.length>first.length?'<div class="pr-sub">'+escH(cut(t.slice(first.length),220))+'</div>':'')+
         (m.example?'<div class="pr-sub pr-lesson">e.g. '+escH(cut(m.example,180))+'</div>':'')}; })},
     {key:'guide',label:'Guide',icon:'🧭',items:(guide||[]).map(function(g){ return {text:[g.situation,g.action,g.why].join(' '),
       html:'<b>'+escH(g.situation)+'</b> → '+escH(g.action)+(g.why?'<div class="pr-sub">'+escH(cut(g.why,200))+'</div>':'')}; })},
-    {key:'th',label:'Thoughts',icon:'💡',items:(thoughts||[]).map(function(t){ return {text:t.heading+' '+t.text,
+    {key:'th',label:'Thoughts (old)',icon:'💡',items:(thoughts||[]).map(function(t){ return {text:t.heading+' '+t.text,
       html:'<b>'+escH(t.heading)+'</b>'+(t.text?'<div class="pr-sub">'+escH(cut(t.text,240))+'</div>':'')}; })},
     {key:'posts',label:'Posts',icon:'📌',items:(posts||[]).map(function(p){ var safe=/^https?:\/\//i.test(p.url||'');
       return {text:p.heading+' '+p.desc, html:'<b>'+escH(p.heading)+'</b>'+(p.desc?'<div class="pr-sub">'+escH(cut(p.desc,200))+'</div>':'')+
