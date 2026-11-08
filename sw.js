@@ -1,8 +1,8 @@
 /* Morning Dashboard service worker.
-   Network first for the page and its files, so an update on GitHub shows
-   up straight away; the cached copy is only used when you're offline.
+   Network first for the page and its files, always revalidated with GitHub
+   (cache: 'no-cache'), so an update shows up straight away; the cached copy is only used when you're offline.
    Requests to the Sheet (a different site) are never touched. */
-const CACHE = 'morning-dashboard-v1';
+const CACHE = 'morning-dashboard-v2';
 const SHELL = ['./', './index.html', './styles.css', './app.js', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {
@@ -17,7 +17,7 @@ self.addEventListener('fetch', e => {
   const req = e.request;
   if (req.method !== 'GET' || new URL(req.url).origin !== self.location.origin) return;
   e.respondWith(
-    fetch(req).then(res => {
+    fetch(req, { cache: 'no-cache' }).then(res => {     // always ask GitHub (cheap 304 if unchanged), never the browser's stale copy
       if (res.ok) { const copy = res.clone(); caches.open(CACHE).then(c => c.put(req, copy)); }
       return res;
     }).catch(() => caches.match(req, { ignoreSearch: true }).then(r => r || caches.match('./index.html')))
