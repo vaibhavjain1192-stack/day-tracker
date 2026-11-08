@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=20261108">
+<link rel="stylesheet" href="styles.css?v=20261108b">
 </head>
 <body>
 <div class="toast" id="toast"></div>
@@ -27,9 +27,8 @@
     <button class="tab" onclick="switchTab('routine')"><span class="tab-icon">&#128197;<span class="badge zero" id="rt-badge">0</span></span><span class="tab-label">Routine</span></button>
     <button class="tab" onclick="switchTab('plans')"><span class="tab-icon">&#129504;<span class="badge zero" id="plan-badge">0</span></span><span class="tab-label">Plans</span></button>
     <button class="tab" onclick="switchTab('situations')"><span class="tab-icon">&#128250;<span class="badge zero" id="sit-badge">0</span></span><span class="tab-label">Situations</span></button>
-    <button class="tab" onclick="switchTab('thoughts')"><span class="tab-icon">&#128161;<span class="badge zero" id="th-badge">0</span></span><span class="tab-label">Thoughts</span></button>
     <button class="tab" onclick="switchTab('posts')"><span class="tab-icon">&#128204;<span class="badge zero" id="post-badge">0</span></span><span class="tab-label">Posts</span></button>
-    <button class="tab" onclick="switchTab('motivation')"><span class="tab-icon">&#128293;<span class="badge zero" id="mot-badge">0</span></span><span class="tab-label"><span class="tl-full">Small learnings</span><span class="tl-short">Learnings</span></span></button>
+    <button class="tab" onclick="switchTab('motivation')"><span class="tab-icon">&#128293;<span class="badge zero" id="mot-badge">0</span></span><span class="tab-label"><span class="tl-full">My Learnings</span><span class="tl-short">Learnings</span></span></button>
     <button class="tab" onclick="switchTab('gratitude')"><span class="tab-icon">&#128591;<span class="badge zero" id="grat-badge">0</span></span><span class="tab-label">Gratitude</span></button>
     <button class="tab" onclick="switchTab('kundali')"><span class="tab-icon">&#128337;<span class="badge zero" id="kun-badge">0</span></span><span class="tab-label">Kundali</span></button>
     <button class="tab" onclick="switchTab('guide')"><span class="tab-icon">&#10024;<span class="badge zero" id="gd-badge">0</span></span><span class="tab-label">Guide</span></button>
@@ -294,18 +293,6 @@
 </div>
 
 <!-- TAB 3: THOUGHTS -->
-<div class="pg" id="pg-thoughts">
-  <div class="past-hdr"><div class="past-title">Good Thoughts</div><div class="past-sub">Your personal repository of ideas, insights and inspirations.</div></div>
-  <div class="th-add-block"><div class="th-add-grid"><div class="th-field-full"><label class="sfl">Heading / title</label><input class="sin" id="th-heading" type="text" placeholder="What is this insight about?"></div><div class="th-field-full"><label class="sfl">Description / key points <span style="color:var(--text-3);font-weight:400">(&#8226; or - for bullets)</span></label><textarea class="sin" id="th-text" rows="5" placeholder="&#8226; The main insight&#10;&#8226; Why this matters&#10;&#8226; How you will apply it"></textarea></div><div><label class="sfl">Category</label><div class="th-cat-pills" id="th-cat-pills"><button class="thp" onclick="selThCat(this)" data-val="mindset">&#129504; Mindset</button><button class="thp" onclick="selThCat(this)" data-val="emotion">&#10084;&#65039; Emotion</button><button class="thp" onclick="selThCat(this)" data-val="focus">&#127919; Focus</button><button class="thp" onclick="selThCat(this)" data-val="discipline">&#9889; Discipline</button><button class="thp" onclick="selThCat(this)" data-val="relationships">&#129306; Relationships</button><button class="thp" onclick="selThCat(this)" data-val="philosophy">&#128214; Philosophy</button><button class="thp" onclick="selThCat(this)" data-val="business">&#128188; Business</button><button class="thp" onclick="selThCat(this)" data-val="life">&#127807; Life</button></div></div><div><label class="sfl">How does it make you feel?</label><div class="th-emo-pills" id="th-emo-pills"><button class="thp" onclick="selThEmo(this)" data-val="inspired">&#10024; Inspired</button><button class="thp" onclick="selThEmo(this)" data-val="calm">&#129528; Calm</button><button class="thp" onclick="selThEmo(this)" data-val="motivated">&#128293; Motivated</button><button class="thp" onclick="selThEmo(this)" data-val="grateful">&#128591; Grateful</button><button class="thp" onclick="selThEmo(this)" data-val="reflective">&#129710; Reflective</button><button class="thp" onclick="selThEmo(this)" data-val="challenged">&#128170; Challenged</button></div></div></div><div class="th-field-full" style="margin-bottom:10px"><label class="sfl">Source or URL <span style="color:var(--text-3);font-weight:400">(optional)</span></label><input class="sin" id="th-url" type="text" placeholder="https://... or Author / Book / Podcast name"></div><div class="th-add-foot"><span class="sync-txt" id="th-sync">Add your first thought</span><button class="btn gold" onclick="addThought()">Save thought &#8599;</button></div></div>
-  <div class="th-filter-bar"><input class="psearch" id="th-search" type="text" placeholder="Search thoughts..." oninput="renderThoughts()" style="flex:1;min-width:160px"><select class="psort" id="th-sort" onchange="renderThoughts()"><option value="newest">Newest first</option><option value="oldest">Oldest first</option></select><button class="btn" onclick="exportThoughtsCSV()">Export CSV</button></div>
-  <div class="ef-bar" id="th-cat-filter"><button class="ef on" data-c="all" onclick="setThCatFilter(this)">All</button><button class="ef" data-c="mindset" onclick="setThCatFilter(this)">&#129504; Mindset</button><button class="ef" data-c="emotion" onclick="setThCatFilter(this)">&#10084;&#65039; Emotion</button><button class="ef" data-c="focus" onclick="setThCatFilter(this)">&#127919; Focus</button><button class="ef" data-c="discipline" onclick="setThCatFilter(this)">&#9889; Discipline</button><button class="ef" data-c="relationships" onclick="setThCatFilter(this)">&#129306; Relationships</button><button class="ef" data-c="philosophy" onclick="setThCatFilter(this)">&#128214; Philosophy</button><button class="ef" data-c="business" onclick="setThCatFilter(this)">&#128188; Business</button><button class="ef" data-c="life" onclick="setThCatFilter(this)">&#127807; Life</button></div>
-  <div class="ef-bar" id="th-emo-filter"><button class="ef on" data-e="all" onclick="setThEmoFilter(this)">All feelings</button><button class="ef" data-e="inspired" onclick="setThEmoFilter(this)">&#10024; Inspired</button><button class="ef" data-e="calm" onclick="setThEmoFilter(this)">&#129528; Calm</button><button class="ef" data-e="motivated" onclick="setThEmoFilter(this)">&#128293; Motivated</button><button class="ef" data-e="grateful" onclick="setThEmoFilter(this)">&#128591; Grateful</button><button class="ef" data-e="reflective" onclick="setThEmoFilter(this)">&#129710; Reflective</button><button class="ef" data-e="challenged" onclick="setThEmoFilter(this)">&#128170; Challenged</button></div>
-  <div class="pmeta" id="th-meta"></div>
-  <div class="th-log" id="th-log"></div>
-  <div class="foot" style="margin-top:1.25rem"><span class="foot-note">Stored locally · synced to Google Sheets</span><button class="btn" onclick="switchTab('morning')">&#8592; Morning</button></div>
-</div>
-
-<!-- TAB 4: POSTS -->
 <div class="pg" id="pg-posts">
   <div class="past-hdr"><div class="past-title">Favourite Posts</div><div class="past-sub">Inspiring posts from across the internet &#8212; saved with context and emotion.</div></div>
 
@@ -347,8 +334,8 @@
 
 <!-- TAB 6: MOTIVATION -->
 <div class="pg" id="pg-motivation">
-  <div class="past-hdr"><div class="past-title">Small learnings</div><div class="past-sub">The lessons, habits and principles you've collected along the way.</div></div>
-  <div class="mot-filter-bar" id="mot-cat-filter"><button class="mf on" data-mc="all" onclick="setMotCatFilter(this)">All</button><button class="mf" data-mc="habit" onclick="setMotCatFilter(this)">&#127775; Habit</button><button class="mf" data-mc="practice" onclick="setMotCatFilter(this)">&#129490; Practice</button><button class="mf" data-mc="principle" onclick="setMotCatFilter(this)">&#128214; Principle</button><button class="mf" data-mc="mantra" onclick="setMotCatFilter(this)">&#128591; Mantra</button><button class="mf" data-mc="reminder" onclick="setMotCatFilter(this)">&#128276; Reminder</button></div>
+  <div class="past-hdr"><div class="past-title">My Learnings</div><div class="past-sub">The lessons, thoughts, habits and principles you've collected along the way.</div></div>
+  <div class="mot-filter-bar" id="mot-cat-filter"><button class="mf on" data-mc="all" onclick="setMotCatFilter(this)">All</button><button class="mf" data-mc="habit" onclick="setMotCatFilter(this)">&#127775; Habit</button><button class="mf" data-mc="practice" onclick="setMotCatFilter(this)">&#129490; Practice</button><button class="mf" data-mc="principle" onclick="setMotCatFilter(this)">&#128214; Principle</button><button class="mf" data-mc="mantra" onclick="setMotCatFilter(this)">&#128591; Mantra</button><button class="mf" data-mc="reminder" onclick="setMotCatFilter(this)">&#128276; Reminder</button><button class="mf" data-mc="thought" onclick="setMotCatFilter(this)">&#128161; Thought</button></div>
   <div class="pst-tabs">
     <button class="pst-tab on" id="mot-tab-pinned" onclick="setMotView('pinned')">&#128204; Pinned <span class="pst-ct" id="mot-ct-pinned">0</span></button>
     <button class="pst-tab" id="mot-tab-all" onclick="setMotView('all')">All entries <span class="pst-ct" id="mot-ct-all">0</span></button>
@@ -357,7 +344,7 @@
   <div class="pmeta" id="mot-meta"></div>
   <div class="mot-log" id="mot-log"></div>
   <div class="lbl" style="margin-top:1.5rem">Add an entry <span class="lbl-line"></span></div>
-  <div class="sit-block"><div style="margin-bottom:10px"><label class="sfl">Category</label><div class="mot-cat-pills"><button class="mcp" onclick="selMotCat(this)" data-val="habit">&#127775; Habit</button><button class="mcp" onclick="selMotCat(this)" data-val="practice">&#129490; Practice</button><button class="mcp" onclick="selMotCat(this)" data-val="principle">&#128214; Principle</button><button class="mcp" onclick="selMotCat(this)" data-val="mantra">&#128591; Mantra</button><button class="mcp" onclick="selMotCat(this)" data-val="reminder">&#128276; Reminder</button></div></div><div style="margin-bottom:10px"><label class="sfl">Habit / practice / principle</label><textarea class="sin" id="mot-text" rows="4" placeholder="e.g. Every morning before I touch my phone, I sit for 5 minutes in silence..."></textarea></div><div style="margin-bottom:10px"><label class="sfl" for="mot-example">Real-life example <span style="color:var(--text-3);font-weight:400">(optional)</span></label><textarea class="sin" id="mot-example" rows="2" placeholder="When did this actually happen to you? e.g. I argued with my manager in March and regretted it for a week..."></textarea></div><div class="sit-foot"><span class="sync-txt" id="mot-sync">Ready to add</span><button class="btn gold" onclick="addMotEntry()">Add to morning read &#8599;</button></div></div>
+  <div class="sit-block"><div style="margin-bottom:10px"><label class="sfl">Category</label><div class="mot-cat-pills"><button class="mcp" onclick="selMotCat(this)" data-val="habit">&#127775; Habit</button><button class="mcp" onclick="selMotCat(this)" data-val="practice">&#129490; Practice</button><button class="mcp" onclick="selMotCat(this)" data-val="principle">&#128214; Principle</button><button class="mcp" onclick="selMotCat(this)" data-val="mantra">&#128591; Mantra</button><button class="mcp" onclick="selMotCat(this)" data-val="reminder">&#128276; Reminder</button><button class="mcp" onclick="selMotCat(this)" data-val="thought">&#128161; Thought</button></div></div><div style="margin-bottom:10px"><label class="sfl">Learning or thought</label><textarea class="sin" id="mot-text" rows="4" placeholder="e.g. Every morning before I touch my phone, I sit for 5 minutes in silence..."></textarea></div><div style="margin-bottom:10px"><label class="sfl" for="mot-example">Real-life example <span style="color:var(--text-3);font-weight:400">(optional)</span></label><textarea class="sin" id="mot-example" rows="2" placeholder="When did this actually happen to you? e.g. I argued with my manager in March and regretted it for a week..."></textarea></div><div class="sit-foot"><span class="sync-txt" id="mot-sync">Ready to add</span><button class="btn gold" onclick="addMotEntry()">Add to morning read &#8599;</button></div></div>
   <div class="foot" style="margin-top:1.5rem"><span class="foot-note">Stored locally · synced to Google Sheets</span><button class="btn" onclick="switchTab('morning')">&#8592; Morning</button></div>
 </div>
 
@@ -519,12 +506,12 @@
   <div class="set-panel"><div class="set-head"><h2 id="set-title">Settings</h2><button type="button" class="set-x" onclick="closeSettings()" aria-label="Close">&times;</button></div>
   <div id="set-body"></div></div>
 </div>
-<script src="app.js?v=20261108"></script>
+<script src="app.js?v=20261108b"></script>
 <script>
 /* If GitHub served an older app.js than this page expects (one file went live before the other,
    or the browser cached it), fetch fresh copies and reload once. */
 (function(){
-  var want='20261108';
+  var want='20261108b';
   if(window.APP_VER===want) { try{ sessionStorage.removeItem('ver_retry'); }catch(e){} return; }
   try{ if(sessionStorage.getItem('ver_retry')===want) return; sessionStorage.setItem('ver_retry',want); }catch(e){ return; }
   Promise.all(['app.js?v='+want,'styles.css?v='+want,'app.js','index.html'].map(function(u){ return fetch(u,{cache:'reload'}).catch(function(){}); }))
