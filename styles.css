@@ -1473,3 +1473,13 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
 .ty-hx{flex:1}
 .ty-hb{color:#E07B7B}.ty-hw{color:var(--gold)}.ty-hd{color:#6BBF8E}
 .ty-hist .rt-mini{font-size:12px;padding:0 4px}
+
+/* Principle popup summary */
+.pr-sum{margin:12px 0 4px;padding:12px 14px;border-radius:var(--r);background:rgba(201,168,76,.07);border:1px solid rgba(201,168,76,.25)}
+.pr-sum-h{font-size:10.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--gold);margin-bottom:6px}
+.pr-pts{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px}
+.pr-pts li{font-size:13.5px;color:var(--text-1);line-height:1.5}
+.pr-pts li::marker{color:var(--gold)}
+.pr-habit{display:flex;flex-direction:column;gap:3px;margin-top:10px;padding:10px 12px;border-radius:8px;background:rgba(107,191,142,.1);border:1px solid rgba(107,191,142,.35)}
+.pr-habit-l{font-size:10.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#6BBF8E}
+.pr-habit-t{font-size:14px;color:var(--text-1);line-height:1.45;font-weight:500}
