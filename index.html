@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=20261108b">
+<link rel="stylesheet" href="styles.css?v=20261109">
 </head>
 <body>
 <div class="toast" id="toast"></div>
@@ -25,6 +25,7 @@
   <div class="nav-inner">
     <button class="tab on" onclick="switchTab('morning')"><span class="tab-icon">&#9728;&#65039;<span class="badge zero" id="mor-badge">0</span></span><span class="tab-label">Morning</span></button>
     <button class="tab" onclick="switchTab('routine')"><span class="tab-icon">&#128197;<span class="badge zero" id="rt-badge">0</span></span><span class="tab-label">Routine</span></button>
+    <button class="tab" onclick="switchTab('improve')"><span class="tab-icon">&#128200;<span class="badge zero" id="imp-badge">0</span></span><span class="tab-label"><span class="tl-full">Improvement</span><span class="tl-short">Improve</span></span></button>
     <button class="tab" onclick="switchTab('plans')"><span class="tab-icon">&#129504;<span class="badge zero" id="plan-badge">0</span></span><span class="tab-label">Plans</span></button>
     <button class="tab" onclick="switchTab('situations')"><span class="tab-icon">&#128250;<span class="badge zero" id="sit-badge">0</span></span><span class="tab-label">Situations</span></button>
     <button class="tab" onclick="switchTab('posts')"><span class="tab-icon">&#128204;<span class="badge zero" id="post-badge">0</span></span><span class="tab-label">Posts</span></button>
@@ -44,22 +45,6 @@
   <section class="mr" id="mr-box" aria-labelledby="mr-title">
     <div class="mr-top"><h2 class="mr-title" id="mr-title">&#127749; Morning read</h2><span class="mr-meta" id="mr-meta"></span></div>
     <div id="mr-body"><div class="fd-note">Loading&hellip;</div></div>
-    <div class="mr-hab">
-      <div class="mr-hab-hd" id="hd-habits"><span class="mr-h">&#127775; Habits I&#8217;m following</span><span class="sec-badge" id="badge-habits"></span></div>
-      <div id="sec-habits">
-      <div style="font-size:11px;color:var(--text-2);margin-bottom:10px">Tick them off as you go; ticks reset each morning. Drag &#9776; to reorder.</div>
-      <div id="today-habits-list"></div>
-      <div id="habit-archive-box" style="display:none"></div>
-      <div style="display:flex;gap:8px;margin-top:10px">
-        <input class="sin" id="today-habit-input" type="text" placeholder="e.g. Pause for 3 breaths before reacting..." style="flex:1" onkeydown="if(event.key==='Enter'){addTodayHabit();event.preventDefault();}">
-        <button class="btn gold" onclick="addTodayHabit()" style="white-space:nowrap">+ Add</button>
-      </div>
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;flex-wrap:wrap;gap:6px">
-        <span class="sync-txt" id="hab-day-sync"></span>
-        <button class="btn" onclick="clearTodayHabits()">Untick all</button>
-      </div>
-    </div>
-    </div>
     <div id="mr-foot"></div>
   </section>
   <section class="feed" id="feed" aria-labelledby="feed-title">
@@ -190,6 +175,28 @@
 
   <div class="foot" style="margin-top:1.5rem"><span class="foot-note">Synced to Google Sheets</span><button class="btn" onclick="switchTab('morning')">&#8592; Morning</button></div>
 </div><!-- /pg-plans -->
+
+<!-- TAB: IMPROVEMENT TRACKER -->
+<div class="pg" id="pg-improve">
+  <div class="past-hdr"><div class="past-title">Improvement tracker</div><div class="past-sub">The habits you&#8217;re changing, and every time one came up: what happened and how you responded.</div></div>
+  <div class="sec-hd open" id="hd-improve"><span class="sec-icon">&#128200;</span><span class="sec-title">Habits I&#8217;m changing</span><span class="lbl-line"></span><span class="sec-badge" id="badge-improve"></span></div>
+  <div class="q-wrap"><div id="imp-body"><div class="fd-note">Loading&hellip;</div></div></div>
+  <div class="sec-hd open" id="hd-habits" style="margin-top:1.5rem"><span class="sec-icon">&#127775;</span><span class="sec-title">Habits I&#8217;m following</span><span class="lbl-line"></span><span class="sec-badge" id="badge-habits"></span></div>
+  <div class="q-wrap"><div id="sec-habits">
+      <div style="font-size:11px;color:var(--text-2);margin-bottom:10px">Tick them off as you go; ticks reset each morning. Drag &#9776; to reorder.</div>
+      <div id="today-habits-list"></div>
+      <div id="habit-archive-box" style="display:none"></div>
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <input class="sin" id="today-habit-input" type="text" placeholder="e.g. Pause for 3 breaths before reacting..." style="flex:1" onkeydown="if(event.key==='Enter'){addTodayHabit();event.preventDefault();}">
+        <button class="btn gold" onclick="addTodayHabit()" style="white-space:nowrap">+ Add</button>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;flex-wrap:wrap;gap:6px">
+        <span class="sync-txt" id="hab-day-sync"></span>
+        <button class="btn" onclick="clearTodayHabits()">Untick all</button>
+      </div>
+    </div></div>
+  <div class="foot" style="margin-top:1.5rem"><span class="foot-note">Synced to Google Sheets</span><button class="btn" onclick="switchTab('morning')">&#8592; Morning</button></div>
+</div>
 
 <!-- TAB 2: ROUTINE -->
 <div class="pg" id="pg-routine">
@@ -506,12 +513,12 @@
   <div class="set-panel"><div class="set-head"><h2 id="set-title">Settings</h2><button type="button" class="set-x" onclick="closeSettings()" aria-label="Close">&times;</button></div>
   <div id="set-body"></div></div>
 </div>
-<script src="app.js?v=20261108b"></script>
+<script src="app.js?v=20261109"></script>
 <script>
 /* If GitHub served an older app.js than this page expects (one file went live before the other,
    or the browser cached it), fetch fresh copies and reload once. */
 (function(){
-  var want='20261108b';
+  var want='20261109';
   if(window.APP_VER===want) { try{ sessionStorage.removeItem('ver_retry'); }catch(e){} return; }
   try{ if(sessionStorage.getItem('ver_retry')===want) return; sessionStorage.setItem('ver_retry',want); }catch(e){ return; }
   Promise.all(['app.js?v='+want,'styles.css?v='+want,'app.js','index.html'].map(function(u){ return fetch(u,{cache:'reload'}).catch(function(){}); }))
