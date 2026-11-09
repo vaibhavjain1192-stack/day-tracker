@@ -1,6 +1,6 @@
 /* Morning Dashboard app. Linked from index.html; bump ?v= there when this changes. */
 'use strict';
-window.APP_VER='20261109b';   // must match the ?v= in index.html (checked there)
+window.APP_VER='20261109c';   // must match the ?v= in index.html (checked there)
 const WORKER_URL='https://muddy-shadow-1aa7.vaibhavjain-1192.workers.dev';
 const FETCH_TIMEOUT=45000;   // default; page loads pass shorter ones
 var DIAG={};  // diagnostics collected during fetch
@@ -993,6 +993,7 @@ async function saveEditModal(){
 
     // Update in-memory state first so the UI responds immediately
     habitList=habitList.map(function(t){return t===oldText?newText:t;});
+    hfRelink(oldText,newText);
     Object.keys(habitDone).forEach(function(d){
       habitDone[d]=habitDone[d].map(function(t){return t===oldText?newText:t;});
     });
@@ -1739,9 +1740,11 @@ function renderTodayHabits(){
       '<div class="th-habit-cb'+(done?' done':'')+'" onclick="toggleTodayHabit('+esc+')"><span class="th-habit-tick">\u2713</span></div>'+
       ptTile(t,'',{clearOnly:true,size:'sm'})+
       '<span class="th-habit-text" onclick="toggleTodayHabit('+esc+')">'+escH(t)+'</span>'+
-      streakHtml+
+      '<span class="th-habit-acts">'+streakHtml+
+      '<button type="button" class="th-habit-log" onclick="impOpenLog('+jsArg(hfId(t))+')" title="Log a time this came up">+ Log</button>'+
       '<button class="th-habit-edit" onclick="editTodayHabit('+esc+')" title="Edit wording">\u270e</button>'+
-      '<button class="th-habit-del" onclick="removeTodayHabit('+esc+')" title="Stop following">\u00d7</button>'+
+      '<button class="th-habit-del" onclick="removeTodayHabit('+esc+')" title="Stop following">\u00d7</button></span>'+
+      hfPanelHTML(t)+
     '</div>';
   }).join('');
   renderHabitArchive();
@@ -5082,7 +5085,7 @@ function replaceImproveFromSheet(d){
   if(!d||!Array.isArray(d.habits)) return;
   impLoaded=true; impUnsupported=false; impFailed=false;
   impHabits=d.habits.slice(); impInst=(d.instances||[]).slice();
-  renderImprove();
+  renderImprove(); renderTodayHabits();
 }
 async function loadImproveDirect(){
   if(impLoaded) return;
@@ -5136,15 +5139,47 @@ async function impDeleteHabit(id){
   gone.forEach(function(x){ queueSave('ii-del:'+x.sheetId,{sheet:'Improve',kind:'instance',action:'delete',sheetId:x.sheetId}); });
 }
 
+/* "Habits I'm following" can log instances too. Their entries live in ImproveInstances
+   with habitId "hf<hash of the wording>"; editing the wording relinks them. */
+function hfId(t){ var h=5381, s=String(t); for(var i=0;i<s.length;i++) h=((h<<5)+h+s.charCodeAt(i))|0; return 'hf'+(h>>>0).toString(36); }
+var hfOpen={};
+function impTarget(id){
+  var h=impHabits.find(function(x){ return x.sheetId===id; }); if(h) return h;
+  var t=(habitList||[]).find(function(x){ return hfId(x)===id; });
+  return t?{sheetId:id,habit:t,follow:true}:null;
+}
+function hfRelink(oldT,newT){
+  var a=hfId(oldT), b=hfId(newT); if(a===b) return;
+  impInst.forEach(function(x){ if(x.habitId!==a) return; x.habitId=b; x.habit=newT;
+    queueSave('ii:'+x.sheetId,{sheet:'Improve',kind:'instance',sheetId:x.sheetId,habitId:b,habit:newT,date:x.date,instance:x.instance,response:x.response,outcome:x.outcome}); });
+  if(hfOpen[a]){ hfOpen[b]=1; delete hfOpen[a]; }
+}
+function hfPanelHTML(t){
+  var id=hfId(t);
+  if(impLogFor===id) return '<div class="hf-panel">'+impLogFormHTML({sheetId:id,habit:t})+'</div>';
+  var log=impOf(id).filter(function(x){ return x.outcome!=='clean'; }).sort(function(a,b){ return b.date.localeCompare(a.date)||b.sheetId.localeCompare(a.sheetId); });
+  if(!log.length) return '';
+  var open=!!hfOpen[id], c={handled:0,slipped:0}; log.forEach(function(x){ if(c[x.outcome]!=null) c[x.outcome]++; });
+  return '<div class="hf-panel"><button type="button" class="hf-sum" aria-expanded="'+open+'" onclick="hfOpen['+jsArg(id)+']=!hfOpen['+jsArg(id)+'];renderTodayHabits()">'+
+      '<span class="ty-hcar">\u25b8</span> '+log.length+' logged \u00b7 \uD83D\uDC4D '+c.handled+' \u00b7 \uD83D\uDC4E '+c.slipped+' \u00b7 last '+feedDate(log[0].date)+'</button>'+
+    (open?'<ul class="imp-list hf-list">'+log.map(function(x){ var o=IMP_OUT[x.outcome]||IMP_OUT.handled;
+      return '<li><div class="imp-lh"><span class="imp-ld">'+feedDate(x.date)+'</span><span class="imp-pill '+x.outcome+'">'+o[0]+' '+o[1]+'</span>'+
+        '<span class="imp-la"><button type="button" class="rt-mini" aria-label="Edit entry" onclick="impOpenLog('+jsArg(id)+','+jsArg(x.date)+','+jsArg(x.sheetId)+')">\u270e</button>'+
+        '<button type="button" class="rt-mini del" aria-label="Delete entry" onclick="impDeleteInst('+jsArg(x.sheetId)+')">\u00d7</button></span></div>'+
+        '<div class="imp-li">'+escH(x.instance)+'</div>'+(x.response?'<div class="imp-lr">\u2192 '+escH(x.response)+'</div>':'')+'</li>'; }).join('')+'</ul>':'')+
+  '</div>';
+}
 function impOpenLog(hid,date,instId){
-  impLogFor=hid; impLogDate=date||isoToday(); impEditInst=instId||''; renderImprove();
+  if(!impLoaded){ showToast('Still loading. Try again in a moment.','error'); return; }
+  impLogFor=hid; impLogDate=date||isoToday(); impEditInst=instId||''; renderImprove(); renderTodayHabits();
+  var f=document.getElementById('imp-l-inst'); if(f) f.closest('.imp-log').scrollIntoView({block:'nearest',behavior:'smooth'});
   var t=document.getElementById('imp-l-inst'); if(t) t.focus();
 }
 function impPickOutcome(btn){ [].forEach.call(btn.parentNode.children,function(b){ var on=b===btn; b.classList.toggle('on',on); b.setAttribute('aria-checked',on); }); }
 async function impSaveLog(){
-  var h=impHabits.find(function(x){ return x.sheetId===impLogFor; }); if(!h) return;
+  var h=impTarget(impLogFor); if(!h) return;
   var date=(document.getElementById('imp-l-date')||{}).value||'', inst=((document.getElementById('imp-l-inst')||{}).value||'').trim(),
-      resp=((document.getElementById('imp-l-resp')||{}).value||'').trim(), ob=document.querySelector('#imp-body .imp-out .on');
+      resp=((document.getElementById('imp-l-resp')||{}).value||'').trim(), ob=document.querySelector('.imp-log .imp-out .on');
   if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||date>isoToday()){ showToast('Pick today or an earlier date.','error'); return; }
   if(!inst){ showToast('Write what happened.','error'); document.getElementById('imp-l-inst').focus(); return; }
   if(!ob){ showToast('Did you handle it, or slip?','error'); return; }
@@ -5152,9 +5187,9 @@ async function impSaveLog(){
   if(x) Object.assign(x,{date:date,instance:inst,response:resp,outcome:out});
   else { x={sheetId:'ii'+Date.now(),habitId:h.sheetId,habit:h.habit,date:date,instance:inst,response:resp,outcome:out}; impInst.push(x);
     impInst=impInst.filter(function(y){ return !(y.habitId===h.sheetId&&y.date===date&&y.outcome==='clean'); }); }
-  impLogFor=''; impEditInst=''; renderImprove();
+  impLogFor=''; impEditInst=''; if(h.follow) hfOpen[h.sheetId]=1; renderImprove(); renderTodayHabits();
   var ok=await postToSheet({sheet:'Improve',kind:'instance',sheetId:x.sheetId,habitId:h.sheetId,habit:h.habit,date:date,instance:inst,response:resp,outcome:out});
-  if(!ok){ if(old) Object.assign(x,old); else impInst=impInst.filter(function(y){ return y!==x; }); renderImprove(); showToast(LAST_SHEET_ERROR||'Couldn’t save.','error'); return; }
+  if(!ok){ if(old) Object.assign(x,old); else impInst=impInst.filter(function(y){ return y!==x; }); renderImprove(); renderTodayHabits(); showToast(LAST_SHEET_ERROR||'Couldn’t save.','error'); return; }
   showToast(out==='handled'?'Logged. Nicely handled ✓':'Logged. Tomorrow’s a new day.','success');
 }
 async function impToggleClean(hid){
@@ -5171,9 +5206,9 @@ async function impToggleClean(hid){
 async function impDeleteInst(id){
   var x=impInst.find(function(y){ return y.sheetId===id; }); if(!x) return;
   if(!confirm('Delete this entry from '+feedDate(x.date)+'?')) return;
-  impInst=impInst.filter(function(y){ return y!==x; }); renderImprove();
+  impInst=impInst.filter(function(y){ return y!==x; }); renderImprove(); renderTodayHabits();
   var ok=await postToSheet({sheet:'Improve',kind:'instance',action:'delete',sheetId:id});
-  if(!ok){ impInst.push(x); renderImprove(); showToast(LAST_SHEET_ERROR||'Couldn’t delete.','error'); }
+  if(!ok){ impInst.push(x); renderImprove(); renderTodayHabits(); showToast(LAST_SHEET_ERROR||'Couldn’t delete.','error'); }
 }
 
 function impLogFormHTML(h){
@@ -5186,7 +5221,7 @@ function impLogFormHTML(h){
     '<div class="pe-f"><span>How did it go?</span><div class="pe-seg imp-out" role="radiogroup" aria-label="How did it go">'+
       ['handled','slipped'].map(function(o){ return '<button type="button" role="radio" data-o="'+o+'" aria-checked="'+(out===o)+'" class="'+(out===o?'on ':'')+'o-'+o+'" onclick="impPickOutcome(this)">'+IMP_OUT[o][0]+' '+(o==='handled'?'Handled it well':'Slipped')+'</button>'; }).join('')+
     '</div></div>'+
-    '<div class="ty-foot"><button type="button" class="btn" onclick="impLogFor=\'\';impEditInst=\'\';renderImprove()">Cancel</button><button type="button" class="btn gold" onclick="impSaveLog()">Save</button></div></div>';
+    '<div class="ty-foot"><button type="button" class="btn" onclick="impLogFor=\'\';impEditInst=\'\';renderImprove();renderTodayHabits()">Cancel</button><button type="button" class="btn gold" onclick="impSaveLog()">Save</button></div></div>';
 }
 function impCardHTML(h){
   var id=h.sheetId, t=isoToday(), days=[]; for(var i=6;i>=0;i--) days.push(foodShift(t,-i));
