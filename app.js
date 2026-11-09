@@ -1,6 +1,6 @@
 /* Morning Dashboard app. Linked from index.html; bump ?v= there when this changes. */
 'use strict';
-window.APP_VER='20261108b';   // must match the ?v= in index.html (checked there)
+window.APP_VER='20261109';   // must match the ?v= in index.html (checked there)
 const WORKER_URL='https://muddy-shadow-1aa7.vaibhavjain-1192.workers.dev';
 const FETCH_TIMEOUT=45000;   // default; page loads pass shorter ones
 var DIAG={};  // diagnostics collected during fetch
@@ -142,6 +142,7 @@ function switchTab(tab){
   document.getElementById('pg-'+tab).classList.add('on');
   var tb=document.querySelector('.tab[onclick="switchTab(\''+tab+'\')"]'); if(tb) tb.classList.add('on');
   if(tab==='plans'){ renderSitRows(); renderPlanLibrary(); renderStepsEditor('spl'); }
+  if(tab==='improve'){ renderImprove(); renderTodayHabits(); }
   if(tab==='routine'){_calNeedsScroll=true;renderMaster();renderRoutine();}
   if(tab==='situations'){renderStats();renderPast();}
   if(tab==='thoughts')renderThoughts();
@@ -224,6 +225,7 @@ function init(){
       if(d.foodGrid&&Array.isArray(d.foodGrid.headers)) replaceFoodGridFromSheet(d.foodGrid); else loadFoodGridDirect();
       if(d.timeGrid&&Array.isArray(d.timeGrid.rows)) replaceTimeGridFromSheet(d.timeGrid); else loadTimeGridDirect();
       if(Array.isArray(d.principles)) replacePrinciplesFromSheet(d.principles); else loadPrinciplesDirect();
+      if(d.improve&&Array.isArray(d.improve.habits)) replaceImproveFromSheet(d.improve); else loadImproveDirect();
       dashKeySet = d.keySet===true ? true : d.keySet===false ? false : null;
       lastBackup = d.lastBackup||'';
       renderKeyWarning();
@@ -282,7 +284,8 @@ function init(){
         ['getAllMasterList','masterList',replaceMlFromSheet],
         ['getFoodGrid','foodGrid',replaceFoodGridFromSheet],
         ['getTimeGrid','timeGrid',replaceTimeGridFromSheet],
-        ['getAllPrinciples','principles',replacePrinciplesFromSheet]
+        ['getAllPrinciples','principles',replacePrinciplesFromSheet],
+        ['getImprove','improve',replaceImproveFromSheet]
       ];
       if(skipArchives){
         var arcKeys={situations:1,thoughts:1,posts:1,motivation:1,gratitude:1,kundali:1,guide:1};
@@ -294,7 +297,7 @@ function init(){
         while(next<jobs.length){
           var j=jobs[next++];
           var r=await sheetFetch(WORKER_URL+'?action='+j[0],null,20000);
-          if(r&&r.status==='ok'&&(Array.isArray(r[j[1]])||((j[1]==='foodGrid'||j[1]==='timeGrid')&&r[j[1]]))){ try{ j[2](r[j[1]]); got++; }catch(er){ console.error(er); } }
+          if(r&&r.status==='ok'&&(Array.isArray(r[j[1]])||((j[1]==='foodGrid'||j[1]==='timeGrid'||j[1]==='improve')&&r[j[1]]))){ try{ j[2](r[j[1]]); got++; }catch(er){ console.error(er); } }
         }
       }
       await Promise.all([worker(),worker(),worker(),worker()]);
@@ -310,6 +313,7 @@ function init(){
       if(!fgLoaded) markFoodGridFailed();
       if(!tgLoaded) markTimeGridFailed();
       if(!prLoaded) markPrinciplesFailed();
+      if(!impLoaded) markImproveFailed();
       // Only call the feed loaded if something for it actually arrived
       if(posts.length||motEntries.length||kunEntries.length||guide.length||gratEntries.length) feedReady=true;
       else feedFailed=true;
@@ -4772,13 +4776,28 @@ async function loadPrinciplesDirect(){
 function markPrinciplesFailed(){ if(prLoaded||prUnsupported) return; prFailed=true; renderMorningRead(); }
 
 function mrDayNo(d){ var p=String(d).split('-'); return Math.floor(Date.UTC(+p[0],+p[1]-1,+p[2])/864e5); }
-function mrToday(){
+var MR_DOW=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+/* "Mon, Thu" / "weekdays" / "weekends" → [1,4] etc.; blank → [] (rotates) */
+function prDays(p){
+  var t=String(p.days||'').toLowerCase(), out={};
+  if(/weekday/.test(t)) [1,2,3,4,5].forEach(function(d){ out[d]=1; });
+  if(/weekend/.test(t)) [0,6].forEach(function(d){ out[d]=1; });
+  if(/daily|every ?day/.test(t)) [0,1,2,3,4,5,6].forEach(function(d){ out[d]=1; });
+  MR_DOW.forEach(function(n,i){ if(new RegExp('\\b'+n.toLowerCase()).test(t)) out[i]=1; });
+  return Object.keys(out).map(Number).sort();
+}
+function mrDow(d){ var p=String(d).split('-'); return new Date(+p[0],+p[1]-1,+p[2]).getDay(); }
+/* Today's reflections = principles set for this weekday, topped up to MR_ROTATE from the rotating ones */
+function mrToday(d){
+  d=d||isoToday();
   var core=principles.filter(function(p){ return p.core; });
   var rest=principles.filter(function(p){ return !p.core; });
-  var pick=[];
-  if(rest.length){ var n=Math.min(MR_ROTATE,rest.length), s=(mrDayNo(isoToday())*n)%rest.length;
-    for(var i=0;i<n;i++) pick.push(rest[(s+i)%rest.length]); }
-  return {core:core,pick:pick};
+  var dow=mrDow(d);
+  var set=rest.filter(function(p){ return prDays(p).indexOf(dow)>=0; });
+  var pool=rest.filter(function(p){ return !prDays(p).length; });
+  var pick=set.slice(), n=Math.min(Math.max(0,MR_ROTATE-set.length),pool.length);
+  if(n){ var s=(mrDayNo(d)*n)%pool.length; for(var i=0;i<n;i++) pick.push(pool[(s+i)%pool.length]); }
+  return {core:core,pick:pick,set:set};
 }
 function mrRead(d){ return /^(y|yes|1|true)$/i.test(dlGet(d,'read')); }
 function mrStreak(){
@@ -4877,6 +4896,143 @@ function closePrinciple(){
 }
 document.addEventListener('keydown',function(e){ if(e.key==='Escape') closePrinciple(); });
 
+/* ═══════════════════════════════════════════════════
+   EDIT MORNING READ — change any principle, its keywords, key points and
+   easy habit; reorder; and choose when it shows: every day, on set
+   weekdays, or rotating. Saves straight to the Principles sheet.
+═══════════════════════════════════════════════════ */
+var peEditId='', peWeekOpen=false, _peLastFocus=null;
+function peWhen(p){ return p.core?'core':prDays(p).length?'days':'rotate'; }
+function peWhenLabel(p){
+  var w=peWhen(p);
+  if(w==='core') return '<span class="pe-tag core">Every day</span>';
+  if(w==='days') return '<span class="pe-tag days">'+prDays(p).map(function(d){ return MR_DOW[d]; }).join(', ')+'</span>';
+  return '<span class="pe-tag rot">Rotates</span>';
+}
+function openPrEditor(){
+  _peLastFocus=document.activeElement; peEditId='';
+  var m=document.getElementById('pe-modal');
+  if(!m){ m=document.createElement('div'); m.id='pe-modal'; m.className='pr-modal';
+    m.setAttribute('role','dialog'); m.setAttribute('aria-modal','true'); m.setAttribute('aria-labelledby','pe-title');
+    m.addEventListener('click',function(e){ if(e.target===m) closePrEditor(); });
+    document.body.appendChild(m); }
+  m.hidden=false; document.body.style.overflow='hidden'; renderPrEditor();
+  var c=m.querySelector('.pr-x'); if(c) c.focus();
+}
+function closePrEditor(){
+  var m=document.getElementById('pe-modal'); if(!m||m.hidden) return;
+  m.hidden=true; document.body.style.overflow=''; peEditId='';
+  renderMorningRead(); if(_peLastFocus&&_peLastFocus.focus) _peLastFocus.focus();
+}
+document.addEventListener('keydown',function(e){ if(e.key==='Escape'){ var m=document.getElementById('pe-modal'); if(m&&!m.hidden){ if(peEditId){ peEditId=''; renderPrEditor(); } else closePrEditor(); } } });
+
+function peSorted(){ return principles.slice().sort(function(a,b){ return a.order-b.order; }); }
+function peFormHTML(p){
+  var w=peWhen(p), days=prDays(p), groups={};
+  principles.forEach(function(x){ if(x.group) groups[x.group]=1; });
+  var f=function(lbl,html,hint){ return '<label class="pe-f"><span>'+lbl+(hint?' <small>'+hint+'</small>':'')+'</span>'+html+'</label>'; };
+  return '<div class="pe-form" data-id="'+escH(p.sheetId)+'">'+
+    f('Principle','<input class="sin" id="pe-title" maxlength="80" value="'+escH(p.title||'')+'" placeholder="e.g. Pause before responding">')+
+    f('Group','<input class="sin" id="pe-group" list="pe-groups" maxlength="40" value="'+escH(p.group||'')+'" placeholder="e.g. Before you react"><datalist id="pe-groups">'+Object.keys(groups).map(function(g){ return '<option value="'+escH(g)+'">'; }).join('')+'</datalist>')+
+    f('Details','<textarea class="sin" id="pe-details" rows="2" placeholder="One or two lines you’ll read each morning">'+escH(p.details||'')+'</textarea>')+
+    '<div class="pe-f"><span>When it shows</span><div class="pe-seg" role="radiogroup" aria-label="When it shows">'+
+      [['core','Every day'],['days','On set days'],['rotate','Rotates']].map(function(o){
+        return '<button type="button" role="radio" aria-checked="'+(w===o[0])+'" class="'+(w===o[0]?'on':'')+'" data-w="'+o[0]+'" onclick="peSetWhen(this)">'+o[1]+'</button>'; }).join('')+'</div>'+
+      '<div class="pe-days" id="pe-days"'+(w==='days'?'':' hidden')+'>'+MR_DOW.map(function(n,i){ i=(i+1)%7; n=MR_DOW[i];
+        return '<button type="button" class="pe-day'+(days.indexOf(i)>=0?' on':'')+'" aria-pressed="'+(days.indexOf(i)>=0)+'" data-d="'+i+'" onclick="this.classList.toggle(\'on\');this.setAttribute(\'aria-pressed\',this.classList.contains(\'on\'))">'+n+'</button>'; }).join('')+'</div>'+
+      '<div class="pe-whenhint" id="pe-whenhint">'+peWhenHint(w)+'</div></div>'+
+    f('Key points','<textarea class="sin" id="pe-kp" rows="3" placeholder="One per line">'+escH(p.keyPoints||'')+'</textarea>','shown as “In short” in the popup, one per line')+
+    f('One easy habit','<input class="sin" id="pe-habit" maxlength="160" value="'+escH(p.habit||'')+'">')+
+    f('Keywords','<input class="sin" id="pe-kw" value="'+escH(p.keywords||'')+'" placeholder="anger, pause, step away">','comma-separated; the popup shows entries from other tabs that contain these')+
+    '<div class="pe-kwprev" id="pe-kwprev"></div>'+
+    '<div class="ty-foot"><button type="button" class="btn" onclick="peEditId=\'\';renderPrEditor()">Cancel</button><button type="button" class="btn gold" onclick="peSave()">Save</button></div></div>';
+}
+function peWhenHint(w){
+  return w==='core'?'Shows in “Every day”, every morning.':w==='days'?'Shows in “Today’s reflections” on the days you pick.':'Takes turns in “Today’s reflections” with the other rotating ones ('+MR_ROTATE+' a day, minus any set for that day).';
+}
+function peSetWhen(btn){
+  var box=btn.parentNode; [].forEach.call(box.children,function(b){ var on=b===btn; b.classList.toggle('on',on); b.setAttribute('aria-checked',on); });
+  var w=btn.getAttribute('data-w'), d=document.getElementById('pe-days'); if(d) d.hidden=w!=='days';
+  var h=document.getElementById('pe-whenhint'); if(h) h.textContent=peWhenHint(w);
+}
+function peKwPreview(){
+  var el=document.getElementById('pe-kwprev'), i=document.getElementById('pe-kw'); if(!el||!i) return;
+  var terms=prTerms({keywords:i.value,title:(document.getElementById('pe-title')||{}).value||''}), n=0, by=[];
+  prSources().forEach(function(src){ var c=src.items.filter(function(it){ return prScore(terms,it.text)>0; }).length; if(c){ n+=c; by.push(src.label+' '+c); } });
+  el.textContent=n?'Matches '+n+' entries: '+by.join(' · '):'No matches yet in your other tabs.';
+}
+async function peSave(){
+  var form=document.querySelector('#pe-modal .pe-form'); if(!form) return;
+  var id=form.getAttribute('data-id'), v=function(x){ return (document.getElementById(x)||{}).value||''; };
+  var title=v('pe-title').trim(); if(!title){ showToast('Give the principle a name.','error'); document.getElementById('pe-title').focus(); return; }
+  var wb=form.querySelector('.pe-seg .on'), w=wb?wb.getAttribute('data-w'):'rotate';
+  var days=[].map.call(form.querySelectorAll('.pe-day.on'),function(b){ return MR_DOW[+b.getAttribute('data-d')]; });
+  if(w==='days'&&!days.length){ showToast('Pick at least one day, or choose Rotates.','error'); return; }
+  var p=principles.find(function(x){ return x.sheetId===id; }), isNew=!p;
+  var nx={sheetId:id,group:v('pe-group').trim(),title:title,details:v('pe-details').trim(),core:w==='core',
+    keywords:v('pe-kw').trim(),keyPoints:v('pe-kp').trim(),habit:v('pe-habit').trim(),days:w==='days'?days.join(', '):'',
+    order:p?p.order:(principles.reduce(function(m,x){ return Math.max(m,x.order); },-1)+1),from:p?p.from:'Added in dashboard'};
+  var old=p?Object.assign({},p):null;
+  if(p) Object.assign(p,nx); else principles.push(nx);
+  peEditId=''; renderPrEditor(); renderMorningRead();
+  var ok=await postToSheet({sheet:'Principles',action:'save',sheetId:id,group:nx.group,title:nx.title,details:nx.details,core:nx.core?'yes':'',
+    keywords:nx.keywords,keyPoints:nx.keyPoints,habit:nx.habit,days:nx.days,order:nx.order});
+  if(!ok){ if(old) Object.assign(p,old); else principles=principles.filter(function(x){ return x!==nx; }); renderPrEditor(); renderMorningRead();
+    showToast(LAST_SHEET_ERROR||'Couldn’t save. Try again.','error'); return; }
+  showToast(isNew?'Added ✓':'Saved ✓','success');
+}
+function peMove(id,dir){
+  var list=peSorted(), i=list.findIndex(function(x){ return x.sheetId===id; }), k=i+dir;
+  if(i<0||k<0||k>=list.length) return;
+  var t=list[i]; list[i]=list[k]; list[k]=t;
+  list.forEach(function(x,n){ x.order=n; });
+  renderPrEditor(); renderMorningRead();
+  queueSave('pr-order',{sheet:'Principles',action:'reorder',ids:JSON.stringify(list.map(function(x){ return x.sheetId; }))});
+  var b=document.querySelector('#pe-modal .pe-row[data-id="'+id+'"] .'+(dir<0?'pe-up':'pe-dn')); if(b&&!b.disabled) b.focus();
+}
+async function peDelete(id){
+  var p=principles.find(function(x){ return x.sheetId===id; }); if(!p) return;
+  if(!confirm('Delete “'+p.title+'” from your morning read?')) return;
+  principles=principles.filter(function(x){ return x!==p; }); renderPrEditor(); renderMorningRead();
+  var ok=await postToSheet({sheet:'Principles',action:'delete',sheetId:id});
+  if(!ok){ principles.push(p); renderPrEditor(); renderMorningRead(); showToast(LAST_SHEET_ERROR||'Couldn’t delete.','error'); }
+}
+function peStartAdd(){ peEditId='pr'+Date.now(); renderPrEditor(); var t=document.getElementById('pe-title'); if(t) t.focus(); }
+function peStartEdit(id){ peEditId=id; renderPrEditor(); var t=document.getElementById('pe-title'); if(t) t.focus(); }
+
+function peWeekHTML(){
+  var out='', d=isoToday();
+  for(var i=0;i<7;i++){ var dd=foodShift(d,i), t=mrToday(dd);
+    out+='<div class="pe-wd'+(i===0?' today':'')+'"><div class="pe-wdh">'+(i===0?'Today':MR_DOW[mrDow(dd)])+' <small>'+fgFmt(dd)+'</small></div><ul>'+
+      t.pick.map(function(p){ return '<li class="'+(t.set.indexOf(p)>=0?'set':'')+'">'+escH(p.title)+'</li>'; }).join('')+'</ul></div>'; }
+  return out;
+}
+function renderPrEditor(){
+  var m=document.getElementById('pe-modal'); if(!m||m.hidden) return;
+  var list=peSorted(), nCore=list.filter(function(p){ return p.core; }).length, nSet=list.filter(function(p){ return !p.core&&prDays(p).length; }).length;
+  var editingNew=peEditId&&!principles.some(function(x){ return x.sheetId===peEditId; });
+  var rows=list.map(function(p,i){
+    if(p.sheetId===peEditId) return '<li class="pe-row editing" data-id="'+escH(p.sheetId)+'">'+peFormHTML(p)+'</li>';
+    return '<li class="pe-row" data-id="'+escH(p.sheetId)+'">'+
+      '<div class="pe-mv"><button type="button" class="rt-mini pe-up" aria-label="Move up"'+(i===0?' disabled':'')+' onclick="peMove(\''+escH(p.sheetId)+'\',-1)">↑</button>'+
+      '<button type="button" class="rt-mini pe-dn" aria-label="Move down"'+(i===list.length-1?' disabled':'')+' onclick="peMove(\''+escH(p.sheetId)+'\',1)">↓</button></div>'+
+      '<div class="pe-main"><div class="pe-t">'+escH(p.title)+' '+peWhenLabel(p)+'</div>'+
+        '<div class="pe-s">'+(p.group?escH(p.group)+' · ':'')+(p.keywords?'<span class="pe-kw">🔎 '+escH(p.keywords.length>70?p.keywords.slice(0,69)+'…':p.keywords)+'</span>':'<span class="pe-kw none">no keywords</span>')+'</div></div>'+
+      '<div class="pe-acts"><button type="button" class="btn pe-editbtn" onclick="peStartEdit(\''+escH(p.sheetId)+'\')">✎ Edit</button>'+
+      '<button type="button" class="rt-mini del" aria-label="Delete '+escH(p.title)+'" onclick="peDelete(\''+escH(p.sheetId)+'\')">×</button></div></li>';
+  }).join('');
+  m.innerHTML='<div class="pr-card pe-card">'+
+    '<div class="pr-top"><div><div class="pr-grp">Morning read</div><h2 class="pr-title" id="pe-title-h">Edit your principles</h2></div>'+
+      '<button type="button" class="pr-x" aria-label="Close" onclick="closePrEditor()">×</button></div>'+
+    '<p class="pr-det">'+nCore+' every day · '+nSet+' on set days · '+(list.length-nCore-nSet)+' rotating. Order here is the order you read them in.</p>'+
+    '<div class="pe-bar"><button type="button" class="btn gold" onclick="peStartAdd()"'+(editingNew?' disabled':'')+'>+ Add a principle</button>'+
+      '<button type="button" class="btn" aria-expanded="'+peWeekOpen+'" onclick="peWeekOpen=!peWeekOpen;renderPrEditor()">📅 '+(peWeekOpen?'Hide':'See')+' the week ahead</button></div>'+
+    (peWeekOpen?'<div class="pe-week">'+peWeekHTML()+'</div><div class="fd-hint pe-weekhint">Today’s reflections for the next 7 days. <b>Bold</b> = set for that day; the rest rotate.</div>':'')+
+    (editingNew?'<div class="pe-row editing pe-new" data-id="'+peEditId+'">'+peFormHTML({sheetId:peEditId})+'</div>':'')+
+    '<ol class="pe-list">'+rows+'</ol></div>';
+  var kw=document.getElementById('pe-kw'); if(kw){ kw.addEventListener('input',peKwPreview); peKwPreview(); }
+}
+
 function mrItem(p,i,showGroup){
   return '<li><button type="button" class="mr-it" onclick="openPrinciple(\''+escH(p.sheetId)+'\',this)" title="See what else you\u2019ve written about this">'+(i!=null?'<span class="mr-n">'+(i+1)+'</span>':'')+
     '<div class="mr-tx"><div class="mr-t">'+escH(p.title)+(showGroup&&p.group?' <span class="mr-g">'+escH(p.group)+'</span>':'')+'</div>'+
@@ -4890,7 +5046,8 @@ function renderMorningRead(){
   if(!principles.length){ body.innerHTML='<div class="fd-note">Your Principles tab is empty. Add a few rows there (mark the daily ones <b>yes</b> under Core).</div>'; return; }
 
   var read=ciLoaded&&mrRead(isoToday()), streak=ciLoaded?mrStreak():0, t=mrToday();
-  meta.innerHTML=(streak?'<span class="mr-streak">🔥 '+streak+'-day streak</span>':'<span class="mr-time">~5 min</span>');
+  meta.innerHTML=(streak?'<span class="mr-streak">🔥 '+streak+'-day streak</span>':'<span class="mr-time">~5 min</span>')+
+    '<button type="button" class="mr-edit" onclick="openPrEditor()" title="Edit, reorder and schedule your principles">\u270e Edit</button>';
   box.classList.toggle('done',read&&!mrOpen);
 
   var foot=document.getElementById('mr-foot');
@@ -4904,9 +5061,180 @@ function renderMorningRead(){
   body.innerHTML=
     (t.core.length?'<div class="mr-sec"><div class="mr-h">Every day</div><ol class="mr-list">'+t.core.map(function(p,i){ return mrItem(p,i,false); }).join('')+'</ol></div>':'')+
     (t.pick.length?'<div class="mr-sec"><div class="mr-h">Today’s reflections</div><ul class="mr-list mr-rot">'+t.pick.map(function(p){ return mrItem(p,null,true); }).join('')+'</ul></div>':'');
-  if(foot) foot.innerHTML='<div class="mr-foot"><span class="fd-hint">Edit these in the <b>Principles</b> tab of your Sheet. Core = yes shows them every day.</span>'+
+  if(foot) foot.innerHTML='<div class="mr-foot"><span class="fd-hint">Tap a principle to go deeper. <b>\u270e Edit</b> to change, reorder or schedule them.</span>'+
     (read?'<button type="button" class="btn" onclick="mrOpen=false;renderMorningRead()">Close</button><button type="button" class="btn" onclick="mrUndo()">Not read yet</button>'
          :'<button type="button" class="btn gold mr-donebtn" onclick="mrDone()"'+(ciLoaded?'':' disabled')+'>✓ Done reading</button>')+'</div>';
+}
+
+/* ═══════════════════════════════════════════════════
+   IMPROVEMENT TRACKER — bad habits I'm changing. Each habit has a
+   7-day strip, days since the last slip, and a log of every time it
+   came up: date · what happened · how I responded · handled / slipped.
+   "No slip today" logs a clean day. Sheets: ImproveHabits, ImproveInstances.
+═══════════════════════════════════════════════════ */
+var impHabits=[], impInst=[], impLoaded=false, impUnsupported=false, impFailed=false;
+var impLogFor='', impLogDate='', impEditInst='', impEditHabit='', impShowAll={}, impRetiredOpen=false;
+var IMP_OUT={handled:['👍','Handled it','#C9A84C'],slipped:['👎','Slipped','#E07B7B'],clean:['✓','No slip','#6BBF8E']};
+
+function replaceImproveFromSheet(d){
+  if(!d||!Array.isArray(d.habits)) return;
+  impLoaded=true; impUnsupported=false; impFailed=false;
+  impHabits=d.habits.slice(); impInst=(d.instances||[]).slice();
+  renderImprove();
+}
+async function loadImproveDirect(){
+  if(impLoaded) return;
+  var r=await sheetFetch(WORKER_URL+'?action=getImprove',null,20000);
+  if(r&&r.status==='ok'&&r.improve){ replaceImproveFromSheet(r.improve); return; }
+  if(!impLoaded){ impUnsupported=true; renderImprove(); }
+}
+function markImproveFailed(){ if(impLoaded||impUnsupported) return; impFailed=true; renderImprove(); }
+
+function impOf(hid){ return impInst.filter(function(x){ return x.habitId===hid; }); }
+function impDay(hid,d){ var xs=impOf(hid).filter(function(x){ return x.date===d; });
+  if(!xs.length) return ''; if(xs.some(function(x){ return x.outcome==='slipped'; })) return 'slipped';
+  if(xs.some(function(x){ return x.outcome==='handled'; })) return 'handled'; return 'clean'; }
+function impSinceSlip(h){
+  var s=impOf(h.sheetId).filter(function(x){ return x.outcome==='slipped'; }).map(function(x){ return x.date; }).sort().pop();
+  var from=s||h.addedOn||isoToday(); return {n:tySpan(from,isoToday())-(s?1:0), since:!!s};
+}
+
+async function impAddHabit(){
+  var n=document.getElementById('imp-new'), ins=document.getElementById('imp-new-instead');
+  var v=n?n.value.trim():''; if(!v){ if(n) n.focus(); showToast('Write the habit you want to change.','error'); return; }
+  var h={sheetId:'ih'+Date.now(),habit:v,instead:ins?ins.value.trim():'',order:impHabits.length,addedOn:isoToday(),status:'active'};
+  impHabits.push(h); n.value=''; if(ins) ins.value=''; renderImprove();
+  var ok=await postToSheet({sheet:'Improve',kind:'habit',sheetId:h.sheetId,habit:h.habit,instead:h.instead,order:h.order,addedOn:h.addedOn,status:'active'});
+  if(!ok){ impHabits=impHabits.filter(function(x){ return x!==h; }); renderImprove(); showToast(LAST_SHEET_ERROR||'Couldn’t add it.','error'); return; }
+  showToast('Tracking “'+h.habit+'” ✓','success');
+}
+async function impSaveHabit(id){
+  var h=impHabits.find(function(x){ return x.sheetId===id; }); if(!h) return;
+  var t=(document.getElementById('imp-eh-'+id)||{}).value||'', i=(document.getElementById('imp-ei-'+id)||{}).value||'';
+  if(!t.trim()){ showToast('The habit can’t be empty.','error'); return; }
+  var old=Object.assign({},h); h.habit=t.trim(); h.instead=i.trim(); impEditHabit=''; renderImprove();
+  var ok=await postToSheet({sheet:'Improve',kind:'habit',sheetId:id,habit:h.habit,instead:h.instead,status:h.status});
+  if(!ok){ Object.assign(h,old); renderImprove(); showToast(LAST_SHEET_ERROR||'Couldn’t save.','error'); }
+}
+async function impSetStatus(id,st){
+  var h=impHabits.find(function(x){ return x.sheetId===id; }); if(!h) return;
+  if(st==='retired'&&!confirm('Move “'+h.habit+'” to “Changed for good”? Its history stays.')) return;
+  var old=h.status; h.status=st; renderImprove();
+  var ok=await postToSheet({sheet:'Improve',kind:'habit',sheetId:id,habit:h.habit,instead:h.instead,status:st});
+  if(!ok){ h.status=old; renderImprove(); showToast(LAST_SHEET_ERROR||'Couldn’t save.','error'); return; }
+  showToast(st==='retired'?'Well done ✓':'Back on your list','success');
+}
+async function impDeleteHabit(id){
+  var h=impHabits.find(function(x){ return x.sheetId===id; }); if(!h) return;
+  var n=impOf(id).length;
+  if(!confirm('Delete “'+h.habit+'”'+(n?' and its '+n+' logged entr'+(n>1?'ies':'y'):'')+'? This can’t be undone.')) return;
+  impHabits=impHabits.filter(function(x){ return x!==h; }); var gone=impOf(id); impInst=impInst.filter(function(x){ return x.habitId!==id; }); renderImprove();
+  var ok=await postToSheet({sheet:'Improve',kind:'habit',action:'delete',sheetId:id});
+  if(!ok){ impHabits.push(h); impInst=impInst.concat(gone); renderImprove(); showToast(LAST_SHEET_ERROR||'Couldn’t delete.','error'); return; }
+  gone.forEach(function(x){ queueSave('ii-del:'+x.sheetId,{sheet:'Improve',kind:'instance',action:'delete',sheetId:x.sheetId}); });
+}
+
+function impOpenLog(hid,date,instId){
+  impLogFor=hid; impLogDate=date||isoToday(); impEditInst=instId||''; renderImprove();
+  var t=document.getElementById('imp-l-inst'); if(t) t.focus();
+}
+function impPickOutcome(btn){ [].forEach.call(btn.parentNode.children,function(b){ var on=b===btn; b.classList.toggle('on',on); b.setAttribute('aria-checked',on); }); }
+async function impSaveLog(){
+  var h=impHabits.find(function(x){ return x.sheetId===impLogFor; }); if(!h) return;
+  var date=(document.getElementById('imp-l-date')||{}).value||'', inst=((document.getElementById('imp-l-inst')||{}).value||'').trim(),
+      resp=((document.getElementById('imp-l-resp')||{}).value||'').trim(), ob=document.querySelector('#imp-body .imp-out .on');
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||date>isoToday()){ showToast('Pick today or an earlier date.','error'); return; }
+  if(!inst){ showToast('Write what happened.','error'); document.getElementById('imp-l-inst').focus(); return; }
+  if(!ob){ showToast('Did you handle it, or slip?','error'); return; }
+  var out=ob.getAttribute('data-o'), x=impEditInst?impInst.find(function(y){ return y.sheetId===impEditInst; }):null, old=x?Object.assign({},x):null;
+  if(x) Object.assign(x,{date:date,instance:inst,response:resp,outcome:out});
+  else { x={sheetId:'ii'+Date.now(),habitId:h.sheetId,habit:h.habit,date:date,instance:inst,response:resp,outcome:out}; impInst.push(x);
+    impInst=impInst.filter(function(y){ return !(y.habitId===h.sheetId&&y.date===date&&y.outcome==='clean'); }); }
+  impLogFor=''; impEditInst=''; renderImprove();
+  var ok=await postToSheet({sheet:'Improve',kind:'instance',sheetId:x.sheetId,habitId:h.sheetId,habit:h.habit,date:date,instance:inst,response:resp,outcome:out});
+  if(!ok){ if(old) Object.assign(x,old); else impInst=impInst.filter(function(y){ return y!==x; }); renderImprove(); showToast(LAST_SHEET_ERROR||'Couldn’t save.','error'); return; }
+  showToast(out==='handled'?'Logged. Nicely handled ✓':'Logged. Tomorrow’s a new day.','success');
+}
+async function impToggleClean(hid){
+  var d=isoToday(), c=impOf(hid).find(function(x){ return x.date===d&&x.outcome==='clean'; });
+  var h=impHabits.find(function(x){ return x.sheetId===hid; }); if(!h) return;
+  if(c){ impInst=impInst.filter(function(x){ return x!==c; }); renderImprove();
+    var ok0=await postToSheet({sheet:'Improve',kind:'instance',action:'delete',sheetId:c.sheetId});
+    if(!ok0){ impInst.push(c); renderImprove(); showToast(LAST_SHEET_ERROR||'Couldn’t undo.','error'); } return; }
+  var x={sheetId:'ii'+Date.now(),habitId:hid,habit:h.habit,date:d,instance:'',response:'',outcome:'clean'}; impInst.push(x); renderImprove();
+  var ok=await postToSheet({sheet:'Improve',kind:'instance',sheetId:x.sheetId,habitId:hid,habit:h.habit,date:d,instance:'',response:'',outcome:'clean'});
+  if(!ok){ impInst=impInst.filter(function(y){ return y!==x; }); renderImprove(); showToast(LAST_SHEET_ERROR||'Couldn’t save.','error'); return; }
+  showToast('No slip today ✓','success');
+}
+async function impDeleteInst(id){
+  var x=impInst.find(function(y){ return y.sheetId===id; }); if(!x) return;
+  if(!confirm('Delete this entry from '+feedDate(x.date)+'?')) return;
+  impInst=impInst.filter(function(y){ return y!==x; }); renderImprove();
+  var ok=await postToSheet({sheet:'Improve',kind:'instance',action:'delete',sheetId:id});
+  if(!ok){ impInst.push(x); renderImprove(); showToast(LAST_SHEET_ERROR||'Couldn’t delete.','error'); }
+}
+
+function impLogFormHTML(h){
+  var x=impEditInst?impInst.find(function(y){ return y.sheetId===impEditInst; }):null, out=x?x.outcome:'';
+  return '<div class="imp-log">'+
+    '<div class="imp-log-h">'+(x?'Edit entry':'Log an instance')+'</div>'+
+    '<label class="pe-f"><span>Date</span><input class="sin imp-date" type="date" id="imp-l-date" max="'+isoToday()+'" value="'+(x?x.date:impLogDate)+'"></label>'+
+    '<label class="pe-f"><span>What happened</span><textarea class="sin" id="imp-l-inst" rows="2" placeholder="e.g. Vendor missed the deadline again on the 4 PM call">'+escH(x?x.instance:'')+'</textarea></label>'+
+    '<label class="pe-f"><span>How I responded</span><textarea class="sin" id="imp-l-resp" rows="2" placeholder="e.g. Took 3 breaths, said I’d reply by mail, and did after 10 minutes">'+escH(x?x.response:'')+'</textarea></label>'+
+    '<div class="pe-f"><span>How did it go?</span><div class="pe-seg imp-out" role="radiogroup" aria-label="How did it go">'+
+      ['handled','slipped'].map(function(o){ return '<button type="button" role="radio" data-o="'+o+'" aria-checked="'+(out===o)+'" class="'+(out===o?'on ':'')+'o-'+o+'" onclick="impPickOutcome(this)">'+IMP_OUT[o][0]+' '+(o==='handled'?'Handled it well':'Slipped')+'</button>'; }).join('')+
+    '</div></div>'+
+    '<div class="ty-foot"><button type="button" class="btn" onclick="impLogFor=\'\';impEditInst=\'\';renderImprove()">Cancel</button><button type="button" class="btn gold" onclick="impSaveLog()">Save</button></div></div>';
+}
+function impCardHTML(h){
+  var id=h.sheetId, t=isoToday(), days=[]; for(var i=6;i>=0;i--) days.push(foodShift(t,-i));
+  var strip=days.map(function(d){ var s=impDay(id,d), o=IMP_OUT[s];
+    return '<button type="button" class="imp-day '+(s||'none')+(d===t?' today':'')+'" onclick="impOpenLog(\''+id+'\',\''+d+'\')" title="'+fgFmt(d,{weekday:'short',day:'numeric',month:'short'})+': '+(o?o[1]:'nothing logged')+'. Tap to log." aria-label="'+fgFmt(d,{weekday:'long',day:'numeric',month:'short'})+', '+(o?o[1]:'nothing logged')+'">'+
+      '<span class="imp-dw">'+MR_DOW[mrDow(d)].charAt(0)+'</span><span class="imp-dot">'+(o?o[0]:'')+'</span></button>'; }).join('');
+  var wk=days.map(function(d){ return impDay(id,d); }), c={handled:0,slipped:0,clean:0}; wk.forEach(function(s){ if(s) c[s]++; });
+  var ss=impSinceSlip(h), cleanToday=impOf(id).some(function(x){ return x.date===t&&x.outcome==='clean'; });
+  var log=impOf(id).filter(function(x){ return x.outcome!=='clean'; }).sort(function(a,b){ return b.date.localeCompare(a.date)||b.sheetId.localeCompare(a.sheetId); });
+  var lim=impShowAll[id]?log.length:3;
+  var head=impEditHabit===id
+    ? '<div class="imp-hedit"><input class="sin" id="imp-eh-'+id+'" value="'+escH(h.habit)+'" maxlength="100"><input class="sin" id="imp-ei-'+id+'" value="'+escH(h.instead)+'" maxlength="160" placeholder="What I’ll do instead (optional)">'+
+      '<div class="ty-foot"><button type="button" class="btn" onclick="impEditHabit=\'\';renderImprove()">Cancel</button><button type="button" class="btn gold" onclick="impSaveHabit(\''+id+'\')">Save</button></div></div>'
+    : '<div class="imp-top"><div class="imp-name">'+escH(h.habit)+'</div><div class="imp-hacts">'+
+        '<button type="button" class="rt-mini" title="Edit" aria-label="Edit '+escH(h.habit)+'" onclick="impEditHabit=\''+id+'\';renderImprove()">✎</button>'+
+        '<button type="button" class="rt-mini" title="Changed for good" aria-label="Mark as changed for good" onclick="impSetStatus(\''+id+'\',\'retired\')">🏁</button>'+
+        '<button type="button" class="rt-mini del" title="Delete" aria-label="Delete '+escH(h.habit)+'" onclick="impDeleteHabit(\''+id+'\')">×</button></div></div>'+
+      (h.instead?'<div class="imp-instead">Instead: '+escH(h.instead)+'</div>':'');
+  return '<div class="imp-card">'+head+
+    '<div class="imp-mid"><div class="imp-strip" role="group" aria-label="Last 7 days">'+strip+'</div>'+
+      '<div class="imp-stats">'+(ss.since?'<b>'+ss.n+'</b> day'+(ss.n!==1?'s':'')+' since last slip':'<b>'+ss.n+'</b> day'+(ss.n!==1?'s':'')+' tracked, no slips logged')+
+        '<span>This week: '+c.handled+' handled · '+c.slipped+' slipped · '+c.clean+' clean</span></div></div>'+
+    (impLogFor===id?impLogFormHTML(h):
+      '<div class="imp-btns"><button type="button" class="btn'+(cleanToday?' imp-cleanon':'')+'" onclick="impToggleClean(\''+id+'\')">'+(cleanToday?'✓ No slip today (undo)':'✓ No slip today')+'</button>'+
+      '<button type="button" class="btn gold" onclick="impOpenLog(\''+id+'\')">+ Log an instance</button></div>')+
+    (log.length?'<ul class="imp-list">'+log.slice(0,lim).map(function(x){ var o=IMP_OUT[x.outcome]||IMP_OUT.handled;
+      return '<li><div class="imp-lh"><span class="imp-ld">'+feedDate(x.date)+'</span><span class="imp-pill '+x.outcome+'">'+o[0]+' '+o[1]+'</span>'+
+        '<span class="imp-la"><button type="button" class="rt-mini" aria-label="Edit entry" onclick="impOpenLog(\''+id+'\',\''+x.date+'\',\''+x.sheetId+'\')">✎</button>'+
+        '<button type="button" class="rt-mini del" aria-label="Delete entry" onclick="impDeleteInst(\''+x.sheetId+'\')">×</button></span></div>'+
+        '<div class="imp-li">'+escH(x.instance)+'</div>'+(x.response?'<div class="imp-lr">→ '+escH(x.response)+'</div>':'')+'</li>'; }).join('')+'</ul>'+
+      (log.length>lim?'<button type="button" class="pr-more" onclick="impShowAll[\''+id+'\']=1;renderImprove()">Show all '+log.length+'</button>':''):'')+
+  '</div>';
+}
+function renderImprove(){
+  var box=document.getElementById('imp-body'); if(!box) return;
+  if(impUnsupported){ box.innerHTML='<div class="fd-note">The Improvement tracker needs the updated <b>Code.gs</b>. Deploy it (Manage deployments → New version), then reload.</div>'; return; }
+  if(!impLoaded){ box.innerHTML='<div class="fd-note">'+(impFailed?'Couldn’t load. Reload the page to try again.':'Loading…')+'</div>'; return; }
+  var act=impHabits.filter(function(h){ return h.status!=='retired'; }).sort(function(a,b){ return a.order-b.order; });
+  var ret=impHabits.filter(function(h){ return h.status==='retired'; });
+  setBadge('imp-badge',act.length);
+  var b=document.getElementById('badge-improve'); if(b) b.textContent=act.length?act.length+' active':'';
+  box.innerHTML=
+    (act.length?act.map(impCardHTML).join(''):'<div class="fd-note">Add a habit you want to change, like “Reacting angrily on calls” or “Scrolling the phone in bed”.</div>')+
+    '<div class="imp-add"><div class="imp-add-h">Add a habit to change</div>'+
+      '<input class="sin" id="imp-new" maxlength="100" placeholder="The habit, e.g. Reacting angrily on calls" onkeydown="if(event.key===\'Enter\')impAddHabit()">'+
+      '<input class="sin" id="imp-new-instead" maxlength="160" placeholder="What I’ll do instead (optional), e.g. 3 breaths, then reply by mail" onkeydown="if(event.key===\'Enter\')impAddHabit()">'+
+      '<button type="button" class="btn gold" onclick="impAddHabit()">Add</button></div>'+
+    (ret.length?'<details class="ml-done imp-ret"'+(impRetiredOpen?' open':'')+' ontoggle="impRetiredOpen=this.open"><summary>🏁 Changed for good <span class="ml-ct">'+ret.length+'</span></summary><ul class="imp-retl">'+
+      ret.map(function(h){ return '<li><span>'+escH(h.habit)+'</span><span class="imp-rc">'+impOf(h.sheetId).filter(function(x){ return x.outcome!=='clean'; }).length+' entries</span>'+
+        '<button type="button" class="btn" onclick="impSetStatus(\''+h.sheetId+'\',\'active\')">Track again</button></li>'; }).join('')+'</ul></details>':'');
 }
 
 /* ═══════════════════════════════════════════════════
