@@ -1,6 +1,6 @@
 /* Morning Dashboard app. Linked from index.html; bump ?v= there when this changes. */
 'use strict';
-window.APP_VER='20261109';   // must match the ?v= in index.html (checked there)
+window.APP_VER='20261109b';   // must match the ?v= in index.html (checked there)
 const WORKER_URL='https://muddy-shadow-1aa7.vaibhavjain-1192.workers.dev';
 const FETCH_TIMEOUT=45000;   // default; page loads pass shorter ones
 var DIAG={};  // diagnostics collected during fetch
@@ -133,6 +133,8 @@ function isoDate(d){return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.get
 function pad(n){return String(n).padStart(2,'0');}
 function parseISO(s){if(!s)return null;var p=s.split('-').map(Number);return new Date(p[0],p[1]-1,p[2]);}
 function escH(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+/* Any text as a safe argument inside onclick="…": a JSON string literal (handles line breaks, quotes, apostrophes), HTML-escaped */
+function jsArg(s){return escH(JSON.stringify(String(s==null?'':s)));}
 var _tt=null;
 function showToast(msg,type){var el=document.getElementById('toast');el.textContent=msg;el.className='toast show'+(type?' '+type:'');clearTimeout(_tt);_tt=setTimeout(function(){el.classList.remove('show');},3200);}
 
@@ -813,7 +815,7 @@ function postCardHTML(p){
       if(!imgs.length) return '';
       return '<div class="pst-imgs">'+imgs.map(function(im){
         return '<img class="pst-img" src="'+escH(im.thumb)+'" alt="" loading="lazy" '+
-               'onclick="openLightbox(\''+escH(im.url).replace(/'/g,"\\'")+'\')" '+
+               'onclick="openLightbox('+jsArg(im.url)+')" '+
                'onerror="this.style.display=\'none\'">';
       }).join('')+'</div>';
     })()+
@@ -1731,15 +1733,15 @@ function renderTodayHabits(){
     var s=habitStreak(t);
     var streakHtml = s>1 ? '<span class="hab-streak">\ud83d\udd25 '+s+'d</span>'
       : (s===1 ? '<span class="hab-streak" style="color:var(--green);border-color:rgba(107,191,142,0.3);background:rgba(107,191,142,0.08)">day 1</span>' : '');
-    var esc=escH(t).replace(/'/g,"\\'");
+    var esc=jsArg(t);
     return '<div class="th-habit-item" data-habit="'+escH(t)+'" data-idx="'+idx+'">'+
       '<span class="th-habit-grip" onpointerdown="startHabitDrag(event,'+idx+')" title="Drag to reorder">\u2630</span>'+
-      '<div class="th-habit-cb'+(done?' done':'')+'" onclick="toggleTodayHabit(\''+esc+'\')"><span class="th-habit-tick">\u2713</span></div>'+
+      '<div class="th-habit-cb'+(done?' done':'')+'" onclick="toggleTodayHabit('+esc+')"><span class="th-habit-tick">\u2713</span></div>'+
       ptTile(t,'',{clearOnly:true,size:'sm'})+
-      '<span class="th-habit-text" onclick="toggleTodayHabit(\''+esc+'\')">'+escH(t)+'</span>'+
+      '<span class="th-habit-text" onclick="toggleTodayHabit('+esc+')">'+escH(t)+'</span>'+
       streakHtml+
-      '<button class="th-habit-edit" onclick="editTodayHabit(\''+esc+'\')" title="Edit wording">\u270e</button>'+
-      '<button class="th-habit-del" onclick="removeTodayHabit(\''+esc+'\')" title="Stop following">\u00d7</button>'+
+      '<button class="th-habit-edit" onclick="editTodayHabit('+esc+')" title="Edit wording">\u270e</button>'+
+      '<button class="th-habit-del" onclick="removeTodayHabit('+esc+')" title="Stop following">\u00d7</button>'+
     '</div>';
   }).join('');
   renderHabitArchive();
@@ -1754,8 +1756,8 @@ function renderHabitArchive(){
   box.innerHTML='<div style="font-size:10px;font-family:var(--fm);color:var(--text-3);letter-spacing:0.1em;text-transform:uppercase;margin:10px 0 6px">Previously followed</div>'+
     '<div style="display:flex;flex-wrap:wrap;gap:5px">'+
     habitArchive.map(function(t){
-      var esc=escH(t).replace(/'/g,"\\'");
-      return '<button class="hab-chip" onclick="restoreHabit(\''+esc+'\')">+ '+escH(t)+'</button>';
+      var esc=jsArg(t);
+      return '<button class="hab-chip" onclick="restoreHabit('+esc+')">+ '+escH(t)+'</button>';
     }).join('')+'</div>';
 }
 
@@ -3156,7 +3158,7 @@ function renderFood(){
   var have=foodHabits.filter(function(h){ return !h.archivedOn; }).map(function(h){ return h.habit.toLowerCase(); });
   var missing=FOOD_STARTERS.filter(function(s){ return have.indexOf(s.toLowerCase())===-1; });
   var quick=missing.length?'<div class="fd-quick"><span class="fd-quick-l">Quick add</span>'+
-    missing.map(function(s){ return '<button type="button" class="fd-chip" onclick="addFood(\''+s.replace(/'/g,"\\'")+'\')">+ '+escH(s)+'</button>'; }).join('')+
+    missing.map(function(s){ return '<button type="button" class="fd-chip" onclick="addFood('+jsArg(s)+')">+ '+escH(s)+'</button>'; }).join('')+
     (missing.length>1?'<button type="button" class="fd-chip all" onclick="addFoodStarters()">Add all '+missing.length+'</button>':'')+'</div>':'';
 
   var archived=foodHabits.filter(function(h){ return h.archivedOn; });
@@ -4210,7 +4212,7 @@ function renderTyag(){
         '<button type="button" class="btn gold" onclick="addTyag()">Add tyag</button></div></div>'
     : '<button type="button" class="btn gold ty-addbtn" onclick="tyAdding=true;renderTyag();document.getElementById(\'ty-new-name\').focus()">+ Add a tyag</button>'+
       (sugg.length?'<div class="fd-quick"><span class="fd-quick-l">From your routine</span>'+sugg.map(function(n){
-        return '<button type="button" class="fd-chip" onclick="quickTyag(\''+escH(n).replace(/'/g,"\\'")+'\')">+ '+escH(n)+'</button>'; }).join('')+'</div>':'');
+        return '<button type="button" class="fd-chip" onclick="quickTyag('+jsArg(n)+')">+ '+escH(n)+'</button>'; }).join('')+'</div>':'');
 
   box.innerHTML=chips+rows+add;
 }
@@ -6047,7 +6049,7 @@ function renderGuide(){
     chipsEl.innerHTML=chips.map(function(c){
       var on=c[0]===gdCat;
       return '<button type="button" class="gd-chip'+(on?' on':'')+(c[1]||on?'':' empty')+'" aria-pressed="'+on+'" '+
-        'onclick="setGdCat(\''+escH(c[0]).replace(/'/g,"\\'")+'\')">'+c[2]+' <span class="gd-chip-n">'+c[1]+'</span></button>';
+        'onclick="setGdCat('+jsArg(c[0])+')">'+c[2]+' <span class="gd-chip-n">'+c[1]+'</span></button>';
     }).join('');
   }
 
@@ -6107,9 +6109,9 @@ function renderGuide(){
     var stars=list.filter(function(g){ return g.starred; }).length;
     var planets=[];
     list.forEach(function(g){ if(g.planet && planets.indexOf(g.planet)===-1) planets.push(g.planet); });
-    var kq=escH(k).replace(/'/g,"\\'");
+    var kq=jsArg(k);
     return '<section class="gd-grp'+(open?' open':'')+'">'+
-      '<h3 class="gd-grp-hd"><button type="button" class="gd-grp-h" aria-expanded="'+open+'" onclick="toggleGdGrp(\''+kq+'\')">'+
+      '<h3 class="gd-grp-hd"><button type="button" class="gd-grp-h" aria-expanded="'+open+'" onclick="toggleGdGrp('+kq+')">'+
         '<span class="gd-grp-name">'+escH(k)+'</span>'+
         '<span class="gd-grp-n">'+list.length+' situation'+(list.length!==1?'s':'')+'</span>'+
         (stars?'<span class="gd-grp-st">\u2605 '+stars+'</span>':'')+
@@ -6993,7 +6995,7 @@ function renderRoutineSelector(){
   var names=routineNames();
   if(!activeRoutine||names.indexOf(activeRoutine)===-1) activeRoutine=names[0];
   el.innerHTML=names.map(function(n){
-    return '<button class="rt-pill'+(n===activeRoutine?' on':'')+'" onclick="selectRoutine(\''+escH(n).replace(/'/g,"\\'")+'\')">'+escH(n)+'</button>';
+    return '<button class="rt-pill'+(n===activeRoutine?' on':'')+'" onclick="selectRoutine('+jsArg(n)+')">'+escH(n)+'</button>';
   }).join('')+'<button class="rt-pill add" onclick="newRoutine()">+ New routine</button>';
 }
 
