@@ -1591,3 +1591,24 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
   .imp-dot{width:30px;height:30px}
   .imp-strip{gap:3px}
 }
+
+/* Habits I'm following: log button, entries, and a roomier mobile layout */
+.th-habit-item{flex-wrap:wrap}
+.th-habit-acts{display:flex;align-items:center;gap:4px;flex-shrink:0}
+.th-habit-log{background:none;border:1px solid rgba(201,168,76,.45);border-radius:12px;color:var(--gold);font-family:var(--fb);font-size:11px;padding:2px 9px;cursor:pointer;white-space:nowrap}
+.th-habit-log:hover{background:rgba(201,168,76,.12)}
+.th-habit-log:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.hf-panel{flex-basis:100%;padding:2px 0 6px 52px}
+.hf-panel .imp-log{border-top:0;padding-top:4px}
+.hf-sum{background:none;border:0;padding:2px 0;font-family:var(--fb);font-size:11.5px;color:var(--text-2);cursor:pointer;display:inline-flex;align-items:center;gap:4px}
+.hf-sum:hover{color:var(--gold)}
+.hf-sum[aria-expanded="true"] .ty-hcar{transform:rotate(90deg)}
+.hf-list{margin-top:6px}
+@media (max-width:640px){
+  .th-habit-item{align-items:flex-start;padding:10px 0}
+  .th-habit-item .pt-tile{display:none}
+  .th-habit-text{flex:1 1 0;min-width:0;font-size:13.5px;line-height:1.5}
+  .th-habit-acts{flex-basis:100%;justify-content:flex-end;padding-left:34px;margin-top:4px;gap:8px}
+  .th-habit-edit,.th-habit-del{font-size:15px;padding:4px 6px}
+  .hf-panel{padding-left:0}
+}
