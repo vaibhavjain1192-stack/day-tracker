@@ -1623,3 +1623,39 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
 .ml-add{grid-template-columns:1fr auto}
 .imp-sum{margin-top:10px;padding-top:8px;border-top:1px solid var(--border);display:flex;width:100%}
 @media (max-width:640px){ .ml-add{grid-template-columns:1fr auto} .ml-add .sin{grid-column:auto} }
+
+/* Morning read: situations */
+.mr-sitbar{display:flex;gap:6px;overflow-x:auto;padding:2px 0 10px;margin:-2px 0 10px;border-bottom:1px solid var(--border);scrollbar-width:thin;align-items:center}
+.mr-sitlbl{font-size:11px;color:var(--text-3);white-space:nowrap;margin-right:2px}
+.mr-sit{flex-shrink:0;font-family:var(--fb);font-size:12px;padding:4px 10px;border-radius:14px;border:1px solid var(--border-md);background:transparent;color:var(--text-2);cursor:pointer;white-space:nowrap}
+.mr-sit:hover{color:var(--text-1);border-color:var(--gold)}
+.mr-sit.on{background:rgba(201,168,76,.16);border-color:var(--gold);color:var(--text-1)}
+.mr-sit:focus-visible{outline:2px solid var(--gold);outline-offset:1px}
+.mr-clear{background:none;border:0;color:var(--gold);font-family:var(--fb);font-size:11px;cursor:pointer;text-transform:none;letter-spacing:0;margin-left:6px;font-weight:500}
+.mr-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px}
+.mr-tag{font-size:10.5px;color:var(--text-3);border:1px solid var(--border);border-radius:9px;padding:0 7px;line-height:18px}
+.mr.done .mr-sitbar{margin-bottom:8px}
+.pe-sits{display:flex;flex-wrap:wrap;gap:5px}
+.pe-sit{font-family:var(--fb);font-size:11.5px;padding:4px 9px;border-radius:12px;border:1px solid var(--border-md);background:transparent;color:var(--text-2);cursor:pointer}
+.pe-sit.on{background:rgba(201,168,76,.16);border-color:var(--gold);color:var(--text-1)}
+.pe-sit:focus-visible{outline:2px solid var(--gold);outline-offset:1px}
+.pe-sit-new{margin-top:6px;font-size:12.5px}
+.pe-sitline{letter-spacing:1px}
+
+/* Habits I'm changing: compact rows (like Habits I'm following) */
+.imp-rows{margin-bottom:6px}
+.imp-row{display:flex;flex-wrap:wrap;align-items:flex-start;gap:8px;padding:10px 0;border-bottom:1px solid var(--border)}
+.imp-row:last-child{border-bottom:0}
+.imp-row.editing{display:block}
+.imp-rmain{flex:1;min-width:0}
+.imp-row .imp-name{font-size:14px;line-height:1.4}
+.imp-row .imp-instead{font-size:12px;margin-top:2px;line-height:1.45}
+.imp-rline{margin-top:3px}
+.imp-none{font-size:11.5px;color:var(--text-3)}
+.imp-racts{padding-top:1px}
+.imp-panel{padding-left:0}
+@media (max-width:640px){
+  .imp-racts{padding-left:0}
+}
+.imp-rline{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-top:4px}
+.imp-rline .imp-racts{flex-basis:auto!important;padding:0!important;margin:0 0 0 auto!important}
