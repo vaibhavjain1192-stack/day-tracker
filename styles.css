@@ -1612,3 +1612,14 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
   .th-habit-edit,.th-habit-del{font-size:15px;padding:4px 6px}
   .hf-panel{padding-left:0}
 }
+
+/* Master list: Personal / Others tabs */
+.ml-tabs{display:flex;gap:6px;margin-bottom:12px;border-bottom:1px solid var(--border)}
+.ml-tab{background:none;border:0;border-bottom:2px solid transparent;margin-bottom:-1px;padding:8px 14px;font-family:var(--fb);font-size:13px;font-weight:500;color:var(--text-2);cursor:pointer}
+.ml-tab:hover{color:var(--text-1)}
+.ml-tab.on{color:var(--text-1);border-bottom-color:var(--pc)}
+.ml-tab:focus-visible{outline:2px solid var(--gold);outline-offset:-2px;border-radius:6px 6px 0 0}
+.ml-tab .ml-ct{font-size:11px;margin-left:2px}
+.ml-add{grid-template-columns:1fr auto}
+.imp-sum{margin-top:10px;padding-top:8px;border-top:1px solid var(--border);display:flex;width:100%}
+@media (max-width:640px){ .ml-add{grid-template-columns:1fr auto} .ml-add .sin{grid-column:auto} }
