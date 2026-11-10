@@ -1,6 +1,6 @@
 /* Morning Dashboard app. Linked from index.html; bump ?v= there when this changes. */
 'use strict';
-window.APP_VER='20261109c';   // must match the ?v= in index.html (checked there)
+window.APP_VER='20261110';   // must match the ?v= in index.html (checked there)
 const WORKER_URL='https://muddy-shadow-1aa7.vaibhavjain-1192.workers.dev';
 const FETCH_TIMEOUT=45000;   // default; page loads pass shorter ones
 var DIAG={};  // diagnostics collected during fetch
@@ -4227,9 +4227,9 @@ function renderTyag(){
 ═══════════════════════════════════════════════════ */
 var mlList=[];               // [{sheetId,item,priority,order,notes,status,addedOn,doneOn}]
 var mlLoaded=false, mlUnsupported=false, mlFailed=false;
-var mlNewPri='next', mlEditId='', mlDoneOpen=false;
-var ML_PRIS=[['now','Now','#E07B7B'],['next','Next','#C9A84C'],['later','Later','#7fb3d5'],['someday','Someday','#9a9aa6']];
-function mlPriOk(p){ return ML_PRIS.some(function(x){ return x[0]===p; })?p:'next'; }
+var mlNewPri='personal', mlEditId='', mlDoneOpen=false;   // mlNewPri = the tab you're on
+var ML_PRIS=[['personal','Personal','#C9A84C'],['others','Others','#7fb3d5']];
+function mlPriOk(p){ return String(p||'').toLowerCase()==='others'?'others':'personal'; }   // old Now/Next/Later/Someday → Personal
 
 function replaceMlFromSheet(rows){
   mlLoaded=true; mlUnsupported=false; mlFailed=false;
@@ -4254,8 +4254,8 @@ function mlSaveOrder(){
   queueSave('ml-order',{sheet:'MasterList',action:'reorder',items:JSON.stringify(items)});
 }
 
-function setMlNewPri(p){ mlNewPri=mlPriOk(p); document.querySelectorAll('#ml-body .ml-seg button').forEach(function(b){
-  var on=b.getAttribute('data-p')===mlNewPri; b.classList.toggle('on',on); b.setAttribute('aria-pressed',on); }); }
+function setMlNewPri(p){ mlNewPri=mlPriOk(p); mlEditId=''; renderMasterList();
+  var b=document.querySelector('#ml-body .ml-tab[data-p="'+mlNewPri+'"]'); if(b) b.focus(); }
 
 async function addMl(){
   var inp=document.getElementById('ml-new'); var v=inp?inp.value.trim():'';
@@ -4328,7 +4328,7 @@ function mlRowHTML(x,i,n){
     '<button type="button" class="btn gold" onclick="saveMlEdit(\''+id+'\')">Save</button></div></div></li>';
   var acts=done
     ? '<span class="ml-when">'+(x.doneOn?fmtShortDate(x.doneOn):'')+'</span>'
-    : '<select class="ml-pri-sel" aria-label="Priority of '+escH(x.item)+'" onchange="setMlPri(\''+id+'\',this.value)">'+
+    : '<select class="ml-pri-sel" aria-label="List for '+escH(x.item)+'" title="Move to the other list" onchange="setMlPri(\''+id+'\',this.value)">'+
         ML_PRIS.map(function(p){ return '<option value="'+p[0]+'"'+(p[0]===x.priority?' selected':'')+'>'+p[1]+'</option>'; }).join('')+'</select>'+
       '<button type="button" class="rt-mini ml-mv-up" aria-label="Move up" title="Move up"'+(i===0?' disabled':'')+' onclick="moveMl(\''+id+'\',-1)">↑</button>'+
       '<button type="button" class="rt-mini ml-mv-dn" aria-label="Move down" title="Move down"'+(i===n-1?' disabled':'')+' onclick="moveMl(\''+id+'\',1)">↓</button>'+
@@ -4348,27 +4348,25 @@ function renderMasterList(){
   if(mlUnsupported){ box.innerHTML='<div class="fd-note">Master list needs the updated <b>Code.gs</b>. Deploy it (Manage deployments → New version), then reload.</div>'; if(badge) badge.textContent=''; return; }
   if(!mlLoaded){ box.innerHTML='<div class="fd-note">'+(mlFailed?'Couldn’t load. Reload the page to try again.':'Loading…')+'</div>'; return; }
 
-  var open=mlList.filter(function(x){ return x.status==='open'; });
-  var done=mlList.filter(function(x){ return x.status==='done'; }).sort(function(a,b){ return (b.doneOn||'').localeCompare(a.doneOn||''); });
-  var nNow=mlGroup('now').length;
-  if(badge) badge.textContent=open.length?(nNow?nNow+' now · ':'')+open.length+' open':'';
+  var tab=mlNewPri, tabInfo=ML_PRIS.filter(function(p){ return p[0]===tab; })[0];
+  var cnt={}; ML_PRIS.forEach(function(p){ cnt[p[0]]=mlGroup(p[0]).length; });
+  if(badge) badge.textContent=ML_PRIS.map(function(p){ return cnt[p[0]]+' '+p[1].toLowerCase(); }).join(' \u00b7 ');
+  var done=mlList.filter(function(x){ return x.status==='done'&&x.priority===tab; }).sort(function(a,b){ return (b.doneOn||'').localeCompare(a.doneOn||''); });
 
-  var add='<div class="ml-add"><input class="sin" id="ml-new" type="text" maxlength="200" placeholder="Something I want to do…" onkeydown="if(event.key===\'Enter\')addMl()">'+
-    '<div class="ml-seg" role="group" aria-label="Priority for the new item">'+ML_PRIS.map(function(p){
-      return '<button type="button" data-p="'+p[0]+'" style="--pc:'+p[2]+'" class="'+(p[0]===mlNewPri?'on':'')+'" aria-pressed="'+(p[0]===mlNewPri)+'" onclick="setMlNewPri(\''+p[0]+'\')">'+p[1]+'</button>';
-    }).join('')+'</div><button type="button" class="btn gold" onclick="addMl()">Add</button></div>';
+  var tabs='<div class="ml-tabs" role="tablist" aria-label="Master list">'+ML_PRIS.map(function(p){ var on=p[0]===tab;
+      return '<button type="button" role="tab" class="ml-tab'+(on?' on':'')+'" data-p="'+p[0]+'" style="--pc:'+p[2]+'" aria-selected="'+on+'" onclick="setMlNewPri(\''+p[0]+'\')">'+
+        (p[0]==='personal'?'\uD83D\uDE4B ':'\uD83E\uDD1D ')+p[1]+' <span class="ml-ct">'+cnt[p[0]]+'</span></button>'; }).join('')+'</div>';
+  var add='<div class="ml-add"><input class="sin" id="ml-new" type="text" maxlength="200" placeholder="'+(tab==='others'?'Something I need to do for someone\u2026 (e.g. Send Dad the insurance papers)':'Something I want to do\u2026')+'" onkeydown="if(event.key===\'Enter\')addMl()">'+
+    '<button type="button" class="btn gold" onclick="addMl()">Add</button></div>';
 
-  var groups=ML_PRIS.map(function(p){
-    var g=mlGroup(p[0]); if(!g.length) return '';
-    return '<div class="ml-grp" style="--pc:'+p[2]+'"><div class="ml-gh"><span class="ml-dot"></span>'+p[1]+' <span class="ml-ct">'+g.length+'</span></div>'+
-      '<ul class="ml-list">'+g.map(function(x,i){ return mlRowHTML(x,i,g.length); }).join('')+'</ul></div>';
-  }).join('');
-  if(!open.length) groups='<div class="fd-note">'+(done.length?'Everything on your list is done. Add what’s next.':'List everything you want to do, big or small. Put what matters most under <b>Now</b>; reorder with ↑ ↓.')+'</div>';
+  var g=mlGroup(tab);
+  var groups=g.length?'<div class="ml-grp" style="--pc:'+tabInfo[2]+'"><ul class="ml-list">'+g.map(function(x,i){ return mlRowHTML(x,i,g.length); }).join('')+'</ul></div>'
+    :'<div class="fd-note">'+(done.length?'Everything here is done. Add what\u2019s next.':tab==='others'?'Things you\u2019ve promised or need to do for family, friends or colleagues. Add who it\u2019s for in the notes (\u270e).':'Everything you want to do for yourself, big or small. Reorder with \u2191 \u2193 so the most important is on top.')+'</div>';
 
   var doneHTML=done.length?'<details class="ml-done"'+(mlDoneOpen?' open':'')+' ontoggle="mlDoneOpen=this.open"><summary>Done <span class="ml-ct">'+done.length+'</span></summary>'+
     '<ul class="ml-list">'+done.map(function(x,i){ return mlRowHTML(x,i,done.length); }).join('')+'</ul></details>':'';
 
-  box.innerHTML=add+groups+doneHTML;
+  box.innerHTML=tabs+add+groups+doneHTML;
 }
 
 /* ═══════════════════════════════════════════════════
@@ -5187,7 +5185,7 @@ async function impSaveLog(){
   if(x) Object.assign(x,{date:date,instance:inst,response:resp,outcome:out});
   else { x={sheetId:'ii'+Date.now(),habitId:h.sheetId,habit:h.habit,date:date,instance:inst,response:resp,outcome:out}; impInst.push(x);
     impInst=impInst.filter(function(y){ return !(y.habitId===h.sheetId&&y.date===date&&y.outcome==='clean'); }); }
-  impLogFor=''; impEditInst=''; if(h.follow) hfOpen[h.sheetId]=1; renderImprove(); renderTodayHabits();
+  impLogFor=''; impEditInst=''; if(h.follow) hfOpen[h.sheetId]=1; else impShowAll[h.sheetId]=1; renderImprove(); renderTodayHabits();
   var ok=await postToSheet({sheet:'Improve',kind:'instance',sheetId:x.sheetId,habitId:h.sheetId,habit:h.habit,date:date,instance:inst,response:resp,outcome:out});
   if(!ok){ if(old) Object.assign(x,old); else impInst=impInst.filter(function(y){ return y!==x; }); renderImprove(); renderTodayHabits(); showToast(LAST_SHEET_ERROR||'Couldn’t save.','error'); return; }
   showToast(out==='handled'?'Logged. Nicely handled ✓':'Logged. Tomorrow’s a new day.','success');
@@ -5231,7 +5229,7 @@ function impCardHTML(h){
   var wk=days.map(function(d){ return impDay(id,d); }), c={handled:0,slipped:0,clean:0}; wk.forEach(function(s){ if(s) c[s]++; });
   var ss=impSinceSlip(h), cleanToday=impOf(id).some(function(x){ return x.date===t&&x.outcome==='clean'; });
   var log=impOf(id).filter(function(x){ return x.outcome!=='clean'; }).sort(function(a,b){ return b.date.localeCompare(a.date)||b.sheetId.localeCompare(a.sheetId); });
-  var lim=impShowAll[id]?log.length:3;
+  var lopen=!!impShowAll[id], lc={handled:0,slipped:0}; log.forEach(function(x){ if(lc[x.outcome]!=null) lc[x.outcome]++; });
   var head=impEditHabit===id
     ? '<div class="imp-hedit"><input class="sin" id="imp-eh-'+id+'" value="'+escH(h.habit)+'" maxlength="100"><input class="sin" id="imp-ei-'+id+'" value="'+escH(h.instead)+'" maxlength="160" placeholder="What I’ll do instead (optional)">'+
       '<div class="ty-foot"><button type="button" class="btn" onclick="impEditHabit=\'\';renderImprove()">Cancel</button><button type="button" class="btn gold" onclick="impSaveHabit(\''+id+'\')">Save</button></div></div>'
@@ -5247,12 +5245,14 @@ function impCardHTML(h){
     (impLogFor===id?impLogFormHTML(h):
       '<div class="imp-btns"><button type="button" class="btn'+(cleanToday?' imp-cleanon':'')+'" onclick="impToggleClean(\''+id+'\')">'+(cleanToday?'✓ No slip today (undo)':'✓ No slip today')+'</button>'+
       '<button type="button" class="btn gold" onclick="impOpenLog(\''+id+'\')">+ Log an instance</button></div>')+
-    (log.length?'<ul class="imp-list">'+log.slice(0,lim).map(function(x){ var o=IMP_OUT[x.outcome]||IMP_OUT.handled;
+    (log.length?'<button type="button" class="hf-sum imp-sum" aria-expanded="'+lopen+'" onclick="impShowAll['+jsArg(id)+']=!impShowAll['+jsArg(id)+'];renderImprove()">'+
+      '<span class="ty-hcar">\u25b8</span> '+log.length+' logged \u00b7 \uD83D\uDC4D '+lc.handled+' \u00b7 \uD83D\uDC4E '+lc.slipped+' \u00b7 last '+feedDate(log[0].date)+'</button>':'')+
+    (log.length&&lopen?'<ul class="imp-list hf-list">'+log.map(function(x){ var o=IMP_OUT[x.outcome]||IMP_OUT.handled;
       return '<li><div class="imp-lh"><span class="imp-ld">'+feedDate(x.date)+'</span><span class="imp-pill '+x.outcome+'">'+o[0]+' '+o[1]+'</span>'+
         '<span class="imp-la"><button type="button" class="rt-mini" aria-label="Edit entry" onclick="impOpenLog(\''+id+'\',\''+x.date+'\',\''+x.sheetId+'\')">✎</button>'+
         '<button type="button" class="rt-mini del" aria-label="Delete entry" onclick="impDeleteInst(\''+x.sheetId+'\')">×</button></span></div>'+
         '<div class="imp-li">'+escH(x.instance)+'</div>'+(x.response?'<div class="imp-lr">→ '+escH(x.response)+'</div>':'')+'</li>'; }).join('')+'</ul>'+
-      (log.length>lim?'<button type="button" class="pr-more" onclick="impShowAll[\''+id+'\']=1;renderImprove()">Show all '+log.length+'</button>':''):'')+
+      '':'')+
   '</div>';
 }
 function renderImprove(){
