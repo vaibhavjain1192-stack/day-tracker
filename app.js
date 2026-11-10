@@ -1,6 +1,6 @@
 /* Morning Dashboard app. Linked from index.html; bump ?v= there when this changes. */
 'use strict';
-window.APP_VER='20261110';   // must match the ?v= in index.html (checked there)
+window.APP_VER='20261110c';   // must match the ?v= in index.html (checked there)
 const WORKER_URL='https://muddy-shadow-1aa7.vaibhavjain-1192.workers.dev';
 const FETCH_TIMEOUT=45000;   // default; page loads pass shorter ones
 var DIAG={};  // diagnostics collected during fetch
@@ -4946,9 +4946,26 @@ function peFormHTML(p){
       '<div class="pe-whenhint" id="pe-whenhint">'+peWhenHint(w)+'</div></div>'+
     f('Key points','<textarea class="sin" id="pe-kp" rows="3" placeholder="One per line">'+escH(p.keyPoints||'')+'</textarea>','shown as “In short” in the popup, one per line')+
     f('One easy habit','<input class="sin" id="pe-habit" maxlength="160" value="'+escH(p.habit||'')+'">')+
+    '<div class="pe-f"><span>Situations <small>when this principle matters; shows as \u201cWhen I\u2019m\u2026\u201d chips</small></span><div class="pe-sits" id="pe-sits">'+
+      peSitChips(prSits(p))+'</div><input class="sin pe-sit-new" id="pe-sit-new" maxlength="40" placeholder="Add your own and press Enter, e.g. Talking to my manager" onkeydown="if(event.key===\'Enter\'){event.preventDefault();peAddSit(this);}"></div>'+
     f('Keywords','<input class="sin" id="pe-kw" value="'+escH(p.keywords||'')+'" placeholder="anger, pause, step away">','comma-separated; the popup shows entries from other tabs that contain these')+
     '<div class="pe-kwprev" id="pe-kwprev"></div>'+
     '<div class="ty-foot"><button type="button" class="btn" onclick="peEditId=\'\';renderPrEditor()">Cancel</button><button type="button" class="btn gold" onclick="peSave()">Save</button></div></div>';
+}
+function peSitChips(sel){
+  var on={}; sel.forEach(function(s){ on[sitKey(s)]=s; });
+  var names=PR_SITS.map(function(x){ return x[0]; });
+  allSitsUsed().concat(sel).forEach(function(s){ if(!names.some(function(n){ return sitKey(n)===sitKey(s); })) names.push(s); });
+  return names.map(function(n){ var o=!!on[sitKey(n)];
+    return '<button type="button" class="pe-sit'+(o?' on':'')+'" aria-pressed="'+o+'" data-s="'+escH(n)+'" onclick="this.classList.toggle(\'on\');this.setAttribute(\'aria-pressed\',this.classList.contains(\'on\'))">'+sitIcon(n)+' '+escH(n)+'</button>'; }).join('');
+}
+function peAddSit(inp){
+  var v=inp.value.trim(); if(!v) return;
+  var box=document.getElementById('pe-sits'), ex=[].filter.call(box.querySelectorAll('.pe-sit'),function(b){ return sitKey(b.getAttribute('data-s'))===sitKey(v); })[0];
+  if(ex){ ex.classList.add('on'); ex.setAttribute('aria-pressed','true'); }
+  else { var b=document.createElement('button'); b.type='button'; b.className='pe-sit on'; b.setAttribute('aria-pressed','true'); b.setAttribute('data-s',v);
+    b.textContent=sitIcon(v)+' '+v; b.onclick=function(){ this.classList.toggle('on'); this.setAttribute('aria-pressed',this.classList.contains('on')); }; box.appendChild(b); }
+  inp.value='';
 }
 function peWhenHint(w){
   return w==='core'?'Shows in “Every day”, every morning.':w==='days'?'Shows in “Today’s reflections” on the days you pick.':'Takes turns in “Today’s reflections” with the other rotating ones ('+MR_ROTATE+' a day, minus any set for that day).';
@@ -4971,15 +4988,17 @@ async function peSave(){
   var wb=form.querySelector('.pe-seg .on'), w=wb?wb.getAttribute('data-w'):'rotate';
   var days=[].map.call(form.querySelectorAll('.pe-day.on'),function(b){ return MR_DOW[+b.getAttribute('data-d')]; });
   if(w==='days'&&!days.length){ showToast('Pick at least one day, or choose Rotates.','error'); return; }
+  var sits=[].map.call(form.querySelectorAll('.pe-sit.on'),function(b){ return b.getAttribute('data-s'); });
+  var pend=(document.getElementById('pe-sit-new')||{}).value; if(pend&&pend.trim()&&sits.map(sitKey).indexOf(sitKey(pend))<0) sits.push(pend.trim());
   var p=principles.find(function(x){ return x.sheetId===id; }), isNew=!p;
   var nx={sheetId:id,group:v('pe-group').trim(),title:title,details:v('pe-details').trim(),core:w==='core',
-    keywords:v('pe-kw').trim(),keyPoints:v('pe-kp').trim(),habit:v('pe-habit').trim(),days:w==='days'?days.join(', '):'',
+    keywords:v('pe-kw').trim(),keyPoints:v('pe-kp').trim(),habit:v('pe-habit').trim(),days:w==='days'?days.join(', '):'',situations:sits.join(', '),
     order:p?p.order:(principles.reduce(function(m,x){ return Math.max(m,x.order); },-1)+1),from:p?p.from:'Added in dashboard'};
   var old=p?Object.assign({},p):null;
   if(p) Object.assign(p,nx); else principles.push(nx);
   peEditId=''; renderPrEditor(); renderMorningRead();
   var ok=await postToSheet({sheet:'Principles',action:'save',sheetId:id,group:nx.group,title:nx.title,details:nx.details,core:nx.core?'yes':'',
-    keywords:nx.keywords,keyPoints:nx.keyPoints,habit:nx.habit,days:nx.days,order:nx.order});
+    keywords:nx.keywords,keyPoints:nx.keyPoints,habit:nx.habit,days:nx.days,situations:nx.situations,order:nx.order});
   if(!ok){ if(old) Object.assign(p,old); else principles=principles.filter(function(x){ return x!==nx; }); renderPrEditor(); renderMorningRead();
     showToast(LAST_SHEET_ERROR||'Couldn’t save. Try again.','error'); return; }
   showToast(isNew?'Added ✓':'Saved ✓','success');
@@ -5020,7 +5039,7 @@ function renderPrEditor(){
       '<div class="pe-mv"><button type="button" class="rt-mini pe-up" aria-label="Move up"'+(i===0?' disabled':'')+' onclick="peMove(\''+escH(p.sheetId)+'\',-1)">↑</button>'+
       '<button type="button" class="rt-mini pe-dn" aria-label="Move down"'+(i===list.length-1?' disabled':'')+' onclick="peMove(\''+escH(p.sheetId)+'\',1)">↓</button></div>'+
       '<div class="pe-main"><div class="pe-t">'+escH(p.title)+' '+peWhenLabel(p)+'</div>'+
-        '<div class="pe-s">'+(p.group?escH(p.group)+' · ':'')+(p.keywords?'<span class="pe-kw">🔎 '+escH(p.keywords.length>70?p.keywords.slice(0,69)+'…':p.keywords)+'</span>':'<span class="pe-kw none">no keywords</span>')+'</div></div>'+
+        '<div class="pe-s">'+(prSits(p).length?'<span class="pe-sitline">'+prSits(p).map(sitIcon).join(' ')+'</span> ':'')+(p.group?escH(p.group)+' · ':'')+(p.keywords?'<span class="pe-kw">🔎 '+escH(p.keywords.length>70?p.keywords.slice(0,69)+'…':p.keywords)+'</span>':'<span class="pe-kw none">no keywords</span>')+'</div></div>'+
       '<div class="pe-acts"><button type="button" class="btn pe-editbtn" onclick="peStartEdit(\''+escH(p.sheetId)+'\')">✎ Edit</button>'+
       '<button type="button" class="rt-mini del" aria-label="Delete '+escH(p.title)+'" onclick="peDelete(\''+escH(p.sheetId)+'\')">×</button></div></li>';
   }).join('');
@@ -5036,10 +5055,39 @@ function renderPrEditor(){
   var kw=document.getElementById('pe-kw'); if(kw){ kw.addEventListener('input',peKwPreview); peKwPreview(); }
 }
 
+/* Situations: the everyday moments a principle is for ("Getting a call", "Reading an email"…).
+   Principles col L. The Morning read shows a "When I'm…" chip row; tap one to see just those principles. */
+var PR_SITS=[['Getting a call','📞'],['Reading an email','📧'],['Sending an email','📤'],['Added to a mail trail','📨'],
+  ['In a meeting','💬'],['Before a meeting','🗓️'],['In an argument','🗣️'],['Feeling angry','😤'],
+  ['Someone is rude','🙄'],['Someone complains','👂'],['Getting feedback','📝'],['Giving feedback','🎯'],
+  ['New task arrives','📥'],['Starting work','🚀'],['Under pressure','⏱️'],['Things going well','🎉'],
+  ['Making plans','🧭'],['Agreeing on something','🤝'],['Money decision','💰'],['At home','🏠'],
+  ['Feeling low','🌧️'],['Worrying','😟'],['Morning','🌅'],['End of day','🌙']];
+var mrSit='';
+function prSits(p){ return String(p.situations||'').split(',').map(function(s){ return s.trim(); }).filter(Boolean); }
+function sitIcon(n){ var f=PR_SITS.filter(function(x){ return x[0].toLowerCase()===String(n).toLowerCase(); })[0]; return f?f[1]:'📍'; }
+function sitKey(n){ return String(n).trim().toLowerCase(); }
+function allSitsUsed(){
+  var seen={}, out=[];
+  principles.forEach(function(p){ prSits(p).forEach(function(s){ var k=sitKey(s); if(!seen[k]){ seen[k]=s; } }); });
+  PR_SITS.forEach(function(x){ var k=sitKey(x[0]); if(seen[k]){ out.push(seen[k]); delete seen[k]; } });
+  return out.concat(Object.keys(seen).map(function(k){ return seen[k]; }));
+}
+function mrSitBar(){
+  var used=allSitsUsed(); if(!used.length) return '';
+  return '<div class="mr-sitbar" role="group" aria-label="Quick look by situation"><span class="mr-sitlbl">When I’m…</span>'+
+    used.map(function(s){ var on=sitKey(s)===sitKey(mrSit);
+      return '<button type="button" class="mr-sit'+(on?' on':'')+'" aria-pressed="'+on+'" onclick="mrPickSit('+jsArg(s)+')">'+sitIcon(s)+' '+escH(s)+'</button>'; }).join('')+'</div>';
+}
+function mrPickSit(s){ mrSit=sitKey(s)===sitKey(mrSit)?'':s; renderMorningRead();
+  var b=document.querySelector('#mr-body .mr-sit.on')||document.querySelector('#mr-body .mr-sitbar .mr-sit'); if(b) b.focus(); }
+function mrSitTags(p){ var ss=prSits(p); if(!ss.length) return '';
+  return '<div class="mr-tags">'+ss.map(function(s){ return '<span class="mr-tag">'+sitIcon(s)+' '+escH(s)+'</span>'; }).join('')+'</div>'; }
+
 function mrItem(p,i,showGroup){
   return '<li><button type="button" class="mr-it" onclick="openPrinciple(\''+escH(p.sheetId)+'\',this)" title="See what else you\u2019ve written about this">'+(i!=null?'<span class="mr-n">'+(i+1)+'</span>':'')+
     '<div class="mr-tx"><div class="mr-t">'+escH(p.title)+(showGroup&&p.group?' <span class="mr-g">'+escH(p.group)+'</span>':'')+'</div>'+
-    (p.details?'<div class="mr-d">'+escH(p.details)+'</div>':'')+'</div><span class="mr-go" aria-hidden="true">\u203a</span></button></li>';
+    (p.details?'<div class="mr-d">'+escH(p.details)+'</div>':'')+mrSitTags(p)+'</div><span class="mr-go" aria-hidden="true">\u203a</span></button></li>';
 }
 function renderMorningRead(){
   var box=document.getElementById('mr-box'); if(!box) return;
@@ -5054,14 +5102,21 @@ function renderMorningRead(){
   box.classList.toggle('done',read&&!mrOpen);
 
   var foot=document.getElementById('mr-foot');
+  if(mrSit){
+    var hits=principles.slice().sort(function(a,b){ return a.order-b.order; }).filter(function(p){ return prSits(p).some(function(s){ return sitKey(s)===sitKey(mrSit); }); });
+    if(foot) foot.innerHTML='';
+    body.innerHTML=mrSitBar()+'<div class="mr-sec"><div class="mr-h">'+sitIcon(mrSit)+' '+escH(mrSit)+' \u00b7 '+hits.length+' principle'+(hits.length!==1?'s':'')+
+      ' <button type="button" class="mr-clear" onclick="mrPickSit('+jsArg(mrSit)+')">Show all</button></div><ol class="mr-list">'+hits.map(function(p,i){ return mrItem(p,i,true); }).join('')+'</ol></div>';
+    return;
+  }
   if(read&&!mrOpen){
     if(foot) foot.innerHTML='';
-    body.innerHTML='<div class="mr-donebar"><span class="mr-ok">✓ Read today</span>'+
+    body.innerHTML=mrSitBar()+'<div class="mr-donebar"><span class="mr-ok">✓ Read today</span>'+
       '<span class="mr-core-line">'+t.core.map(function(p){ return escH(p.title); }).join(' · ')+'</span>'+
       '<button type="button" class="btn mr-again" onclick="mrOpen=true;renderMorningRead()">Read again</button></div>';
     return;
   }
-  body.innerHTML=
+  body.innerHTML=mrSitBar()+
     (t.core.length?'<div class="mr-sec"><div class="mr-h">Every day</div><ol class="mr-list">'+t.core.map(function(p,i){ return mrItem(p,i,false); }).join('')+'</ol></div>':'')+
     (t.pick.length?'<div class="mr-sec"><div class="mr-h">Today’s reflections</div><ul class="mr-list mr-rot">'+t.pick.map(function(p){ return mrItem(p,null,true); }).join('')+'</ul></div>':'');
   if(foot) foot.innerHTML='<div class="mr-foot"><span class="fd-hint">Tap a principle to go deeper. <b>\u270e Edit</b> to change, reorder or schedule them.</span>'+
@@ -5222,37 +5277,28 @@ function impLogFormHTML(h){
     '<div class="ty-foot"><button type="button" class="btn" onclick="impLogFor=\'\';impEditInst=\'\';renderImprove();renderTodayHabits()">Cancel</button><button type="button" class="btn gold" onclick="impSaveLog()">Save</button></div></div>';
 }
 function impCardHTML(h){
-  var id=h.sheetId, t=isoToday(), days=[]; for(var i=6;i>=0;i--) days.push(foodShift(t,-i));
-  var strip=days.map(function(d){ var s=impDay(id,d), o=IMP_OUT[s];
-    return '<button type="button" class="imp-day '+(s||'none')+(d===t?' today':'')+'" onclick="impOpenLog(\''+id+'\',\''+d+'\')" title="'+fgFmt(d,{weekday:'short',day:'numeric',month:'short'})+': '+(o?o[1]:'nothing logged')+'. Tap to log." aria-label="'+fgFmt(d,{weekday:'long',day:'numeric',month:'short'})+', '+(o?o[1]:'nothing logged')+'">'+
-      '<span class="imp-dw">'+MR_DOW[mrDow(d)].charAt(0)+'</span><span class="imp-dot">'+(o?o[0]:'')+'</span></button>'; }).join('');
-  var wk=days.map(function(d){ return impDay(id,d); }), c={handled:0,slipped:0,clean:0}; wk.forEach(function(s){ if(s) c[s]++; });
-  var ss=impSinceSlip(h), cleanToday=impOf(id).some(function(x){ return x.date===t&&x.outcome==='clean'; });
+  var id=h.sheetId;
   var log=impOf(id).filter(function(x){ return x.outcome!=='clean'; }).sort(function(a,b){ return b.date.localeCompare(a.date)||b.sheetId.localeCompare(a.sheetId); });
   var lopen=!!impShowAll[id], lc={handled:0,slipped:0}; log.forEach(function(x){ if(lc[x.outcome]!=null) lc[x.outcome]++; });
-  var head=impEditHabit===id
-    ? '<div class="imp-hedit"><input class="sin" id="imp-eh-'+id+'" value="'+escH(h.habit)+'" maxlength="100"><input class="sin" id="imp-ei-'+id+'" value="'+escH(h.instead)+'" maxlength="160" placeholder="What I’ll do instead (optional)">'+
-      '<div class="ty-foot"><button type="button" class="btn" onclick="impEditHabit=\'\';renderImprove()">Cancel</button><button type="button" class="btn gold" onclick="impSaveHabit(\''+id+'\')">Save</button></div></div>'
-    : '<div class="imp-top"><div class="imp-name">'+escH(h.habit)+'</div><div class="imp-hacts">'+
-        '<button type="button" class="rt-mini" title="Edit" aria-label="Edit '+escH(h.habit)+'" onclick="impEditHabit=\''+id+'\';renderImprove()">✎</button>'+
-        '<button type="button" class="rt-mini" title="Changed for good" aria-label="Mark as changed for good" onclick="impSetStatus(\''+id+'\',\'retired\')">🏁</button>'+
-        '<button type="button" class="rt-mini del" title="Delete" aria-label="Delete '+escH(h.habit)+'" onclick="impDeleteHabit(\''+id+'\')">×</button></div></div>'+
-      (h.instead?'<div class="imp-instead">Instead: '+escH(h.instead)+'</div>':'');
-  return '<div class="imp-card">'+head+
-    '<div class="imp-mid"><div class="imp-strip" role="group" aria-label="Last 7 days">'+strip+'</div>'+
-      '<div class="imp-stats">'+(ss.since?'<b>'+ss.n+'</b> day'+(ss.n!==1?'s':'')+' since last slip':'<b>'+ss.n+'</b> day'+(ss.n!==1?'s':'')+' tracked, no slips logged')+
-        '<span>This week: '+c.handled+' handled · '+c.slipped+' slipped · '+c.clean+' clean</span></div></div>'+
-    (impLogFor===id?impLogFormHTML(h):
-      '<div class="imp-btns"><button type="button" class="btn'+(cleanToday?' imp-cleanon':'')+'" onclick="impToggleClean(\''+id+'\')">'+(cleanToday?'✓ No slip today (undo)':'✓ No slip today')+'</button>'+
-      '<button type="button" class="btn gold" onclick="impOpenLog(\''+id+'\')">+ Log an instance</button></div>')+
-    (log.length?'<button type="button" class="hf-sum imp-sum" aria-expanded="'+lopen+'" onclick="impShowAll['+jsArg(id)+']=!impShowAll['+jsArg(id)+'];renderImprove()">'+
-      '<span class="ty-hcar">\u25b8</span> '+log.length+' logged \u00b7 \uD83D\uDC4D '+lc.handled+' \u00b7 \uD83D\uDC4E '+lc.slipped+' \u00b7 last '+feedDate(log[0].date)+'</button>':'')+
-    (log.length&&lopen?'<ul class="imp-list hf-list">'+log.map(function(x){ var o=IMP_OUT[x.outcome]||IMP_OUT.handled;
+  if(impEditHabit===id) return '<div class="imp-row editing"><div class="imp-hedit"><input class="sin" id="imp-eh-'+id+'" value="'+escH(h.habit)+'" maxlength="100"><input class="sin" id="imp-ei-'+id+'" value="'+escH(h.instead)+'" maxlength="160" placeholder="What I’ll do instead (optional)">'+
+      '<div class="ty-foot"><button type="button" class="btn" onclick="impEditHabit=\'\';renderImprove()">Cancel</button><button type="button" class="btn gold" onclick="impSaveHabit(\''+id+'\')">Save</button></div></div></div>';
+  return '<div class="imp-row">'+
+    '<div class="imp-rmain"><div class="imp-name">'+escH(h.habit)+'</div>'+
+      (h.instead?'<div class="imp-instead">Instead: '+escH(h.instead)+'</div>':'')+
+      '<div class="imp-rline">'+
+        (log.length?'<button type="button" class="hf-sum" aria-expanded="'+lopen+'" onclick="impShowAll['+jsArg(id)+']=!impShowAll['+jsArg(id)+'];renderImprove()">'+
+          '<span class="ty-hcar">▸</span> '+log.length+' logged · 👍 '+lc.handled+' · 👎 '+lc.slipped+' · last '+feedDate(log[0].date)+'</button>'
+          :'<span class="imp-none">Nothing logged yet</span>')+
+    '<span class="th-habit-acts imp-racts"><button type="button" class="th-habit-log" onclick="impOpenLog(\''+id+'\')" title="Log a time this came up">+ Log</button>'+
+      '<button type="button" class="th-habit-edit" title="Edit" aria-label="Edit '+escH(h.habit)+'" onclick="impEditHabit=\''+id+'\';renderImprove()">✎</button>'+
+      '<button type="button" class="th-habit-edit" title="Changed for good" aria-label="Mark as changed for good" onclick="impSetStatus(\''+id+'\',\'retired\')">🏁</button>'+
+      '<button type="button" class="th-habit-del" title="Delete" aria-label="Delete '+escH(h.habit)+'" onclick="impDeleteHabit(\''+id+'\')">×</button></span></div></div>'+
+    (impLogFor===id?'<div class="hf-panel imp-panel">'+impLogFormHTML(h)+'</div>':'')+
+    (log.length&&lopen&&impLogFor!==id?'<div class="hf-panel imp-panel"><ul class="imp-list hf-list">'+log.map(function(x){ var o=IMP_OUT[x.outcome]||IMP_OUT.handled;
       return '<li><div class="imp-lh"><span class="imp-ld">'+feedDate(x.date)+'</span><span class="imp-pill '+x.outcome+'">'+o[0]+' '+o[1]+'</span>'+
         '<span class="imp-la"><button type="button" class="rt-mini" aria-label="Edit entry" onclick="impOpenLog(\''+id+'\',\''+x.date+'\',\''+x.sheetId+'\')">✎</button>'+
         '<button type="button" class="rt-mini del" aria-label="Delete entry" onclick="impDeleteInst(\''+x.sheetId+'\')">×</button></span></div>'+
-        '<div class="imp-li">'+escH(x.instance)+'</div>'+(x.response?'<div class="imp-lr">→ '+escH(x.response)+'</div>':'')+'</li>'; }).join('')+'</ul>'+
-      '':'')+
+        '<div class="imp-li">'+escH(x.instance)+'</div>'+(x.response?'<div class="imp-lr">→ '+escH(x.response)+'</div>':'')+'</li>'; }).join('')+'</ul></div>':'')+
   '</div>';
 }
 function renderImprove(){
@@ -5264,7 +5310,7 @@ function renderImprove(){
   setBadge('imp-badge',act.length);
   var b=document.getElementById('badge-improve'); if(b) b.textContent=act.length?act.length+' active':'';
   box.innerHTML=
-    (act.length?act.map(impCardHTML).join(''):'<div class="fd-note">Add a habit you want to change, like “Reacting angrily on calls” or “Scrolling the phone in bed”.</div>')+
+    (act.length?'<div class="imp-rows">'+act.map(impCardHTML).join('')+'</div>':'<div class="fd-note">Add a habit you want to change, like “Reacting angrily on calls” or “Scrolling the phone in bed”.</div>')+
     '<div class="imp-add"><div class="imp-add-h">Add a habit to change</div>'+
       '<input class="sin" id="imp-new" maxlength="100" placeholder="The habit, e.g. Reacting angrily on calls" onkeydown="if(event.key===\'Enter\')impAddHabit()">'+
       '<input class="sin" id="imp-new-instead" maxlength="160" placeholder="What I’ll do instead (optional), e.g. 3 breaths, then reply by mail" onkeydown="if(event.key===\'Enter\')impAddHabit()">'+
