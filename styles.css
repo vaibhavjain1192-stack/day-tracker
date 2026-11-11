@@ -1659,3 +1659,9 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
 }
 .imp-rline{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-top:4px}
 .imp-rline .imp-racts{flex-basis:auto!important;padding:0!important;margin:0 0 0 auto!important}
+
+/* Astrology lines */
+.mr-astro{font-size:12px;color:#B9A6E0;line-height:1.5;margin-top:4px;font-style:italic}
+.pr-astro{display:flex;flex-direction:column;gap:3px;margin-top:10px;padding:10px 12px;border-radius:8px;background:rgba(179,157,219,.1);border:1px solid rgba(179,157,219,.35)}
+.pr-astro .pr-habit-l{color:#B39DDB}
+.pr-astro-t{font-size:13.5px;color:var(--text-1);line-height:1.5}
