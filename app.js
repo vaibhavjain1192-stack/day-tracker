@@ -1,6 +1,6 @@
 /* Morning Dashboard app. Linked from index.html; bump ?v= there when this changes. */
 'use strict';
-window.APP_VER='20261110c';   // must match the ?v= in index.html (checked there)
+window.APP_VER='20261111';   // must match the ?v= in index.html (checked there)
 const WORKER_URL='https://muddy-shadow-1aa7.vaibhavjain-1192.workers.dev';
 const FETCH_TIMEOUT=45000;   // default; page loads pass shorter ones
 var DIAG={};  // diagnostics collected during fetch
@@ -4854,10 +4854,11 @@ function prSources(){
 }
 function prSummaryHTML(p){
   var pts=String(p.keyPoints||'').split(/\n+/).map(function(s){ return s.replace(/^[-•*\s]+/,'').trim(); }).filter(Boolean);
-  if(!pts.length&&!p.habit) return '';
+  if(!pts.length&&!p.habit&&!p.astro) return '';
   return '<div class="pr-sum">'+
     (pts.length?'<div class="pr-sum-h">In short</div><ul class="pr-pts">'+pts.map(function(s){ return '<li>'+escH(s)+'</li>'; }).join('')+'</ul>':'')+
     (p.habit?'<div class="pr-habit"><span class="pr-habit-l">✅ One easy habit</span><span class="pr-habit-t">'+escH(p.habit)+'</span></div>':'')+
+    (p.astro?'<div class="pr-astro"><span class="pr-habit-l">\u2728 From my chart</span><span class="pr-astro-t">'+escH(p.astro)+'</span></div>':'')+
   '</div>';
 }
 function openPrinciple(id,btn){
@@ -4946,6 +4947,7 @@ function peFormHTML(p){
       '<div class="pe-whenhint" id="pe-whenhint">'+peWhenHint(w)+'</div></div>'+
     f('Key points','<textarea class="sin" id="pe-kp" rows="3" placeholder="One per line">'+escH(p.keyPoints||'')+'</textarea>','shown as “In short” in the popup, one per line')+
     f('One easy habit','<input class="sin" id="pe-habit" maxlength="160" value="'+escH(p.habit||'')+'">')+
+    f('From my chart','<textarea class="sin" id="pe-astro" rows="2" placeholder="Optional: what your Kundali says about this">'+escH(p.astro||'')+'</textarea>','shown with \u2728 on the Morning read')+
     '<div class="pe-f"><span>Situations <small>when this principle matters; shows as \u201cWhen I\u2019m\u2026\u201d chips</small></span><div class="pe-sits" id="pe-sits">'+
       peSitChips(prSits(p))+'</div><input class="sin pe-sit-new" id="pe-sit-new" maxlength="40" placeholder="Add your own and press Enter, e.g. Talking to my manager" onkeydown="if(event.key===\'Enter\'){event.preventDefault();peAddSit(this);}"></div>'+
     f('Keywords','<input class="sin" id="pe-kw" value="'+escH(p.keywords||'')+'" placeholder="anger, pause, step away">','comma-separated; the popup shows entries from other tabs that contain these')+
@@ -4992,13 +4994,13 @@ async function peSave(){
   var pend=(document.getElementById('pe-sit-new')||{}).value; if(pend&&pend.trim()&&sits.map(sitKey).indexOf(sitKey(pend))<0) sits.push(pend.trim());
   var p=principles.find(function(x){ return x.sheetId===id; }), isNew=!p;
   var nx={sheetId:id,group:v('pe-group').trim(),title:title,details:v('pe-details').trim(),core:w==='core',
-    keywords:v('pe-kw').trim(),keyPoints:v('pe-kp').trim(),habit:v('pe-habit').trim(),days:w==='days'?days.join(', '):'',situations:sits.join(', '),
+    keywords:v('pe-kw').trim(),keyPoints:v('pe-kp').trim(),habit:v('pe-habit').trim(),days:w==='days'?days.join(', '):'',situations:sits.join(', '),astro:v('pe-astro').trim(),
     order:p?p.order:(principles.reduce(function(m,x){ return Math.max(m,x.order); },-1)+1),from:p?p.from:'Added in dashboard'};
   var old=p?Object.assign({},p):null;
   if(p) Object.assign(p,nx); else principles.push(nx);
   peEditId=''; renderPrEditor(); renderMorningRead();
   var ok=await postToSheet({sheet:'Principles',action:'save',sheetId:id,group:nx.group,title:nx.title,details:nx.details,core:nx.core?'yes':'',
-    keywords:nx.keywords,keyPoints:nx.keyPoints,habit:nx.habit,days:nx.days,situations:nx.situations,order:nx.order});
+    keywords:nx.keywords,keyPoints:nx.keyPoints,habit:nx.habit,days:nx.days,situations:nx.situations,astro:nx.astro,order:nx.order});
   if(!ok){ if(old) Object.assign(p,old); else principles=principles.filter(function(x){ return x!==nx; }); renderPrEditor(); renderMorningRead();
     showToast(LAST_SHEET_ERROR||'Couldn’t save. Try again.','error'); return; }
   showToast(isNew?'Added ✓':'Saved ✓','success');
@@ -5087,7 +5089,7 @@ function mrSitTags(p){ var ss=prSits(p); if(!ss.length) return '';
 function mrItem(p,i,showGroup){
   return '<li><button type="button" class="mr-it" onclick="openPrinciple(\''+escH(p.sheetId)+'\',this)" title="See what else you\u2019ve written about this">'+(i!=null?'<span class="mr-n">'+(i+1)+'</span>':'')+
     '<div class="mr-tx"><div class="mr-t">'+escH(p.title)+(showGroup&&p.group?' <span class="mr-g">'+escH(p.group)+'</span>':'')+'</div>'+
-    (p.details?'<div class="mr-d">'+escH(p.details)+'</div>':'')+mrSitTags(p)+'</div><span class="mr-go" aria-hidden="true">\u203a</span></button></li>';
+    (p.details?'<div class="mr-d">'+escH(p.details)+'</div>':'')+(p.astro?'<div class="mr-astro"><span aria-hidden="true">\u2728</span> '+escH(p.astro)+'</div>':'')+mrSitTags(p)+'</div><span class="mr-go" aria-hidden="true">\u203a</span></button></li>';
 }
 function renderMorningRead(){
   var box=document.getElementById('mr-box'); if(!box) return;
