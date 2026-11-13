@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=20261111">
+<link rel="stylesheet" href="styles.css?v=20261113">
 </head>
 <body>
 <div class="toast" id="toast"></div>
@@ -26,7 +26,7 @@
     <button class="tab on" onclick="switchTab('morning')"><span class="tab-icon">&#9728;&#65039;<span class="badge zero" id="mor-badge">0</span></span><span class="tab-label">Morning</span></button>
     <button class="tab" onclick="switchTab('routine')"><span class="tab-icon">&#128197;<span class="badge zero" id="rt-badge">0</span></span><span class="tab-label">Routine</span></button>
     <button class="tab" onclick="switchTab('improve')"><span class="tab-icon">&#128200;<span class="badge zero" id="imp-badge">0</span></span><span class="tab-label"><span class="tl-full">Improvement</span><span class="tl-short">Improve</span></span></button>
-    <button class="tab" onclick="switchTab('plans')"><span class="tab-icon">&#129504;<span class="badge zero" id="plan-badge">0</span></span><span class="tab-label">Plans</span></button>
+    <button class="tab" onclick="switchTab('personal')"><span class="tab-icon">&#128173;<span class="badge zero" id="pt-badge">0</span></span><span class="tab-label"><span class="tl-full">Personal Thoughts</span><span class="tl-short">Thoughts</span></span></button>
     <button class="tab" onclick="switchTab('situations')"><span class="tab-icon">&#128250;<span class="badge zero" id="sit-badge">0</span></span><span class="tab-label">Situations</span></button>
     <button class="tab" onclick="switchTab('posts')"><span class="tab-icon">&#128204;<span class="badge zero" id="post-badge">0</span></span><span class="tab-label">Posts</span></button>
     <button class="tab" onclick="switchTab('motivation')"><span class="tab-icon">&#128293;<span class="badge zero" id="mot-badge">0</span></span><span class="tab-label"><span class="tl-full">My Learnings</span><span class="tl-short">Learnings</span></span></button>
@@ -46,6 +46,56 @@
     <div class="mr-top"><h2 class="mr-title" id="mr-title">&#127749; Morning read</h2><span class="mr-meta" id="mr-meta"></span></div>
     <div id="mr-body"><div class="fd-note">Loading&hellip;</div></div>
     <div id="mr-foot"></div>
+    <div class="mr-plans">
+      <button type="button" class="mr-plans-hd" id="mr-plans-hd" aria-expanded="false" aria-controls="mr-plans-body" onclick="toggleMrPlans()"><span class="ty-hcar">&#9656;</span> &#129504; My plans for situations <span class="ml-ct" id="mr-plans-ct"></span><span class="mr-plans-sub">When this happens, I&#8217;ll follow these steps</span></button>
+      <div id="mr-plans-body" hidden>
+  <div class="focus-box sit-pairs">
+    <div class="focus-top">
+      <div class="focus-lbl">&#129504; Today</div>
+      <span class="focus-sync" id="sit-sync"></span>
+    </div>
+    <div class="sp-hint">Mark each one at day's end: did it come up, and did you follow your steps?</div>
+    <div id="sit-rows"></div>
+    <div class="sp-foot">
+      <span class="focus-carry" id="sit-carry"></span>
+      <button class="btn" onclick="openPlanLibrary()">&#9881; Add or edit plans</button>
+    </div>
+  </div>
+
+
+  <div class="sec-hd" id="hd-sitlib" onclick="toggleSection('sitlib')"><span class="sec-icon">&#129504;</span><span class="sec-title">Add &amp; edit plans</span><span class="lbl-line"></span><span class="sec-badge" id="badge-sitlib"></span><span class="sec-caret" id="caret-sitlib">&#9662;</span></div>
+  <div class="sec-body closed" id="sec-sitlib">
+    <div class="spl-tabs">
+      <button class="pst-tab on" id="spl-tab-active" onclick="setPlanView('active')">Active <span class="pst-ct" id="spl-ct-active">0</span></button>
+      <button class="pst-tab" id="spl-tab-retired" onclick="setPlanView('retired')">Retired <span class="pst-ct" id="spl-ct-retired">0</span></button>
+    </div>
+    <div style="font-size:11px;color:var(--text-2);margin-bottom:10px">Drag &#9776; to reorder. Retiring a plan hides it from Today but keeps its history.</div>
+    <div id="spl-list"></div>
+    <div id="spl-import" style="display:none;margin-top:10px">
+      <button class="btn" onclick="importStarterPlans()">&#8681; Import 10 plans from my habit list</button>
+      <div style="font-size:10.5px;color:var(--text-3);margin-top:6px;line-height:1.6">Splits your existing anger and reaction habits into one plan per situation, so each can be tracked separately.</div>
+    </div>
+
+    <div class="lbl" style="margin-top:1.25rem">Add a plan <span class="lbl-line"></span></div>
+    <div class="sit-block">
+      <div style="margin-bottom:8px">
+        <label class="sfl">When this happens <span style="color:var(--text-3);font-weight:400">(the trigger)</span></label>
+        <textarea class="sin" id="spl-sit" rows="2" placeholder="e.g. When I open my laptop before 9am" oninput="checkTrigger(this)"></textarea>
+        <div class="spl-tip" id="spl-tip">A trigger works best when you could <strong>see it from outside</strong> &#8212; a time, a place, or an action. &ldquo;When I feel rushed&rdquo; rarely fires; &ldquo;when I sit down at my desk&rdquo; does.</div>
+      </div>
+      <div style="margin-bottom:8px">
+        <label class="sfl">My steps <span style="color:var(--text-3);font-weight:400">(one per point, up to 5)</span></label>
+        <div id="spl-steps"></div>
+      </div>
+      <div class="sit-foot">
+        <span class="sync-txt" id="spl-sync">Ready</span>
+        <button class="btn gold" onclick="addSitPlan()">Add plan &#8599;</button>
+      </div>
+    </div>
+  </div><!-- /sec-sitlib -->
+
+      </div>
+    </div>
   </section>
   <section class="feed" id="feed" aria-labelledby="feed-title">
     <div class="feed-hd">
@@ -123,58 +173,19 @@
 </div>
 
 <!-- TAB: PLANS (situations & how I'll handle them) -->
-<div class="pg" id="pg-plans">
-  <div class="past-hdr">
-    <div class="past-title">Situations &amp; how I'll handle them</div>
-    <div class="past-sub">When <em>this</em> happens, I'll follow <em>these steps</em>.</div>
-  </div>
-  <div class="focus-box sit-pairs">
-    <div class="focus-top">
-      <div class="focus-lbl">&#129504; Today</div>
-      <span class="focus-sync" id="sit-sync"></span>
-    </div>
-    <div class="sp-hint">Mark each one at day's end: did it come up, and did you follow your steps?</div>
-    <div id="sit-rows"></div>
-    <div class="sp-foot">
-      <span class="focus-carry" id="sit-carry"></span>
-      <button class="btn" onclick="openPlanLibrary()">&#9881; Add or edit plans</button>
-    </div>
-  </div>
 
 
-  <div class="sec-hd" id="hd-sitlib" onclick="toggleSection('sitlib')"><span class="sec-icon">&#129504;</span><span class="sec-title">Add &amp; edit plans</span><span class="lbl-line"></span><span class="sec-badge" id="badge-sitlib"></span><span class="sec-caret" id="caret-sitlib">&#9662;</span></div>
-  <div class="sec-body closed" id="sec-sitlib">
-    <div class="spl-tabs">
-      <button class="pst-tab on" id="spl-tab-active" onclick="setPlanView('active')">Active <span class="pst-ct" id="spl-ct-active">0</span></button>
-      <button class="pst-tab" id="spl-tab-retired" onclick="setPlanView('retired')">Retired <span class="pst-ct" id="spl-ct-retired">0</span></button>
-    </div>
-    <div style="font-size:11px;color:var(--text-2);margin-bottom:10px">Drag &#9776; to reorder. Retiring a plan hides it from Today but keeps its history.</div>
-    <div id="spl-list"></div>
-    <div id="spl-import" style="display:none;margin-top:10px">
-      <button class="btn" onclick="importStarterPlans()">&#8681; Import 10 plans from my habit list</button>
-      <div style="font-size:10.5px;color:var(--text-3);margin-top:6px;line-height:1.6">Splits your existing anger and reaction habits into one plan per situation, so each can be tracked separately.</div>
-    </div>
+<!-- TAB: PERSONAL THOUGHTS -->
+<div class="pg" id="pg-personal">
+  <div class="past-hdr"><div class="past-title">Personal Thoughts</div><div class="past-sub">What&#8217;s on my mind, and what I want to do, for myself and for others.</div></div>
+  <div class="sec-hd" id="hd-mythoughts" onclick="toggleSection('mythoughts')"><span class="sec-icon">&#128173;</span><span class="sec-title">My thoughts</span><span class="lbl-line"></span><span class="sec-badge" id="badge-mythoughts"></span><span class="sec-caret open" id="caret-mythoughts">&#9662;</span></div>
+  <div class="sec-body" id="sec-mythoughts"><div class="q-wrap"><div id="mt-body"><div class="fd-note">Loading&hellip;</div></div></div></div><!-- /sec-mythoughts -->
 
-    <div class="lbl" style="margin-top:1.25rem">Add a plan <span class="lbl-line"></span></div>
-    <div class="sit-block">
-      <div style="margin-bottom:8px">
-        <label class="sfl">When this happens <span style="color:var(--text-3);font-weight:400">(the trigger)</span></label>
-        <textarea class="sin" id="spl-sit" rows="2" placeholder="e.g. When I open my laptop before 9am" oninput="checkTrigger(this)"></textarea>
-        <div class="spl-tip" id="spl-tip">A trigger works best when you could <strong>see it from outside</strong> &#8212; a time, a place, or an action. &ldquo;When I feel rushed&rdquo; rarely fires; &ldquo;when I sit down at my desk&rdquo; does.</div>
-      </div>
-      <div style="margin-bottom:8px">
-        <label class="sfl">My steps <span style="color:var(--text-3);font-weight:400">(one per point, up to 5)</span></label>
-        <div id="spl-steps"></div>
-      </div>
-      <div class="sit-foot">
-        <span class="sync-txt" id="spl-sync">Ready</span>
-        <button class="btn gold" onclick="addSitPlan()">Add plan &#8599;</button>
-      </div>
-    </div>
-  </div><!-- /sec-sitlib -->
+  <div class="sec-hd" id="hd-mlist" onclick="toggleSection('mlist')"><span class="sec-icon">&#128221;</span><span class="sec-title">Master list</span><span class="lbl-line"></span><span class="sec-badge" id="badge-mlist"></span><span class="sec-caret open" id="caret-mlist">&#9662;</span></div>
+  <div class="sec-body" id="sec-mlist"><div class="q-wrap"><div id="ml-body"><div class="fd-note">Loading&hellip;</div></div></div></div><!-- /sec-mlist -->
 
   <div class="foot" style="margin-top:1.5rem"><span class="foot-note">Synced to Google Sheets</span><button class="btn" onclick="switchTab('morning')">&#8592; Morning</button></div>
-</div><!-- /pg-plans -->
+</div>
 
 <!-- TAB: IMPROVEMENT TRACKER -->
 <div class="pg" id="pg-improve">
@@ -205,8 +216,6 @@
     <div class="past-sub">Your habit library, today's schedule and how it's tracking.</div>
   </div>
 
-  <div class="sec-hd" id="hd-mlist" onclick="toggleSection('mlist')"><span class="sec-icon">&#128221;</span><span class="sec-title">Master list</span><span class="lbl-line"></span><span class="sec-badge" id="badge-mlist"></span><span class="sec-caret open" id="caret-mlist">&#9662;</span></div>
-  <div class="sec-body" id="sec-mlist"><div class="q-wrap"><div id="ml-body"><div class="fd-note">Loading&hellip;</div></div></div></div><!-- /sec-mlist -->
 
   <div class="sec-hd" id="hd-tyag" onclick="toggleSection('tyag')"><span class="sec-icon">&#129684;</span><span class="sec-title">Tyag</span><span class="lbl-line"></span><span class="sec-badge" id="badge-tyag"></span><span class="sec-caret open" id="caret-tyag">&#9662;</span></div>
   <div class="sec-body" id="sec-tyag"><div class="q-wrap"><div id="ty-body"><div class="fd-note">Loading&hellip;</div></div></div></div><!-- /sec-tyag -->
@@ -513,12 +522,12 @@
   <div class="set-panel"><div class="set-head"><h2 id="set-title">Settings</h2><button type="button" class="set-x" onclick="closeSettings()" aria-label="Close">&times;</button></div>
   <div id="set-body"></div></div>
 </div>
-<script src="app.js?v=20261111"></script>
+<script src="app.js?v=20261113"></script>
 <script>
 /* If GitHub served an older app.js than this page expects (one file went live before the other,
    or the browser cached it), fetch fresh copies and reload once. */
 (function(){
-  var want='20261111';
+  var want='20261113';
   if(window.APP_VER===want) { try{ sessionStorage.removeItem('ver_retry'); }catch(e){} return; }
   try{ if(sessionStorage.getItem('ver_retry')===want) return; sessionStorage.setItem('ver_retry',want); }catch(e){ return; }
   Promise.all(['app.js?v='+want,'styles.css?v='+want,'app.js','index.html'].map(function(u){ return fetch(u,{cache:'reload'}).catch(function(){}); }))
