@@ -1,6 +1,6 @@
 /* Morning Dashboard app. Linked from index.html; bump ?v= there when this changes. */
 'use strict';
-window.APP_VER='20261111';   // must match the ?v= in index.html (checked there)
+window.APP_VER='20261113';   // must match the ?v= in index.html (checked there)
 const WORKER_URL='https://muddy-shadow-1aa7.vaibhavjain-1192.workers.dev';
 const FETCH_TIMEOUT=45000;   // default; page loads pass shorter ones
 var DIAG={};  // diagnostics collected during fetch
@@ -143,7 +143,7 @@ function switchTab(tab){
   document.querySelectorAll('.tab').forEach(function(b){b.classList.remove('on');});
   document.getElementById('pg-'+tab).classList.add('on');
   var tb=document.querySelector('.tab[onclick="switchTab(\''+tab+'\')"]'); if(tb) tb.classList.add('on');
-  if(tab==='plans'){ renderSitRows(); renderPlanLibrary(); renderStepsEditor('spl'); }
+  if(tab==='personal'){ renderMyThoughts(); renderMasterList(); }
   if(tab==='improve'){ renderImprove(); renderTodayHabits(); }
   if(tab==='routine'){_calNeedsScroll=true;renderMaster();renderRoutine();}
   if(tab==='situations'){renderStats();renderPast();}
@@ -228,6 +228,7 @@ function init(){
       if(d.timeGrid&&Array.isArray(d.timeGrid.rows)) replaceTimeGridFromSheet(d.timeGrid); else loadTimeGridDirect();
       if(Array.isArray(d.principles)) replacePrinciplesFromSheet(d.principles); else loadPrinciplesDirect();
       if(d.improve&&Array.isArray(d.improve.habits)) replaceImproveFromSheet(d.improve); else loadImproveDirect();
+      if(Array.isArray(d.myThoughts)) replaceMyThoughtsFromSheet(d.myThoughts); else loadMyThoughtsDirect();
       dashKeySet = d.keySet===true ? true : d.keySet===false ? false : null;
       lastBackup = d.lastBackup||'';
       renderKeyWarning();
@@ -287,7 +288,8 @@ function init(){
         ['getFoodGrid','foodGrid',replaceFoodGridFromSheet],
         ['getTimeGrid','timeGrid',replaceTimeGridFromSheet],
         ['getAllPrinciples','principles',replacePrinciplesFromSheet],
-        ['getImprove','improve',replaceImproveFromSheet]
+        ['getImprove','improve',replaceImproveFromSheet],
+        ['getMyThoughts','myThoughts',replaceMyThoughtsFromSheet]
       ];
       if(skipArchives){
         var arcKeys={situations:1,thoughts:1,posts:1,motivation:1,gratitude:1,kundali:1,guide:1};
@@ -316,6 +318,7 @@ function init(){
       if(!tgLoaded) markTimeGridFailed();
       if(!prLoaded) markPrinciplesFailed();
       if(!impLoaded) markImproveFailed();
+      if(!mtLoaded) markMyThoughtsFailed();
       // Only call the feed loaded if something for it actually arrived
       if(posts.length||motEntries.length||kunEntries.length||guide.length||gratEntries.length) feedReady=true;
       else feedFailed=true;
@@ -2369,7 +2372,8 @@ function saveSitLog(){
 /* ── Library ───────────────────────────────────────────── */
 /* Open the library, expand it if collapsed, and scroll to it */
 function openPlanLibrary(){
-  if(!document.getElementById('pg-plans').classList.contains('on')) switchTab('plans');
+  if(!document.getElementById('pg-morning').classList.contains('on')) switchTab('morning');
+  toggleMrPlans(true);
   localStorage.setItem('sec_sitlib','1');
   applySection('sitlib');
   renderPlanLibrary();
@@ -2646,7 +2650,7 @@ function replaceSitPlansFromSheet(rows){
       status:r.status==='retired'?'retired':'active',
       order:(r.order===null||r.order===undefined)?9999:Number(r.order)};
   });
-  renderPlanLibrary(); renderSitRows();
+  renderPlanLibrary(); renderSitRows(); applyMrPlans();
 }
 
 function replaceSitLogFromSheet(rows){
@@ -3522,6 +3526,7 @@ function checkForNewVersion(){
   }).catch(function(){});
 }
 window.addEventListener('load',function(){ setTimeout(checkForNewVersion,1500); });
+window.addEventListener('load',function(){ try{ renderStepsEditor('spl'); applyMrPlans(); }catch(e){} });
 document.addEventListener('visibilitychange',function(){
   if(document.visibilityState==='visible'&&Date.now()-_verCheckedAt>5*60*1000) checkForNewVersion();
 });
@@ -5323,6 +5328,76 @@ function renderImprove(){
 }
 
 /* ═══════════════════════════════════════════════════
+   MY THOUGHTS (Personal Thoughts tab) — a thought and a real-life example.
+   Sheet: MyThoughts. Newest first; 5 shown, then "Show all".
+═══════════════════════════════════════════════════ */
+var myThoughts=[], mtLoaded=false, mtUnsupported=false, mtFailed=false, mtEditId='', mtAll=false;
+function replaceMyThoughtsFromSheet(rows){
+  if(!Array.isArray(rows)) return;
+  mtLoaded=true; mtUnsupported=false; mtFailed=false; myThoughts=rows.slice(); renderMyThoughts();
+}
+async function loadMyThoughtsDirect(){
+  if(mtLoaded) return;
+  var r=await sheetFetch(WORKER_URL+'?action=getMyThoughts',null,20000);
+  if(r&&r.status==='ok'&&Array.isArray(r.myThoughts)){ replaceMyThoughtsFromSheet(r.myThoughts); return; }
+  if(!mtLoaded){ mtUnsupported=true; renderMyThoughts(); }
+}
+function markMyThoughtsFailed(){ if(mtLoaded||mtUnsupported) return; mtFailed=true; renderMyThoughts(); }
+async function mtSave(){
+  var t=((document.getElementById('mt-thought')||{}).value||'').trim(), e=((document.getElementById('mt-example')||{}).value||'').trim();
+  if(!t){ showToast('Write the thought first.','error'); document.getElementById('mt-thought').focus(); return; }
+  var x=mtEditId?myThoughts.find(function(y){ return y.sheetId===mtEditId; }):null, old=x?Object.assign({},x):null;
+  if(x){ x.thought=t; x.example=e; } else { x={sheetId:'mt'+Date.now(),date:isoToday(),thought:t,example:e}; myThoughts.push(x); }
+  mtEditId=''; renderMyThoughts();
+  var ok=await postToSheet({sheet:'MyThoughts',sheetId:x.sheetId,date:x.date,thought:x.thought,example:x.example});
+  if(!ok){ if(old) Object.assign(x,old); else myThoughts=myThoughts.filter(function(y){ return y!==x; }); renderMyThoughts(); showToast(LAST_SHEET_ERROR||'Couldn’t save. Try again.','error'); return; }
+  showToast(old?'Saved ✓':'Thought saved ✓','success');
+}
+function mtEdit(id){ mtEditId=id; renderMyThoughts(); var t=document.getElementById('mt-thought'); if(t){ t.focus(); t.scrollIntoView({block:'center',behavior:'smooth'}); } }
+async function mtDelete(id){
+  var x=myThoughts.find(function(y){ return y.sheetId===id; }); if(!x) return;
+  if(!confirm('Delete this thought?')) return;
+  myThoughts=myThoughts.filter(function(y){ return y!==x; }); renderMyThoughts();
+  var ok=await postToSheet({sheet:'MyThoughts',action:'delete',sheetId:id});
+  if(!ok){ myThoughts.push(x); renderMyThoughts(); showToast(LAST_SHEET_ERROR||'Couldn’t delete.','error'); }
+}
+function renderMyThoughts(){
+  var box=document.getElementById('mt-body'); if(!box) return;
+  var badge=document.getElementById('badge-mythoughts');
+  if(mtUnsupported){ box.innerHTML='<div class="fd-note">My thoughts needs the updated <b>Code.gs</b>. Deploy it (Manage deployments → New version), then reload.</div>'; return; }
+  if(!mtLoaded){ box.innerHTML='<div class="fd-note">'+(mtFailed?'Couldn’t load. Reload the page to try again.':'Loading…')+'</div>'; return; }
+  if(badge) badge.textContent=myThoughts.length||'';
+  setBadge('pt-badge',myThoughts.length);
+  var ed=mtEditId?myThoughts.find(function(y){ return y.sheetId===mtEditId; }):null;
+  var list=myThoughts.slice().sort(function(a,b){ return (b.date||'').localeCompare(a.date||'')||b.sheetId.localeCompare(a.sheetId); });
+  var lim=mtAll?list.length:5;
+  box.innerHTML='<div class="mt-form">'+
+      '<label class="pe-f"><span>Thought</span><textarea class="sin" id="mt-thought" rows="2" placeholder="e.g. Most of my anger comes from wanting to be in control">'+escH(ed?ed.thought:'')+'</textarea></label>'+
+      '<label class="pe-f"><span>Real-life example</span><textarea class="sin" id="mt-example" rows="2" placeholder="e.g. On the Esskay call I pushed hard because I felt it all depended on me">'+escH(ed?ed.example:'')+'</textarea></label>'+
+      '<div class="ty-foot">'+(ed?'<button type="button" class="btn" onclick="mtEditId=\'\';renderMyThoughts()">Cancel</button>':'')+
+        '<button type="button" class="btn gold" onclick="mtSave()">'+(ed?'Save changes':'Add thought')+'</button></div></div>'+
+    (list.length?'<ul class="mt-list">'+list.slice(0,lim).map(function(x){
+      return '<li class="mt-item'+(x.sheetId===mtEditId?' editing':'')+'"><div class="mt-top"><span class="mt-date">'+(x.date?feedDate(x.date):'')+'</span>'+
+        '<span class="imp-la"><button type="button" class="rt-mini" aria-label="Edit thought" onclick="mtEdit('+jsArg(x.sheetId)+')">✎</button>'+
+        '<button type="button" class="rt-mini del" aria-label="Delete thought" onclick="mtDelete('+jsArg(x.sheetId)+')">×</button></span></div>'+
+        '<div class="mt-t">'+escH(x.thought)+'</div>'+(x.example?'<div class="mt-ex"><span>Real life:</span> '+escH(x.example)+'</div>':'')+'</li>'; }).join('')+'</ul>'+
+      (list.length>lim?'<button type="button" class="pr-more" onclick="mtAll=true;renderMyThoughts()">Show all '+list.length+'</button>':'')
+    :'<div class="fd-note">Nothing here yet. Write down a thought and a moment from your life that shows it.</div>');
+}
+
+/* Plans now live inside the Morning read, in a collapsible block */
+function mrPlansOpen(){ try{ return localStorage.getItem('mr_plans')==='1'; }catch(e){ return false; } }
+function toggleMrPlans(force){
+  var open=force===undefined?!mrPlansOpen():!!force; try{ localStorage.setItem('mr_plans',open?'1':'0'); }catch(e){}
+  applyMrPlans();
+}
+function applyMrPlans(){
+  var b=document.getElementById('mr-plans-body'), h=document.getElementById('mr-plans-hd'); if(!b||!h) return;
+  var open=mrPlansOpen(); b.hidden=!open; h.setAttribute('aria-expanded',open);
+  var n=(sitPlans||[]).filter(function(p){ return p.status!=='retired'; }).length, c=document.getElementById('mr-plans-ct'); if(c) c.textContent=n||'';
+}
+
+/* ═══════════════════════════════════════════════════
    SAVE QUEUE — one write per key in flight; only the newest state
    waits behind it, so changes can never reach the Sheet out of order.
 ═══════════════════════════════════════════════════ */
@@ -6612,7 +6687,7 @@ async function importGuide(){
    Open/closed state is a display preference, so it lives in
    localStorage — no dashboard data is stored there.
 ──────────────────────────────────────────────────────── */
-var SEC_KEYS=['links','sitlib','mlist','tyag','master','routine','food','times','weekly','library','rtstats','habitperf','checklist','pillars','anchors'];
+var SEC_KEYS=['links','sitlib','mythoughts','mlist','tyag','master','routine','food','times','weekly','library','rtstats','habitperf','checklist','pillars','anchors'];
 
 function secOpen(key){
   var v=localStorage.getItem('sec_'+key);
@@ -6696,7 +6771,7 @@ function renderGlance(){
 
 /* Sections now live on two tabs, so a glance card may need to
    switch tab before scrolling to its section. */
-var ROUTINE_TAB_SECTIONS=['mlist','tyag','master','routine','food','times','rtstats','habitperf'];   // sitlib lives on Home
+var ROUTINE_TAB_SECTIONS=['tyag','master','routine','food','times','rtstats','habitperf'];   // sitlib lives on Home
 
 function jumpToSection(key){
   if(!secOpen(key)){ localStorage.setItem('sec_'+key,'1'); applySection(key); }
