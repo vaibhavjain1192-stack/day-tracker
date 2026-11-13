@@ -1,6 +1,6 @@
 /* Morning Dashboard app. Linked from index.html; bump ?v= there when this changes. */
 'use strict';
-window.APP_VER='20261113';   // must match the ?v= in index.html (checked there)
+window.APP_VER='20261113b';   // must match the ?v= in index.html (checked there)
 const WORKER_URL='https://muddy-shadow-1aa7.vaibhavjain-1192.workers.dev';
 const FETCH_TIMEOUT=45000;   // default; page loads pass shorter ones
 var DIAG={};  // diagnostics collected during fetch
@@ -2793,6 +2793,7 @@ function feedDate(iso){
   var d=new Date(iso.slice(0,10)+'T00:00:00');
   return d.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:d.getFullYear()!==new Date().getFullYear()?'numeric':undefined});
 }
+var FEED_RD_KEY={'feed-post':'post','feed-learning':'learn','feed-kundali':'kun','feed-guide':'guide','feed-gratitude':'grat'};
 function feedCard(id,label,inner,openLabel,openJs,meta,nav){
   var el=document.getElementById(id); if(!el) return;
   var navHtml = (nav&&nav.n>1)
@@ -2801,7 +2802,8 @@ function feedCard(id,label,inner,openLabel,openJs,meta,nav){
       '<span class="feed-pos">'+(nav.i+1)+' / '+nav.n+'</span>'+
       '<button type="button" class="feed-step feed-next" onclick="feedNext(\''+nav.key+'\')" aria-label="Next ('+(nav.i+1===nav.n?'back to the first':'item '+(nav.i+2)+' of '+nav.n)+')" title="Next">\u203a</button></span>'
     : '';
-  el.innerHTML='<div class="feed-lbl"><span>'+label+'</span>'+navHtml+'</div>'+inner+
+  var rk=FEED_RD_KEY[id];
+  el.innerHTML='<div class="feed-lbl"><span>'+label+'</span><span class="feed-lbl-r">'+navHtml+(rk?rdBtn(rk):'')+'</span></div>'+inner+
     '<div class="feed-meta"><span>'+(meta||'')+'</span>'+
     (openJs?'<button type="button" class="feed-open" onclick="'+openJs+'">'+openLabel+' \u203a</button>':'')+'</div>';
 }
@@ -4807,20 +4809,43 @@ function mrToday(d){
   if(n){ var s=(mrDayNo(d)*n)%pool.length; for(var i=0;i<n;i++) pick.push(pool[(s+i)%pool.length]); }
   return {core:core,pick:pick,set:set};
 }
-function mrRead(d){ return /^(y|yes|1|true)$/i.test(dlGet(d,'read')); }
+/* What's been read each day: DayLog "Read" holds a list like "everyday, reflect, pick, kun".
+   An older plain "yes" means both Morning read sections. */
+var RD_KEYS=[['everyday','Every day'],['reflect','Today\u2019s reflections'],['pick','My pick'],['post','Saved post'],
+  ['learn','My learning'],['kun','Kundali'],['guide','Guide'],['grat','Gratitude']];
+var mrSecOpen={};
+function rdList(d){ var v=String(dlGet(d,'read')||'').trim().toLowerCase();
+  if(/^(y|yes|1|true)$/.test(v)) return ['everyday','reflect'];
+  return v.split(/\s*,\s*/).filter(function(k){ return RD_KEYS.some(function(x){ return x[0]===k; }); }); }
+function rdHas(k,d){ return ciLoaded&&rdList(d||isoToday()).indexOf(k)>=0; }
+function rdToggle(k){
+  if(!ciLoaded||ciUnsupported){ showToast('Still loading. Try again in a moment.','error'); return; }
+  var l=rdList(isoToday()), on=l.indexOf(k)<0;
+  l=on?l.concat([k]):l.filter(function(x){ return x!==k; });
+  l=RD_KEYS.map(function(x){ return x[0]; }).filter(function(x){ return l.indexOf(x)>=0; });
+  dlSet(isoToday(),'read',l.join(', ')); mrSecOpen[k]=false;
+  renderMorningRead(); rdPaint();
+  if(on){ var n=l.length; showToast(n===RD_KEYS.length?'All 8 read today \u2713':'Done \u2713 \u00b7 '+n+' of '+RD_KEYS.length+' read today','success'); }
+}
+function rdBtn(k){ var on=rdHas(k);
+  return '<button type="button" class="rd-btn'+(on?' on':'')+'" data-k="'+k+'" aria-pressed="'+on+'" onclick="rdToggle(\''+k+'\')" title="'+(on?'Marked as read today. Tap to undo.':'Mark as read today')+'">'+(on?'\u2713 Done':'Done')+'</button>'; }
+/* Repaint the Done buttons on the feed cards + the "x of 8" count */
+function rdPaint(){
+  document.querySelectorAll('.rd-btn[data-k]').forEach(function(b){ var k=b.getAttribute('data-k'), on=rdHas(k);
+    b.classList.toggle('on',on); b.setAttribute('aria-pressed',on); b.textContent=on?'\u2713 Done':'Done';
+    b.title=on?'Marked as read today. Tap to undo.':'Mark as read today'; });
+  var n=ciLoaded?rdList(isoToday()).length:0, el=document.getElementById('rd-prog');
+  if(el){ el.textContent=ciLoaded?n+' of '+RD_KEYS.length+' read today':''; el.classList.toggle('all',n===RD_KEYS.length); }
+}
+function mrRead(d){ return rdList(d).indexOf('everyday')>=0; }
 function mrStreak(){
   var d=isoToday(), n=0;
   if(!mrRead(d)) d=foodShift(d,-1);
   while(mrRead(d)&&n<3660){ n++; d=foodShift(d,-1); }
   return n;
 }
-function mrDone(){
-  if(!ciLoaded||ciUnsupported){ showToast('Still loading. Try again in a moment.','error'); return; }
-  dlSet(isoToday(),'read','yes'); mrOpen=false; renderMorningRead();
-  var s=mrStreak(); showToast(s>1?'Read ✓ · '+s+'-day streak':'Read ✓ See you tomorrow','success');
-  var b=document.getElementById('mr-box'); if(b) b.scrollIntoView({block:'nearest',behavior:'smooth'});
-}
-function mrUndo(){ if(!ciLoaded) return; dlSet(isoToday(),'read',''); mrOpen=true; renderMorningRead(); }
+function mrDone(){ if(!rdHas('everyday')) rdToggle('everyday'); }
+function mrUndo(){ if(rdHas('everyday')) rdToggle('everyday'); }
 
 /* Principle popup: everything across the dashboard that matches the principle's
    Keywords (Principles col H; falls back to words from its title) */
@@ -5103,7 +5128,7 @@ function renderMorningRead(){
   if(!prLoaded){ body.innerHTML='<div class="fd-note">'+(prFailed?'Couldn’t load. Reload the page to try again.':'Loading…')+'</div>'; return; }
   if(!principles.length){ body.innerHTML='<div class="fd-note">Your Principles tab is empty. Add a few rows there (mark the daily ones <b>yes</b> under Core).</div>'; return; }
 
-  var read=ciLoaded&&mrRead(isoToday()), streak=ciLoaded?mrStreak():0, t=mrToday();
+  var read=false, streak=ciLoaded?mrStreak():0, t=mrToday();
   meta.innerHTML=(streak?'<span class="mr-streak">🔥 '+streak+'-day streak</span>':'<span class="mr-time">~5 min</span>')+
     '<button type="button" class="mr-edit" onclick="openPrEditor()" title="Edit, reorder and schedule your principles">\u270e Edit</button>';
   box.classList.toggle('done',read&&!mrOpen);
@@ -5116,19 +5141,27 @@ function renderMorningRead(){
       ' <button type="button" class="mr-clear" onclick="mrPickSit('+jsArg(mrSit)+')">Show all</button></div><ol class="mr-list">'+hits.map(function(p,i){ return mrItem(p,i,true); }).join('')+'</ol></div>';
     return;
   }
-  if(read&&!mrOpen){
+  if(false){
     if(foot) foot.innerHTML='';
     body.innerHTML=mrSitBar()+'<div class="mr-donebar"><span class="mr-ok">✓ Read today</span>'+
       '<span class="mr-core-line">'+t.core.map(function(p){ return escH(p.title); }).join(' · ')+'</span>'+
       '<button type="button" class="btn mr-again" onclick="mrOpen=true;renderMorningRead()">Read again</button></div>';
     return;
   }
+  var sec=function(k,title,items,list){
+    if(!items.length) return '';
+    var done=rdHas(k), open=!done||mrSecOpen[k];
+    var head='<div class="mr-h mr-hrow"><span>'+title+(done?' <span class="mr-hdone">\u2713 read today</span>':'')+'</span>'+
+      (done?'<button type="button" class="mr-clear" onclick="mrSecOpen[\''+k+'\']=!mrSecOpen[\''+k+'\'];renderMorningRead()">'+(open?'Hide':'Read again')+'</button>':'')+rdBtn(k)+'</div>';
+    if(!open) return '<div class="mr-sec mr-sec-done">'+head+'<div class="mr-core-line">'+items.map(function(p){ return escH(p.title); }).join(' \u00b7 ')+'</div></div>';
+    return '<div class="mr-sec">'+head+list+
+      (done?'':'<div class="mr-secfoot"><button type="button" class="btn gold rd-big" onclick="rdToggle(\''+k+'\')"'+(ciLoaded?'':' disabled')+'>\u2713 Done reading '+(k==='everyday'?'Every day':'Today\u2019s reflections')+'</button></div>')+'</div>';
+  };
   body.innerHTML=mrSitBar()+
-    (t.core.length?'<div class="mr-sec"><div class="mr-h">Every day</div><ol class="mr-list">'+t.core.map(function(p,i){ return mrItem(p,i,false); }).join('')+'</ol></div>':'')+
-    (t.pick.length?'<div class="mr-sec"><div class="mr-h">Today’s reflections</div><ul class="mr-list mr-rot">'+t.pick.map(function(p){ return mrItem(p,null,true); }).join('')+'</ul></div>':'');
-  if(foot) foot.innerHTML='<div class="mr-foot"><span class="fd-hint">Tap a principle to go deeper. <b>\u270e Edit</b> to change, reorder or schedule them.</span>'+
-    (read?'<button type="button" class="btn" onclick="mrOpen=false;renderMorningRead()">Close</button><button type="button" class="btn" onclick="mrUndo()">Not read yet</button>'
-         :'<button type="button" class="btn gold mr-donebtn" onclick="mrDone()"'+(ciLoaded?'':' disabled')+'>✓ Done reading</button>')+'</div>';
+    sec('everyday','Every day',t.core,'<ol class="mr-list">'+t.core.map(function(p,i){ return mrItem(p,i,false); }).join('')+'</ol>')+
+    sec('reflect','Today\u2019s reflections',t.pick,'<ul class="mr-list mr-rot">'+t.pick.map(function(p){ return mrItem(p,null,true); }).join('')+'</ul>');
+  if(foot) foot.innerHTML='<div class="mr-foot"><span class="fd-hint">Tap a principle to go deeper. <b>\u270e Edit</b> to change, reorder or schedule them.</span></div>';
+  rdPaint();
 }
 
 /* ═══════════════════════════════════════════════════
@@ -5343,9 +5376,11 @@ async function loadMyThoughtsDirect(){
   if(!mtLoaded){ mtUnsupported=true; renderMyThoughts(); }
 }
 function markMyThoughtsFailed(){ if(mtLoaded||mtUnsupported) return; mtFailed=true; renderMyThoughts(); }
-async function mtSave(){
-  var t=((document.getElementById('mt-thought')||{}).value||'').trim(), e=((document.getElementById('mt-example')||{}).value||'').trim();
-  if(!t){ showToast('Write the thought first.','error'); document.getElementById('mt-thought').focus(); return; }
+async function mtSave(inPlace){
+  var pre=inPlace?'mt-e-':'mt-';
+  var t=((document.getElementById(pre+'thought')||{}).value||'').trim(), e=((document.getElementById(pre+'example')||{}).value||'').trim();
+  if(!t){ showToast('Write the thought first.','error'); document.getElementById(pre+'thought').focus(); return; }
+  if(!inPlace) mtEditId='';
   var x=mtEditId?myThoughts.find(function(y){ return y.sheetId===mtEditId; }):null, old=x?Object.assign({},x):null;
   if(x){ x.thought=t; x.example=e; } else { x={sheetId:'mt'+Date.now(),date:isoToday(),thought:t,example:e}; myThoughts.push(x); }
   mtEditId=''; renderMyThoughts();
@@ -5353,7 +5388,7 @@ async function mtSave(){
   if(!ok){ if(old) Object.assign(x,old); else myThoughts=myThoughts.filter(function(y){ return y!==x; }); renderMyThoughts(); showToast(LAST_SHEET_ERROR||'Couldn’t save. Try again.','error'); return; }
   showToast(old?'Saved ✓':'Thought saved ✓','success');
 }
-function mtEdit(id){ mtEditId=id; renderMyThoughts(); var t=document.getElementById('mt-thought'); if(t){ t.focus(); t.scrollIntoView({block:'center',behavior:'smooth'}); } }
+function mtEdit(id){ mtEditId=id; mtAll=true; renderMyThoughts(); var t=document.getElementById('mt-e-thought'); if(t){ t.focus(); t.scrollIntoView({block:'center',behavior:'smooth'}); } }
 async function mtDelete(id){
   var x=myThoughts.find(function(y){ return y.sheetId===id; }); if(!x) return;
   if(!confirm('Delete this thought?')) return;
@@ -5368,7 +5403,7 @@ function renderMyThoughts(){
   if(!mtLoaded){ box.innerHTML='<div class="fd-note">'+(mtFailed?'Couldn’t load. Reload the page to try again.':'Loading…')+'</div>'; return; }
   if(badge) badge.textContent=myThoughts.length||'';
   setBadge('pt-badge',myThoughts.length);
-  var ed=mtEditId?myThoughts.find(function(y){ return y.sheetId===mtEditId; }):null;
+  var ed=null;
   var list=myThoughts.slice().sort(function(a,b){ return (b.date||'').localeCompare(a.date||'')||b.sheetId.localeCompare(a.sheetId); });
   var lim=mtAll?list.length:5;
   box.innerHTML='<div class="mt-form">'+
@@ -5377,9 +5412,13 @@ function renderMyThoughts(){
       '<div class="ty-foot">'+(ed?'<button type="button" class="btn" onclick="mtEditId=\'\';renderMyThoughts()">Cancel</button>':'')+
         '<button type="button" class="btn gold" onclick="mtSave()">'+(ed?'Save changes':'Add thought')+'</button></div></div>'+
     (list.length?'<ul class="mt-list">'+list.slice(0,lim).map(function(x){
-      return '<li class="mt-item'+(x.sheetId===mtEditId?' editing':'')+'"><div class="mt-top"><span class="mt-date">'+(x.date?feedDate(x.date):'')+'</span>'+
-        '<span class="imp-la"><button type="button" class="rt-mini" aria-label="Edit thought" onclick="mtEdit('+jsArg(x.sheetId)+')">✎</button>'+
-        '<button type="button" class="rt-mini del" aria-label="Delete thought" onclick="mtDelete('+jsArg(x.sheetId)+')">×</button></span></div>'+
+      if(x.sheetId===mtEditId) return '<li class="mt-item mt-editing"><div class="mt-top"><span class="mt-date">Editing \u00b7 '+(x.date?feedDate(x.date):'')+'</span></div>'+
+        '<label class="pe-f"><span>Thought</span><textarea class="sin" id="mt-e-thought" rows="3">'+escH(x.thought)+'</textarea></label>'+
+        '<label class="pe-f"><span>Real-life example</span><textarea class="sin" id="mt-e-example" rows="2">'+escH(x.example)+'</textarea></label>'+
+        '<div class="ty-foot"><button type="button" class="btn" onclick="mtEditId=\'\';renderMyThoughts()">Cancel</button><button type="button" class="btn gold" onclick="mtSave(true)">Save changes</button></div></li>';
+      return '<li class="mt-item"><div class="mt-top"><span class="mt-date">'+(x.date?feedDate(x.date):'')+'</span>'+
+        '<span class="imp-la"><button type="button" class="mt-editbtn" aria-label="Edit this thought" onclick="mtEdit('+jsArg(x.sheetId)+')">\u270e Edit</button>'+
+        '<button type="button" class="rt-mini del" aria-label="Delete thought" onclick="mtDelete('+jsArg(x.sheetId)+')">\u00d7</button></span></div>'+
         '<div class="mt-t">'+escH(x.thought)+'</div>'+(x.example?'<div class="mt-ex"><span>Real life:</span> '+escH(x.example)+'</div>':'')+'</li>'; }).join('')+'</ul>'+
       (list.length>lim?'<button type="button" class="pr-more" onclick="mtAll=true;renderMyThoughts()">Show all '+list.length+'</button>':'')
     :'<div class="fd-note">Nothing here yet. Write down a thought and a moment from your life that shows it.</div>');
@@ -5446,7 +5485,7 @@ function replaceCheckinFromSheet(checks,log){
     });
     dayLog=d;
   }
-  renderSleep(); renderCheckin(); renderWeekly(); renderMorningRead();
+  renderSleep(); renderCheckin(); renderWeekly(); renderMorningRead(); rdPaint();
 }
 function markCheckinUnsupported(){ if(ciLoaded) return; ciUnsupported=true; renderSleep(); renderCheckin(); renderWeekly(); }
 function markCheckinFailed(){ if(ciLoaded||ciUnsupported) return; ciFailed=true; renderSleep(); renderCheckin(); renderWeekly(); }
