@@ -1,6 +1,6 @@
 /* Morning Dashboard app. Linked from index.html; bump ?v= there when this changes. */
 'use strict';
-window.APP_VER='20261113b';   // must match the ?v= in index.html (checked there)
+window.APP_VER='20261115';   // must match the ?v= in index.html (checked there)
 const WORKER_URL='https://muddy-shadow-1aa7.vaibhavjain-1192.workers.dev';
 const FETCH_TIMEOUT=45000;   // default; page loads pass shorter ones
 var DIAG={};  // diagnostics collected during fetch
@@ -143,7 +143,7 @@ function switchTab(tab){
   document.querySelectorAll('.tab').forEach(function(b){b.classList.remove('on');});
   document.getElementById('pg-'+tab).classList.add('on');
   var tb=document.querySelector('.tab[onclick="switchTab(\''+tab+'\')"]'); if(tb) tb.classList.add('on');
-  if(tab==='personal'){ renderMyThoughts(); renderMasterList(); }
+  if(tab==='personal'){ renderMyThoughts(); renderMonthlyGoals(); renderMasterList(); }
   if(tab==='improve'){ renderImprove(); renderTodayHabits(); }
   if(tab==='routine'){_calNeedsScroll=true;renderMaster();renderRoutine();}
   if(tab==='situations'){renderStats();renderPast();}
@@ -229,6 +229,7 @@ function init(){
       if(Array.isArray(d.principles)) replacePrinciplesFromSheet(d.principles); else loadPrinciplesDirect();
       if(d.improve&&Array.isArray(d.improve.habits)) replaceImproveFromSheet(d.improve); else loadImproveDirect();
       if(Array.isArray(d.myThoughts)) replaceMyThoughtsFromSheet(d.myThoughts); else loadMyThoughtsDirect();
+      if(d.monthlyGoals&&Array.isArray(d.monthlyGoals.cats)) replaceMonthlyGoalsFromSheet(d.monthlyGoals); else loadMonthlyGoalsDirect();
       dashKeySet = d.keySet===true ? true : d.keySet===false ? false : null;
       lastBackup = d.lastBackup||'';
       renderKeyWarning();
@@ -289,7 +290,8 @@ function init(){
         ['getTimeGrid','timeGrid',replaceTimeGridFromSheet],
         ['getAllPrinciples','principles',replacePrinciplesFromSheet],
         ['getImprove','improve',replaceImproveFromSheet],
-        ['getMyThoughts','myThoughts',replaceMyThoughtsFromSheet]
+        ['getMyThoughts','myThoughts',replaceMyThoughtsFromSheet],
+        ['getMonthlyGoals','monthlyGoals',replaceMonthlyGoalsFromSheet]
       ];
       if(skipArchives){
         var arcKeys={situations:1,thoughts:1,posts:1,motivation:1,gratitude:1,kundali:1,guide:1};
@@ -301,7 +303,7 @@ function init(){
         while(next<jobs.length){
           var j=jobs[next++];
           var r=await sheetFetch(WORKER_URL+'?action='+j[0],null,20000);
-          if(r&&r.status==='ok'&&(Array.isArray(r[j[1]])||((j[1]==='foodGrid'||j[1]==='timeGrid'||j[1]==='improve')&&r[j[1]]))){ try{ j[2](r[j[1]]); got++; }catch(er){ console.error(er); } }
+          if(r&&r.status==='ok'&&(Array.isArray(r[j[1]])||((j[1]==='foodGrid'||j[1]==='timeGrid'||j[1]==='improve'||j[1]==='monthlyGoals')&&r[j[1]]))){ try{ j[2](r[j[1]]); got++; }catch(er){ console.error(er); } }
         }
       }
       await Promise.all([worker(),worker(),worker(),worker()]);
@@ -319,6 +321,7 @@ function init(){
       if(!prLoaded) markPrinciplesFailed();
       if(!impLoaded) markImproveFailed();
       if(!mtLoaded) markMyThoughtsFailed();
+      if(!mgLoaded) markMonthlyGoalsFailed();
       // Only call the feed loaded if something for it actually arrived
       if(posts.length||motEntries.length||kunEntries.length||guide.length||gratEntries.length) feedReady=true;
       else feedFailed=true;
@@ -5437,6 +5440,99 @@ function applyMrPlans(){
 }
 
 /* ═══════════════════════════════════════════════════
+   MONTHLY GOALS — a goal per category for this month and next.
+   Sheet MonthlyGoals (category rows × month columns). ‹ › moves the
+   two-month window to look back or ahead. Goals save as you leave the box.
+═══════════════════════════════════════════════════ */
+var mgCats=[], mgGoals={}, mgLoaded=false, mgUnsupported=false, mgFailed=false, mgOffset=0, mgEditCat='';
+var MG_MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function replaceMonthlyGoalsFromSheet(d){
+  if(!d||!Array.isArray(d.cats)) return;
+  mgLoaded=true; mgUnsupported=false; mgFailed=false;
+  mgCats=d.cats.slice().sort(function(a,b){ return a.order-b.order; }); mgGoals=Object.assign({},d.goals||{});
+  Object.keys(_sqPending).forEach(function(k){ if(k.indexOf('mg:')!==0) return; var p=_sqPending[k].p; (mgGoals[p.sheetId]=mgGoals[p.sheetId]||{})[p.month]=p.value; });
+  renderMonthlyGoals();
+}
+async function loadMonthlyGoalsDirect(){
+  if(mgLoaded) return;
+  var r=await sheetFetch(WORKER_URL+'?action=getMonthlyGoals',null,20000);
+  if(r&&r.status==='ok'&&r.monthlyGoals){ replaceMonthlyGoalsFromSheet(r.monthlyGoals); return; }
+  if(!mgLoaded){ mgUnsupported=true; renderMonthlyGoals(); }
+}
+function markMonthlyGoalsFailed(){ if(mgLoaded||mgUnsupported) return; mgFailed=true; renderMonthlyGoals(); }
+function mgMonth(off){ var p=isoToday().split('-'), y=+p[0], m=+p[1]-1+off; y+=Math.floor(m/12); m=((m%12)+12)%12; return y+'-'+String(m+1).padStart(2,'0'); }
+function mgLabel(k){ var p=k.split('-'); return MG_MON[+p[1]-1]+' '+p[0]; }
+function mgGoal(id,k){ return (mgGoals[id]||{})[k]||''; }
+function mgSetGoal(el){
+  var id=el.getAttribute('data-id'), k=el.getAttribute('data-m'), v=el.value.trim();
+  if(v===mgGoal(id,k)) return;
+  (mgGoals[id]=mgGoals[id]||{})[k]=v; if(!v) delete mgGoals[id][k];
+  queueSave('mg:'+id+':'+k,{sheet:'MonthlyGoals',action:'goal',sheetId:id,month:k,value:v});
+  var s=document.getElementById('mg-saved'); if(s){ s.textContent='Saved ✓'; clearTimeout(mgSetGoal._t); mgSetGoal._t=setTimeout(function(){ s.textContent=''; },1800); }
+}
+function mgGrow(el){ el.style.height='auto'; el.style.height=Math.max(36,el.scrollHeight)+'px'; }
+async function mgAddCat(){
+  var i=document.getElementById('mg-newcat'), v=i?i.value.trim():''; if(!v){ if(i) i.focus(); return; }
+  if(mgCats.some(function(c){ return c.name.toLowerCase()===v.toLowerCase(); })){ showToast('“'+v+'” is already a category.','error'); return; }
+  var c={sheetId:'mg'+Date.now(),name:v,order:mgCats.length?mgCats[mgCats.length-1].order+1:0}; mgCats.push(c); renderMonthlyGoals();
+  var ok=await postToSheet({sheet:'MonthlyGoals',action:'cat',sheetId:c.sheetId,name:c.name,order:c.order});
+  if(!ok){ mgCats=mgCats.filter(function(x){ return x!==c; }); renderMonthlyGoals(); showToast(LAST_SHEET_ERROR||'Couldn’t add it.','error'); return; }
+  showToast('Added “'+v+'” ✓','success');
+  var n=document.getElementById('mg-newcat'); if(n) n.focus();
+}
+async function mgRenameCat(id){
+  var c=mgCats.find(function(x){ return x.sheetId===id; }), i=document.getElementById('mg-cn-'+id); if(!c||!i) return;
+  var v=i.value.trim(); mgEditCat='';
+  if(!v||v===c.name){ renderMonthlyGoals(); return; }
+  var old=c.name; c.name=v; renderMonthlyGoals();
+  var ok=await postToSheet({sheet:'MonthlyGoals',action:'cat',sheetId:id,name:v});
+  if(!ok){ c.name=old; renderMonthlyGoals(); showToast(LAST_SHEET_ERROR||'Couldn’t rename.','error'); }
+}
+function mgMove(id,dir){
+  var i=mgCats.findIndex(function(x){ return x.sheetId===id; }), k=i+dir; if(i<0||k<0||k>=mgCats.length) return;
+  var t=mgCats[i]; mgCats[i]=mgCats[k]; mgCats[k]=t; mgCats.forEach(function(x,n){ x.order=n; }); renderMonthlyGoals();
+  queueSave('mg-order',{sheet:'MonthlyGoals',action:'reorder',ids:JSON.stringify(mgCats.map(function(x){ return x.sheetId; }))});
+  var b=document.querySelector('#mg-body .mg-row[data-id="'+id+'"] .'+(dir<0?'mg-up':'mg-dn')); if(b&&!b.disabled) b.focus();
+}
+async function mgDelCat(id){
+  var c=mgCats.find(function(x){ return x.sheetId===id; }); if(!c) return;
+  var n=Object.keys(mgGoals[id]||{}).length;
+  if(!confirm('Remove the “'+c.name+'” category'+(n?' and its '+n+' goal'+(n>1?'s':''):'')+'?')) return;
+  mgCats=mgCats.filter(function(x){ return x!==c; }); renderMonthlyGoals();
+  var ok=await postToSheet({sheet:'MonthlyGoals',action:'delcat',sheetId:id});
+  if(!ok){ mgCats.push(c); mgCats.sort(function(a,b){ return a.order-b.order; }); renderMonthlyGoals(); showToast(LAST_SHEET_ERROR||'Couldn’t remove.','error'); }
+}
+function renderMonthlyGoals(){
+  var box=document.getElementById('mg-body'); if(!box) return;
+  if(mgUnsupported){ box.innerHTML='<div class="fd-note">Monthly goals needs the updated <b>Code.gs</b>. Deploy it (Manage deployments → New version), then reload.</div>'; return; }
+  if(!mgLoaded){ box.innerHTML='<div class="fd-note">'+(mgFailed?'Couldn’t load. Reload the page to try again.':'Loading…')+'</div>'; return; }
+  var m=[mgMonth(mgOffset),mgMonth(mgOffset+1)], cur=mgMonth(0);
+  var badge=document.getElementById('badge-goals');
+  if(badge){ var set=mgCats.filter(function(c){ return mgGoal(c.sheetId,cur); }).length; badge.textContent=mgCats.length?set+'/'+mgCats.length+' set for '+MG_MON[+cur.split('-')[1]-1]:''; }
+  var lbl=function(k){ return mgLabel(k)+(k===cur?' <span class="mg-now">this month</span>':k===mgMonth(1)?' <span class="mg-next">next month</span>':''); };
+  var head='<div class="mg-nav"><button type="button" class="feed-step" aria-label="Earlier months" onclick="mgOffset--;renderMonthlyGoals()">‹</button>'+
+    '<span class="mg-range">'+mgLabel(m[0])+' – '+mgLabel(m[1])+'</span>'+
+    '<button type="button" class="feed-step" aria-label="Later months" onclick="mgOffset++;renderMonthlyGoals()">›</button>'+
+    (mgOffset?'<button type="button" class="mr-clear" onclick="mgOffset=0;renderMonthlyGoals()">Back to this month</button>':'')+
+    '<span class="mg-saved" id="mg-saved" aria-live="polite"></span></div>';
+  var rows=mgCats.map(function(c,i){
+    var name=mgEditCat===c.sheetId
+      ? '<input class="sin mg-cn" id="mg-cn-'+c.sheetId+'" value="'+escH(c.name)+'" maxlength="40" onkeydown="if(event.key===\'Enter\')this.blur();if(event.key===\'Escape\'){mgEditCat=\'\';renderMonthlyGoals();}" onblur="mgRenameCat(\''+c.sheetId+'\')">'
+      : '<button type="button" class="mg-name" title="Rename" onclick="mgEditCat=\''+c.sheetId+'\';renderMonthlyGoals();var x=document.getElementById(\'mg-cn-'+c.sheetId+'\');if(x){x.focus();x.select();}">'+escH(c.name)+'</button>';
+    return '<div class="mg-row" data-id="'+c.sheetId+'"><div class="mg-cat">'+name+
+        '<span class="mg-acts"><button type="button" class="rt-mini mg-up" aria-label="Move '+escH(c.name)+' up"'+(i===0?' disabled':'')+' onclick="mgMove(\''+c.sheetId+'\',-1)">↑</button>'+
+        '<button type="button" class="rt-mini mg-dn" aria-label="Move '+escH(c.name)+' down"'+(i===mgCats.length-1?' disabled':'')+' onclick="mgMove(\''+c.sheetId+'\',1)">↓</button>'+
+        '<button type="button" class="rt-mini del" aria-label="Remove '+escH(c.name)+'" onclick="mgDelCat(\''+c.sheetId+'\')">×</button></span></div>'+
+      m.map(function(k){ return '<label class="mg-cell"><span class="mg-ml">'+mgLabel(k)+'</span><textarea class="mg-in" rows="1" data-id="'+c.sheetId+'" data-m="'+k+'" placeholder="Goal for '+escH(c.name)+'…" oninput="mgGrow(this)" onblur="mgSetGoal(this)" aria-label="'+escH(c.name)+' goal for '+mgLabel(k)+'">'+escH(mgGoal(c.sheetId,k))+'</textarea></label>'; }).join('')+
+    '</div>';
+  }).join('');
+  box.innerHTML=head+'<div class="mg-grid"><div class="mg-row mg-head"><div>Category</div><div>'+lbl(m[0])+'</div><div>'+lbl(m[1])+'</div></div>'+rows+'</div>'+
+    '<div class="mg-add"><input class="sin" id="mg-newcat" maxlength="40" placeholder="Add a category, e.g. Family, Finance, Learning" onkeydown="if(event.key===\'Enter\')mgAddCat()"><button type="button" class="btn gold" onclick="mgAddCat()">Add</button></div>'+
+    '<div class="fd-hint mg-hint">Goals save when you click out of the box. Tap a category name to rename it.</div>';
+  box.querySelectorAll('.mg-in').forEach(mgGrow);
+}
+
+/* ═══════════════════════════════════════════════════
    SAVE QUEUE — one write per key in flight; only the newest state
    waits behind it, so changes can never reach the Sheet out of order.
 ═══════════════════════════════════════════════════ */
@@ -6726,7 +6822,7 @@ async function importGuide(){
    Open/closed state is a display preference, so it lives in
    localStorage — no dashboard data is stored there.
 ──────────────────────────────────────────────────────── */
-var SEC_KEYS=['links','sitlib','mythoughts','mlist','tyag','master','routine','food','times','weekly','library','rtstats','habitperf','checklist','pillars','anchors'];
+var SEC_KEYS=['links','sitlib','mythoughts','goals','mlist','tyag','master','routine','food','times','weekly','library','rtstats','habitperf','checklist','pillars','anchors'];
 
 function secOpen(key){
   var v=localStorage.getItem('sec_'+key);
