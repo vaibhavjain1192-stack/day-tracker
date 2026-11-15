@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=20261115">
+<link rel="stylesheet" href="styles.css?v=20261115b">
 </head>
 <body>
 <div class="toast" id="toast"></div>
@@ -177,12 +177,9 @@
 
 <!-- TAB: PERSONAL THOUGHTS -->
 <div class="pg" id="pg-personal">
-  <div class="past-hdr"><div class="past-title">Personal Thoughts</div><div class="past-sub">What&#8217;s on my mind, my goals for the month, and what I want to do, for myself and for others.</div></div>
+  <div class="past-hdr"><div class="past-title">Personal Thoughts</div><div class="past-sub">What&#8217;s on my mind, and what I want to do, for myself and for others.</div></div>
   <div class="sec-hd" id="hd-mythoughts" onclick="toggleSection('mythoughts')"><span class="sec-icon">&#128173;</span><span class="sec-title">My thoughts</span><span class="lbl-line"></span><span class="sec-badge" id="badge-mythoughts"></span><span class="sec-caret open" id="caret-mythoughts">&#9662;</span></div>
   <div class="sec-body" id="sec-mythoughts"><div class="q-wrap"><div id="mt-body"><div class="fd-note">Loading&hellip;</div></div></div></div><!-- /sec-mythoughts -->
-
-  <div class="sec-hd" id="hd-goals" onclick="toggleSection('goals')"><span class="sec-icon">&#127919;</span><span class="sec-title">Monthly goals</span><span class="lbl-line"></span><span class="sec-badge" id="badge-goals"></span><span class="sec-caret open" id="caret-goals">&#9662;</span></div>
-  <div class="sec-body" id="sec-goals"><div class="q-wrap"><div id="mg-body"><div class="fd-note">Loading&hellip;</div></div></div></div><!-- /sec-goals -->
 
   <div class="sec-hd" id="hd-mlist" onclick="toggleSection('mlist')"><span class="sec-icon">&#128221;</span><span class="sec-title">Master list</span><span class="lbl-line"></span><span class="sec-badge" id="badge-mlist"></span><span class="sec-caret open" id="caret-mlist">&#9662;</span></div>
   <div class="sec-body" id="sec-mlist"><div class="q-wrap"><div id="ml-body"><div class="fd-note">Loading&hellip;</div></div></div></div><!-- /sec-mlist -->
@@ -216,8 +213,11 @@
 <div class="pg" id="pg-routine">
   <div class="past-hdr">
     <div class="past-title">Routine</div>
-    <div class="past-sub">Your habit library, today's schedule and how it's tracking.</div>
+    <div class="past-sub">Your monthly goals, habit library, today's schedule and how it's tracking.</div>
   </div>
+  <div class="sec-hd" id="hd-goals" onclick="toggleSection('goals')"><span class="sec-icon">&#127919;</span><span class="sec-title">Monthly goals</span><span class="lbl-line"></span><span class="sec-badge" id="badge-goals"></span><span class="sec-caret open" id="caret-goals">&#9662;</span></div>
+  <div class="sec-body" id="sec-goals"><div class="q-wrap"><div id="mg-body"><div class="fd-note">Loading&hellip;</div></div></div></div><!-- /sec-goals -->
+
 
 
   <div class="sec-hd" id="hd-tyag" onclick="toggleSection('tyag')"><span class="sec-icon">&#129684;</span><span class="sec-title">Tyag</span><span class="lbl-line"></span><span class="sec-badge" id="badge-tyag"></span><span class="sec-caret open" id="caret-tyag">&#9662;</span></div>
@@ -525,12 +525,12 @@
   <div class="set-panel"><div class="set-head"><h2 id="set-title">Settings</h2><button type="button" class="set-x" onclick="closeSettings()" aria-label="Close">&times;</button></div>
   <div id="set-body"></div></div>
 </div>
-<script src="app.js?v=20261115"></script>
+<script src="app.js?v=20261115b"></script>
 <script>
 /* If GitHub served an older app.js than this page expects (one file went live before the other,
    or the browser cached it), fetch fresh copies and reload once. */
 (function(){
-  var want='20261115';
+  var want='20261115b';
   if(window.APP_VER===want) { try{ sessionStorage.removeItem('ver_retry'); }catch(e){} return; }
   try{ if(sessionStorage.getItem('ver_retry')===want) return; sessionStorage.setItem('ver_retry',want); }catch(e){ return; }
   Promise.all(['app.js?v='+want,'styles.css?v='+want,'app.js','index.html'].map(function(u){ return fetch(u,{cache:'reload'}).catch(function(){}); }))
