@@ -1,6 +1,6 @@
 /* Morning Dashboard app. Linked from index.html; bump ?v= there when this changes. */
 'use strict';
-window.APP_VER='20261115b';   // must match the ?v= in index.html (checked there)
+window.APP_VER='20261115c';   // must match the ?v= in index.html (checked there)
 const WORKER_URL='https://muddy-shadow-1aa7.vaibhavjain-1192.workers.dev';
 const FETCH_TIMEOUT=45000;   // default; page loads pass shorter ones
 var DIAG={};  // diagnostics collected during fetch
@@ -2807,9 +2807,13 @@ function feedCard(id,label,inner,openLabel,openJs,meta,nav){
       '<button type="button" class="feed-step feed-next" onclick="feedNext(\''+nav.key+'\')" aria-label="Next ('+(nav.i+1===nav.n?'back to the first':'item '+(nav.i+2)+' of '+nav.n)+')" title="Next">\u203a</button></span>'
     : '';
   var rk=FEED_RD_KEY[id];
-  el.innerHTML='<div class="feed-lbl"><span>'+label+'</span><span class="feed-lbl-r">'+navHtml+(rk?rdBtn(rk):'')+'</span></div>'+inner+
+  if(rk) el.setAttribute('data-rd',rk);
+  el.innerHTML='<div class="feed-lbl"><span>'+label+'</span><span class="feed-lbl-r">'+navHtml+(rk?rdAgainBtn(rk)+rdBtn(rk):'')+'</span></div>'+
+    '<div class="feed-body">'+inner+
     '<div class="feed-meta"><span>'+(meta||'')+'</span>'+
-    (openJs?'<button type="button" class="feed-open" onclick="'+openJs+'">'+openLabel+' \u203a</button>':'')+'</div>';
+    (openJs?'<button type="button" class="feed-open" onclick="'+openJs+'">'+openLabel+' \u203a</button>':'')+'</div>'+
+    (rk?rdFootBtn(rk):'')+'</div>';
+  if(rk) rdPaint();
 }
 function feedEmpty(id,label,msg){
   var el=document.getElementById(id); if(!el) return;
@@ -4833,11 +4837,18 @@ function rdToggle(k){
 }
 function rdBtn(k){ var on=rdHas(k);
   return '<button type="button" class="rd-btn'+(on?' on':'')+'" data-k="'+k+'" aria-pressed="'+on+'" onclick="rdToggle(\''+k+'\')" title="'+(on?'Marked as read today. Tap to undo.':'Mark as read today')+'">'+(on?'\u2713 Done':'Done')+'</button>'; }
+/* Feed cards behave like the Morning read sections: a big "Done reading" at the bottom; once done the
+   card folds to its title row with "Read again". */
+function rdAgainBtn(k){ return '<button type="button" class="mr-clear rd-again" data-k="'+k+'" onclick="mrSecOpen[\''+k+'\']=!mrSecOpen[\''+k+'\'];rdPaint()">Read again</button>'; }
+function rdFootBtn(k){ return '<div class="rd-foot"><button type="button" class="btn gold rd-big" onclick="rdToggle(\''+k+'\')">\u2713 Done reading</button></div>'; }
 /* Repaint the Done buttons on the feed cards + the "x of 8" count */
 function rdPaint(){
   document.querySelectorAll('.rd-btn[data-k]').forEach(function(b){ var k=b.getAttribute('data-k'), on=rdHas(k);
     b.classList.toggle('on',on); b.setAttribute('aria-pressed',on); b.textContent=on?'\u2713 Done':'Done';
     b.title=on?'Marked as read today. Tap to undo.':'Mark as read today'; });
+  document.querySelectorAll('[data-rd]').forEach(function(card){ var k=card.getAttribute('data-rd'), on=rdHas(k), open=!!mrSecOpen[k];
+    card.classList.toggle('rd-on',on); card.classList.toggle('rd-collapsed',on&&!open);
+    var ag=card.querySelector('.rd-again'); if(ag) ag.textContent=open?'Hide':'Read again'; });
   var n=ciLoaded?rdList(isoToday()).length:0, el=document.getElementById('rd-prog');
   if(el){ el.textContent=ciLoaded?n+' of '+RD_KEYS.length+' read today':''; el.classList.toggle('all',n===RD_KEYS.length); }
 }
@@ -5451,6 +5462,7 @@ function replaceMonthlyGoalsFromSheet(d){
   if(!d||!Array.isArray(d.cats)) return;
   mgLoaded=true; mgUnsupported=false; mgFailed=false;
   mgCats=d.cats.slice().sort(function(a,b){ return a.order-b.order; }); mgGoals=Object.assign({},d.goals||{});
+  mgStatus=Object.assign({},d.status||{}); mgMaster=(d.master||[]).slice();
   Object.keys(_sqPending).forEach(function(k){ if(k.indexOf('mg:')!==0) return; var p=_sqPending[k].p; (mgGoals[p.sheetId]=mgGoals[p.sheetId]||{})[p.month]=p.value; });
   renderMonthlyGoals();
 }
@@ -5503,33 +5515,76 @@ async function mgDelCat(id){
   var ok=await postToSheet({sheet:'MonthlyGoals',action:'delcat',sheetId:id});
   if(!ok){ mgCats.push(c); mgCats.sort(function(a,b){ return a.order-b.order; }); renderMonthlyGoals(); showToast(LAST_SHEET_ERROR||'Couldn’t remove.','error'); }
 }
+var mgStatus={}, mgMaster=[], mgListOpen={};
+var MG_ST=[['done','\u2713 Done','#6BBF8E'],['partly','\u25D0 Partly','#C9A84C'],['missed','\u2717 Missed','#E07B7B']];
+function mgGetStatus(id,k){ return (mgStatus[id]||{})[k]||''; }
+async function mgSetStatus(id,k,v){
+  var old=mgGetStatus(id,k); if(old===v) v='';
+  (mgStatus[id]=mgStatus[id]||{})[k]=v; if(!v) delete mgStatus[id][k]; renderMonthlyGoals();
+  var ok=await postToSheet({sheet:'MonthlyGoals',action:'status',sheetId:id,month:k,status:v});
+  if(!ok){ (mgStatus[id]=mgStatus[id]||{})[k]=old; renderMonthlyGoals(); showToast(LAST_SHEET_ERROR||'Couldn\u2019t save.','error'); }
+}
+function mgUse(id,gid){
+  var g=mgMaster.find(function(x){ return x.goalId===gid; }); if(!g) return;
+  var k=mgMonth(mgOffset); (mgGoals[id]=mgGoals[id]||{})[k]=g.goal; mgListOpen[id]=false; renderMonthlyGoals();
+  queueSave('mg:'+id+':'+k,{sheet:'MonthlyGoals',action:'goal',sheetId:id,month:k,value:g.goal});
+  showToast('Set as the '+mgLabel(k)+' goal \u2713','success');
+}
+async function mgAddMaster(id){
+  var i=document.getElementById('mg-ml-'+id), v=i?i.value.trim():''; if(!v){ if(i) i.focus(); return; }
+  var c=mgCats.find(function(x){ return x.sheetId===id; });
+  var g={goalId:'gm'+Date.now(),sheetId:id,goal:v}; mgMaster.push(g); renderMonthlyGoals();
+  var n=document.getElementById('mg-ml-'+id); if(n) n.focus();
+  var ok=await postToSheet({sheet:'MonthlyGoals',action:'masteradd',goalId:g.goalId,sheetId:id,category:c?c.name:'',goal:v,addedOn:isoToday()});
+  if(!ok){ mgMaster=mgMaster.filter(function(x){ return x!==g; }); renderMonthlyGoals(); showToast(LAST_SHEET_ERROR||'Couldn\u2019t add it.','error'); }
+}
+async function mgDelMaster(gid){
+  var g=mgMaster.find(function(x){ return x.goalId===gid; }); if(!g) return;
+  mgMaster=mgMaster.filter(function(x){ return x!==g; }); renderMonthlyGoals();
+  var ok=await postToSheet({sheet:'MonthlyGoals',action:'masterdel',goalId:gid,sheetId:g.sheetId});
+  if(!ok){ mgMaster.push(g); renderMonthlyGoals(); showToast(LAST_SHEET_ERROR||'Couldn\u2019t remove it.','error'); }
+}
 function renderMonthlyGoals(){
   var box=document.getElementById('mg-body'); if(!box) return;
-  if(mgUnsupported){ box.innerHTML='<div class="fd-note">Monthly goals needs the updated <b>Code.gs</b>. Deploy it (Manage deployments → New version), then reload.</div>'; return; }
-  if(!mgLoaded){ box.innerHTML='<div class="fd-note">'+(mgFailed?'Couldn’t load. Reload the page to try again.':'Loading…')+'</div>'; return; }
-  var m=[mgMonth(mgOffset),mgMonth(mgOffset+1)], cur=mgMonth(0);
+  if(mgUnsupported){ box.innerHTML='<div class="fd-note">Monthly goals needs the updated <b>Code.gs</b>. Deploy it (Manage deployments \u2192 New version), then reload.</div>'; return; }
+  if(!mgLoaded){ box.innerHTML='<div class="fd-note">'+(mgFailed?'Couldn\u2019t load. Reload the page to try again.':'Loading\u2026')+'</div>'; return; }
+  var k=mgMonth(mgOffset), cur=mgMonth(0), canTrack=k<=cur;
+  var withGoal=mgCats.filter(function(c){ return mgGoal(c.sheetId,k); });
+  var nDone=withGoal.filter(function(c){ return mgGetStatus(c.sheetId,k)==='done'; }).length;
   var badge=document.getElementById('badge-goals');
-  if(badge){ var set=mgCats.filter(function(c){ return mgGoal(c.sheetId,cur); }).length; badge.textContent=mgCats.length?set+'/'+mgCats.length+' set for '+MG_MON[+cur.split('-')[1]-1]:''; }
-  var lbl=function(k){ return mgLabel(k)+(k===cur?' <span class="mg-now">this month</span>':k===mgMonth(1)?' <span class="mg-next">next month</span>':''); };
-  var head='<div class="mg-nav"><button type="button" class="feed-step" aria-label="Earlier months" onclick="mgOffset--;renderMonthlyGoals()">‹</button>'+
-    '<span class="mg-range">'+mgLabel(m[0])+' – '+mgLabel(m[1])+'</span>'+
-    '<button type="button" class="feed-step" aria-label="Later months" onclick="mgOffset++;renderMonthlyGoals()">›</button>'+
-    (mgOffset?'<button type="button" class="mr-clear" onclick="mgOffset=0;renderMonthlyGoals()">Back to this month</button>':'')+
+  if(badge){ var cg=mgCats.filter(function(c){ return mgGoal(c.sheetId,cur); }), cd=cg.filter(function(c){ return mgGetStatus(c.sheetId,cur)==='done'; }).length;
+    badge.textContent=cg.length?cd+'/'+cg.length+' done in '+MG_MON[+cur.split('-')[1]-1]:''; }
+  var tag=k===cur?'<span class="mg-now">this month</span>':k===mgMonth(1)?'<span class="mg-next">next month</span>':k<cur?'<span class="mg-next">past</span>':'';
+  var head='<div class="mg-nav"><button type="button" class="feed-step" aria-label="Previous month" onclick="mgOffset--;renderMonthlyGoals()">\u2039</button>'+
+    '<span class="mg-range">'+mgLabel(k)+' '+tag+'</span>'+
+    '<button type="button" class="feed-step" aria-label="Next month" onclick="mgOffset++;renderMonthlyGoals()">\u203a</button>'+
+    (mgOffset?'<button type="button" class="mr-clear" onclick="mgOffset=0;renderMonthlyGoals()">This month</button>':'')+
+    '<span class="mg-sum">'+(withGoal.length?(canTrack?nDone+' of '+withGoal.length+' done':withGoal.length+' goal'+(withGoal.length>1?'s':'')+' set'):'')+'</span>'+
     '<span class="mg-saved" id="mg-saved" aria-live="polite"></span></div>';
   var rows=mgCats.map(function(c,i){
-    var name=mgEditCat===c.sheetId
-      ? '<input class="sin mg-cn" id="mg-cn-'+c.sheetId+'" value="'+escH(c.name)+'" maxlength="40" onkeydown="if(event.key===\'Enter\')this.blur();if(event.key===\'Escape\'){mgEditCat=\'\';renderMonthlyGoals();}" onblur="mgRenameCat(\''+c.sheetId+'\')">'
-      : '<button type="button" class="mg-name" title="Rename" onclick="mgEditCat=\''+c.sheetId+'\';renderMonthlyGoals();var x=document.getElementById(\'mg-cn-'+c.sheetId+'\');if(x){x.focus();x.select();}">'+escH(c.name)+'</button>';
-    return '<div class="mg-row" data-id="'+c.sheetId+'"><div class="mg-cat">'+name+
-        '<span class="mg-acts"><button type="button" class="rt-mini mg-up" aria-label="Move '+escH(c.name)+' up"'+(i===0?' disabled':'')+' onclick="mgMove(\''+c.sheetId+'\',-1)">↑</button>'+
-        '<button type="button" class="rt-mini mg-dn" aria-label="Move '+escH(c.name)+' down"'+(i===mgCats.length-1?' disabled':'')+' onclick="mgMove(\''+c.sheetId+'\',1)">↓</button>'+
-        '<button type="button" class="rt-mini del" aria-label="Remove '+escH(c.name)+'" onclick="mgDelCat(\''+c.sheetId+'\')">×</button></span></div>'+
-      m.map(function(k){ return '<label class="mg-cell"><span class="mg-ml">'+mgLabel(k)+'</span><textarea class="mg-in" rows="1" data-id="'+c.sheetId+'" data-m="'+k+'" placeholder="Goal for '+escH(c.name)+'…" oninput="mgGrow(this)" onblur="mgSetGoal(this)" aria-label="'+escH(c.name)+' goal for '+mgLabel(k)+'">'+escH(mgGoal(c.sheetId,k))+'</textarea></label>'; }).join('')+
+    var id=c.sheetId, g=mgGoal(id,k), st=mgGetStatus(id,k), list=mgMaster.filter(function(x){ return x.sheetId===id; }), lo=!!mgListOpen[id];
+    var name=mgEditCat===id
+      ? '<input class="sin mg-cn" id="mg-cn-'+id+'" value="'+escH(c.name)+'" maxlength="40" onkeydown="if(event.key===\'Enter\')this.blur();if(event.key===\'Escape\'){mgEditCat=\'\';renderMonthlyGoals();}" onblur="mgRenameCat(\''+id+'\')">'
+      : '<button type="button" class="mg-name" title="Rename" onclick="mgEditCat=\''+id+'\';renderMonthlyGoals();var x=document.getElementById(\'mg-cn-'+id+'\');if(x){x.focus();x.select();}">'+escH(c.name)+'</button>';
+    return '<div class="mg-card'+(st?' st-'+st:'')+'" data-id="'+id+'">'+
+      '<div class="mg-ctop">'+name+
+        '<span class="mg-acts"><button type="button" class="mg-listbtn" aria-expanded="'+lo+'" onclick="mgListOpen[\''+id+'\']=!mgListOpen[\''+id+'\'];renderMonthlyGoals()">\uD83D\uDCCB Goal list'+(list.length?' ('+list.length+')':'')+'</button>'+
+        '<button type="button" class="rt-mini mg-up" aria-label="Move '+escH(c.name)+' up"'+(i===0?' disabled':'')+' onclick="mgMove(\''+id+'\',-1)">\u2191</button>'+
+        '<button type="button" class="rt-mini mg-dn" aria-label="Move '+escH(c.name)+' down"'+(i===mgCats.length-1?' disabled':'')+' onclick="mgMove(\''+id+'\',1)">\u2193</button>'+
+        '<button type="button" class="rt-mini del" aria-label="Remove '+escH(c.name)+'" onclick="mgDelCat(\''+id+'\')">\u00d7</button></span></div>'+
+      '<textarea class="mg-in" rows="1" data-id="'+id+'" data-m="'+k+'" placeholder="Goal for '+escH(c.name)+' in '+mgLabel(k)+'\u2026" oninput="mgGrow(this)" onblur="mgSetGoal(this)" aria-label="'+escH(c.name)+' goal for '+mgLabel(k)+'">'+escH(g)+'</textarea>'+
+      (g&&canTrack?'<div class="mg-st" role="group" aria-label="Did it happen?"><span class="mg-stl">'+(k===cur?'So far:':'How it went:')+'</span>'+MG_ST.map(function(s){ var on=st===s[0];
+        return '<button type="button" class="mg-stb s-'+s[0]+(on?' on':'')+'" aria-pressed="'+on+'" onclick="mgSetStatus(\''+id+'\',\''+k+'\',\''+s[0]+'\')">'+s[1]+'</button>'; }).join('')+'</div>':'')+
+      (lo?'<div class="mg-list"><div class="mg-lh">Goal list for '+escH(c.name)+' <span>pick one for '+mgLabel(k)+', or keep ideas here for later</span></div>'+
+        (list.length?'<ul>'+list.map(function(x){ return '<li><span class="mg-lt">'+escH(x.goal)+'</span>'+
+          '<button type="button" class="btn mg-use" onclick="mgUse(\''+id+'\',\''+x.goalId+'\')">Use for '+MG_MON[+k.split('-')[1]-1]+'</button>'+
+          '<button type="button" class="rt-mini del" aria-label="Remove from list" onclick="mgDelMaster(\''+x.goalId+'\')">\u00d7</button></li>'; }).join('')+'</ul>':'<div class="fd-hint">No goals in this list yet.</div>')+
+        '<div class="mg-ladd"><input class="sin" id="mg-ml-'+id+'" maxlength="140" placeholder="Add a goal to the '+escH(c.name)+' list" onkeydown="if(event.key===\'Enter\')mgAddMaster(\''+id+'\')"><button type="button" class="btn gold" onclick="mgAddMaster(\''+id+'\')">Add</button></div></div>':'')+
     '</div>';
   }).join('');
-  box.innerHTML=head+'<div class="mg-grid"><div class="mg-row mg-head"><div>Category</div><div>'+lbl(m[0])+'</div><div>'+lbl(m[1])+'</div></div>'+rows+'</div>'+
+  box.innerHTML=head+'<div class="mg-cards">'+rows+'</div>'+
     '<div class="mg-add"><input class="sin" id="mg-newcat" maxlength="40" placeholder="Add a category, e.g. Family, Finance, Learning" onkeydown="if(event.key===\'Enter\')mgAddCat()"><button type="button" class="btn gold" onclick="mgAddCat()">Add</button></div>'+
-    '<div class="fd-hint mg-hint">Goals save when you click out of the box. Tap a category name to rename it.</div>';
+    '<div class="fd-hint mg-hint">Goals save when you click out of the box. Tap a category name to rename it. \uD83D\uDCCB Goal list keeps ideas per category to pick from.</div>';
   box.querySelectorAll('.mg-in').forEach(mgGrow);
 }
 
@@ -6823,7 +6878,7 @@ async function importGuide(){
    Open/closed state is a display preference, so it lives in
    localStorage — no dashboard data is stored there.
 ──────────────────────────────────────────────────────── */
-var SEC_KEYS=['links','sitlib','mythoughts','goals','mlist','tyag','master','routine','food','times','weekly','library','rtstats','habitperf','checklist','pillars','anchors'];
+var SEC_KEYS=['links','sitlib','mythoughts','goals','mlist','tyag','master','routine','food','weekly','library','rtstats','habitperf','checklist','pillars','anchors'];
 
 function secOpen(key){
   var v=localStorage.getItem('sec_'+key);
@@ -6907,7 +6962,7 @@ function renderGlance(){
 
 /* Sections now live on two tabs, so a glance card may need to
    switch tab before scrolling to its section. */
-var ROUTINE_TAB_SECTIONS=['goals','tyag','master','routine','food','times','rtstats','habitperf'];   // sitlib lives on Home
+var ROUTINE_TAB_SECTIONS=['goals','tyag','master','routine','food','rtstats','habitperf'];   // sitlib lives on Home
 
 function jumpToSection(key){
   if(!secOpen(key)){ localStorage.setItem('sec_'+key,'1'); applySection(key); }
