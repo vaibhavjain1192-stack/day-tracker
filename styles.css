@@ -1741,3 +1741,56 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
   .mg-row>div,.mg-row>label{padding:4px 10px}
   .mg-ml{display:block}
 }
+
+/* Feed cards: Done like the Morning read */
+.rd-foot{display:flex;justify-content:flex-end;margin-top:12px}
+.rd-on .rd-foot{display:none}
+.rd-again{display:none}
+.rd-on .rd-again{display:inline-block}
+.rd-collapsed .feed-body{display:none}
+.rd-collapsed{padding-bottom:12px}
+.rd-collapsed .feed-lbl{margin-bottom:0}
+/* Monthly goals: one month, cards */
+.mg-range{display:flex;align-items:center;gap:6px}
+.mg-sum{font-size:11.5px;color:var(--text-3)}
+.mg-cards{display:flex;flex-direction:column;gap:8px}
+.mg-card{border:1px solid var(--border);border-radius:var(--r);padding:10px 12px;border-left:3px solid var(--border-md)}
+.mg-card.st-done{border-left-color:#6BBF8E}
+.mg-card.st-partly{border-left-color:#C9A84C}
+.mg-card.st-missed{border-left-color:#E07B7B}
+.mg-ctop{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.mg-ctop .mg-name{padding:2px 0}
+.mg-listbtn{background:none;border:1px solid var(--border-md);border-radius:12px;padding:2px 9px;font-family:var(--fb);font-size:11px;color:var(--text-2);cursor:pointer;white-space:nowrap}
+.mg-listbtn:hover,.mg-listbtn[aria-expanded="true"]{color:var(--gold);border-color:var(--gold)}
+.mg-card .mg-in{margin-top:6px;border-color:var(--border)}
+.mg-st{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:8px}
+.mg-stl{font-size:11px;color:var(--text-3)}
+.mg-stb{font-family:var(--fb);font-size:11.5px;padding:3px 10px;border-radius:12px;border:1px solid var(--border-md);background:transparent;color:var(--text-2);cursor:pointer}
+.mg-stb.s-done.on{background:rgba(107,191,142,.16);border-color:#6BBF8E;color:#6BBF8E}
+.mg-stb.s-partly.on{background:rgba(201,168,76,.16);border-color:#C9A84C;color:#C9A84C}
+.mg-stb.s-missed.on{background:rgba(224,123,123,.14);border-color:#E07B7B;color:#E07B7B}
+.mg-stb:focus-visible,.mg-listbtn:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.mg-list{margin-top:10px;padding:10px;background:var(--surface);border-radius:8px}
+.mg-lh{font-size:12px;font-weight:600;color:var(--text-1);margin-bottom:6px}
+.mg-lh span{font-weight:400;color:var(--text-3);margin-left:4px}
+.mg-list ul{list-style:none;margin:0 0 8px;padding:0;display:flex;flex-direction:column;gap:6px}
+.mg-list li{display:flex;align-items:center;gap:8px}
+.mg-lt{flex:1;min-width:0;font-size:13px;color:var(--text-1)}
+.mg-use{font-size:11px;padding:3px 10px;white-space:nowrap}
+.mg-ladd{display:grid;grid-template-columns:1fr auto;gap:6px}
+.mg-ladd .sin{font-size:12.5px}
+@media (max-width:640px){
+  .mg-nav{flex-wrap:wrap}
+  .mg-saved{flex-basis:100%;margin-left:0}
+  .mg-ctop .mg-acts{margin-left:auto}
+  .mg-list li{flex-wrap:wrap}
+  .mg-lt{flex-basis:100%}
+}
+
+/* Touch screens: every small button gets a thumb-sized (≥32px) tap area */
+@media (pointer:coarse){
+  .rt-mini,.th-habit-edit,.th-habit-del,.mg-acts .rt-mini{min-width:32px;min-height:32px;display:inline-flex;align-items:center;justify-content:center}
+  .rd-btn,.mg-stb,.mg-listbtn,.mr-edit,.feed-open,.th-habit-log,.mr-sit,.mt-editbtn,.hf-sum,.mr-clear,.pe-sit,.pe-day,.ml-tab,.ty-histbtn,.imp-pill,.mg-name,.mg-use{min-height:32px}
+  .feed-step{min-width:32px;min-height:32px}
+  .mg-acts{opacity:1}
+}
