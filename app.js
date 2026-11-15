@@ -1,6 +1,6 @@
 /* Morning Dashboard app. Linked from index.html; bump ?v= there when this changes. */
 'use strict';
-window.APP_VER='20261115';   // must match the ?v= in index.html (checked there)
+window.APP_VER='20261115b';   // must match the ?v= in index.html (checked there)
 const WORKER_URL='https://muddy-shadow-1aa7.vaibhavjain-1192.workers.dev';
 const FETCH_TIMEOUT=45000;   // default; page loads pass shorter ones
 var DIAG={};  // diagnostics collected during fetch
@@ -143,7 +143,8 @@ function switchTab(tab){
   document.querySelectorAll('.tab').forEach(function(b){b.classList.remove('on');});
   document.getElementById('pg-'+tab).classList.add('on');
   var tb=document.querySelector('.tab[onclick="switchTab(\''+tab+'\')"]'); if(tb) tb.classList.add('on');
-  if(tab==='personal'){ renderMyThoughts(); renderMonthlyGoals(); renderMasterList(); }
+  if(tab==='personal'){ renderMyThoughts(); renderMasterList(); }
+  if(tab==='routine') renderMonthlyGoals();
   if(tab==='improve'){ renderImprove(); renderTodayHabits(); }
   if(tab==='routine'){_calNeedsScroll=true;renderMaster();renderRoutine();}
   if(tab==='situations'){renderStats();renderPast();}
@@ -6906,7 +6907,7 @@ function renderGlance(){
 
 /* Sections now live on two tabs, so a glance card may need to
    switch tab before scrolling to its section. */
-var ROUTINE_TAB_SECTIONS=['tyag','master','routine','food','times','rtstats','habitperf'];   // sitlib lives on Home
+var ROUTINE_TAB_SECTIONS=['goals','tyag','master','routine','food','times','rtstats','habitperf'];   // sitlib lives on Home
 
 function jumpToSection(key){
   if(!secOpen(key)){ localStorage.setItem('sec_'+key,'1'); applySection(key); }
