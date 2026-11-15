@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=20261115b">
+<link rel="stylesheet" href="styles.css?v=20261115c">
 </head>
 <body>
 <div class="toast" id="toast"></div>
@@ -106,8 +106,8 @@
       </span>
     </div>
     <div class="feed-vids">
-      <div class="feed-card feed-video">
-        <div class="feed-lbl"><span>&#127909; My pick</span><span class="feed-lbl-r"><span class="focus-sync" id="vid-sync"></span><button type="button" class="rd-btn" data-k="pick" aria-pressed="false" onclick="rdToggle('pick')" title="Mark as read today">Done</button></span></div>
+      <div class="feed-card feed-video" data-rd="pick">
+        <div class="feed-lbl"><span>&#127909; My pick</span><span class="feed-lbl-r"><span class="focus-sync" id="vid-sync"></span><button type="button" class="mr-clear rd-again" data-k="pick" onclick="mrSecOpen['pick']=!mrSecOpen['pick'];rdPaint()">Read again</button><button type="button" class="rd-btn" data-k="pick" aria-pressed="false" onclick="rdToggle('pick')" title="Mark as read today">Done</button></span></div><div class="feed-body">
         <div id="vid-preview"></div>
         <input class="focus-in" id="vid-url" type="text" placeholder="Paste a YouTube or Instagram link..."
                onblur="saveDailyVideo()"
@@ -118,6 +118,8 @@
                   onkeydown="if(event.key==='Enter'&&!event.shiftKey){saveDailyVideo();this.blur();event.preventDefault();}"
                   onblur="saveDailyVideo()"></textarea>
         <div class="focus-carry" id="vid-carry"></div>
+        <div class="rd-foot"><button type="button" class="btn gold rd-big" onclick="rdToggle('pick')">&#10003; Done reading</button></div>
+        </div>
       </div>
       <div class="feed-card feed-video" id="feed-post"></div>
     </div>
@@ -273,10 +275,6 @@
     <div class="q-wrap"><div id="fg-body"><div class="fd-note">Loading&hellip;</div></div></div>
   </div><!-- /sec-food -->
 
-  <div class="sec-hd" id="hd-times" onclick="toggleSection('times')"><span class="sec-icon">&#9200;</span><span class="sec-title">Time tracker</span><span class="lbl-line"></span><span class="sec-badge" id="badge-times"></span><span class="sec-caret open" id="caret-times">&#9662;</span></div>
-  <div class="sec-body" id="sec-times">
-    <div class="q-wrap"><div id="tg-body"><div class="fd-note">Loading&hellip;</div></div></div>
-  </div><!-- /sec-times -->
 
   <!-- Completion history -->
   <div class="sec-hd" id="hd-rtstats" onclick="toggleSection('rtstats')"><span class="sec-icon">&#128200;</span><span class="sec-title">Routine completion</span><span class="lbl-line"></span><span class="sec-badge" id="badge-rtstats"></span><span class="sec-caret open" id="caret-rtstats">&#9662;</span></div>
@@ -525,12 +523,12 @@
   <div class="set-panel"><div class="set-head"><h2 id="set-title">Settings</h2><button type="button" class="set-x" onclick="closeSettings()" aria-label="Close">&times;</button></div>
   <div id="set-body"></div></div>
 </div>
-<script src="app.js?v=20261115b"></script>
+<script src="app.js?v=20261115c"></script>
 <script>
 /* If GitHub served an older app.js than this page expects (one file went live before the other,
    or the browser cached it), fetch fresh copies and reload once. */
 (function(){
-  var want='20261115b';
+  var want='20261115c';
   if(window.APP_VER===want) { try{ sessionStorage.removeItem('ver_retry'); }catch(e){} return; }
   try{ if(sessionStorage.getItem('ver_retry')===want) return; sessionStorage.setItem('ver_retry',want); }catch(e){ return; }
   Promise.all(['app.js?v='+want,'styles.css?v='+want,'app.js','index.html'].map(function(u){ return fetch(u,{cache:'reload'}).catch(function(){}); }))
