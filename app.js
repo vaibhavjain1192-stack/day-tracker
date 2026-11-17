@@ -1,6 +1,6 @@
 /* Morning Dashboard app. Linked from index.html; bump ?v= there when this changes. */
 'use strict';
-window.APP_VER='20261115c';   // must match the ?v= in index.html (checked there)
+window.APP_VER='20261117b';   // must match the ?v= in index.html (checked there)
 const WORKER_URL='https://muddy-shadow-1aa7.vaibhavjain-1192.workers.dev';
 const FETCH_TIMEOUT=45000;   // default; page loads pass shorter ones
 var DIAG={};  // diagnostics collected during fetch
@@ -4411,19 +4411,24 @@ async function loadFoodGridDirect(){
 function markFoodGridFailed(){ if(fgLoaded||fgUnsupported) return; fgFailed=true; renderFoodGrid(); }
 
 function fgVal(d,c){ var r=fgRows[d]; return r&&r[c]?String(r[c]):''; }
-function fgSlips(d){ return fgHeads.filter(function(c){ return !!fgVal(d,c); }).length; }
-function fgFirstDate(){ var ks=Object.keys(fgRows).filter(function(d){ return fgSlips(d)>0; }).sort(); return ks[0]||''; }
+/* A cell is "Followed" (green, a success), something eaten (a slip), or blank */
+var FG_OK='Followed';
+function fgIsOk(v){ return /^followed$/i.test(String(v||'').trim()); }
+function fgSlip(d,c){ var v=fgVal(d,c); return !!v&&!fgIsOk(v); }
+function fgSlips(d){ return fgHeads.filter(function(c){ return fgSlip(d,c); }).length; }
+function fgAllOk(d){ return fgHeads.length>0&&fgHeads.every(function(c){ return fgIsOk(fgVal(d,c)); }); }
+function fgFirstDate(){ var ks=Object.keys(fgRows).filter(function(d){ return Object.keys(fgRows[d]||{}).length>0; }).sort(); return ks[0]||''; }
 function fgStartDate(){ return fgStart||fgFirstDate()||isoToday(); }
 function fgDays(){ var out=[], d=fgStartDate(), t=isoToday(), n=0; while(d<=t&&n<4000){ out.push(d); d=foodShift(d,1); n++; } return out; }
-/* A day counts once it's over; today counts early only if something was eaten */
-function fgCounts(d){ return d<isoToday()||fgSlips(d)>0; }
+/* A day counts once it's over; today counts early if something was eaten, or every column is marked Followed */
+function fgCounts(d){ return d<isoToday()||fgSlips(d)>0||fgAllOk(d); }
 function fgFmt(d,opt){ var x=parseISO(d); return x.toLocaleDateString('en-IN',opt||{day:'numeric',month:'short'}); }
 function fgEsc(s){ return escH(s).replace(/'/g,'&#39;'); }
 
 /* Past entries for a column, most used first */
 function fgOptions(c){
   var n={};
-  Object.keys(fgRows).forEach(function(d){ var v=fgVal(d,c); if(v) n[v]=(n[v]||0)+1; });
+  Object.keys(fgRows).forEach(function(d){ var v=fgVal(d,c); if(v&&!fgIsOk(v)) n[v]=(n[v]||0)+1; });
   return Object.keys(n).sort(function(a,b){ return n[b]-n[a]||a.localeCompare(b); });
 }
 
@@ -4476,9 +4481,10 @@ function fgCellHTML(d,c){
   var v=fgVal(d,c);
   if(fgNewFor===d+'|'+c) return '<div class="fg-cell fg-newbox" data-l="'+fgEsc(c)+'"><input class="sin" id="fg-new-in" maxlength="60" placeholder="What did you have?" data-d="'+d+'" data-c="'+fgEsc(c)+'" onkeydown="if(event.key===\'Enter\')fgSaveNew();if(event.key===\'Escape\')fgCancelNew()">'+
     '<button type="button" class="rt-mini" title="Save" aria-label="Save" onclick="fgSaveNew()">✓</button><button type="button" class="rt-mini" title="Cancel" aria-label="Cancel" onclick="fgCancelNew()">×</button></div>';
-  var opts=fgOptions(c); if(v&&opts.indexOf(v)<0) opts.unshift(v);
-  return '<div class="fg-cell" data-l="'+fgEsc(c)+'"><select class="fg-sel'+(v?' had':'')+'" data-d="'+d+'" data-c="'+fgEsc(c)+'" aria-label="'+fgEsc(c)+' on '+fgFmt(d)+'" onchange="fgPick(this)">'+
+  var ok=fgIsOk(v), opts=fgOptions(c); if(v&&!ok&&opts.indexOf(v)<0) opts.unshift(v);
+  return '<div class="fg-cell" data-l="'+fgEsc(c)+'"><select class="fg-sel'+(ok?' ok':v?' had':'')+'" data-d="'+d+'" data-c="'+fgEsc(c)+'" aria-label="'+fgEsc(c)+' on '+fgFmt(d)+'" onchange="fgPick(this)">'+
     '<option value=""'+(v?'':' selected')+'>—</option>'+
+    '<option value="'+FG_OK+'"'+(ok?' selected':'')+'>\u2713 Followed</option>'+
     opts.map(function(o){ return '<option value="'+fgEsc(o)+'"'+(o===v?' selected':'')+'>'+escH(o)+'</option>'; }).join('')+
     '<option value="__new">+ Add new…</option></select></div>';
 }
@@ -4525,7 +4531,7 @@ function renderFoodGrid(){
     var p=cnt.length?Math.round(cl/cnt.length*100):null, open=fgWeekOpen(w.n);
     var tone=p==null?'':p>=80?'good':p>=50?'mid':'low';
     var range=fgFmt(w.days[0])+' – '+fgFmt(w.days[w.days.length-1]);
-    var perCat=fgHeads.map(function(c){ var n=w.days.filter(function(d){ return !!fgVal(d,c); }).length;
+    var perCat=fgHeads.map(function(c){ var n=w.days.filter(function(d){ return fgSlip(d,c); }).length;
       return '<div class="fg-wc'+(n?' had':'')+'" data-l="'+fgEsc(c)+'">'+(n?n+'×':'✓')+'</div>'; }).join('');
     return '<div class="fg-wk'+(open?' open':'')+'">'+
       '<button type="button" class="fg-row fg-wk-h" data-w="'+w.n+'" aria-expanded="'+open+'" onclick="fgToggleWeek('+w.n+')">'+
@@ -4536,7 +4542,7 @@ function renderFoodGrid(){
   }).join('');
 
   box.innerHTML=top+'<div class="fg-grid" style="--fgcols:'+cols+'">'+head+body+'</div>'+
-    '<div class="fg-foot"><span class="fd-hint">Blank (—) = avoided. Pick what you had, or “+ Add new…”.</span>'+fgCatAdd()+'</div>';
+    '<div class="fg-foot"><span class="fd-hint">✓ Followed = avoided it (green). A blank counts as followed once the day is over. Otherwise pick what you had, or “+ Add new…”.</span>'+fgCatAdd()+'</div>';
   if(typeof renderGlance==='function') renderGlance();
 }
 function fgCatAdd(){
@@ -4984,6 +4990,7 @@ function peFormHTML(p){
     f('Principle','<input class="sin" id="pe-title" maxlength="80" value="'+escH(p.title||'')+'" placeholder="e.g. Pause before responding">')+
     f('Group','<input class="sin" id="pe-group" list="pe-groups" maxlength="40" value="'+escH(p.group||'')+'" placeholder="e.g. Before you react"><datalist id="pe-groups">'+Object.keys(groups).map(function(g){ return '<option value="'+escH(g)+'">'; }).join('')+'</datalist>')+
     f('Details','<textarea class="sin" id="pe-details" rows="2" placeholder="One or two lines you’ll read each morning">'+escH(p.details||'')+'</textarea>')+
+    f('Quick line','<input class="sin" id="pe-quick" maxlength="140" value="'+escH(p.quick||'')+'" placeholder="One short line for the Quick read">','blank = the first sentence of Details')+
     '<div class="pe-f"><span>When it shows</span><div class="pe-seg" role="radiogroup" aria-label="When it shows">'+
       [['core','Every day'],['days','On set days'],['rotate','Rotates']].map(function(o){
         return '<button type="button" role="radio" aria-checked="'+(w===o[0])+'" class="'+(w===o[0]?'on':'')+'" data-w="'+o[0]+'" onclick="peSetWhen(this)">'+o[1]+'</button>'; }).join('')+'</div>'+
@@ -5039,13 +5046,13 @@ async function peSave(){
   var pend=(document.getElementById('pe-sit-new')||{}).value; if(pend&&pend.trim()&&sits.map(sitKey).indexOf(sitKey(pend))<0) sits.push(pend.trim());
   var p=principles.find(function(x){ return x.sheetId===id; }), isNew=!p;
   var nx={sheetId:id,group:v('pe-group').trim(),title:title,details:v('pe-details').trim(),core:w==='core',
-    keywords:v('pe-kw').trim(),keyPoints:v('pe-kp').trim(),habit:v('pe-habit').trim(),days:w==='days'?days.join(', '):'',situations:sits.join(', '),astro:v('pe-astro').trim(),
+    keywords:v('pe-kw').trim(),keyPoints:v('pe-kp').trim(),habit:v('pe-habit').trim(),days:w==='days'?days.join(', '):'',situations:sits.join(', '),astro:v('pe-astro').trim(),quick:v('pe-quick').trim(),
     order:p?p.order:(principles.reduce(function(m,x){ return Math.max(m,x.order); },-1)+1),from:p?p.from:'Added in dashboard'};
   var old=p?Object.assign({},p):null;
   if(p) Object.assign(p,nx); else principles.push(nx);
   peEditId=''; renderPrEditor(); renderMorningRead();
   var ok=await postToSheet({sheet:'Principles',action:'save',sheetId:id,group:nx.group,title:nx.title,details:nx.details,core:nx.core?'yes':'',
-    keywords:nx.keywords,keyPoints:nx.keyPoints,habit:nx.habit,days:nx.days,situations:nx.situations,astro:nx.astro,order:nx.order});
+    keywords:nx.keywords,keyPoints:nx.keyPoints,habit:nx.habit,days:nx.days,situations:nx.situations,astro:nx.astro,quick:nx.quick,order:nx.order});
   if(!ok){ if(old) Object.assign(p,old); else principles=principles.filter(function(x){ return x!==nx; }); renderPrEditor(); renderMorningRead();
     showToast(LAST_SHEET_ERROR||'Couldn’t save. Try again.','error'); return; }
   showToast(isNew?'Added ✓':'Saved ✓','success');
@@ -5131,10 +5138,17 @@ function mrPickSit(s){ mrSit=sitKey(s)===sitKey(mrSit)?'':s; renderMorningRead()
 function mrSitTags(p){ var ss=prSits(p); if(!ss.length) return '';
   return '<div class="mr-tags">'+ss.map(function(s){ return '<span class="mr-tag">'+sitIcon(s)+' '+escH(s)+'</span>'; }).join('')+'</div>'; }
 
+/* Quick read (default): title + the first sentence of the details; chart lines and tags stay in the popup */
+function mrQuick(){ try{ return localStorage.getItem('mr_view')!=='full'; }catch(e){ return true; } }
+function mrSetView(v){ try{ localStorage.setItem('mr_view',v); }catch(e){} renderMorningRead(); }
+function mrFirst(t){ t=String(t||'').trim(); var m=t.match(/^.*?[.!?](?=\s|$)/); return m?m[0]:t; }
 function mrItem(p,i,showGroup){
   return '<li><button type="button" class="mr-it" onclick="openPrinciple(\''+escH(p.sheetId)+'\',this)" title="See what else you\u2019ve written about this">'+(i!=null?'<span class="mr-n">'+(i+1)+'</span>':'')+
     '<div class="mr-tx"><div class="mr-t">'+escH(p.title)+(showGroup&&p.group?' <span class="mr-g">'+escH(p.group)+'</span>':'')+'</div>'+
-    (p.details?'<div class="mr-d">'+escH(p.details)+'</div>':'')+(p.astro?'<div class="mr-astro"><span aria-hidden="true">\u2728</span> '+escH(p.astro)+'</div>':'')+mrSitTags(p)+'</div><span class="mr-go" aria-hidden="true">\u203a</span></button></li>';
+    (mrQuick()
+      ? ((p.quick||p.details)?'<div class="mr-d">'+escH(p.quick||mrFirst(p.details))+'</div>':'')
+      : (p.details?'<div class="mr-d">'+escH(p.details)+'</div>':'')+(p.astro?'<div class="mr-astro"><span aria-hidden="true">\u2728</span> '+escH(p.astro)+'</div>':'')+mrSitTags(p))+
+    '</div><span class="mr-go" aria-hidden="true">\u203a</span></button></li>';
 }
 function renderMorningRead(){
   var box=document.getElementById('mr-box'); if(!box) return;
@@ -5144,7 +5158,10 @@ function renderMorningRead(){
   if(!principles.length){ body.innerHTML='<div class="fd-note">Your Principles tab is empty. Add a few rows there (mark the daily ones <b>yes</b> under Core).</div>'; return; }
 
   var read=false, streak=ciLoaded?mrStreak():0, t=mrToday();
-  meta.innerHTML=(streak?'<span class="mr-streak">🔥 '+streak+'-day streak</span>':'<span class="mr-time">~5 min</span>')+
+  meta.innerHTML=(streak?'<span class="mr-streak">🔥 '+streak+'-day streak</span>':'<span class="mr-time">'+(mrQuick()?'~2 min':'~8 min')+'</span>')+
+    '<span class="mr-view" role="group" aria-label="How much to show">'+
+      '<button type="button" class="'+(mrQuick()?'on':'')+'" aria-pressed="'+mrQuick()+'" onclick="mrSetView(\'quick\')" title="Title and one line each">Quick</button>'+
+      '<button type="button" class="'+(mrQuick()?'':'on')+'" aria-pressed="'+!mrQuick()+'" onclick="mrSetView(\'full\')" title="Full details, chart notes and situations">Full</button></span>'+
     '<button type="button" class="mr-edit" onclick="openPrEditor()" title="Edit, reorder and schedule your principles">\u270e Edit</button>';
   box.classList.toggle('done',read&&!mrOpen);
 
@@ -6953,7 +6970,7 @@ function renderGlance(){
       '<div class="gl-l">'+label+'</div>'+
       '<div class="gl-bar"><div class="gl-fill" style="width:'+pct+'%"></div></div></div>';
   }
-  var fList=fgHeads, fDone=fgHeads.filter(function(c){ return !fgVal(isoToday(),c); }).length;
+  var fList=fgHeads, fDone=fgHeads.filter(function(c){ return !fgSlip(isoToday(),c); }).length;
   el.innerHTML=card(rdone,items.length,'Routine','routine')+
     card(fDone,fList.length,'Food','food')+
     card(hDone,habitList.length,'Habits','habits')+
