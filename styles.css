@@ -1794,3 +1794,13 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
   .feed-step{min-width:32px;min-height:32px}
   .mg-acts{opacity:1}
 }
+
+/* Food: Followed */
+.fg-sel.ok{color:#9fd3b5;border-color:rgba(107,191,142,.5);background:rgba(107,191,142,.1)}
+/* Morning read: Quick / Full */
+.mr-view{display:inline-flex;border:1px solid var(--border-md);border-radius:14px;overflow:hidden}
+.mr-view button{font-family:var(--fb);font-size:11px;padding:3px 10px;background:transparent;border:0;color:var(--text-3);cursor:pointer}
+.mr-view button.on{background:rgba(201,168,76,.16);color:var(--text-1)}
+.mr-view button:focus-visible{outline:2px solid var(--gold);outline-offset:-2px}
+@media (pointer:coarse){ .mr-view button{min-height:32px} }
+@media (max-width:640px){ .mr-meta{flex-wrap:wrap;justify-content:flex-end;gap:6px} .mr-time{display:none} }
