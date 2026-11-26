@@ -1830,12 +1830,32 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
 .sw-adh option{background:var(--card,#1e2333);color:var(--text-1)}
 .sw-in:focus-visible,.sw-adh:focus-visible{outline:2px solid var(--gold);outline-offset:1px}
 .sw-hint{margin-top:8px}
-@media (max-width:760px){
-  .sw-head{display:none}
-  .sw-row{grid-template-columns:1fr 1fr;row-gap:8px;padding:10px 12px}
-  .sw-date{grid-column:1/-1}
-  .sw-c[data-l="Why not on time"]{grid-column:1/-1}
-  .sw-c::before{content:attr(data-l);display:block;font-size:10.5px;color:var(--text-3);margin-bottom:2px}
-  .sw-avg{margin-left:0;flex-basis:100%;padding-left:16px}
-}
 @media (pointer:coarse){ .sw-in,.sw-adh,.sw-why{min-height:36px} }
+
+/* One line per day on phones: Food + Sleep trackers */
+.sw-ls{display:none}
+@media (max-width:640px){
+  .fg-head.fg-head-f{display:grid;grid-template-columns:var(--fgcols-m);gap:5px;padding:6px 8px;font-size:9.5px;letter-spacing:.02em}
+  .fg-day:not(.tg-day){grid-template-columns:var(--fgcols-m);gap:5px;padding:6px 8px;row-gap:0}
+  .fg-day:not(.tg-day) .fg-cell::before{display:none}
+  .fg-day:not(.tg-day) .fg-date,.fg-day:not(.tg-day) .fg-st{grid-row:auto;grid-column:auto}
+  .fg-date,.sw-date{display:flex;flex-direction:column;line-height:1.15;font-size:10.5px;white-space:nowrap}
+  .fg-date b{font-size:14px}
+  .fg-mo,.fg-date .fg-tag{display:none}
+  .fg-day:not(.tg-day) .fg-sel{-webkit-appearance:none;appearance:none;font-size:12px;padding:7px 4px;text-align:center;text-align-last:center;white-space:nowrap;overflow:hidden;min-height:34px}
+  .fg-day:not(.tg-day) .fg-sel.ok{font-size:14px}
+  .fg-st{width:16px;height:16px;font-size:10px;justify-self:center}
+  .fg-newbox{grid-column:2/-1}
+
+  .sw-row{grid-template-columns:34px minmax(0,1fr) minmax(0,1fr) minmax(0,1.25fr) 40px;gap:5px;padding:6px 8px}
+  .sw-head{display:grid;font-size:9.5px;letter-spacing:.02em;padding:6px 8px}
+  .sw-lf{display:none}.sw-ls{display:inline}
+  .sw-c::before{display:none}
+  .sw-in{font-size:12px;padding:7px 2px;text-align:center;min-height:34px}
+  .sw-in::-webkit-calendar-picker-indicator{display:none}
+  .sw-why{font-size:12px;padding:7px 5px;min-height:34px}
+  .sw-adh{-webkit-appearance:none;appearance:none;text-align:center;text-align-last:center;font-size:14px;padding:6px 0;min-height:34px}
+  .sw-adh.auto{border-style:dashed}
+  .sw-wk-h{padding:9px 10px;gap:6px}
+  .sw-avg{margin-left:auto}
+}
