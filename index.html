@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=20261117b">
+<link rel="stylesheet" href="styles.css?v=20261126">
 </head>
 <body>
 <div class="toast" id="toast"></div>
@@ -275,6 +275,9 @@
     <div class="q-wrap"><div id="fg-body"><div class="fd-note">Loading&hellip;</div></div></div>
   </div><!-- /sec-food -->
 
+  <div class="sec-hd" id="hd-sleepw" onclick="toggleSection('sleepw')"><span class="sec-icon">&#128564;</span><span class="sec-title">Sleep &amp; get-up tracker</span><span class="lbl-line"></span><span class="sec-badge" id="badge-sleepw"></span><span class="sec-caret open" id="caret-sleepw">&#9662;</span></div>
+  <div class="sec-body" id="sec-sleepw"><div class="q-wrap"><div id="sw-body"><div class="fd-note">Loading&hellip;</div></div></div></div><!-- /sec-sleepw -->
+
 
   <!-- Completion history -->
   <div class="sec-hd" id="hd-rtstats" onclick="toggleSection('rtstats')"><span class="sec-icon">&#128200;</span><span class="sec-title">Routine completion</span><span class="lbl-line"></span><span class="sec-badge" id="badge-rtstats"></span><span class="sec-caret open" id="caret-rtstats">&#9662;</span></div>
@@ -523,12 +526,12 @@
   <div class="set-panel"><div class="set-head"><h2 id="set-title">Settings</h2><button type="button" class="set-x" onclick="closeSettings()" aria-label="Close">&times;</button></div>
   <div id="set-body"></div></div>
 </div>
-<script src="app.js?v=20261117b"></script>
+<script src="app.js?v=20261126"></script>
 <script>
 /* If GitHub served an older app.js than this page expects (one file went live before the other,
    or the browser cached it), fetch fresh copies and reload once. */
 (function(){
-  var want='20261117b';
+  var want='20261126';
   if(window.APP_VER===want) { try{ sessionStorage.removeItem('ver_retry'); }catch(e){} return; }
   try{ if(sessionStorage.getItem('ver_retry')===want) return; sessionStorage.setItem('ver_retry',want); }catch(e){ return; }
   Promise.all(['app.js?v='+want,'styles.css?v='+want,'app.js','index.html'].map(function(u){ return fetch(u,{cache:'reload'}).catch(function(){}); }))
