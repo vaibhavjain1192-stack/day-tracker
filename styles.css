@@ -1847,12 +1847,14 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
   .fg-st{width:16px;height:16px;font-size:10px;justify-self:center}
   .fg-newbox{grid-column:2/-1}
 
-  .sw-row{grid-template-columns:34px minmax(0,1fr) minmax(0,1fr) minmax(0,1.25fr) 40px;gap:5px;padding:6px 8px}
+  .sw-row{grid-template-columns:34px minmax(58px,1fr) minmax(58px,1fr) minmax(0,1fr) 40px;gap:5px;padding:6px 8px}
   .sw-head{display:grid;font-size:9.5px;letter-spacing:.02em;padding:6px 8px}
   .sw-lf{display:none}.sw-ls{display:inline}
   .sw-c::before{display:none}
   .sw-in{font-size:12px;padding:7px 2px;text-align:center;min-height:34px}
-  .sw-in::-webkit-calendar-picker-indicator{display:none}
+  .sw-in{-webkit-appearance:none;appearance:none;padding:7px 0;font-variant-numeric:tabular-nums}
+  .sw-in::-webkit-calendar-picker-indicator,.sw-in::-webkit-inner-spin-button,.sw-in::-webkit-clear-button{display:none;-webkit-appearance:none;margin:0;width:0}
+  .sw-in::-webkit-datetime-edit,.sw-in::-webkit-datetime-edit-fields-wrapper{padding:0;justify-content:center}
   .sw-why{font-size:12px;padding:7px 5px;min-height:34px}
   .sw-adh{-webkit-appearance:none;appearance:none;text-align:center;text-align-last:center;font-size:14px;padding:6px 0;min-height:34px}
   .sw-adh.auto{border-style:dashed}
