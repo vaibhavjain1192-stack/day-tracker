@@ -1,6 +1,6 @@
 /* Morning Dashboard app. Linked from index.html; bump ?v= there when this changes. */
 'use strict';
-window.APP_VER='20261117b';   // must match the ?v= in index.html (checked there)
+window.APP_VER='20261126';   // must match the ?v= in index.html (checked there)
 const WORKER_URL='https://muddy-shadow-1aa7.vaibhavjain-1192.workers.dev';
 const FETCH_TIMEOUT=45000;   // default; page loads pass shorter ones
 var DIAG={};  // diagnostics collected during fetch
@@ -5606,6 +5606,81 @@ function renderMonthlyGoals(){
 }
 
 /* ═══════════════════════════════════════════════════
+   SLEEP & GET-UP TRACKER (Routine, below the Food tracker)
+   Date · slept the night before · got up · why not on time · adhered.
+   Times are the same DayLog values as the Morning sleep row (sleptAt on a
+   date = the night before it). "Why late" and "Adhered" are DayLog H and I.
+   Adhered is worked out (woke by SW_WAKE and slept by SW_SLEEP) unless set by hand.
+   Weeks run Mon–Sun from SW_START; weeks that have ended start collapsed.
+═══════════════════════════════════════════════════ */
+var SW_START='2026-11-26', SW_WAKE=7*60, SW_SLEEP=23*60, swOpen={};
+function swMin(t){ var m=String(t||'').match(/^(\d{1,2}):(\d{2})/); return m?(+m[1])*60+(+m[2]):null; }
+function swLate(min,target){ return ((min-target+720)%1440+1440)%1440-720; }   // + = later than target, wraps past midnight
+function swAuto(d){
+  var w=swMin(dlGet(d,'wokeAt')), s=swMin(dlGet(d,'sleptAt'));
+  if(w==null&&s==null) return '';
+  var okW=w==null||w<=SW_WAKE, okS=s==null||swLate(s,SW_SLEEP)<=0;
+  return okW&&okS?'yes':'no';
+}
+function swAdh(d){ var m=String(dlGet(d,'adhered')||'').toLowerCase(); return m==='yes'||m==='no'?m:swAuto(d); }
+function swSet(el){
+  if(!ciLoaded||ciUnsupported){ showToast('Still loading. Try again in a moment.','error'); renderSleepTracker(); return; }
+  var d=el.getAttribute('data-d'), f=el.getAttribute('data-f'), v=el.value;
+  if(f==='adhered') v=v==='auto'?'':v;
+  dlSet(d,f,v);
+  if(f==='sleptAt'||f==='wokeAt'){ try{ renderSleep(); }catch(e){} }
+  renderSleepTracker();
+}
+function swWeeks(){
+  var t=isoToday(), out=[], d=SW_START; if(t<SW_START) return out;
+  var cur=[];
+  while(d<=t){ cur.push(d); if(mrDow(d)===0||d===t){ out.push(cur); cur=[]; } d=foodShift(d,1); }
+  return out;
+}
+function swReasons(){
+  var n={}; Object.keys(dayLog||{}).forEach(function(d){ var r=dlGet(d,'wakeWhy'); if(r) n[r]=(n[r]||0)+1; });
+  return Object.keys(n).sort(function(a,b){ return n[b]-n[a]; });
+}
+function swFmt12(t){ var m=swMin(t); return m==null?'':tgFmt(m); }
+function renderSleepTracker(){
+  var box=document.getElementById('sw-body'); if(!box) return;
+  if(!ciLoaded){ box.innerHTML='<div class="fd-note">Loading…</div>'; return; }
+  if(ciUnsupported){ box.innerHTML='<div class="fd-note">Sleep times need the updated <b>Code.gs</b>.</div>'; return; }
+  var weeks=swWeeks(), t=isoToday();
+  if(!weeks.length){ box.innerHTML='<div class="fd-note">Starts on '+fgFmt(SW_START,{day:'numeric',month:'short'})+'.</div>'; return; }
+  var all=[].concat.apply([],weeks), yes=all.filter(function(d){ return swAdh(d)==='yes'; }).length, marked=all.filter(function(d){ return swAdh(d); }).length;
+  var badge=document.getElementById('badge-sleepw'); if(badge) badge.textContent=marked?yes+'/'+marked+' adhered':'';
+  var reasons=swReasons();
+  var head='<div class="sw-row sw-head"><div>Date</div><div>Slept (prev. night)</div><div>Got up</div><div>Why not on time</div><div>Adhered</div></div>';
+  var body=weeks.map(function(w,i){ return {n:i+1,days:w}; }).reverse().map(function(w){
+    var last=w.days[w.days.length-1], ended=mrDow(last)===0&&last<t, open=(w.n in swOpen)?swOpen[w.n]:!ended;
+    var y=w.days.filter(function(d){ return swAdh(d)==='yes'; }).length, mk=w.days.filter(function(d){ return swAdh(d); }).length;
+    var wk=w.days.map(function(d){ return swMin(dlGet(d,'wokeAt')); }).filter(function(x){ return x!=null; });
+    var avg=wk.length?tgFmt(Math.round(wk.reduce(function(a,b){ return a+b; },0)/wk.length)):'';
+    var p=mk?Math.round(y/mk*100):null, tone=p==null?'':p>=80?'good':p>=50?'mid':'low';
+    var rows=w.days.slice().reverse().map(function(d){
+      var a=swAdh(d), man=String(dlGet(d,'adhered')||'').toLowerCase(), auto=swAuto(d), today=d===t;
+      var sel='<select class="sw-adh '+(a||'none')+'" data-d="'+d+'" data-f="adhered" onchange="swSet(this)" aria-label="Adhered on '+fgFmt(d)+'">'+
+        '<option value="auto"'+(man?'':' selected')+'>'+(auto==='yes'?'✓ Yes (auto)':auto==='no'?'✗ No (auto)':'—')+'</option>'+
+        '<option value="yes"'+(man==='yes'?' selected':'')+'>✓ Yes</option><option value="no"'+(man==='no'?' selected':'')+'>✗ No</option></select>';
+      return '<div class="sw-row sw-day'+(today?' sw-today':'')+'">'+
+        '<div class="sw-date">'+fgFmt(d,{weekday:'short'})+' <b>'+fgFmt(d)+'</b>'+(today?' <span class="fg-tag">Today</span>':'')+'</div>'+
+        '<label class="sw-c" data-l="Slept (night before)"><input type="time" class="sw-in" data-d="'+d+'" data-f="sleptAt" value="'+escH(dlGet(d,'sleptAt')||'')+'" onchange="swSet(this)" aria-label="Slept the night before '+fgFmt(d)+'"></label>'+
+        '<label class="sw-c" data-l="Got up"><input type="time" class="sw-in'+(swMin(dlGet(d,'wokeAt'))>SW_WAKE?' late':'')+'" data-d="'+d+'" data-f="wokeAt" value="'+escH(dlGet(d,'wokeAt')||'')+'" onchange="swSet(this)" aria-label="Got up on '+fgFmt(d)+'"></label>'+
+        '<label class="sw-c" data-l="Why not on time"><input class="sin sw-why" list="sw-reasons" maxlength="120" data-d="'+d+'" data-f="wakeWhy" value="'+escH(dlGet(d,'wakeWhy')||'')+'" placeholder="'+(a==='no'?'What got in the way?':'')+'" onchange="swSet(this)" aria-label="Why not on time on '+fgFmt(d)+'"></label>'+
+        '<label class="sw-c" data-l="Adhered">'+sel+'</label></div>';
+    }).join('');
+    return '<div class="fg-wk'+(open?' open':'')+'"><button type="button" class="sw-wk-h" aria-expanded="'+open+'" onclick="swOpen['+w.n+']='+!open+';renderSleepTracker()">'+
+      '<span class="fg-car">▸</span><b>Week '+w.n+'</b><span class="sw-rng">'+fgFmt(w.days[0])+' – '+fgFmt(last)+(ended?'':' · this week')+'</span>'+
+      '<span class="fg-pct '+tone+'">'+(p==null?'—':y+'/'+mk+' adhered')+'</span>'+(avg?'<span class="sw-avg">avg get-up '+avg+'</span>':'')+'</button>'+
+      (open?'<div class="sw-days">'+head+rows+'</div>':'')+'</div>';
+  }).join('');
+  box.innerHTML='<datalist id="sw-reasons">'+reasons.map(function(r){ return '<option value="'+escH(r)+'">'; }).join('')+'</datalist>'+
+    '<div class="sw-grid">'+body+'</div>'+
+    '<div class="fd-hint sw-hint">Targets: up by '+tgFmt(SW_WAKE)+', asleep by '+tgFmt(SW_SLEEP)+'. Adhered is worked out from your times; pick Yes or No to override. Times are the same as the Morning sleep row.</div>';
+}
+
+/* ═══════════════════════════════════════════════════
    SAVE QUEUE — one write per key in flight; only the newest state
    waits behind it, so changes can never reach the Sheet out of order.
 ═══════════════════════════════════════════════════ */
@@ -5647,14 +5722,14 @@ function replaceCheckinFromSheet(checks,log){
     ruleChecks=m;
   }
   if(Array.isArray(log)){
-    var d={}; log.forEach(function(r){ d[r.dateISO]={sleptAt:r.sleptAt||'',wokeAt:r.wokeAt||'',note:r.note||'',weekNote:r.weekNote||'',read:r.read||''}; });
+    var d={}; log.forEach(function(r){ d[r.dateISO]={sleptAt:r.sleptAt||'',wokeAt:r.wokeAt||'',note:r.note||'',weekNote:r.weekNote||'',read:r.read||'',wakeWhy:r.wakeWhy||'',adhered:r.adhered||''}; });
     Object.keys(_sqPending).forEach(function(k){
       var p=_sqPending[k].p; if(p.sheet!=='DayLog'||p.field==='sleptAt'||p.field==='wokeAt') return;   // sleep shows its own pending state
       (d[p.dateISO]=d[p.dateISO]||{})[p.field]=p.value;
     });
     dayLog=d;
   }
-  renderSleep(); renderCheckin(); renderWeekly(); renderMorningRead(); rdPaint();
+  renderSleep(); renderCheckin(); renderWeekly(); renderMorningRead(); rdPaint(); renderSleepTracker();
 }
 function markCheckinUnsupported(){ if(ciLoaded) return; ciUnsupported=true; renderSleep(); renderCheckin(); renderWeekly(); }
 function markCheckinFailed(){ if(ciLoaded||ciUnsupported) return; ciFailed=true; renderSleep(); renderCheckin(); renderWeekly(); }
@@ -5716,6 +5791,7 @@ function sleepLen(slept,woke){
 
 /* ── Sleep row (Morning) ── */
 function renderSleep(){
+  if(typeof renderSleepTracker==='function') setTimeout(renderSleepTracker,0);
   if(typeof renderTimeGrid==='function') setTimeout(renderTimeGrid,0);
   var el=document.getElementById('sleep-row'); if(!el) return;
   if(ciUnsupported||(!ciLoaded&&ciFailed)){ el.hidden=true; return; }
@@ -6895,7 +6971,7 @@ async function importGuide(){
    Open/closed state is a display preference, so it lives in
    localStorage — no dashboard data is stored there.
 ──────────────────────────────────────────────────────── */
-var SEC_KEYS=['links','sitlib','mythoughts','goals','mlist','tyag','master','routine','food','weekly','library','rtstats','habitperf','checklist','pillars','anchors'];
+var SEC_KEYS=['links','sitlib','mythoughts','goals','mlist','tyag','master','routine','food','sleepw','weekly','library','rtstats','habitperf','checklist','pillars','anchors'];
 
 function secOpen(key){
   var v=localStorage.getItem('sec_'+key);
@@ -6979,7 +7055,7 @@ function renderGlance(){
 
 /* Sections now live on two tabs, so a glance card may need to
    switch tab before scrolling to its section. */
-var ROUTINE_TAB_SECTIONS=['goals','tyag','master','routine','food','rtstats','habitperf'];   // sitlib lives on Home
+var ROUTINE_TAB_SECTIONS=['goals','tyag','master','routine','food','sleepw','rtstats','habitperf'];   // sitlib lives on Home
 
 function jumpToSection(key){
   if(!secOpen(key)){ localStorage.setItem('sec_'+key,'1'); applySection(key); }
