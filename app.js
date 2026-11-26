@@ -1,6 +1,6 @@
 /* Morning Dashboard app. Linked from index.html; bump ?v= there when this changes. */
 'use strict';
-window.APP_VER='20261126';   // must match the ?v= in index.html (checked there)
+window.APP_VER='20261126b';   // must match the ?v= in index.html (checked there)
 const WORKER_URL='https://muddy-shadow-1aa7.vaibhavjain-1192.workers.dev';
 const FETCH_TIMEOUT=45000;   // default; page loads pass shorter ones
 var DIAG={};  // diagnostics collected during fetch
@@ -4477,6 +4477,10 @@ function fgToggleWeek(n){ fgOpen[n]=!fgWeekOpen(n); renderFoodGrid();
 var _fgCurWeek=0;
 function fgWeekOpen(n){ return (n in fgOpen)?fgOpen[n]:n===_fgCurWeek; }
 
+var FG_NARROW=!!(window.matchMedia&&matchMedia('(max-width:640px)').matches);
+try{ matchMedia('(max-width:640px)').addEventListener('change',function(e){ FG_NARROW=e.matches; try{renderFoodGrid();}catch(x){} try{renderSleepTracker();}catch(x){} }); }catch(e){}
+function fgDateHTML(d){ var today=d===isoToday();
+  return '<div class="fg-date"><span class="fg-dw">'+fgFmt(d,{weekday:'short'})+'</span> <b>'+fgFmt(d,{day:'numeric'})+'<span class="fg-mo"> '+fgFmt(d,{month:'short'})+'</span></b>'+(today?' <span class="fg-tag">Today</span>':'')+'</div>'; }
 function fgCellHTML(d,c){
   var v=fgVal(d,c);
   if(fgNewFor===d+'|'+c) return '<div class="fg-cell fg-newbox" data-l="'+fgEsc(c)+'"><input class="sin" id="fg-new-in" maxlength="60" placeholder="What did you have?" data-d="'+d+'" data-c="'+fgEsc(c)+'" onkeydown="if(event.key===\'Enter\')fgSaveNew();if(event.key===\'Escape\')fgCancelNew()">'+
@@ -4484,14 +4488,14 @@ function fgCellHTML(d,c){
   var ok=fgIsOk(v), opts=fgOptions(c); if(v&&!ok&&opts.indexOf(v)<0) opts.unshift(v);
   return '<div class="fg-cell" data-l="'+fgEsc(c)+'"><select class="fg-sel'+(ok?' ok':v?' had':'')+'" data-d="'+d+'" data-c="'+fgEsc(c)+'" aria-label="'+fgEsc(c)+' on '+fgFmt(d)+'" onchange="fgPick(this)">'+
     '<option value=""'+(v?'':' selected')+'>—</option>'+
-    '<option value="'+FG_OK+'"'+(ok?' selected':'')+'>\u2713 Followed</option>'+
+    '<option value="'+FG_OK+'"'+(ok?' selected':'')+'>'+(FG_NARROW?'\u2713':'\u2713 Followed')+'</option>'+
     opts.map(function(o){ return '<option value="'+fgEsc(o)+'"'+(o===v?' selected':'')+'>'+escH(o)+'</option>'; }).join('')+
     '<option value="__new">+ Add new…</option></select></div>';
 }
 function fgDayHTML(d){
   var s=fgSlips(d), today=d===isoToday(), st=!fgCounts(d)?['fg-open','•','Today, still going']:(s?['fg-no','✗',s+' slipped']:['fg-ok','✓','Clean day']);
   return '<div class="fg-row fg-day'+(today?' fg-today':'')+'">'+
-    '<div class="fg-date">'+fgFmt(d,{weekday:'short'})+' <b>'+fgFmt(d)+'</b>'+(today?' <span class="fg-tag">Today</span>':'')+'</div>'+
+    fgDateHTML(d)+
     fgHeads.map(function(c){ return fgCellHTML(d,c); }).join('')+
     '<div class="fg-st '+st[0]+'" title="'+st[2]+'" aria-label="'+st[2]+'">'+st[1]+'</div></div>';
 }
@@ -4524,7 +4528,7 @@ function renderFoodGrid(){
 
   if(!fgHeads.length){ box.innerHTML=top+'<div class="fd-note">Add a food type to start (e.g. Fried Food).</div>'+fgCatAdd(); return; }
 
-  var head='<div class="fg-row fg-head"><div>Date</div>'+fgHeads.map(function(c){ return '<div title="'+fgEsc(c)+'">'+escH(c)+'</div>'; }).join('')+'<div></div></div>';
+  var head='<div class="fg-row fg-head fg-head-f"><div>Date</div>'+fgHeads.map(function(c){ return '<div title="'+fgEsc(c)+'">'+escH(c)+'</div>'; }).join('')+'<div></div></div>';
 
   var body=weeks.map(function(wd,i){ return {n:i+1,days:wd}; }).reverse().map(function(w){
     var cnt=w.days.filter(fgCounts), cl=cnt.filter(function(d){ return !fgSlips(d); }).length;
@@ -4541,7 +4545,7 @@ function renderFoodGrid(){
       (open?'<div class="fg-days">'+w.days.map(fgDayHTML).join('')+'</div>':'')+'</div>';
   }).join('');
 
-  box.innerHTML=top+'<div class="fg-grid" style="--fgcols:'+cols+'">'+head+body+'</div>'+
+  box.innerHTML=top+'<div class="fg-grid" style="--fgcols:'+cols+';--fgcols-m:34px repeat('+fgHeads.length+',minmax(0,1fr)) 16px">'+head+body+'</div>'+
     '<div class="fg-foot"><span class="fd-hint">✓ Followed = avoided it (green). A blank counts as followed once the day is over. Otherwise pick what you had, or “+ Add new…”.</span>'+fgCatAdd()+'</div>';
   if(typeof renderGlance==='function') renderGlance();
 }
@@ -5651,7 +5655,7 @@ function renderSleepTracker(){
   var all=[].concat.apply([],weeks), yes=all.filter(function(d){ return swAdh(d)==='yes'; }).length, marked=all.filter(function(d){ return swAdh(d); }).length;
   var badge=document.getElementById('badge-sleepw'); if(badge) badge.textContent=marked?yes+'/'+marked+' adhered':'';
   var reasons=swReasons();
-  var head='<div class="sw-row sw-head"><div>Date</div><div>Slept (prev. night)</div><div>Got up</div><div>Why not on time</div><div>Adhered</div></div>';
+  var head='<div class="sw-row sw-head"><div>Date</div><div><span class="sw-lf">Slept (prev. night)</span><span class="sw-ls">Slept</span></div><div><span class="sw-lf">Got up</span><span class="sw-ls">Up</span></div><div><span class="sw-lf">Why not on time</span><span class="sw-ls">Why late</span></div><div><span class="sw-lf">Adhered</span><span class="sw-ls">OK?</span></div></div>';
   var body=weeks.map(function(w,i){ return {n:i+1,days:w}; }).reverse().map(function(w){
     var last=w.days[w.days.length-1], ended=mrDow(last)===0&&last<t, open=(w.n in swOpen)?swOpen[w.n]:!ended;
     var y=w.days.filter(function(d){ return swAdh(d)==='yes'; }).length, mk=w.days.filter(function(d){ return swAdh(d); }).length;
@@ -5660,14 +5664,15 @@ function renderSleepTracker(){
     var p=mk?Math.round(y/mk*100):null, tone=p==null?'':p>=80?'good':p>=50?'mid':'low';
     var rows=w.days.slice().reverse().map(function(d){
       var a=swAdh(d), man=String(dlGet(d,'adhered')||'').toLowerCase(), auto=swAuto(d), today=d===t;
-      var sel='<select class="sw-adh '+(a||'none')+'" data-d="'+d+'" data-f="adhered" onchange="swSet(this)" aria-label="Adhered on '+fgFmt(d)+'">'+
-        '<option value="auto"'+(man?'':' selected')+'>'+(auto==='yes'?'✓ Yes (auto)':auto==='no'?'✗ No (auto)':'—')+'</option>'+
+      var N=FG_NARROW;
+      var sel='<select class="sw-adh '+(a||'none')+(man?'':' auto')+'" data-d="'+d+'" data-f="adhered" onchange="swSet(this)" aria-label="Adhered on '+fgFmt(d)+'">'+
+        '<option value="auto"'+(man?'':' selected')+'>'+(auto==='yes'?(N?'✓':'✓ Yes (auto)'):auto==='no'?(N?'✗':'✗ No (auto)'):'—')+'</option>'+
         '<option value="yes"'+(man==='yes'?' selected':'')+'>✓ Yes</option><option value="no"'+(man==='no'?' selected':'')+'>✗ No</option></select>';
       return '<div class="sw-row sw-day'+(today?' sw-today':'')+'">'+
-        '<div class="sw-date">'+fgFmt(d,{weekday:'short'})+' <b>'+fgFmt(d)+'</b>'+(today?' <span class="fg-tag">Today</span>':'')+'</div>'+
+        fgDateHTML(d).replace('fg-date','fg-date sw-date')+
         '<label class="sw-c" data-l="Slept (night before)"><input type="time" class="sw-in" data-d="'+d+'" data-f="sleptAt" value="'+escH(dlGet(d,'sleptAt')||'')+'" onchange="swSet(this)" aria-label="Slept the night before '+fgFmt(d)+'"></label>'+
         '<label class="sw-c" data-l="Got up"><input type="time" class="sw-in'+(swMin(dlGet(d,'wokeAt'))>SW_WAKE?' late':'')+'" data-d="'+d+'" data-f="wokeAt" value="'+escH(dlGet(d,'wokeAt')||'')+'" onchange="swSet(this)" aria-label="Got up on '+fgFmt(d)+'"></label>'+
-        '<label class="sw-c" data-l="Why not on time"><input class="sin sw-why" list="sw-reasons" maxlength="120" data-d="'+d+'" data-f="wakeWhy" value="'+escH(dlGet(d,'wakeWhy')||'')+'" placeholder="'+(a==='no'?'What got in the way?':'')+'" onchange="swSet(this)" aria-label="Why not on time on '+fgFmt(d)+'"></label>'+
+        '<label class="sw-c" data-l="Why not on time"><input class="sin sw-why" list="sw-reasons" maxlength="120" data-d="'+d+'" data-f="wakeWhy" value="'+escH(dlGet(d,'wakeWhy')||'')+'" placeholder="'+(a==='no'?(FG_NARROW?'why?':'What got in the way?'):'')+'" onchange="swSet(this)" aria-label="Why not on time on '+fgFmt(d)+'"></label>'+
         '<label class="sw-c" data-l="Adhered">'+sel+'</label></div>';
     }).join('');
     return '<div class="fg-wk'+(open?' open':'')+'"><button type="button" class="sw-wk-h" aria-expanded="'+open+'" onclick="swOpen['+w.n+']='+!open+';renderSleepTracker()">'+
