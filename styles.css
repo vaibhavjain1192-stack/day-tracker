@@ -1804,3 +1804,38 @@ hr.d{border:none;border-top:1px solid var(--border);margin:1rem 0}
 .mr-view button:focus-visible{outline:2px solid var(--gold);outline-offset:-2px}
 @media (pointer:coarse){ .mr-view button{min-height:32px} }
 @media (max-width:640px){ .mr-meta{flex-wrap:wrap;justify-content:flex-end;gap:6px} .mr-time{display:none} }
+
+/* Sleep & get-up tracker */
+.sw-grid{border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.sw-grid .fg-wk+.fg-wk{border-top:1px solid var(--border)}
+.sw-wk-h{width:100%;display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:transparent;border:0;padding:11px 12px;font-family:var(--fb);font-size:13px;color:var(--text-1);text-align:left;cursor:pointer}
+.sw-wk-h:hover{background:color-mix(in srgb,var(--surface) 70%,transparent)}
+.sw-wk-h:focus-visible{outline:2px solid var(--gold);outline-offset:-2px}
+.sw-rng,.sw-avg{font-size:11px;color:var(--text-3)}
+.sw-avg{margin-left:auto}
+.sw-days{border-top:1px solid var(--border);background:color-mix(in srgb,var(--surface) 55%,transparent)}
+.sw-row{display:grid;grid-template-columns:120px 130px 130px minmax(0,1fr) 140px;gap:8px;align-items:center;padding:7px 12px}
+.sw-head{font-size:10.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--text-3);border-bottom:1px solid var(--border)}
+.sw-day+.sw-day{border-top:1px solid var(--border)}
+.sw-today{box-shadow:inset 3px 0 0 var(--gold)}
+.sw-date{font-size:12px;color:var(--text-3);white-space:nowrap}
+.sw-date b{color:var(--text-1);font-weight:500}
+.sw-c{display:block;min-width:0}
+.sw-in{width:100%;font-family:var(--fb);font-size:12.5px;padding:5px 6px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text-1);color-scheme:dark}
+.sw-in.late{border-color:rgba(224,123,123,.55)}
+.sw-why{font-size:12.5px;padding:5px 8px;width:100%}
+.sw-adh{width:100%;font-family:var(--fb);font-size:12px;padding:5px 6px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text-2);color-scheme:dark}
+.sw-adh.yes{color:#9fd3b5;border-color:rgba(107,191,142,.5);background:rgba(107,191,142,.1)}
+.sw-adh.no{color:#F1B5B5;border-color:rgba(224,123,123,.5);background:rgba(224,123,123,.08)}
+.sw-adh option{background:var(--card,#1e2333);color:var(--text-1)}
+.sw-in:focus-visible,.sw-adh:focus-visible{outline:2px solid var(--gold);outline-offset:1px}
+.sw-hint{margin-top:8px}
+@media (max-width:760px){
+  .sw-head{display:none}
+  .sw-row{grid-template-columns:1fr 1fr;row-gap:8px;padding:10px 12px}
+  .sw-date{grid-column:1/-1}
+  .sw-c[data-l="Why not on time"]{grid-column:1/-1}
+  .sw-c::before{content:attr(data-l);display:block;font-size:10.5px;color:var(--text-3);margin-bottom:2px}
+  .sw-avg{margin-left:0;flex-basis:100%;padding-left:16px}
+}
+@media (pointer:coarse){ .sw-in,.sw-adh,.sw-why{min-height:36px} }
