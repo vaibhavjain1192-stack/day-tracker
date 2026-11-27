@@ -1,6 +1,6 @@
 /* Morning Dashboard app. Linked from index.html; bump ?v= there when this changes. */
 'use strict';
-window.APP_VER='20261127b';   // must match the ?v= in index.html (checked there)
+window.APP_VER='20261127c';   // must match the ?v= in index.html (checked there)
 const WORKER_URL='https://muddy-shadow-1aa7.vaibhavjain-1192.workers.dev';
 const FETCH_TIMEOUT=45000;   // default; page loads pass shorter ones
 var DIAG={};  // diagnostics collected during fetch
@@ -5242,10 +5242,10 @@ function fcAssignPosts(){
 function fcPostHTML(c){
   var x=c.post; if(!x) return '';
   var safe=/^https?:\/\//i.test(x.url||''), d=String(x.desc||'').replace(/\s+/g,' ').trim();
-  if(d.length>260) d=d.slice(0,259)+'…';
-  return '<div class="fc-post"><span class="pr-habit-l">📌 Today’s post'+(c.postMatch?'':' · something to reflect on')+'</span>'+
-    (x.heading?'<b class="fc-post-h">'+escH(x.heading)+'</b>':'')+(d?'<p>'+escH(d)+'</p>':'')+
-    (safe?'<a class="pr-link" href="'+escH(x.url)+'" target="_blank" rel="noopener">Open post ↗</a>':'')+'</div>';
+  var h=escH(x.heading||d);
+  return '<div class="fc-post"><span class="pr-habit-l">📌 Today’s post'+(c.postMatch?'':' · to reflect on')+'</span>'+
+    (safe?'<a class="fc-post-h" href="'+escH(x.url)+'" target="_blank" rel="noopener">'+h+' ↗</a>':'<b class="fc-post-h">'+h+'</b>')+
+    (d&&x.heading?'<p class="fc-drop2">'+escH(d)+'</p>':'')+'</div>';
 }
 function fcOpen(btn){
   if(!prLoaded||!principles.length){ showToast('Still loading. Try again in a moment.','error'); return; }
@@ -5288,26 +5288,39 @@ function fcRender(){
     var b=m.querySelector('.fc-endb .btn'); if(b) b.focus(); return;
   }
   var c=fcDeck[fcI], p=c.p;
-  var pts=String(p.keyPoints||'').split(/\n+/).map(function(s){ return s.replace(/^[-•*\s]+/,'').trim(); }).filter(Boolean);
   var essence=p.quick||mrFirst(p.details);
   m.innerHTML='<div class="pr-card fc-card">'+bar+
     '<div class="pr-top"><div class="pr-grp">'+escH(c.tag)+(p.group?' · '+escH(p.group):'')+'</div>'+
       '<div class="fc-top-r"><span class="fc-n">'+(fcI+1)+' / '+N+'</span><button type="button" class="pr-x" aria-label="Close" onclick="fcClose()">×</button></div></div>'+
+    '<div class="fc-body">'+
     '<h2 class="pr-title fc-title" id="fc-title">'+escH(p.title)+'</h2>'+
     (essence?'<p class="fc-ess">'+escH(essence)+'</p>':'')+
     (p.habit?'<div class="pr-habit"><span class="pr-habit-l">✅ What to do</span><span class="pr-habit-t">'+escH(p.habit)+'</span></div>':'')+
-    '<div class="fc-why"><span class="pr-habit-l">💡 Why</span>'+
-      (p.details&&p.details!==essence?'<p>'+escH(p.details)+'</p>':'')+
-      (pts.length?'<ul class="pr-pts">'+pts.map(function(s){ return '<li>'+escH(s)+'</li>'; }).join('')+'</ul>':'')+'</div>'+
-    (p.astro?'<div class="pr-astro"><span class="pr-habit-l">✨ From my chart</span><span class="pr-astro-t">'+escH(p.astro)+'</span></div>':'')+
-    fcPostHTML(c)+
+    (p.details&&p.details!==essence?'<div class="fc-why"><span class="pr-habit-l">💡 Why</span><p>'+escH(p.details)+'</p></div>':'')+
+    (p.astro?'<div class="pr-astro fc-drop1"><span class="pr-habit-l">✨ From my chart</span><span class="pr-astro-t">'+escH(p.astro)+'</span></div>':'')+
+    fcPostHTML(c)+'</div>'+
     '<div class="fc-nav">'+
       '<button type="button" class="btn fc-prev" onclick="fcGo(-1)"'+(fcI?'':' disabled')+' aria-label="Previous card">‹ Back</button>'+
-      '<button type="button" class="fc-more" onclick="fcMore()">Related notes</button>'+
+      '<button type="button" class="fc-more" onclick="fcMore()" title="Key points and everything related">More</button>'+
       '<button type="button" class="btn gold fc-next" onclick="fcGo(1)">'+(fcI===N-1?'Finish ✓':'Next ›')+'</button></div></div>';
-  m.scrollTop=0;
+  fcFit();
   var nx=m.querySelector('.fc-next'); if(nx) nx.focus({preventScroll:true});
 }
+/* Make the card fit one screen: shrink the text step by step; if still too tall, hide the post's description,
+   then the chart note, and only as a last resort let the card scroll. */
+function fcFit(){
+  var m=document.getElementById('fc-modal'); if(!m||m.hidden) return;
+  var card=m.querySelector('.fc-card'), body=m.querySelector('.fc-body'); if(!card||!body) return;
+  card.classList.remove('fc-hide1','fc-hide2','fc-scroll');
+  var over=function(){ return body.scrollHeight>body.clientHeight+1; }, s=1;
+  card.style.setProperty('--fcs',1);
+  while(over()&&s>0.8){ s=Math.round((s-0.04)*100)/100; card.style.setProperty('--fcs',s); }
+  if(over()) card.classList.add('fc-hide2');
+  if(over()) card.classList.add('fc-hide1');
+  while(over()&&s>0.7){ s=Math.round((s-0.03)*100)/100; card.style.setProperty('--fcs',s); }
+  if(over()) card.classList.add('fc-scroll');
+}
+window.addEventListener('resize',function(){ fcFit(); });
 document.addEventListener('keydown',function(e){
   var m=document.getElementById('fc-modal'); if(!m||m.hidden) return;
   if(e.key==='Escape') fcClose();
