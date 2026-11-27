@@ -1,6 +1,6 @@
 /* Morning Dashboard app. Linked from index.html; bump ?v= there when this changes. */
 'use strict';
-window.APP_VER='20261127';   // must match the ?v= in index.html (checked there)
+window.APP_VER='20261127b';   // must match the ?v= in index.html (checked there)
 const WORKER_URL='https://muddy-shadow-1aa7.vaibhavjain-1192.workers.dev';
 const FETCH_TIMEOUT=45000;   // default; page loads pass shorter ones
 var DIAG={};  // diagnostics collected during fetch
@@ -5215,9 +5215,41 @@ function fcBuild(){
   return t.core.map(function(p){ return {p:p,tag:'Every day',k:'everyday'}; })
     .concat(t.pick.map(function(p){ return {p:p,tag:'Today’s reflection',k:'reflect'}; }));
 }
+/* One saved post per card, different each day. Prefer posts that match the principle's keywords;
+   if none match (or all were used by earlier cards), take any unused post. The day number rotates the choice. */
+function fcAssignPosts(){
+  var ps=(posts||[]).filter(function(x){ return x&&(x.heading||x.desc); });
+  var used={}, day=mrDayNo(isoToday());
+  fcDeck.forEach(function(c){ c.post=null; c.postMatch=false; });
+  if(!ps.length) return;
+  // pass 1: cards with matching posts (heading words count double), rotating among the best few each day
+  fcDeck.forEach(function(c,i){
+    var terms=prTerms(c.p);
+    var hits=ps.map(function(x,k){ return {k:k,s:2*prScore(terms,x.heading||'')+prScore(terms,x.desc||'')}; })
+      .filter(function(h){ return h.s>0&&!used[h.k]; }).sort(function(a,b){ return b.s-a.s||a.k-b.k; });
+    if(!hits.length) return;
+    var top=hits.slice(0,Math.max(3,hits.filter(function(h){ return h.s===hits[0].s; }).length));
+    var k=top[(day+i)%top.length].k; used[k]=1; c.post=ps[k]; c.postMatch=true;
+  });
+  // pass 2: the rest get any unused post, different each day
+  var free=ps.map(function(x,k){ return k; }).filter(function(k){ return !used[k]; });
+  fcDeck.forEach(function(c,i){
+    if(c.post) return;
+    if(!free.length) free=ps.map(function(x,k){ return k; });
+    var at=(day*7+i*13)%free.length; c.post=ps[free[at]]; free.splice(at,1);
+  });
+}
+function fcPostHTML(c){
+  var x=c.post; if(!x) return '';
+  var safe=/^https?:\/\//i.test(x.url||''), d=String(x.desc||'').replace(/\s+/g,' ').trim();
+  if(d.length>260) d=d.slice(0,259)+'…';
+  return '<div class="fc-post"><span class="pr-habit-l">📌 Today’s post'+(c.postMatch?'':' · something to reflect on')+'</span>'+
+    (x.heading?'<b class="fc-post-h">'+escH(x.heading)+'</b>':'')+(d?'<p>'+escH(d)+'</p>':'')+
+    (safe?'<a class="pr-link" href="'+escH(x.url)+'" target="_blank" rel="noopener">Open post ↗</a>':'')+'</div>';
+}
 function fcOpen(btn){
   if(!prLoaded||!principles.length){ showToast('Still loading. Try again in a moment.','error'); return; }
-  fcDeck=fcBuild(); fcI=0; if(!fcDeck.length) return;
+  fcDeck=fcBuild(); fcI=0; if(!fcDeck.length) return; fcAssignPosts();
   fcLastFocus=btn||document.activeElement;
   var m=document.getElementById('fc-modal');
   if(!m){ m=document.createElement('div'); m.id='fc-modal'; m.className='pr-modal fc-modal';
@@ -5268,6 +5300,7 @@ function fcRender(){
       (p.details&&p.details!==essence?'<p>'+escH(p.details)+'</p>':'')+
       (pts.length?'<ul class="pr-pts">'+pts.map(function(s){ return '<li>'+escH(s)+'</li>'; }).join('')+'</ul>':'')+'</div>'+
     (p.astro?'<div class="pr-astro"><span class="pr-habit-l">✨ From my chart</span><span class="pr-astro-t">'+escH(p.astro)+'</span></div>':'')+
+    fcPostHTML(c)+
     '<div class="fc-nav">'+
       '<button type="button" class="btn fc-prev" onclick="fcGo(-1)"'+(fcI?'':' disabled')+' aria-label="Previous card">‹ Back</button>'+
       '<button type="button" class="fc-more" onclick="fcMore()">Related notes</button>'+
