@@ -1,6 +1,6 @@
 /* Morning Dashboard app. Linked from index.html; bump ?v= there when this changes. */
 'use strict';
-window.APP_VER='20261126c';   // must match the ?v= in index.html (checked there)
+window.APP_VER='20261127';   // must match the ?v= in index.html (checked there)
 const WORKER_URL='https://muddy-shadow-1aa7.vaibhavjain-1192.workers.dev';
 const FETCH_TIMEOUT=45000;   // default; page loads pass shorter ones
 var DIAG={};  // diagnostics collected during fetch
@@ -5166,6 +5166,7 @@ function renderMorningRead(){
     '<span class="mr-view" role="group" aria-label="How much to show">'+
       '<button type="button" class="'+(mrQuick()?'on':'')+'" aria-pressed="'+mrQuick()+'" onclick="mrSetView(\'quick\')" title="Title and one line each">Quick</button>'+
       '<button type="button" class="'+(mrQuick()?'':'on')+'" aria-pressed="'+!mrQuick()+'" onclick="mrSetView(\'full\')" title="Full details, chart notes and situations">Full</button></span>'+
+    '<button type="button" class="mr-edit mr-cards" onclick="fcOpen(this)" title="One principle at a time, like flashcards">\ud83c\udccf Cards</button>'+
     '<button type="button" class="mr-edit" onclick="openPrEditor()" title="Edit, reorder and schedule your principles">\u270e Edit</button>';
   box.classList.toggle('done',read&&!mrOpen);
 
@@ -5199,6 +5200,87 @@ function renderMorningRead(){
   if(foot) foot.innerHTML='<div class="mr-foot"><span class="fd-hint">Tap a principle to go deeper. <b>\u270e Edit</b> to change, reorder or schedule them.</span></div>';
   rdPaint();
 }
+
+/* ═══════════════════════════════════════════════════
+   FLASHCARDS — the Morning read one principle at a time: what to do, why,
+   then Next. Deck = Every day + Today's reflections (or the chosen situation).
+   Swipe, arrow keys or the buttons move between cards.
+═══════════════════════════════════════════════════ */
+var fcDeck=[], fcI=0, fcLastFocus=null, fcTX=null;
+function fcBuild(){
+  if(mrSit) return principles.slice().sort(function(a,b){ return a.order-b.order; })
+    .filter(function(p){ return prSits(p).some(function(s){ return sitKey(s)===sitKey(mrSit); }); })
+    .map(function(p){ return {p:p,tag:sitIcon(mrSit)+' '+mrSit}; });
+  var t=mrToday();
+  return t.core.map(function(p){ return {p:p,tag:'Every day',k:'everyday'}; })
+    .concat(t.pick.map(function(p){ return {p:p,tag:'Today’s reflection',k:'reflect'}; }));
+}
+function fcOpen(btn){
+  if(!prLoaded||!principles.length){ showToast('Still loading. Try again in a moment.','error'); return; }
+  fcDeck=fcBuild(); fcI=0; if(!fcDeck.length) return;
+  fcLastFocus=btn||document.activeElement;
+  var m=document.getElementById('fc-modal');
+  if(!m){ m=document.createElement('div'); m.id='fc-modal'; m.className='pr-modal fc-modal';
+    m.setAttribute('role','dialog'); m.setAttribute('aria-modal','true'); m.setAttribute('aria-label','Morning read cards');
+    m.addEventListener('click',function(e){ if(e.target===m) fcClose(); });
+    m.addEventListener('touchstart',function(e){ var t=e.changedTouches[0]; fcTX=[t.clientX,t.clientY]; },{passive:true});
+    m.addEventListener('touchend',function(e){ if(!fcTX) return; var t=e.changedTouches[0], dx=t.clientX-fcTX[0], dy=t.clientY-fcTX[1]; fcTX=null;
+      if(Math.abs(dx)>60&&Math.abs(dx)>Math.abs(dy)*1.5) fcGo(dx<0?1:-1); },{passive:true});
+    document.body.appendChild(m); }
+  m.hidden=false; document.body.style.overflow='hidden'; fcRender();
+}
+function fcClose(){
+  var m=document.getElementById('fc-modal'); if(!m||m.hidden) return;
+  m.hidden=true; document.body.style.overflow='';
+  if(fcLastFocus&&fcLastFocus.focus) fcLastFocus.focus();
+}
+function fcGo(n){ var to=fcI+n; if(to<0||to>fcDeck.length) return; fcI=to; fcRender(); }
+function fcMore(){ var c=fcDeck[fcI]; if(!c) return; fcClose(); openPrinciple(c.p.sheetId); }
+function fcMarkRead(){
+  var ks={}; fcDeck.forEach(function(c){ if(c.k) ks[c.k]=1; });
+  Object.keys(ks).forEach(function(k){ if(!rdHas(k)) rdToggle(k); });
+  showToast('Marked as read 🙏'); fcRender();
+}
+function fcRender(){
+  var m=document.getElementById('fc-modal'); if(!m) return;
+  var N=fcDeck.length, pct=Math.round(Math.min(fcI+1,N)/N*100);
+  var bar='<div class="fc-bar" aria-hidden="true"><span style="width:'+(fcI>=N?100:pct)+'%"></span></div>';
+  if(fcI>=N){
+    var ks={}; fcDeck.forEach(function(c){ if(c.k) ks[c.k]=1; });
+    var allDone=Object.keys(ks).every(function(k){ return rdHas(k); });
+    m.innerHTML='<div class="pr-card fc-card fc-end">'+bar+
+      '<div class="fc-endic" aria-hidden="true">🙏</div><h2 class="pr-title">All '+N+' done</h2>'+
+      '<p class="fc-endt">Go gently today. Humble, grateful, and kind.</p>'+
+      '<div class="fc-endb">'+(Object.keys(ks).length?(allDone?'<span class="mr-ok">✓ Marked as read today</span>':'<button type="button" class="btn gold" onclick="fcMarkRead()"'+(ciLoaded?'':' disabled')+'>✓ Mark today’s read as done</button>'):'')+
+      '<button type="button" class="btn" onclick="fcI=0;fcRender()">↺ Start again</button><button type="button" class="btn" onclick="fcClose()">Close</button></div></div>';
+    var b=m.querySelector('.fc-endb .btn'); if(b) b.focus(); return;
+  }
+  var c=fcDeck[fcI], p=c.p;
+  var pts=String(p.keyPoints||'').split(/\n+/).map(function(s){ return s.replace(/^[-•*\s]+/,'').trim(); }).filter(Boolean);
+  var essence=p.quick||mrFirst(p.details);
+  m.innerHTML='<div class="pr-card fc-card">'+bar+
+    '<div class="pr-top"><div class="pr-grp">'+escH(c.tag)+(p.group?' · '+escH(p.group):'')+'</div>'+
+      '<div class="fc-top-r"><span class="fc-n">'+(fcI+1)+' / '+N+'</span><button type="button" class="pr-x" aria-label="Close" onclick="fcClose()">×</button></div></div>'+
+    '<h2 class="pr-title fc-title" id="fc-title">'+escH(p.title)+'</h2>'+
+    (essence?'<p class="fc-ess">'+escH(essence)+'</p>':'')+
+    (p.habit?'<div class="pr-habit"><span class="pr-habit-l">✅ What to do</span><span class="pr-habit-t">'+escH(p.habit)+'</span></div>':'')+
+    '<div class="fc-why"><span class="pr-habit-l">💡 Why</span>'+
+      (p.details&&p.details!==essence?'<p>'+escH(p.details)+'</p>':'')+
+      (pts.length?'<ul class="pr-pts">'+pts.map(function(s){ return '<li>'+escH(s)+'</li>'; }).join('')+'</ul>':'')+'</div>'+
+    (p.astro?'<div class="pr-astro"><span class="pr-habit-l">✨ From my chart</span><span class="pr-astro-t">'+escH(p.astro)+'</span></div>':'')+
+    '<div class="fc-nav">'+
+      '<button type="button" class="btn fc-prev" onclick="fcGo(-1)"'+(fcI?'':' disabled')+' aria-label="Previous card">‹ Back</button>'+
+      '<button type="button" class="fc-more" onclick="fcMore()">Related notes</button>'+
+      '<button type="button" class="btn gold fc-next" onclick="fcGo(1)">'+(fcI===N-1?'Finish ✓':'Next ›')+'</button></div></div>';
+  m.scrollTop=0;
+  var nx=m.querySelector('.fc-next'); if(nx) nx.focus({preventScroll:true});
+}
+document.addEventListener('keydown',function(e){
+  var m=document.getElementById('fc-modal'); if(!m||m.hidden) return;
+  if(e.key==='Escape') fcClose();
+  else if(e.key==='ArrowRight') fcGo(1);
+  else if(e.key==='ArrowLeft') fcGo(-1);
+});
 
 /* ═══════════════════════════════════════════════════
    IMPROVEMENT TRACKER — bad habits I'm changing. Each habit has a
